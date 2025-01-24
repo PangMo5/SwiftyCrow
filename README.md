@@ -1,7 +1,8 @@
+> [!NOTE]
+We're currently building `SwiftyCrow`, a new app that supports cost-free Apple in-device translation and real-time on-screen translation.
+
 # Swifty-OCR-Translator <img src="https://user-images.githubusercontent.com/16532526/125602894-9c4de3ae-fc07-4999-bab4-a8f7c090a5b8.png" align="right" height="128" />
 Screen translator for macOS with Apple Vision API and IBM Watson, Google Cloud Translator
-
-# We're currently building `SwiftyCrow`, a new app that supports cost-free Apple in-device translation and real-time on-screen translation.
 
 ## Usage
 1. Select Translator
