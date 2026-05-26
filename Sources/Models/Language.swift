@@ -1,0 +1,58 @@
+import Foundation
+import Translation
+import Vision
+
+// MARK: - Language
+
+struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
+  let code: String
+
+  var id: String {
+    code
+  }
+
+  var displayName: String {
+    Locale.current.localizedString(forIdentifier: code) ?? code
+  }
+
+  var localeLanguage: Locale.Language {
+    Locale.Language(identifier: code)
+  }
+}
+
+extension Language {
+  /// Sentinel value meaning "let Vision detect the source language and feed
+  /// that result into Apple Translation." Only valid for `sourceLanguage`.
+  static let auto = Language(code: "")
+
+  var isAuto: Bool {
+    code.isEmpty
+  }
+
+  /// Default for new installs. Picks the user's most-preferred system
+  /// language; falls back to whatever Translation reports first if Locale
+  /// somehow returns nothing useful.
+  static func systemPreferred() -> Language {
+    let preferred = Locale.preferredLanguages.first
+      ?? Locale.current.language.maximalIdentifier
+    return Language(code: preferred)
+  }
+
+  /// Languages reported by Apple Translation as supported on this device.
+  /// When `intersectedWithOCR` is true, narrows the list to ones Vision can
+  /// also OCR — appropriate for source pickers.
+  static func systemSupported(intersectedWithOCR: Bool) async -> [Language] {
+    let translationLangs = await LanguageAvailability().supportedLanguages
+    var ids = Set(translationLangs.map(\.maximalIdentifier))
+    if intersectedWithOCR {
+      let request = RecognizeTextRequest()
+      if let ocr = try? request.supportedRecognitionLanguages {
+        ids.formIntersection(ocr.map(\.maximalIdentifier))
+      }
+    }
+    return ids
+      .filter { !$0.isEmpty }
+      .map { Language(code: $0) }
+      .sorted { $0.displayName.localizedCompare($1.displayName) == .orderedAscending }
+  }
+}
