@@ -209,6 +209,19 @@ private struct ShortcutsSection: View {
         .font(.caption)
         .foregroundStyle(.secondary)
     }
+
+    Section {
+      KeyboardShortcuts.Recorder("Save image", name: .regionSave)
+      KeyboardShortcuts.Recorder("Copy image", name: .regionCopyImage)
+      KeyboardShortcuts.Recorder("Copy original text", name: .regionCopyOriginal)
+      KeyboardShortcuts.Recorder("Copy translation", name: .regionCopyTranslation)
+    } header: {
+      Text("Capture Window")
+    } footer: {
+      Text("Active only while a capture result window is focused.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
   }
 
   // MARK: Private

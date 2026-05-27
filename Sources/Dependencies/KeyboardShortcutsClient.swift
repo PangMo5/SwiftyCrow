@@ -67,4 +67,12 @@ extension KeyboardShortcuts.Name {
   static let selectRegion = Self("selectRegion")
   static let toggleLive = Self("toggleLive")
   static let toggleOverlay = Self("toggleOverlay")
+
+  // Capture-result-window actions. These are matched locally by an NSEvent
+  // monitor while the window is focused (never globally registered), so they
+  // don't steal ⌘S etc. system-wide.
+  static let regionSave = Self("regionSave", default: .init(.s, modifiers: .command))
+  static let regionCopyImage = Self("regionCopyImage", default: .init(.c, modifiers: .command))
+  static let regionCopyOriginal = Self("regionCopyOriginal", default: .init(.o, modifiers: .command))
+  static let regionCopyTranslation = Self("regionCopyTranslation", default: .init(.t, modifiers: .command))
 }

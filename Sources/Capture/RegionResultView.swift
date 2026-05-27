@@ -1,5 +1,6 @@
 import AppKit
 import ComposableArchitecture
+import KeyboardShortcuts
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -24,18 +25,19 @@ struct RegionResultView: View {
         .strokeBorder(.white.opacity(0.12), lineWidth: 1)
     )
     .task { store.send(.task) }
+    .onAppear(perform: installMonitor)
+    .onDisappear(perform: removeMonitor)
   }
 
   // MARK: Private
 
   @State private var hoveredHelp: String?
+  @State private var keyMonitor: Any?
 
-  // The captured screenshot with the translation drawn over it, exactly as
-  // shown — used for both Copy Image and Save.
   @ViewBuilder
   private var translatedImage: some View {
     if let composed = store.composedImageData, let image = NSImage(data: composed) {
-      // Finished: show the blurred composition (identical to copy/save).
+      // Finished: blurred composition (identical to copy/save).
       Image(nsImage: image)
         .resizable()
         .aspectRatio(aspectRatio, contentMode: .fit)
@@ -65,11 +67,11 @@ struct RegionResultView: View {
         ProgressView().controlSize(.small)
       }
       Spacer()
-      toolbarButton("square.and.arrow.down", key: "s", help: "Save image (⌘S)", action: saveImage)
-      toolbarButton("doc.on.doc", key: "c", help: "Copy image (⌘C)", action: copyImage)
-      toolbarButton("text.quote", key: "o", help: "Copy original text (⌘O)", action: copyOriginal)
-      toolbarButton("character.bubble", key: "t", help: "Copy translation (⌘T)", action: copyTranslation)
-      toolbarButton("xmark", key: .escape, modifiers: [], help: "Close (Esc)", action: onClose)
+      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave), action: saveImage)
+      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage), action: copyImage)
+      toolbarButton("text.quote", help: helpText("Copy original text", .regionCopyOriginal), action: copyOriginal)
+      toolbarButton("character.bubble", help: helpText("Copy translation", .regionCopyTranslation), action: copyTranslation)
+      toolbarButton("xmark", help: "Close (Esc)", action: onClose)
     }
     .padding(.horizontal, 14)
     .padding(.vertical, 10)
@@ -91,20 +93,13 @@ struct RegionResultView: View {
     }
   }
 
-  private func toolbarButton(
-    _ systemName: String,
-    key: KeyEquivalent,
-    modifiers: EventModifiers = .command,
-    help: String,
-    action: @escaping () -> Void
-  ) -> some View {
+  private func toolbarButton(_ systemName: String, help: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: systemName)
         .font(.system(size: 13, weight: .semibold))
         .frame(width: 26, height: 26)
     }
     .buttonStyle(.plain)
-    .keyboardShortcut(key, modifiers: modifiers)
     .help(help)
     .onHover { hovering in
       if hovering {
@@ -115,12 +110,17 @@ struct RegionResultView: View {
     }
   }
 
+  private func helpText(_ label: String, _ name: KeyboardShortcuts.Name) -> String {
+    if let shortcut = KeyboardShortcuts.getShortcut(for: name) {
+      return "\(label) (\(shortcut))"
+    }
+    return label
+  }
+
   // MARK: Image composition + actions
 
   @MainActor
   private func composedImage() -> NSImage? {
-    // Prefer the finished blurred composition; fall back to a solid render if
-    // translation hasn't finished yet.
     if let composed = store.composedImageData, let image = NSImage(data: composed) {
       return image
     }
@@ -132,7 +132,7 @@ struct RegionResultView: View {
     }
     .frame(width: store.imageSize.width, height: store.imageSize.height)
     let renderer = ImageRenderer(content: content)
-    renderer.scale = 1 // imageSize is already in pixels
+    renderer.scale = 1
     return renderer.nsImage
   }
 
@@ -175,5 +175,36 @@ struct RegionResultView: View {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(text, forType: .string)
     onClose()
+  }
+
+  // MARK: Key handling
+
+  // Match the customizable shortcuts locally; they aren't registered globally,
+  // so they only fire while this window has focus.
+  private func installMonitor() {
+    guard keyMonitor == nil else { return }
+    keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+      if event.keyCode == 53 { // Escape
+        onClose()
+        return nil
+      }
+      let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+      func matches(_ name: KeyboardShortcuts.Name) -> Bool {
+        guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
+        return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
+      }
+      if matches(.regionSave) { saveImage(); return nil }
+      if matches(.regionCopyImage) { copyImage(); return nil }
+      if matches(.regionCopyOriginal) { copyOriginal(); return nil }
+      if matches(.regionCopyTranslation) { copyTranslation(); return nil }
+      return event
+    }
+  }
+
+  private func removeMonitor() {
+    if let keyMonitor {
+      NSEvent.removeMonitor(keyMonitor)
+      self.keyMonitor = nil
+    }
   }
 }
