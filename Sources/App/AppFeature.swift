@@ -42,18 +42,16 @@ struct AppFeature {
               }
             }
           },
-          .run { [updater] _ in
-            @Shared(.settings) var settings
+          .run { [updater, settings = state.$settings] _ in
             for await config in Observations({
-              (settings.updates.automaticChecks, settings.updates.checkInterval)
+              (settings.wrappedValue.updates.automaticChecks, settings.wrappedValue.updates.checkInterval)
             }) {
               updater.configure(automaticallyChecks: config.0, interval: config.1.seconds)
             }
           },
-          .run { send in
-            @Shared(.settings) var settings
+          .run { [settings = state.$settings] send in
             var isFirst = true
-            for await _ in Observations({ settings.overlay.enabled }) {
+            for await _ in Observations({ settings.wrappedValue.overlay.enabled }) {
               // Skip the initial emission; only clear on actual toggles so a
               // stale capture doesn't linger when the overlay is switched.
               if isFirst {
@@ -63,15 +61,14 @@ struct AppFeature {
               await send(.capture(.clearResults))
             }
           },
-          .run { [keyboardShortcuts] _ in
-            @Shared(.settings) var settings
+          .run { [keyboardShortcuts, settings = state.$settings] _ in
             // config.toml is the source of truth for hotkeys; push it into the
             // registrar on launch and whenever it changes (incl. hand edits).
             for await keys in Observations({
               (
-                settings.shortcuts.selectRegion,
-                settings.shortcuts.toggleLive,
-                settings.shortcuts.toggleOverlay
+                settings.wrappedValue.shortcuts.selectRegion,
+                settings.wrappedValue.shortcuts.toggleLive,
+                settings.wrappedValue.shortcuts.toggleOverlay
               )
             }) {
               keyboardShortcuts.setShortcut(.selectRegion, keys.0)

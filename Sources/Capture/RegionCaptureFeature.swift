@@ -25,6 +25,8 @@ struct RegionCaptureFeature {
     var composedImageData: Data?
     var isTranslating = false
     var lastError: String?
+    /// Set once the user copies or saves; the window observes this to close.
+    var finished = false
 
     @Shared(.settings) var settings
   }
@@ -34,11 +36,20 @@ struct RegionCaptureFeature {
     case captured(Result<CapturedRegion, any Error>)
     case translated(id: UUID, text: String)
     case composedReady(Data?)
+    case copyImageRequested
+    case copyOriginalRequested
+    case copyTranslationRequested
+    case saveRequested
+    case saved
   }
 
+  @Dependency(\.date.now) var now
   @Dependency(OCRClient.self) var ocr
+  @Dependency(\.pasteboard) var pasteboard
+  @Dependency(\.savePanel) var savePanel
   @Dependency(ScreenCaptureClient.self) var screenCapture
   @Dependency(TranslationClient.self) var translation
+  @Dependency(\.uuid) var uuid
 
   var body: some Reducer<State, Action> {
     Reduce { state, action in
@@ -67,7 +78,7 @@ struct RegionCaptureFeature {
         state.imageData = captured.pngData
         state.imageSize = captured.size
         state.overlayLines = captured.lines.map {
-          OverlayLine(id: UUID(), box: $0.boundingBoxNormalized, sourceText: $0.text, translated: nil)
+          OverlayLine(id: uuid(), box: $0.boundingBoxNormalized, sourceText: $0.text, translated: nil)
         }
         guard !state.overlayLines.isEmpty else { return .none }
         state.isTranslating = true
@@ -105,6 +116,38 @@ struct RegionCaptureFeature {
 
       case .composedReady(let data):
         state.composedImageData = data
+        return .none
+
+      case .copyImageRequested:
+        guard let data = state.composedImageData else { return .none }
+        state.finished = true
+        return .run { _ in await pasteboard.copyImage(data) }
+
+      case .copyOriginalRequested:
+        let text = state.overlayLines.map(\.sourceText).joined(separator: "\n")
+        guard !text.isEmpty else { return .none }
+        state.finished = true
+        return .run { _ in await pasteboard.copyString(text) }
+
+      case .copyTranslationRequested:
+        let text = state.overlayLines.compactMap(\.translated).joined(separator: "\n")
+        guard !text.isEmpty else { return .none }
+        state.finished = true
+        return .run { _ in await pasteboard.copyString(text) }
+
+      case .saveRequested:
+        guard let data = state.composedImageData else { return .none }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+        let name = "SwiftyCrow-\(formatter.string(from: now)).png"
+        return .run { send in
+          if await savePanel.savePNG(data, name) {
+            await send(.saved)
+          }
+        }
+
+      case .saved:
+        state.finished = true
         return .none
       }
     }

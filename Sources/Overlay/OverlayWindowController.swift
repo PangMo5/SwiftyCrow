@@ -44,6 +44,17 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     }
   }
 
+  /// Copies the currently shown translation (falling back to source text) to
+  /// the pasteboard — driven by the overlay's hidden ⌘C affordance.
+  func copyTranslation() {
+    let text = model.lines
+      .compactMap { $0.translated ?? ($0.sourceText.isEmpty ? nil : $0.sourceText) }
+      .joined(separator: "\n")
+    guard !text.isEmpty else { return }
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(text, forType: .string)
+  }
+
   func windowDidMove(_: Notification) {
     scheduleFrameSave()
     markInteracting()
@@ -131,6 +142,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       model: model,
       onHover: { [weak self] hovering in
         self?.handleHover(hovering)
+      },
+      onCopy: { [weak self] in
+        self?.copyTranslation()
       }
     )
     let hosting = NSHostingView(rootView: rootView)
@@ -197,12 +211,13 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
 // MARK: - OverlayWindowModel
 
-private final class OverlayWindowModel: ObservableObject {
-  @Published var lines = [OverlayLine]()
-  @Published var hideOnHover = false
-  @Published var isInteracting = false
-  @Published var isLive = false
-  @Published var isTranslating = false
+@Observable
+private final class OverlayWindowModel {
+  var lines = [OverlayLine]()
+  var hideOnHover = false
+  var isInteracting = false
+  var isLive = false
+  var isTranslating = false
 }
 
 // MARK: - OverlayRootView
@@ -211,9 +226,10 @@ private struct OverlayRootView: View {
 
   // MARK: Internal
 
-  @ObservedObject var model: OverlayWindowModel
+  let model: OverlayWindowModel
 
   let onHover: (Bool) -> Void
+  let onCopy: () -> Void
 
   var body: some View {
     OverlayView(
@@ -229,11 +245,9 @@ private struct OverlayRootView: View {
       Group {
         Button("Open Settings") { openSettings() }
           .keyboardShortcut(",", modifiers: .command)
-        Button("Copy translation") {
-          appStore.send(.capture(.copyTranslationRequested))
-        }
-        .keyboardShortcut("c", modifiers: .command)
-        .disabled(model.lines.isEmpty)
+        Button("Copy translation") { onCopy() }
+          .keyboardShortcut("c", modifiers: .command)
+          .disabled(model.lines.isEmpty)
       }
       .frame(width: 0, height: 0)
       .opacity(0)

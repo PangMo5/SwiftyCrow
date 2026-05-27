@@ -1,27 +1,28 @@
 import AppKit
 import ComposableArchitecture
-import Sharing
 import SwiftUI
-
-// MARK: - AppStore
-
-@MainActor let appStore = Store(initialState: AppFeature.State()) {
-  AppFeature()
-}
 
 // MARK: - SwiftyCrowApp
 
 @main
 struct SwiftyCrowApp: App {
   var body: some Scene {
+    // The App owns the store; the delegate handles menu-bar-app lifetime
+    // (keyboard listener + overlay sync), so we hand the store to it here.
+    let _ = appDelegate.bind(store)
+
     MenuBarExtra("SwiftyCrow", systemImage: "character.bubble.fill") {
-      MenuBarContent(store: appStore)
+      MenuBarContent(store: store)
     }
     .menuBarExtraStyle(.window)
 
     Settings {
       SettingsView()
     }
+  }
+
+  @State private var store = Store(initialState: AppFeature.State()) {
+    AppFeature()
   }
 
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -38,28 +39,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_: Notification) {
     // Start Sparkle's background check schedule by reading the dependency.
     _ = updater
-
-    // Run the keyboard-shortcut listener for the entire app lifetime.
-    observationTasks.append(
-      Task { @MainActor in
-        await appStore.send(.task).finish()
-      }
-    )
-
-    // Keep the overlay in sync with capture/translation state and settings
-    // regardless of which scene (popover, Settings window) is currently shown.
-    observationTasks.append(
-      Task { @MainActor in
-        for await _ in overlayStateStream() {
-          await syncOverlay()
-        }
-      }
-    )
-    observationTasks.append(Task { @MainActor in await syncOverlay() })
   }
 
   func applicationWillTerminate(_: Notification) {
-    for observationTask in observationTasks { observationTask.cancel() }
+    lifetimeTask?.cancel()
+    overlayObservation = nil
+  }
+
+  /// Receives the App-owned store once and wires up app-lifetime work.
+  func bind(_ store: StoreOf<AppFeature>) {
+    guard self.store == nil else { return }
+    self.store = store
+
+    // Run the keyboard-shortcut listener for the entire app lifetime.
+    lifetimeTask = Task { @MainActor in
+      await store.send(.task).finish()
+    }
+
+    // Drive the overlay from capture/translation state + settings. `observe`
+    // re-runs whenever anything the snapshot reads changes — no polling.
+    overlayObservation = observe { [weak self] in
+      guard let self, let state = overlaySnapshot() else { return }
+      Task { @MainActor [weak self] in await self?.syncOverlay(state) }
+    }
   }
 
   // MARK: Private
@@ -67,41 +69,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   @Dependency(\.overlay) private var overlay
   @Dependency(\.updater) private var updater
 
-  private var observationTasks = [Task<Void, Never>]()
+  private var store: StoreOf<AppFeature>?
+  private var lifetimeTask: Task<Void, Never>?
+  private var overlayObservation: ObserveToken?
 
-  private func overlayStateStream() -> AsyncStream<Void> {
-    AsyncStream { continuation in
-      let task = Task { @MainActor in
-        var last = snapshot()
-        continuation.yield(())
-        while !Task.isCancelled {
-          try? await Task.sleep(for: .milliseconds(100))
-          let current = snapshot()
-          if current != last {
-            last = current
-            continuation.yield(())
-          }
-        }
-      }
-      continuation.onTermination = { _ in task.cancel() }
-    }
-  }
-
-  private func snapshot() -> OverlayRenderState {
-    let capture = appStore.capture
-    let settings = appStore.settings
+  private func overlaySnapshot() -> OverlayRenderState? {
+    guard let store else { return nil }
     return OverlayRenderState(
-      lines: capture.overlayLines,
-      isVisible: settings.overlay.enabled,
-      hideOnHover: settings.overlay.hideOnHover,
-      isTranslating: capture.isTranslating,
-      isLive: capture.isLive
+      lines: store.capture.overlayLines,
+      isVisible: store.settings.overlay.enabled,
+      hideOnHover: store.settings.overlay.hideOnHover,
+      isTranslating: store.capture.isTranslating,
+      isLive: store.capture.isLive
     )
   }
 
-  private func syncOverlay() async {
-    await overlay.render(snapshot())
+  private func syncOverlay(_ state: OverlayRenderState) async {
+    await overlay.render(state)
     let excluded = await overlay.windowID().map { [$0] } ?? []
-    appStore.send(.capture(.setExcludedWindowIDs(excluded)))
+    store?.send(.capture(.setExcludedWindowIDs(excluded)))
   }
 }

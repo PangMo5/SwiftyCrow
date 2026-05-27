@@ -54,6 +54,7 @@ struct CaptureFeature {
   @Dependency(\.regionSelector) var regionSelector
   @Dependency(ScreenCaptureClient.self) var screenCapture
   @Dependency(TranslationClient.self) var translation
+  @Dependency(\.uuid) var uuid
 
   var body: some Reducer<State, Action> {
     Reduce { state, action in
@@ -201,7 +202,7 @@ struct CaptureFeature {
         reused[line.text] = bucket
       } else {
         overlayLine = OverlayLine(
-          id: UUID(),
+          id: uuid(),
           box: line.boundingBoxNormalized,
           sourceText: line.text,
           translated: cached

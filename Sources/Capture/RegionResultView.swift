@@ -2,7 +2,6 @@ import AppKit
 import ComposableArchitecture
 import KeyboardShortcuts
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct RegionResultView: View {
 
@@ -27,6 +26,9 @@ struct RegionResultView: View {
     .task { store.send(.task) }
     .onAppear(perform: installMonitor)
     .onDisappear(perform: removeMonitor)
+    .onChange(of: store.finished) { _, finished in
+      if finished { onClose() }
+    }
   }
 
   // MARK: Private
@@ -67,10 +69,18 @@ struct RegionResultView: View {
         ProgressView().controlSize(.small)
       }
       Spacer()
-      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave), action: saveImage)
-      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage), action: copyImage)
-      toolbarButton("text.quote", help: helpText("Copy original text", .regionCopyOriginal), action: copyOriginal)
-      toolbarButton("character.bubble", help: helpText("Copy translation", .regionCopyTranslation), action: copyTranslation)
+      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave)) {
+        store.send(.saveRequested)
+      }
+      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage)) {
+        store.send(.copyImageRequested)
+      }
+      toolbarButton("text.quote", help: helpText("Copy original text", .regionCopyOriginal)) {
+        store.send(.copyOriginalRequested)
+      }
+      toolbarButton("character.bubble", help: helpText("Copy translation", .regionCopyTranslation)) {
+        store.send(.copyTranslationRequested)
+      }
       toolbarButton("xmark", help: "Close (Esc)", action: onClose)
     }
     .padding(.horizontal, 14)
@@ -117,93 +127,23 @@ struct RegionResultView: View {
     return label
   }
 
-  // MARK: Image composition + actions
-
-  @MainActor
-  private func composedImage() -> NSImage? {
-    if let composed = store.composedImageData, let image = NSImage(data: composed) {
-      return image
-    }
-    guard let data = store.imageData, let base = NSImage(data: data), store.imageSize != .zero else { return nil }
-    let content = ZStack {
-      Image(nsImage: base)
-        .resizable()
-      TranslationOverlayLayer(lines: store.overlayLines, glass: false)
-    }
-    .frame(width: store.imageSize.width, height: store.imageSize.height)
-    let renderer = ImageRenderer(content: content)
-    renderer.scale = 1
-    return renderer.nsImage
-  }
-
-  private func copyImage() {
-    guard let image = composedImage() else { return }
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.writeObjects([image])
-    onClose()
-  }
-
-  private func saveImage() {
-    guard
-      let image = composedImage(),
-      let tiff = image.tiffRepresentation,
-      let rep = NSBitmapImageRep(data: tiff),
-      let png = rep.representation(using: .png, properties: [:])
-    else { return }
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-    let panel = NSSavePanel()
-    panel.allowedContentTypes = [.png]
-    panel.nameFieldStringValue = "SwiftyCrow-\(formatter.string(from: Date())).png"
-    if panel.runModal() == .OK, let url = panel.url {
-      try? png.write(to: url)
-      onClose()
-    }
-  }
-
-  private func copyOriginal() {
-    let text = store.overlayLines.map(\.sourceText).joined(separator: "\n")
-    guard !text.isEmpty else { return }
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(text, forType: .string)
-    onClose()
-  }
-
-  private func copyTranslation() {
-    let text = store.overlayLines.compactMap(\.translated).joined(separator: "\n")
-    guard !text.isEmpty else { return }
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(text, forType: .string)
-    onClose()
-  }
-
-  // MARK: Key handling
-
   // Match the customizable shortcuts locally; they aren't registered globally,
   // so they only fire while this window has focus.
   private func installMonitor() {
     guard keyMonitor == nil else { return }
     keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-      // Key events are delivered on the main thread; the read APIs and our
-      // actions are main-actor isolated.
       MainActor.assumeIsolated {
         if event.keyCode == 53 { // Escape
           onClose()
           return nil
         }
-        if matches(event, .regionSave) { saveImage(); return nil }
-        if matches(event, .regionCopyImage) { copyImage(); return nil }
-        if matches(event, .regionCopyOriginal) { copyOriginal(); return nil }
-        if matches(event, .regionCopyTranslation) { copyTranslation(); return nil }
+        if matches(event, .regionSave) { store.send(.saveRequested); return nil }
+        if matches(event, .regionCopyImage) { store.send(.copyImageRequested); return nil }
+        if matches(event, .regionCopyOriginal) { store.send(.copyOriginalRequested); return nil }
+        if matches(event, .regionCopyTranslation) { store.send(.copyTranslationRequested); return nil }
         return event
       }
     }
-  }
-
-  private func matches(_ event: NSEvent, _ name: KeyboardShortcuts.Name) -> Bool {
-    guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
-    let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
-    return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
   }
 
   private func removeMonitor() {
@@ -211,5 +151,11 @@ struct RegionResultView: View {
       NSEvent.removeMonitor(keyMonitor)
       self.keyMonitor = nil
     }
+  }
+
+  private func matches(_ event: NSEvent, _ name: KeyboardShortcuts.Name) -> Bool {
+    guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
+    let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+    return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
   }
 }
