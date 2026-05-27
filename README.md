@@ -38,7 +38,11 @@ launch. Persist it in your shell profile or in `~/.mise.local.toml`:
 ```toml
 [env]
 TUIST_DEVELOPMENT_TEAM = "YOUR_TEAM_ID"
+SPARKLE_PUBLIC_ED_KEY  = "YOUR_SPARKLE_PUBLIC_KEY"   # see Releasing
 ```
+
+`SPARKLE_PUBLIC_ED_KEY` is baked into `Info.plist` at generate time so the
+app can verify update signatures. For local debug builds it can be empty.
 
 On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app.
 
@@ -90,6 +94,66 @@ height = 280.0
 - **KeyboardShortcuts** by sindresorhus for global hotkeys
 - **Apple Vision** for OCR, **Apple Translation** for translation, **ScreenCaptureKit** for capture
 - Source style enforced by the [Airbnb SwiftFormat](https://github.com/airbnb/swift) configuration in `.swiftformat`
+
+## Releasing
+
+Updates ship through [Sparkle](https://sparkle-project.org). One-time setup:
+
+```sh
+# Generate the EdDSA key pair (private key is stored in your Keychain)
+SPARKLE_BIN=$(find Tuist/.build -path '*/Sparkle/bin' -type d | head -1)
+"$SPARKLE_BIN/generate_keys"                       # prints the PUBLIC key
+"$SPARKLE_BIN/generate_keys" -x sparkle_private.key # export PRIVATE key for CI
+```
+
+Add these GitHub Action secrets:
+
+| Secret | Purpose |
+|---|---|
+| `DEVELOPMENT_TEAM` | Apple Developer Team ID |
+| `SPARKLE_PUBLIC_ED_KEY` | Sparkle public key (also in your local env) |
+| `SPARKLE_PRIVATE_ED_KEY` | Sparkle private key (from `-x` export) |
+| `DEVELOPER_ID_P12_BASE64` / `DEVELOPER_ID_P12_PASSWORD` | Developer ID Application cert (`base64 cert.p12`) |
+| `KEYCHAIN_PASSWORD` | scratch keychain password for CI |
+| `AC_API_KEY_ID` / `AC_API_ISSUER_ID` / `AC_API_KEY_P8` | App Store Connect API key for `notarytool` |
+
+Then cut a release by pushing a tag — `.github/workflows/release.yml` builds,
+signs, notarizes, packages a DMG, signs it for Sparkle, regenerates
+`appcast.xml`, publishes a GitHub Release, and deploys the appcast to GitHub
+Pages (`SUFeedURL`):
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+## Install via Homebrew
+
+Once a release exists, distribute through a Homebrew tap. Create
+`PangMo5/homebrew-tap` with `Casks/swiftycrow.rb`:
+
+```ruby
+cask "swiftycrow" do
+  version "1.0.0"
+  sha256 "<shasum -a 256 SwiftyCrow-1.0.0.dmg>"
+  url "https://github.com/PangMo5/SwiftyCrow/releases/download/v#{version}/SwiftyCrow-#{version}.dmg"
+  name "SwiftyCrow"
+  desc "On-screen translator for macOS"
+  homepage "https://github.com/PangMo5/SwiftyCrow"
+  depends_on macos: ">= :tahoe"
+  app "SwiftyCrow.app"
+  zap trash: ["~/.config/SwiftyCrow"]
+end
+```
+
+Users then install with:
+
+```sh
+brew install --cask PangMo5/tap/swiftycrow
+```
+
+Sparkle handles updates after the first install, so the cask only needs a
+version bump per release (or `livecheck` against GitHub releases).
 
 ## License
 

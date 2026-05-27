@@ -1,0 +1,144 @@
+name: Release
+
+# Push a tag like `v1.2.0` to cut a release: builds, signs, notarizes,
+# packages a DMG, signs it for Sparkle, regenerates appcast.xml, publishes a
+# GitHub Release, and updates the appcast on GitHub Pages.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-26
+    env:
+      TUIST_DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+      SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: jdx/mise-action@v2
+
+      - name: Import Developer ID certificate
+        env:
+          CERT_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/productsign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+
+      - name: Generate Xcode project
+        run: |
+          tuist install
+          tuist generate --no-open
+
+      - name: Archive (Developer ID, Release)
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -workspace SwiftyCrow.xcworkspace \
+            -scheme SwiftyCrow \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$RUNNER_TEMP/SwiftyCrow.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TUIST_DEVELOPMENT_TEAM" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime"
+
+      - name: Export app
+        run: |
+          set -euo pipefail
+          cp -R "$RUNNER_TEMP/SwiftyCrow.xcarchive/Products/Applications/SwiftyCrow.app" "$RUNNER_TEMP/SwiftyCrow.app"
+
+      - name: Create DMG
+        run: |
+          set -euo pipefail
+          brew install create-dmg
+          create-dmg \
+            --volname "SwiftyCrow" \
+            --app-drop-link 420 180 \
+            --window-size 600 360 \
+            "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
+            "$RUNNER_TEMP/SwiftyCrow.app"
+
+      - name: Notarize + staple
+        env:
+          AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
+          AC_API_ISSUER_ID: ${{ secrets.AC_API_ISSUER_ID }}
+          AC_API_KEY_P8: ${{ secrets.AC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          echo "$AC_API_KEY_P8" > "$RUNNER_TEMP/ac_api_key.p8"
+          xcrun notarytool submit "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
+            --key "$RUNNER_TEMP/ac_api_key.p8" \
+            --key-id "$AC_API_KEY_ID" \
+            --issuer "$AC_API_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+
+      - name: Sign for Sparkle + build appcast
+        env:
+          SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+        run: |
+          set -euo pipefail
+          SPARKLE_BIN="$(find Tuist/.build -path '*/Sparkle/bin' -type d | head -1)"
+          mkdir -p "$RUNNER_TEMP/release"
+          cp "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" "$RUNNER_TEMP/release/"
+          echo "$SPARKLE_PRIVATE_ED_KEY" > "$RUNNER_TEMP/sparkle_ed_private.key"
+          # generate_appcast signs every archive in the folder and emits appcast.xml
+          "$SPARKLE_BIN/generate_appcast" \
+            --ed-key-file "$RUNNER_TEMP/sparkle_ed_private.key" \
+            --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/" \
+            "$RUNNER_TEMP/release"
+
+      - name: Publish GitHub Release
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Publish appcast to GitHub Pages
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/site"
+          cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy-pages:
+    needs: release
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
