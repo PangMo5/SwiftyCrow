@@ -32,5 +32,6 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.7.4"),
     .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", branch: "main"),
     .package(url: "https://github.com/mattt/swift-toml", from: "2.0.0"),
+    .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.2"),
   ]
 )

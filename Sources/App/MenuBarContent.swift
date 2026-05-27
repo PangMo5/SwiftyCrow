@@ -19,6 +19,16 @@ struct MenuBarContent: View {
         }
         .keyboardShortcut(",", modifiers: .command)
 
+        Button("Check for Updates…") {
+          updater.checkForUpdates()
+        }
+        .disabled(!canCheckForUpdates)
+        .task {
+          for await value in updater.canCheckForUpdates() {
+            canCheckForUpdates = value
+          }
+        }
+
         Spacer()
 
         Button("Quit") {
@@ -34,6 +44,10 @@ struct MenuBarContent: View {
 
   // MARK: Private
 
+  @State private var canCheckForUpdates = false
+
   @Environment(\.openSettings) private var openSettings
+
+  @Dependency(\.updater) private var updater
 
 }

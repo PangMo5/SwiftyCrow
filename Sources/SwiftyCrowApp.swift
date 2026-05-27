@@ -36,9 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   // MARK: Internal
 
   func applicationDidFinishLaunching(_: Notification) {
-    // Touch the singleton so it starts mirroring settings even before the
-    // menu bar popover opens.
-    _ = OverlayWindowController.shared
+    // Start Sparkle's background check schedule by reading the dependency.
+    _ = updater
 
     // Run the keyboard-shortcut listener for the entire app lifetime.
     observationTasks.append(
@@ -52,11 +51,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     observationTasks.append(
       Task { @MainActor in
         for await _ in overlayStateStream() {
-          syncOverlay()
+          await syncOverlay()
         }
       }
     )
-    syncOverlay()
+    observationTasks.append(Task { @MainActor in await syncOverlay() })
   }
 
   func applicationWillTerminate(_: Notification) {
@@ -64,6 +63,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   // MARK: Private
+
+  @Dependency(\.overlay) private var overlay
+  @Dependency(\.updater) private var updater
 
   private var observationTasks = [Task<Void, Never>]()
 
@@ -85,38 +87,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
 
-  private func snapshot() -> OverlaySnapshot {
+  private func snapshot() -> OverlayRenderState {
     let capture = appStore.capture
     let settings = appStore.settings
-    return OverlaySnapshot(
+    return OverlayRenderState(
       lines: capture.overlayLines,
+      isVisible: settings.overlayEnabled,
+      hideOnHover: settings.overlayHideOnHover,
       isTranslating: capture.isTranslating,
-      isLive: capture.isLive,
-      overlayEnabled: settings.overlayEnabled,
-      overlayHideOnHover: settings.overlayHideOnHover
+      isLive: capture.isLive
     )
   }
 
-  private func syncOverlay() {
-    let snap = snapshot()
-    OverlayWindowController.shared.update(
-      lines: snap.lines,
-      isVisible: snap.overlayEnabled,
-      hideOnHover: snap.overlayHideOnHover,
-      isTranslating: snap.isTranslating,
-      isLive: snap.isLive
-    )
-    let excluded = OverlayWindowController.shared.windowID.map { [$0] } ?? []
+  private func syncOverlay() async {
+    await overlay.render(snapshot())
+    let excluded = await overlay.windowID().map { [$0] } ?? []
     appStore.send(.capture(.setExcludedWindowIDs(excluded)))
   }
-}
-
-// MARK: - OverlaySnapshot
-
-private struct OverlaySnapshot: Equatable {
-  var lines: [CaptureFeature.OverlayLine]
-  var isTranslating: Bool
-  var isLive: Bool
-  var overlayEnabled: Bool
-  var overlayHideOnHover: Bool
 }

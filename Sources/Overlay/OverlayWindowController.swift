@@ -9,8 +9,6 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
   // MARK: Internal
 
-  static let shared = OverlayWindowController()
-
   var windowID: CGWindowID? {
     guard let window else { return nil }
     return CGWindowID(window.windowNumber)
@@ -86,7 +84,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingInteractionReset = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .milliseconds(150))
       guard !Task.isCancelled, let self else { return }
-      self.model.isInteracting = false
+      model.isInteracting = false
     }
   }
 
