@@ -130,8 +130,3 @@ app can verify update signatures. For local debug builds it can be empty.
 [Mozilla Public License 2.0](LICENSE). Originally MIT (2021); relicensed to MPL-2.0 in 2026.
 
 MPL-2.0 is file-level copyleft: modifications to existing source files must remain under MPL-2.0, but you can add new files under any compatible license. App Store distribution is supported.
-
-## Credits
-
-### App Icon
-- Rendered with ChatGPT Image, 2026
