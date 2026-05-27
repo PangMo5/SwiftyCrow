@@ -72,3 +72,11 @@ Tuist/.build
 buildServer.json
 .codanna/index/tantivy
 .mise.local.toml
+
+### Secrets / signing material ###
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+*.certSigningRequest
