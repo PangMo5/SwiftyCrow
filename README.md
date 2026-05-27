@@ -6,13 +6,13 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 
 ## Features
 
-- **Menu bar agent** (`LSUIElement = true`) — no Dock icon; click the menu bar item for the popover and `⌘,` for Settings
-- **Region capture** — drag to select any area of the screen; it's OCR'd and translated, then shown in a borderless preview window with each line's box **blurred** and its translation drawn on top. `⌘S` saves a PNG, `⌘C` copies the image, `⌘O`/`⌘T` copy the original/translated text
-- **Live in-place overlay** — a transparent, borderless floating panel you drag/resize over text; **Live mode** re-captures on a configurable interval (pulsing `LIVE` badge) and replaces each recognized line with its translation right where it sits (Apple Translate camera mode style)
-- **Per-line translation cache** keyed by `(source, target, strategy, text)` — repeat captures of the same screen skip the translation call entirely
-- **Dynamic language list** loaded from `LanguageAvailability().supportedLanguages` ∩ `RecognizeTextRequest.supportedRecognitionLanguages` — pick the source/target that match the text on screen
-- **Customizable shortcuts** — Capture Region / Toggle Live / Toggle Overlay (global) plus the result-window Save/Copy keys, all set in Settings → Shortcuts
-- **Single TOML config** at `$XDG_CONFIG_HOME/SwiftyCrow/config.toml` (or `~/.config/SwiftyCrow/config.toml`), two-way synced with the in-app Settings UI
+- **Lives in the menu bar** — no Dock icon; open the popover from the menu bar item, `⌘,` for Settings
+- **Region capture** — drag to select any part of the screen; it's translated and shown in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original / translated text
+- **Live overlay** — a floating window you drag and resize over text; flip on **Live mode** to keep translating in place as the content changes
+- **Instant re-captures** — translating the same screen again is cached
+- **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text
+- **Customizable shortcuts** — capture, Live mode, overlay, and the save/copy keys, all in Settings → Shortcuts
+- **Editable config file** — a plain-text file you can hand-edit, kept in sync with the in-app Settings
 
 ## Install
 
