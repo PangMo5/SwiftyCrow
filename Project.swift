@@ -2,6 +2,11 @@ import ProjectDescription
 
 let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
+// Single source of truth for the marketing version. The release workflow
+// verifies the pushed tag matches this before building.
+let appVersion = "2.0.0"
+// Build number is injected by CI (github.run_number); 1 for local builds.
+let buildNumber = Environment.buildNumber.getString(default: "1")
 
 let project = Project(
   name: "SwiftyCrow",
@@ -13,6 +18,8 @@ let project = Project(
       bundleId: "io.tuist.SwiftyCrow",
       deploymentTargets: .macOS("26.0"),
       infoPlist: .extendingDefault(with: [
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
         "LSUIElement": true,
         "NSScreenCaptureDescription": "SwiftyCrow captures the region under its overlay window to read text.",
         "SUFeedURL": "https://pangmo5.github.io/SwiftyCrow/appcast.xml",
@@ -35,6 +42,8 @@ let project = Project(
         "CODE_SIGN_IDENTITY": "Apple Development",
         "CODE_SIGNING_REQUIRED": "YES",
         "SPARKLE_PUBLIC_ED_KEY": SettingValue(stringLiteral: sparklePublicEDKey),
+        "MARKETING_VERSION": SettingValue(stringLiteral: appVersion),
+        "CURRENT_PROJECT_VERSION": SettingValue(stringLiteral: buildNumber),
       ])
     ),
   ]

@@ -28,7 +28,15 @@ jobs:
 
       - name: Resolve version
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          APP_VERSION="$(grep -E '^let appVersion' Project.swift | sed -E 's/.*"([^"]+)".*/\1/')"
+          if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
+            echo "::error::Tag ($TAG_VERSION) does not match Project.swift appVersion ($APP_VERSION). Bump appVersion and retag." >&2
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
 
       - uses: jdx/mise-action@v2
 
@@ -50,6 +58,8 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
 
       - name: Generate Xcode project
+        env:
+          TUIST_BUILD_NUMBER: ${{ github.run_number }}
         run: |
           tuist install
           tuist generate --no-open
@@ -156,6 +166,31 @@ jobs:
             --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Update Homebrew cask
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          DMG="$RUNNER_TEMP/SwiftyCrow-${VERSION}.dmg"
+          SHA="$(shasum -a 256 "$DMG" | awk '{print $1}')"
+          git clone --depth 1 \
+            "https://x-access-token:${TAP_TOKEN}@github.com/${{ github.repository_owner }}/homebrew-tap.git" \
+            "$RUNNER_TEMP/tap"
+          CASK="$RUNNER_TEMP/tap/Casks/swiftycrow.rb"
+          sed -i.bak -E "s|^  version \".*\"|  version \"${VERSION}\"|" "$CASK"
+          sed -i.bak -E "s|^  sha256 \".*\"|  sha256 \"${SHA}\"|" "$CASK"
+          rm -f "${CASK}.bak"
+          cd "$RUNNER_TEMP/tap"
+          if git diff --quiet; then
+            echo "Cask already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "swiftycrow ${VERSION}"
+          git push
 
       - name: Publish appcast to GitHub Pages
         run: |
