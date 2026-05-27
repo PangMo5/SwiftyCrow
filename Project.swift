@@ -15,7 +15,7 @@ let project = Project(
       name: "SwiftyCrow",
       destinations: .macOS,
       product: .app,
-      bundleId: "io.tuist.SwiftyCrow",
+      bundleId: "dev.PangMo5.SwiftyCrow",
       deploymentTargets: .macOS("26.0"),
       infoPlist: .extendingDefault(with: [
         "CFBundleShortVersionString": "$(MARKETING_VERSION)",

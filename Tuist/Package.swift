@@ -5,9 +5,6 @@ import PackageDescription
   import ProjectDescription
 
   let packageSettings = PackageSettings(
-    // Customize the product types for specific package product
-    // Default is .staticFramework
-    // productTypes: ["Alamofire": .framework,]
     productTypes: [:],
     baseSettings: .settings(base: [
       "STRINGS_FILE_OUTPUT_ENCODING": "UTF-8",
@@ -28,9 +25,6 @@ import PackageDescription
 let package = Package(
   name: "SwiftyCrow",
   dependencies: [
-    // Add your own dependencies here:
-    // .package(url: "https://github.com/Alamofire/Alamofire", from: "5.0.0"),
-    // You can read more about dependencies here: https://docs.tuist.io/documentation/tuist/dependencies
     .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.25.5"),
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.7.4"),
     .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", branch: "main"),
