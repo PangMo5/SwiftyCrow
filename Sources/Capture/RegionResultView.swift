@@ -191,18 +191,19 @@ struct RegionResultView: View {
           onClose()
           return nil
         }
-        let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
-        func matches(_ name: KeyboardShortcuts.Name) -> Bool {
-          guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
-          return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
-        }
-        if matches(.regionSave) { saveImage(); return nil }
-        if matches(.regionCopyImage) { copyImage(); return nil }
-        if matches(.regionCopyOriginal) { copyOriginal(); return nil }
-        if matches(.regionCopyTranslation) { copyTranslation(); return nil }
+        if matches(event, .regionSave) { saveImage(); return nil }
+        if matches(event, .regionCopyImage) { copyImage(); return nil }
+        if matches(event, .regionCopyOriginal) { copyOriginal(); return nil }
+        if matches(event, .regionCopyTranslation) { copyTranslation(); return nil }
         return event
       }
     }
+  }
+
+  private func matches(_ event: NSEvent, _ name: KeyboardShortcuts.Name) -> Bool {
+    guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
+    let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+    return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
   }
 
   private func removeMonitor() {
