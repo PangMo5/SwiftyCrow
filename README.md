@@ -14,37 +14,15 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 - **Global keyboard shortcuts**: Capture Once, Toggle Live Mode, Toggle Overlay (bound from Settings → Shortcuts)
 - **Single TOML config** at `$XDG_CONFIG_HOME/SwiftyCrow/config.toml` (or `~/.config/SwiftyCrow/config.toml`), two-way synced with the in-app Settings UI
 
-## Requirements
+## Install
 
-- macOS 26+
-- Xcode 26+ / Swift 6.3+
-- [mise](https://mise.jdx.dev) (manages Tuist + SwiftFormat versions via `.mise.toml`)
-
-## Getting started
+Requires **macOS 26+**. Install via the Homebrew tap:
 
 ```sh
-export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID   # your Apple Developer Team ID
-mise install               # installs Tuist + SwiftFormat
-tuist install              # resolves SPM dependencies
-tuist generate             # generates the Xcode workspace
-open SwiftyCrow.xcworkspace
+brew install --cask PangMo5/tap/swiftycrow
 ```
 
-`TUIST_DEVELOPMENT_TEAM` makes the Debug build sign with the same Apple
-Development certificate every time. Skip it and macOS will treat each build
-as a new binary and re-prompt for Screen Recording permission on every
-launch. Persist it in your shell profile or in `~/.mise.local.toml`:
-
-```toml
-[env]
-TUIST_DEVELOPMENT_TEAM = "YOUR_TEAM_ID"
-SPARKLE_PUBLIC_ED_KEY  = "YOUR_SPARKLE_PUBLIC_KEY"   # see Releasing
-```
-
-`SPARKLE_PUBLIC_ED_KEY` is baked into `Info.plist` at generate time so the
-app can verify update signatures. For local debug builds it can be empty.
-
-On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app.
+On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. Sparkle keeps the app up to date afterward.
 
 ## Usage
 
@@ -86,16 +64,49 @@ width = 520.0
 height = 280.0
 ```
 
-## Tech stack
+## Development
+
+### Requirements
+
+- macOS 26+
+- Xcode 26+ / Swift 6.3+
+- [mise](https://mise.jdx.dev) (manages Tuist + SwiftFormat versions via `.mise.toml`)
+
+### Building from source
+
+```sh
+export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID   # your Apple Developer Team ID
+mise install               # installs Tuist + SwiftFormat
+tuist install              # resolves SPM dependencies
+tuist generate             # generates the Xcode workspace
+open SwiftyCrow.xcworkspace
+```
+
+`TUIST_DEVELOPMENT_TEAM` makes the Debug build sign with the same Apple
+Development certificate every time. Skip it and macOS will treat each build
+as a new binary and re-prompt for Screen Recording permission on every
+launch. Persist it in your shell profile or in `~/.mise.local.toml`:
+
+```toml
+[env]
+TUIST_DEVELOPMENT_TEAM = "YOUR_TEAM_ID"
+SPARKLE_PUBLIC_ED_KEY  = "YOUR_SPARKLE_PUBLIC_KEY"   # see Releasing
+```
+
+`SPARKLE_PUBLIC_ED_KEY` is baked into `Info.plist` at generate time so the
+app can verify update signatures. For local debug builds it can be empty.
+
+### Tech stack
 
 - **Tuist** generated workspace (`Project.swift`, `Tuist/Package.swift`)
-- **TCA** (`swift-composable-architecture`) for app + capture state
+- **TCA** (`swift-composable-architecture`) for app + capture state; dependencies wired with `@DependencyClient`
 - **swift-sharing** with a `fileStorage` strategy bridged to **swift-toml**
 - **KeyboardShortcuts** by sindresorhus for global hotkeys
+- **Sparkle** for in-app updates
 - **Apple Vision** for OCR, **Apple Translation** for translation, **ScreenCaptureKit** for capture
 - Source style enforced by the [Airbnb SwiftFormat](https://github.com/airbnb/swift) configuration in `.swiftformat`
 
-## Releasing
+### Releasing
 
 Updates ship through [Sparkle](https://sparkle-project.org). One-time setup:
 
@@ -127,10 +138,8 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-## Install via Homebrew
-
-Once a release exists, distribute through a Homebrew tap. Create
-`PangMo5/homebrew-tap` with `Casks/swiftycrow.rb`:
+The Homebrew cask (`PangMo5/homebrew-tap`, `Casks/swiftycrow.rb`) only needs a
+version bump per release since Sparkle handles updates after install:
 
 ```ruby
 cask "swiftycrow" do
@@ -145,15 +154,6 @@ cask "swiftycrow" do
   zap trash: ["~/.config/SwiftyCrow"]
 end
 ```
-
-Users then install with:
-
-```sh
-brew install --cask PangMo5/tap/swiftycrow
-```
-
-Sparkle handles updates after the first install, so the cask only needs a
-version bump per release (or `livecheck` against GitHub releases).
 
 ## License
 
