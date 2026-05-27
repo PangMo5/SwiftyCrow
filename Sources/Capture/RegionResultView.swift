@@ -184,20 +184,24 @@ struct RegionResultView: View {
   private func installMonitor() {
     guard keyMonitor == nil else { return }
     keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-      if event.keyCode == 53 { // Escape
-        onClose()
-        return nil
+      // Key events are delivered on the main thread; the read APIs and our
+      // actions are main-actor isolated.
+      MainActor.assumeIsolated {
+        if event.keyCode == 53 { // Escape
+          onClose()
+          return nil
+        }
+        let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+        func matches(_ name: KeyboardShortcuts.Name) -> Bool {
+          guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
+          return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
+        }
+        if matches(.regionSave) { saveImage(); return nil }
+        if matches(.regionCopyImage) { copyImage(); return nil }
+        if matches(.regionCopyOriginal) { copyOriginal(); return nil }
+        if matches(.regionCopyTranslation) { copyTranslation(); return nil }
+        return event
       }
-      let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
-      func matches(_ name: KeyboardShortcuts.Name) -> Bool {
-        guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
-        return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
-      }
-      if matches(.regionSave) { saveImage(); return nil }
-      if matches(.regionCopyImage) { copyImage(); return nil }
-      if matches(.regionCopyOriginal) { copyOriginal(); return nil }
-      if matches(.regionCopyTranslation) { copyTranslation(); return nil }
-      return event
     }
   }
 
