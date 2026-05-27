@@ -91,8 +91,8 @@ launch. Persist it in your shell profile or in `~/.mise.local.toml`:
 
 ```toml
 [env]
-TUIST_DEVELOPMENT_TEAM = "YOUR_TEAM_ID"
-SPARKLE_PUBLIC_ED_KEY  = "YOUR_SPARKLE_PUBLIC_KEY"
+TUIST_DEVELOPMENT_TEAM     = "YOUR_TEAM_ID"
+TUIST_SPARKLE_PUBLIC_ED_KEY = "YOUR_SPARKLE_PUBLIC_KEY"
 ```
 
 `SPARKLE_PUBLIC_ED_KEY` is baked into `Info.plist` at generate time so the

@@ -22,7 +22,7 @@ jobs:
     runs-on: macos-26
     env:
       TUIST_DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
-      SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+      TUIST_SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
     steps:
       - uses: actions/checkout@v4
 
