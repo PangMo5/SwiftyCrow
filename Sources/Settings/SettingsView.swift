@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import KeyboardShortcuts
 import Sharing
 import SwiftUI
@@ -28,6 +29,10 @@ struct SettingsView: View {
       }
       Tab("Shortcuts", systemImage: "command") {
         Form { ShortcutsSection() }
+          .formStyle(.grouped)
+      }
+      Tab("Updates", systemImage: "arrow.down.circle") {
+        Form { UpdatesSection() }
           .formStyle(.grouped)
       }
     }
@@ -198,4 +203,47 @@ private struct ShortcutsSection: View {
         .foregroundStyle(.secondary)
     }
   }
+}
+
+// MARK: - UpdatesSection
+
+private struct UpdatesSection: View {
+
+  // MARK: Internal
+
+  var body: some View {
+    Section {
+      Toggle("Automatically check for updates", isOn: Binding($settings.automaticallyChecksForUpdates))
+      Picker("Check", selection: Binding($settings.updateCheckInterval)) {
+        ForEach(UpdateCheckInterval.allCases) { interval in
+          Text(interval.displayName).tag(interval)
+        }
+      }
+      .disabled(!settings.automaticallyChecksForUpdates)
+      Button("Check for Updates Now") {
+        updater.checkForUpdates()
+      }
+      .disabled(!canCheckForUpdates)
+      .task {
+        for await value in updater.canCheckForUpdates() {
+          canCheckForUpdates = value
+        }
+      }
+    } header: {
+      Text("Software Update")
+    } footer: {
+      Text("SwiftyCrow checks in the background and notifies you when a new version is available.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  // MARK: Private
+
+  @State private var canCheckForUpdates = false
+
+  @Dependency(\.updater) private var updater
+
+  @Shared(.settings) private var settings
+
 }

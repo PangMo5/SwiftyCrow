@@ -10,6 +10,8 @@ struct UpdaterClient {
   var canCheckForUpdates: @Sendable () -> AsyncStream<Bool> = { .finished }
   /// Triggers a user-initiated update check.
   var checkForUpdates: @Sendable () -> Void
+  /// Applies the scheduled-check preferences to the underlying updater.
+  var configure: @Sendable (_ automaticallyChecks: Bool, _ interval: TimeInterval) -> Void
 }
 
 // MARK: DependencyKey
@@ -36,6 +38,12 @@ extension UpdaterClient: DependencyKey {
       },
       checkForUpdates: {
         Task { @MainActor in updater.checkForUpdates() }
+      },
+      configure: { automaticallyChecks, interval in
+        Task { @MainActor in
+          updater.automaticallyChecksForUpdates = automaticallyChecks
+          updater.updateCheckInterval = interval
+        }
       }
     )
   }()

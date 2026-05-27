@@ -11,6 +11,8 @@ struct AppSettings: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let defaults = AppSettings()
+    automaticallyChecksForUpdates = try container
+      .decodeIfPresent(Bool.self, forKey: .automaticallyChecksForUpdates) ?? defaults.automaticallyChecksForUpdates
     captureInterval = try container.decodeIfPresent(Double.self, forKey: .captureInterval) ?? defaults.captureInterval
     ocrMode = try container.decodeIfPresent(OCRMode.self, forKey: .ocrMode) ?? defaults.ocrMode
     overlayEnabled = try container.decodeIfPresent(Bool.self, forKey: .overlayEnabled) ?? defaults.overlayEnabled
@@ -20,10 +22,13 @@ struct AppSettings: Codable, Equatable, Sendable {
     targetLanguage = try container.decodeIfPresent(Language.self, forKey: .targetLanguage) ?? defaults.targetLanguage
     translationStrategy = try container
       .decodeIfPresent(TranslationStrategy.self, forKey: .translationStrategy) ?? defaults.translationStrategy
+    updateCheckInterval = try container
+      .decodeIfPresent(UpdateCheckInterval.self, forKey: .updateCheckInterval) ?? defaults.updateCheckInterval
   }
 
   // MARK: Internal
 
+  var automaticallyChecksForUpdates = true
   var captureInterval = 0.8
   var ocrMode = OCRMode.text
   var overlayEnabled = true
@@ -32,7 +37,36 @@ struct AppSettings: Codable, Equatable, Sendable {
   var sourceLanguage = Language.auto
   var targetLanguage = Language.systemPreferred()
   var translationStrategy = TranslationStrategy.lowLatency
+  var updateCheckInterval = UpdateCheckInterval.daily
 
+}
+
+// MARK: - UpdateCheckInterval
+
+enum UpdateCheckInterval: String, Codable, Equatable, Sendable, CaseIterable, Identifiable {
+  case hourly
+  case daily
+  case weekly
+
+  var id: String {
+    rawValue
+  }
+
+  var seconds: TimeInterval {
+    switch self {
+    case .hourly: 3600
+    case .daily: 86400
+    case .weekly: 604_800
+    }
+  }
+
+  var displayName: String {
+    switch self {
+    case .hourly: "Every hour"
+    case .daily: "Every day"
+    case .weekly: "Every week"
+    }
+  }
 }
 
 // MARK: - OCRMode
