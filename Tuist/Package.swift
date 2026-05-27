@@ -17,6 +17,9 @@ import PackageDescription
         "SWIFT_DEFAULT_ACTOR_ISOLATION": "MainActor",
         "SWIFT_UPCOMING_FEATURE_NONISOLATED_NONSENDING_BY_DEFAULT": "YES",
         "SWIFT_UPCOMING_FEATURE_INFER_ISOLATED_CONFORMANCES": "YES",
+        // The Xcode 26 SIL optimizer crashes inlining KeyboardShortcuts at
+        // -O (Release). Disable optimization for just this module.
+        "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
       ],
     ]
   )
