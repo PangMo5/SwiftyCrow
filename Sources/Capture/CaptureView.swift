@@ -11,8 +11,8 @@ struct CaptureView: View {
     GlassEffectContainer(spacing: 12) {
       VStack(alignment: .leading, spacing: 12) {
         HStack(spacing: 12) {
-          Button("Capture Once") {
-            store.send(.captureOnceRequested)
+          Button("Capture Region") {
+            store.send(.selectRegionRequested)
           }
           .buttonStyle(.glassProminent)
           .keyboardShortcut(.defaultAction)

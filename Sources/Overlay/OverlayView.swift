@@ -7,7 +7,7 @@ struct OverlayView: View {
 
   // MARK: Internal
 
-  let lines: [CaptureFeature.OverlayLine]
+  let lines: [OverlayLine]
   let isTranslating: Bool
   let isLive: Bool
 
@@ -46,37 +46,7 @@ struct OverlayView: View {
       .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
       .padding(12)
     } else {
-      perLineTranslation
-    }
-  }
-
-  /// Draws each translated line at its source bounding box, sized to that
-  /// box's height. Each line gets its own Liquid Glass chip so the panel
-  /// itself stays fully transparent.
-  private var perLineTranslation: some View {
-    GeometryReader { proxy in
-      ForEach(lines) { line in
-        let box = line.box
-        let width = max(1, box.width * proxy.size.width)
-        let height = max(1, box.height * proxy.size.height)
-        let fontSize = max(8, min(96, height * 0.85))
-
-        Text(line.translated ?? line.sourceText)
-          .font(.system(size: fontSize, weight: .semibold))
-          .foregroundStyle(line.translated == nil ? .secondary : .primary)
-          .multilineTextAlignment(.leading)
-          .lineLimit(1)
-          .truncationMode(.tail)
-          .minimumScaleFactor(0.4)
-          .padding(.horizontal, 6)
-          .padding(.vertical, 2)
-          .frame(width: width + 12, height: height + 4, alignment: .leading)
-          .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-          .position(
-            x: box.midX * proxy.size.width,
-            y: box.midY * proxy.size.height
-          )
-      }
+      TranslationOverlayLayer(lines: lines)
     }
   }
 }
@@ -130,8 +100,8 @@ private struct EmptyOverlayGuide: View {
       VStack(alignment: .leading, spacing: 4) {
         GuideRow(
           icon: "camera.viewfinder",
-          title: "Capture once",
-          shortcut: shortcutDescription(for: .captureOnce)
+          title: "Capture region",
+          shortcut: shortcutDescription(for: .selectRegion)
         )
         GuideRow(
           icon: "play.fill",

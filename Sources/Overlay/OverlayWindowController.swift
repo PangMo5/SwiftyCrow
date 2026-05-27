@@ -15,7 +15,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   func update(
-    lines: [CaptureFeature.OverlayLine],
+    lines: [OverlayLine],
     isVisible: Bool,
     hideOnHover: Bool,
     isTranslating: Bool,
@@ -198,7 +198,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 // MARK: - OverlayWindowModel
 
 private final class OverlayWindowModel: ObservableObject {
-  @Published var lines = [CaptureFeature.OverlayLine]()
+  @Published var lines = [OverlayLine]()
   @Published var hideOnHover = false
   @Published var isInteracting = false
   @Published var isLive = false

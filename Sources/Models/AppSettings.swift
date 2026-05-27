@@ -95,7 +95,7 @@ struct RecognitionSettings: Codable, Equatable, Sendable {
 // MARK: - ShortcutSettings
 
 struct ShortcutSettings: Codable, Equatable, Sendable {
-  var captureOnce: HotKey?
+  var selectRegion: HotKey?
   var toggleLive: HotKey?
   var toggleOverlay: HotKey?
 }

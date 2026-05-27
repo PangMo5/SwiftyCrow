@@ -33,8 +33,8 @@ struct AppFeature {
           .run { send in
             for await event in keyboardShortcuts.events() {
               switch event {
-              case .captureOnce:
-                await send(.capture(.captureOnceRequested))
+              case .selectRegion:
+                await send(.capture(.selectRegionRequested))
               case .toggleLive:
                 await send(.capture(.toggleLiveRequested))
               case .toggleOverlay:
@@ -68,9 +68,13 @@ struct AppFeature {
             // config.toml is the source of truth for hotkeys; push it into the
             // registrar on launch and whenever it changes (incl. hand edits).
             for await keys in Observations({
-              (settings.shortcuts.captureOnce, settings.shortcuts.toggleLive, settings.shortcuts.toggleOverlay)
+              (
+                settings.shortcuts.selectRegion,
+                settings.shortcuts.toggleLive,
+                settings.shortcuts.toggleOverlay
+              )
             }) {
-              keyboardShortcuts.setShortcut(.captureOnce, keys.0)
+              keyboardShortcuts.setShortcut(.selectRegion, keys.0)
               keyboardShortcuts.setShortcut(.toggleLive, keys.1)
               keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
             }

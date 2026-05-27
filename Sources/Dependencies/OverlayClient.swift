@@ -5,7 +5,7 @@ import DependenciesMacros
 // MARK: - OverlayRenderState
 
 struct OverlayRenderState: Equatable, Sendable {
-  var lines: [CaptureFeature.OverlayLine]
+  var lines: [OverlayLine]
   var isVisible: Bool
   var hideOnHover: Bool
   var isTranslating: Bool

@@ -193,8 +193,8 @@ private struct ShortcutsSection: View {
 
   var body: some View {
     Section {
-      KeyboardShortcuts.Recorder("Capture once", name: .captureOnce) { shortcut in
-        $settings.withLock { $0.shortcuts.captureOnce = shortcut.map(HotKey.init) }
+      KeyboardShortcuts.Recorder("Capture region", name: .selectRegion) { shortcut in
+        $settings.withLock { $0.shortcuts.selectRegion = shortcut.map(HotKey.init) }
       }
       KeyboardShortcuts.Recorder("Toggle Live Mode", name: .toggleLive) { shortcut in
         $settings.withLock { $0.shortcuts.toggleLive = shortcut.map(HotKey.init) }

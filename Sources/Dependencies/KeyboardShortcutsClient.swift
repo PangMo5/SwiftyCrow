@@ -5,13 +5,13 @@ import KeyboardShortcuts
 // MARK: - KeyboardShortcutEvent
 
 enum KeyboardShortcutEvent: Equatable, CaseIterable {
-  case captureOnce
+  case selectRegion
   case toggleLive
   case toggleOverlay
 
   var name: KeyboardShortcuts.Name {
     switch self {
-    case .captureOnce: .captureOnce
+    case .selectRegion: .selectRegion
     case .toggleLive: .toggleLive
     case .toggleOverlay: .toggleOverlay
     }
@@ -35,8 +35,8 @@ extension KeyboardShortcutsClient: DependencyKey {
     events: {
       AsyncStream { continuation in
         let task = Task { @MainActor in
-          KeyboardShortcuts.onKeyUp(for: .captureOnce) {
-            continuation.yield(.captureOnce)
+          KeyboardShortcuts.onKeyUp(for: .selectRegion) {
+            continuation.yield(.selectRegion)
           }
           KeyboardShortcuts.onKeyUp(for: .toggleLive) {
             continuation.yield(.toggleLive)
@@ -64,7 +64,7 @@ extension DependencyValues {
 }
 
 extension KeyboardShortcuts.Name {
-  static let captureOnce = Self("captureOnce")
+  static let selectRegion = Self("selectRegion")
   static let toggleLive = Self("toggleLive")
   static let toggleOverlay = Self("toggleOverlay")
 }

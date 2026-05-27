@@ -23,16 +23,6 @@ struct CaptureFeature {
     var text: String
   }
 
-  /// A recognized line on the overlay region together with whatever
-  /// translation is currently known. `translated == nil` means the line
-  /// is still in flight.
-  struct OverlayLine: Equatable, Identifiable, Sendable {
-    let id: UUID
-    var box: CGRect
-    var sourceText: String
-    var translated: String?
-  }
-
   @ObservableState
   struct State {
     var excludedWindowIDs = [CGWindowID]()
@@ -48,10 +38,10 @@ struct CaptureFeature {
   }
 
   enum Action {
-    case captureOnceRequested
     case captureResponse(Result<OCRResult, any Error>)
     case clearResults
     case copyTranslationRequested
+    case selectRegionRequested
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
@@ -60,25 +50,24 @@ struct CaptureFeature {
 
   @Dependency(\.continuousClock) var clock
   @Dependency(OCRClient.self) var ocr
+  @Dependency(\.regionResult) var regionResult
+  @Dependency(\.regionSelector) var regionSelector
   @Dependency(ScreenCaptureClient.self) var screenCapture
   @Dependency(TranslationClient.self) var translation
 
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case .captureOnceRequested:
-        guard state.settings.overlay.enabled else { return .none }
-        state.isCapturing = true
-        return captureEffect(
-          settings: state.settings,
-          overlayFrame: state.overlayFrame,
-          excludedWindowIDs: state.excludedWindowIDs
-        )
-
       case .clearResults:
         state.overlayLines = []
         state.isTranslating = false
         return .cancel(id: CancelID.translation)
+
+      case .selectRegionRequested:
+        return .run { _ in
+          guard let rect = await regionSelector.selectRegion() else { return }
+          await regionResult.present(rect)
+        }
 
       case .captureResponse(.failure(let error)):
         state.isCapturing = false
@@ -257,53 +246,18 @@ struct CaptureFeature {
     .cancellable(id: CancelID.translation, cancelInFlight: true)
   }
 
-  private func captureEffect(
-    settings: AppSettings,
-    overlayFrame: OverlayFrame,
-    excludedWindowIDs: [CGWindowID]
-  ) -> Effect<Action> {
-    .run { send in
-      await send(
-        .captureResponse(
-          Result {
-            try await runCapture(settings: settings, overlayFrame: overlayFrame, excludedWindowIDs: excludedWindowIDs)
-          }
-        )
-      )
-    }
-  }
-
   private func runCapture(
     settings: AppSettings,
     overlayFrame: OverlayFrame,
     excludedWindowIDs: [CGWindowID]
   ) async throws -> OCRResult {
     let region = settings.overlay.enabled ? overlayFrame.rect : nil
-    let displayID = screenDisplayID(screenForOverlay(frame: overlayFrame.rect))
     let image = try await screenCapture.captureImage(
       region,
       excludedWindowIDs,
-      displayID,
+      displayID(coveringMostOf: overlayFrame.rect),
       Bundle.main.bundleIdentifier
     )
     return try await ocr.recognizeText(image, settings.languages.source, settings.recognition.mode)
   }
-}
-
-private func screenForOverlay(frame: CGRect) -> NSScreen? {
-  NSScreen.screens
-    .map { screen in
-      let intersection = frame.intersection(screen.frame)
-      return (screen, intersection.width * intersection.height)
-    }
-    .max { $0.1 < $1.1 }?
-    .0
-}
-
-private func screenDisplayID(_ screen: NSScreen?) -> CGDirectDisplayID? {
-  guard
-    let screen,
-    let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
-  else { return nil }
-  return CGDirectDisplayID(truncating: number)
 }
