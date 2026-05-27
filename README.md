@@ -7,12 +7,11 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 ## Features
 
 - **Menu bar agent** (`LSUIElement = true`) — no Dock icon; click the menu bar item for the popover and `⌘,` for Settings
-- **In-place per-line translation** — each OCR line is replaced by its translation right on top of the source, sized to the original line height (Apple Translate camera mode style)
-- **Floating overlay** as a transparent borderless `NSPanel` you can drag, resize, and auto-hide on hover; ⌘C copies the current translation
-- **Live mode** re-captures the overlay region on a configurable interval; **`LIVE` badge** pulses while the loop runs
-- **Per-line translation cache** keyed by `(source, target, strategy, text)` — repeat captures of the same screen skip the network/Apple-Intelligence call entirely
+- **Region capture** — drag to select any area of the screen; it's OCR'd and translated, then shown in a borderless preview window with each line's box **blurred** and its translation drawn on top. `⌘S` saves a PNG, `⌘C` copies the image, `⌘O`/`⌘T` copy the original/translated text
+- **Live in-place overlay** — a transparent, borderless floating panel you drag/resize over text; **Live mode** re-captures on a configurable interval (pulsing `LIVE` badge) and replaces each recognized line with its translation right where it sits (Apple Translate camera mode style)
+- **Per-line translation cache** keyed by `(source, target, strategy, text)` — repeat captures of the same screen skip the translation call entirely
 - **Dynamic language list** loaded from `LanguageAvailability().supportedLanguages` ∩ `RecognizeTextRequest.supportedRecognitionLanguages` — pick the source/target that match the text on screen
-- **Global keyboard shortcuts**: Capture Once, Toggle Live Mode, Toggle Overlay (bound from Settings → Shortcuts)
+- **Customizable shortcuts** — Capture Region / Toggle Live / Toggle Overlay (global) plus the result-window Save/Copy keys, all set in Settings → Shortcuts
 - **Single TOML config** at `$XDG_CONFIG_HOME/SwiftyCrow/config.toml` (or `~/.config/SwiftyCrow/config.toml`), two-way synced with the in-app Settings UI
 
 ## Install
@@ -27,12 +26,11 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 
 ## Usage
 
-1. Click the menu bar icon to open the popover, then pick the **Source** and **Target** languages from Settings (`⌘,`).
-2. Drag / resize the floating overlay to cover the region you want translated.
-3. Press **Capture Once** from the popover or your bound hotkey, or flip **Live** to keep re-capturing.
-4. The translated text appears directly over each recognized line. While the overlay window is focused: `⌘,` opens Settings, `⌘C` copies the joined translation.
+1. Pick the **Source** and **Target** languages in Settings (`⌘,`).
+2. **Capture a region**: trigger **Capture Region** (the popover button or your hotkey), then drag over the text. A floating preview window shows the translation over the screenshot — `⌘S` save, `⌘C` copy image, `⌘O` copy original, `⌘T` copy translation, `Esc` to close.
+3. **Or use the live overlay**: drag/resize the floating overlay over text and flip **Live** to keep translating in place; `⌘C` copies the joined translation.
 
-Shortcuts are bound from Settings → Shortcuts.
+All hotkeys are customizable in Settings → Shortcuts.
 
 ## Configuration
 
@@ -62,7 +60,7 @@ hideOnHover = false
 mode = "text"                       # "text" or "document"
 
 [shortcuts]
-captureOnce = "cmd + shift - c"     # skhd-style; omit a key to leave it unset
+selectRegion = "cmd + shift - c"    # skhd-style; omit a key to leave it unset
 toggleLive = "cmd + shift - l"
 toggleOverlay = "cmd + shift - o"
 
@@ -74,7 +72,7 @@ automaticChecks = true
 checkInterval = "daily"             # "hourly", "daily", or "weekly"
 ```
 
-Window position/size is UI state, so it lives in `~/Library/Application Support/SwiftyCrow/overlay-frame.json`, not here.
+Window position/size is UI state, so it lives in `~/Library/Application Support/SwiftyCrow/overlay-frame.json`, not here. The capture-window Save/Copy keys are stored by macOS (set them in Settings → Shortcuts), also not in this file.
 
 ## Development
 
