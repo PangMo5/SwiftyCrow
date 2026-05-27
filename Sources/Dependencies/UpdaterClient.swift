@@ -1,11 +1,13 @@
 import ComposableArchitecture
+import DependenciesMacros
 import Sparkle
 
 // MARK: - UpdaterClient
 
+@DependencyClient
 struct UpdaterClient {
   /// Emits whether the updater can currently start a check.
-  var canCheckForUpdates: @Sendable () -> AsyncStream<Bool>
+  var canCheckForUpdates: @Sendable () -> AsyncStream<Bool> = { .finished }
   /// Triggers a user-initiated update check.
   var checkForUpdates: @Sendable () -> Void
 }
@@ -32,13 +34,6 @@ extension UpdaterClient: DependencyKey {
       checkForUpdates: { updater.checkForUpdates() }
     )
   }()
-
-  static let testValue = UpdaterClient(
-    canCheckForUpdates: { AsyncStream { $0.yield(false)
-      $0.finish()
-    } },
-    checkForUpdates: { }
-  )
 }
 
 extension DependencyValues {

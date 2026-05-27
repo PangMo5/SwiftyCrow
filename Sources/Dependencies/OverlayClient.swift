@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import CoreGraphics
+import DependenciesMacros
 
 // MARK: - OverlayRenderState
 
@@ -13,8 +14,9 @@ struct OverlayRenderState: Equatable, Sendable {
 
 // MARK: - OverlayClient
 
+@DependencyClient
 struct OverlayClient {
-  var render: @Sendable (OverlayRenderState) async -> Void
+  var render: @Sendable (_ state: OverlayRenderState) async -> Void
   var windowID: @Sendable () async -> CGWindowID?
 }
 
@@ -45,11 +47,6 @@ extension OverlayClient: DependencyKey {
       windowID: { await resolve().windowID }
     )
   }()
-
-  static let testValue = OverlayClient(
-    render: { _ in },
-    windowID: { nil }
-  )
 }
 
 extension DependencyValues {

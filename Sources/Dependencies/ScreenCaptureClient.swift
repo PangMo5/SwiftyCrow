@@ -1,11 +1,13 @@
 import AppKit
 import ComposableArchitecture
 import CoreGraphics
+import DependenciesMacros
 import Foundation
 import ScreenCaptureKit
 
 // MARK: - ScreenCaptureClient
 
+@DependencyClient
 struct ScreenCaptureClient {
   /// Captures a region of a display.
   ///

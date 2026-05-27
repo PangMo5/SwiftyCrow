@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DependenciesMacros
 import KeyboardShortcuts
 
 // MARK: - KeyboardShortcutEvent
@@ -11,8 +12,9 @@ enum KeyboardShortcutEvent: Equatable {
 
 // MARK: - KeyboardShortcutsClient
 
+@DependencyClient
 struct KeyboardShortcutsClient {
-  var events: @Sendable () -> AsyncStream<KeyboardShortcutEvent>
+  var events: @Sendable () -> AsyncStream<KeyboardShortcutEvent> = { .finished }
 }
 
 // MARK: DependencyKey

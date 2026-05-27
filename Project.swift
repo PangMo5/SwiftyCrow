@@ -23,6 +23,7 @@ let project = Project(
       resources: ["Resources/**"],
       dependencies: [
         .external(name: "ComposableArchitecture"),
+        .external(name: "DependenciesMacros"),
         .external(name: "Sharing"),
         .external(name: "KeyboardShortcuts"),
         .external(name: "TOML"),

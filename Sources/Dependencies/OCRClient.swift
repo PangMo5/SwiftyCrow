@@ -1,12 +1,14 @@
 import ComposableArchitecture
 import CoreGraphics
+import DependenciesMacros
 import Foundation
 import Vision
 
 // MARK: - OCRClient
 
+@DependencyClient
 struct OCRClient {
-  var recognizeText: @Sendable (CGImage, Language, OCRMode) async throws -> OCRResult
+  var recognizeText: @Sendable (_ image: CGImage, _ language: Language, _ mode: OCRMode) async throws -> OCRResult
 }
 
 // MARK: DependencyKey
@@ -54,9 +56,6 @@ extension OCRClient: DependencyKey {
           request.textRecognitionOptions.recognitionLanguages = [Locale.Language(identifier: language.code)]
         }
         let observations = try await request.perform(on: image)
-        // Document mode collapses everything into paragraphs; we don't
-        // currently have per-line geometry for those, so represent each
-        // paragraph as a "full-width" line stacked vertically.
         let paragraphs = observations.flatMap(\.document.paragraphs)
         let count = max(paragraphs.count, 1)
         let lines: [OCRResult.Line] = paragraphs.enumerated().map { index, paragraph in

@@ -1,9 +1,11 @@
 import ComposableArchitecture
+import DependenciesMacros
 import Foundation
 import Translation
 
 // MARK: - TranslationClient
 
+@DependencyClient
 struct TranslationClient {
   var translate: @Sendable (
     _ text: String,
