@@ -73,6 +73,28 @@ jobs:
           set -euo pipefail
           cp -R "$RUNNER_TEMP/SwiftyCrow.xcarchive/Products/Applications/SwiftyCrow.app" "$RUNNER_TEMP/SwiftyCrow.app"
 
+      - name: Re-sign Sparkle nested helpers
+        run: |
+          set -euo pipefail
+          # xcodebuild re-signs Sparkle.framework itself but leaves its nested
+          # helper bundles/binaries (Updater.app, Autoupdate, XPCServices) with
+          # Sparkle's original signature, which notarization rejects. Re-sign
+          # them inside-out with our Developer ID, hardened runtime + timestamp.
+          APP="$RUNNER_TEMP/SwiftyCrow.app"
+          SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+          sign() {
+            codesign --force --options runtime --timestamp \
+              --preserve-metadata=entitlements \
+              --sign "Developer ID Application" "$1"
+          }
+          sign "$SPARKLE/Versions/Current/XPCServices/Installer.xpc"
+          sign "$SPARKLE/Versions/Current/XPCServices/Downloader.xpc"
+          sign "$SPARKLE/Versions/Current/Autoupdate"
+          sign "$SPARKLE/Versions/Current/Updater.app"
+          sign "$SPARKLE"
+          sign "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
       - name: Create DMG
         run: |
           set -euo pipefail
@@ -92,12 +114,24 @@ jobs:
         run: |
           set -euo pipefail
           echo "$AC_API_KEY_P8" > "$RUNNER_TEMP/ac_api_key.p8"
-          xcrun notarytool submit "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
+          DMG="$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+          SUBMIT_JSON="$(xcrun notarytool submit "$DMG" \
             --key "$RUNNER_TEMP/ac_api_key.p8" \
             --key-id "$AC_API_KEY_ID" \
             --issuer "$AC_API_ISSUER_ID" \
-            --wait
-          xcrun stapler staple "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+            --output-format json --wait)"
+          echo "$SUBMIT_JSON"
+          SUB_ID="$(echo "$SUBMIT_JSON" | python3 -c 'import sys, json; print(json.load(sys.stdin)["id"])')"
+          SUB_STATUS="$(echo "$SUBMIT_JSON" | python3 -c 'import sys, json; print(json.load(sys.stdin)["status"])')"
+          if [ "$SUB_STATUS" != "Accepted" ]; then
+            echo "Notarization failed with status: $SUB_STATUS. Fetching log:"
+            xcrun notarytool log "$SUB_ID" \
+              --key "$RUNNER_TEMP/ac_api_key.p8" \
+              --key-id "$AC_API_KEY_ID" \
+              --issuer "$AC_API_ISSUER_ID" || true
+            exit 1
+          fi
+          xcrun stapler staple "$DMG"
 
       - name: Sign for Sparkle + build appcast
         env:
