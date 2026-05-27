@@ -9,40 +9,125 @@ struct AppSettings: Codable, Equatable, Sendable {
   init() { }
 
   init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    let defaults = AppSettings()
-    automaticallyChecksForUpdates = try container
-      .decodeIfPresent(Bool.self, forKey: .automaticallyChecksForUpdates) ?? defaults.automaticallyChecksForUpdates
-    captureInterval = try container.decodeIfPresent(Double.self, forKey: .captureInterval) ?? defaults.captureInterval
-    captureOnceHotKey = try container.decodeIfPresent(HotKey.self, forKey: .captureOnceHotKey)
-    ocrMode = try container.decodeIfPresent(OCRMode.self, forKey: .ocrMode) ?? defaults.ocrMode
-    overlayEnabled = try container.decodeIfPresent(Bool.self, forKey: .overlayEnabled) ?? defaults.overlayEnabled
-    overlayHideOnHover = try container.decodeIfPresent(Bool.self, forKey: .overlayHideOnHover) ?? defaults.overlayHideOnHover
-    sourceLanguage = try container.decodeIfPresent(Language.self, forKey: .sourceLanguage) ?? defaults.sourceLanguage
-    targetLanguage = try container.decodeIfPresent(Language.self, forKey: .targetLanguage) ?? defaults.targetLanguage
-    toggleLiveHotKey = try container.decodeIfPresent(HotKey.self, forKey: .toggleLiveHotKey)
-    toggleOverlayHotKey = try container.decodeIfPresent(HotKey.self, forKey: .toggleOverlayHotKey)
-    translationStrategy = try container
-      .decodeIfPresent(TranslationStrategy.self, forKey: .translationStrategy) ?? defaults.translationStrategy
-    updateCheckInterval = try container
-      .decodeIfPresent(UpdateCheckInterval.self, forKey: .updateCheckInterval) ?? defaults.updateCheckInterval
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = AppSettings()
+    capture = try c.decodeIfPresent(CaptureSettings.self, forKey: .capture) ?? d.capture
+    languages = try c.decodeIfPresent(LanguageSettings.self, forKey: .languages) ?? d.languages
+    overlay = try c.decodeIfPresent(OverlaySettings.self, forKey: .overlay) ?? d.overlay
+    recognition = try c.decodeIfPresent(RecognitionSettings.self, forKey: .recognition) ?? d.recognition
+    shortcuts = try c.decodeIfPresent(ShortcutSettings.self, forKey: .shortcuts) ?? d.shortcuts
+    translation = try c.decodeIfPresent(TranslationSettings.self, forKey: .translation) ?? d.translation
+    updates = try c.decodeIfPresent(UpdateSettings.self, forKey: .updates) ?? d.updates
   }
 
   // MARK: Internal
 
-  var automaticallyChecksForUpdates = true
-  var captureInterval = 0.8
-  var captureOnceHotKey: HotKey?
-  var ocrMode = OCRMode.text
-  var overlayEnabled = true
-  var overlayHideOnHover = false
-  var sourceLanguage = Language.auto
-  var targetLanguage = Language.systemPreferred()
-  var toggleLiveHotKey: HotKey?
-  var toggleOverlayHotKey: HotKey?
-  var translationStrategy = TranslationStrategy.lowLatency
-  var updateCheckInterval = UpdateCheckInterval.daily
+  var capture = CaptureSettings()
+  var languages = LanguageSettings()
+  var overlay = OverlaySettings()
+  var recognition = RecognitionSettings()
+  var shortcuts = ShortcutSettings()
+  var translation = TranslationSettings()
+  var updates = UpdateSettings()
 
+}
+
+// MARK: - CaptureSettings
+
+struct CaptureSettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = CaptureSettings()
+    interval = try c.decodeIfPresent(Double.self, forKey: .interval) ?? d.interval
+  }
+
+  var interval = 0.8
+}
+
+// MARK: - LanguageSettings
+
+struct LanguageSettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = LanguageSettings()
+    source = try c.decodeIfPresent(Language.self, forKey: .source) ?? d.source
+    target = try c.decodeIfPresent(Language.self, forKey: .target) ?? d.target
+  }
+
+  var source = Language.defaultSource
+  var target = Language.systemPreferred()
+}
+
+// MARK: - OverlaySettings
+
+struct OverlaySettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = OverlaySettings()
+    enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? d.enabled
+    hideOnHover = try c.decodeIfPresent(Bool.self, forKey: .hideOnHover) ?? d.hideOnHover
+  }
+
+  var enabled = true
+  var hideOnHover = false
+}
+
+// MARK: - RecognitionSettings
+
+struct RecognitionSettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = RecognitionSettings()
+    mode = try c.decodeIfPresent(OCRMode.self, forKey: .mode) ?? d.mode
+  }
+
+  var mode = OCRMode.text
+}
+
+// MARK: - ShortcutSettings
+
+struct ShortcutSettings: Codable, Equatable, Sendable {
+  var captureOnce: HotKey?
+  var toggleLive: HotKey?
+  var toggleOverlay: HotKey?
+}
+
+// MARK: - TranslationSettings
+
+struct TranslationSettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = TranslationSettings()
+    strategy = try c.decodeIfPresent(TranslationStrategy.self, forKey: .strategy) ?? d.strategy
+  }
+
+  var strategy = TranslationStrategy.lowLatency
+}
+
+// MARK: - UpdateSettings
+
+struct UpdateSettings: Codable, Equatable, Sendable {
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = UpdateSettings()
+    automaticChecks = try c.decodeIfPresent(Bool.self, forKey: .automaticChecks) ?? d.automaticChecks
+    checkInterval = try c.decodeIfPresent(UpdateCheckInterval.self, forKey: .checkInterval) ?? d.checkInterval
+  }
+
+  var automaticChecks = true
+  var checkInterval = UpdateCheckInterval.daily
 }
 
 // MARK: - UpdateCheckInterval

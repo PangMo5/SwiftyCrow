@@ -21,13 +21,9 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
 }
 
 extension Language {
-  /// Sentinel value meaning "let Vision detect the source language and feed
-  /// that result into Apple Translation." Only valid for `sourceLanguage`.
-  static let auto = Language(code: "")
-
-  var isAuto: Bool {
-    code.isEmpty
-  }
+  /// Default source language for new installs (most screen text users
+  /// translate is English).
+  static let defaultSource = Language(code: "en-US")
 
   /// Default for new installs. Picks the user's most-preferred system
   /// language; falls back to whatever Translation reports first if Locale

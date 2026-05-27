@@ -92,8 +92,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = appStore.settings
     return OverlayRenderState(
       lines: capture.overlayLines,
-      isVisible: settings.overlayEnabled,
-      hideOnHover: settings.overlayHideOnHover,
+      isVisible: settings.overlay.enabled,
+      hideOnHover: settings.overlay.hideOnHover,
       isTranslating: capture.isTranslating,
       isLive: capture.isLive
     )

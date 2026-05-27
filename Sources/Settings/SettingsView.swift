@@ -49,14 +49,12 @@ private struct LanguagesSection: View {
 
   var body: some View {
     Section {
-      Picker("Source", selection: Binding($settings.sourceLanguage)) {
-        Text("Auto").tag(Language.auto)
-        Divider()
+      Picker("Source", selection: Binding($settings.languages.source)) {
         ForEach(sourceLanguages) { language in
           Text(language.displayName).tag(language)
         }
       }
-      Picker("Target", selection: Binding($settings.targetLanguage)) {
+      Picker("Target", selection: Binding($settings.languages.target)) {
         ForEach(targetLanguages) { language in
           Text(language.displayName).tag(language)
         }
@@ -93,9 +91,9 @@ private struct LiveCaptureSection: View {
     Section {
       LabeledContent("Capture interval") {
         VStack(alignment: .trailing, spacing: 2) {
-          Slider(value: Binding($settings.captureInterval), in: 0.3...3.0, step: 0.1)
+          Slider(value: Binding($settings.capture.interval), in: 0.3...3.0, step: 0.1)
             .frame(width: 220)
-          Text(String(format: "%.1f s", settings.captureInterval))
+          Text(String(format: "%.1f s", settings.capture.interval))
             .font(.caption)
             .foregroundStyle(.secondary)
             .monospacedDigit()
@@ -121,7 +119,7 @@ private struct LiveCaptureSection: View {
 private struct RecognitionSection: View {
   var body: some View {
     Section {
-      Picker("OCR mode", selection: Binding($settings.ocrMode)) {
+      Picker("OCR mode", selection: Binding($settings.recognition.mode)) {
         ForEach(OCRMode.allCases) { mode in
           Text(mode.displayName).tag(mode)
         }
@@ -144,7 +142,7 @@ private struct RecognitionSection: View {
 private struct TranslationSection: View {
   var body: some View {
     Section {
-      Picker("Strategy", selection: Binding($settings.translationStrategy)) {
+      Picker("Strategy", selection: Binding($settings.translation.strategy)) {
         ForEach(TranslationStrategy.allCases) { strategy in
           Text(strategy.displayName).tag(strategy)
         }
@@ -170,8 +168,8 @@ private struct OverlaySection: View {
 
   var body: some View {
     Section {
-      Toggle("Enable overlay", isOn: Binding($settings.overlayEnabled))
-      Toggle("Hide on hover", isOn: Binding($settings.overlayHideOnHover))
+      Toggle("Enable overlay", isOn: Binding($settings.overlay.enabled))
+      Toggle("Hide on hover", isOn: Binding($settings.overlay.hideOnHover))
     } header: {
       Text("Overlay")
     } footer: {
@@ -196,13 +194,13 @@ private struct ShortcutsSection: View {
   var body: some View {
     Section {
       KeyboardShortcuts.Recorder("Capture once", name: .captureOnce) { shortcut in
-        $settings.withLock { $0.captureOnceHotKey = shortcut.map(HotKey.init) }
+        $settings.withLock { $0.shortcuts.captureOnce = shortcut.map(HotKey.init) }
       }
       KeyboardShortcuts.Recorder("Toggle Live Mode", name: .toggleLive) { shortcut in
-        $settings.withLock { $0.toggleLiveHotKey = shortcut.map(HotKey.init) }
+        $settings.withLock { $0.shortcuts.toggleLive = shortcut.map(HotKey.init) }
       }
       KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay) { shortcut in
-        $settings.withLock { $0.toggleOverlayHotKey = shortcut.map(HotKey.init) }
+        $settings.withLock { $0.shortcuts.toggleOverlay = shortcut.map(HotKey.init) }
       }
     } header: {
       Text("Global Shortcuts")
@@ -227,13 +225,13 @@ private struct UpdatesSection: View {
 
   var body: some View {
     Section {
-      Toggle("Automatically check for updates", isOn: Binding($settings.automaticallyChecksForUpdates))
-      Picker("Check", selection: Binding($settings.updateCheckInterval)) {
+      Toggle("Automatically check for updates", isOn: Binding($settings.updates.automaticChecks))
+      Picker("Check", selection: Binding($settings.updates.checkInterval)) {
         ForEach(UpdateCheckInterval.allCases) { interval in
           Text(interval.displayName).tag(interval)
         }
       }
-      .disabled(!settings.automaticallyChecksForUpdates)
+      .disabled(!settings.updates.automaticChecks)
       Button("Check for Updates Now") {
         updater.checkForUpdates()
       }

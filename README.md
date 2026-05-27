@@ -11,8 +11,7 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 - **Floating overlay** as a transparent borderless `NSPanel` you can drag, resize, and auto-hide on hover; ⌘C copies the current translation
 - **Live mode** re-captures the overlay region on a configurable interval; **`LIVE` badge** pulses while the loop runs
 - **Per-line translation cache** keyed by `(source, target, strategy, text)` — repeat captures of the same screen skip the network/Apple-Intelligence call entirely
-- **Auto source detection** via Vision's `automaticallyDetectsLanguage`; the detected `Locale.Language` is fed straight into `TranslationSession`
-- **Dynamic language list** loaded from `LanguageAvailability().supportedLanguages` ∩ `RecognizeTextRequest.supportedRecognitionLanguages`
+- **Dynamic language list** loaded from `LanguageAvailability().supportedLanguages` ∩ `RecognizeTextRequest.supportedRecognitionLanguages` — pick the source/target that match the text on screen
 - **Global keyboard shortcuts**: Capture Once, Toggle Live Mode, Toggle Overlay (bound from Settings → Shortcuts)
 - **Single TOML config** at `$XDG_CONFIG_HOME/SwiftyCrow/config.toml` (or `~/.config/SwiftyCrow/config.toml`), two-way synced with the in-app Settings UI
 
@@ -28,7 +27,7 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 
 ## Usage
 
-1. Click the menu bar icon to open the popover, then pick **Source** (or leave **Auto**) and **Target** languages from Settings (`⌘,`).
+1. Click the menu bar icon to open the popover, then pick the **Source** and **Target** languages from Settings (`⌘,`).
 2. Drag / resize the floating overlay to cover the region you want translated.
 3. Press **Capture Once** from the popover or your bound hotkey, or flip **Live** to keep re-capturing.
 4. The translated text appears directly over each recognized line. While the overlay window is focused: `⌘,` opens Settings, `⌘C` copies the joined translation.
@@ -43,28 +42,39 @@ All persisted settings live in a single TOML file:
 ${XDG_CONFIG_HOME:-$HOME/.config}/SwiftyCrow/config.toml
 ```
 
-The file is written by the app and can also be edited by hand — changes are picked up on next launch. Example:
+The file is written by the app and can also be edited by hand — changes are picked up on next launch. Settings are grouped into sections that mirror the in-app Settings tabs:
 
 ```toml
-captureInterval = 0.8
-overlayEnabled = true
-overlayHideOnHover = false
-ocrMode = "text"                 # "text" or "document"
-translationStrategy = "lowLatency"  # or "highFidelity" (macOS 26.4+)
+[capture]
+interval = 0.8                      # Live Mode re-capture interval (seconds)
 
-# Empty `code` on sourceLanguage means Auto — Vision detects it.
-[sourceLanguage]
-code = ""
-
-[targetLanguage]
+[languages]
+[languages.source]
+code = "en-US"
+[languages.target]
 code = "ko-KR"
 
-[overlayFrame]
-x = 200.0
-y = 200.0
-width = 520.0
-height = 280.0
+[overlay]
+enabled = true
+hideOnHover = false
+
+[recognition]
+mode = "text"                       # "text" or "document"
+
+[shortcuts]
+captureOnce = "cmd + shift - c"     # skhd-style; omit a key to leave it unset
+toggleLive = "cmd + shift - l"
+toggleOverlay = "cmd + shift - o"
+
+[translation]
+strategy = "lowLatency"             # or "highFidelity" (macOS 26.4+)
+
+[updates]
+automaticChecks = true
+checkInterval = "daily"             # "hourly", "daily", or "weekly"
 ```
+
+Window position/size is UI state, so it lives in `~/Library/Application Support/SwiftyCrow/overlay-frame.json`, not here.
 
 ## Development
 

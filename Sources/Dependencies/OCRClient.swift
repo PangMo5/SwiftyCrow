@@ -21,11 +21,7 @@ extension OCRClient: DependencyKey {
         var request = RecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
-        if language.isAuto {
-          request.automaticallyDetectsLanguage = true
-        } else {
-          request.recognitionLanguages = [Locale.Language(identifier: language.code)]
-        }
+        request.recognitionLanguages = [Locale.Language(identifier: language.code)]
         let observations = try await request.perform(on: image)
 
         let lines: [OCRResult.Line] = observations.compactMap { observation in
@@ -40,21 +36,11 @@ extension OCRClient: DependencyKey {
           return OCRResult.Line(boundingBoxNormalized: topLeftRect, text: text)
         }
 
-        let detected = observations
-          .flatMap(\.recognitionLanguages)
-          .reduce(into: [Locale.Language: Int]()) { counts, lang in
-            counts[lang, default: 0] += 1
-          }
-          .max(by: { $0.value < $1.value })?
-          .key
-
-        return OCRResult(lines: lines, detectedLanguage: detected)
+        return OCRResult(lines: lines)
 
       case .document:
         var request = RecognizeDocumentsRequest()
-        if !language.isAuto {
-          request.textRecognitionOptions.recognitionLanguages = [Locale.Language(identifier: language.code)]
-        }
+        request.textRecognitionOptions.recognitionLanguages = [Locale.Language(identifier: language.code)]
         let observations = try await request.perform(on: image)
         let paragraphs = observations.flatMap(\.document.paragraphs)
         let count = max(paragraphs.count, 1)
@@ -70,7 +56,7 @@ extension OCRClient: DependencyKey {
             text: paragraph.transcript
           )
         }
-        return OCRResult(lines: lines, detectedLanguage: nil)
+        return OCRResult(lines: lines)
       }
     }
   )

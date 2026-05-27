@@ -12,7 +12,7 @@ struct MenuBarContent: View {
       CaptureView(store: store.scope(state: \.capture, action: \.capture))
 
       Toggle("Enable Overlay", isOn: Binding(
-        get: { store.settings.overlayEnabled },
+        get: { store.settings.overlay.enabled },
         set: { _ in store.send(.toggleOverlayRequested) }
       ))
       .toggleStyle(.switch)

@@ -67,7 +67,7 @@ struct CaptureFeature {
     Reduce { state, action in
       switch action {
       case .captureOnceRequested:
-        guard state.settings.overlayEnabled else { return .none }
+        guard state.settings.overlay.enabled else { return .none }
         state.isCapturing = true
         return captureEffect(
           settings: state.settings,
@@ -109,7 +109,7 @@ struct CaptureFeature {
         return .none
 
       case .setLive(let isLive):
-        if isLive, !state.settings.overlayEnabled {
+        if isLive, !state.settings.overlay.enabled {
           state.isLive = false
           state.isCapturing = false
           return .cancel(id: CancelID.live)
@@ -142,7 +142,7 @@ struct CaptureFeature {
                     }
                   )
                 )
-                try await clock.sleep(for: .seconds(snapshot.captureInterval))
+                try await clock.sleep(for: .seconds(snapshot.capture.interval))
               }
             }
             .cancellable(id: CancelID.live, cancelInFlight: true)
@@ -179,9 +179,9 @@ struct CaptureFeature {
       return .cancel(id: CancelID.translation)
     }
 
-    let source = result.detectedLanguage ?? state.settings.sourceLanguage.localeLanguage
-    let target = state.settings.targetLanguage.localeLanguage
-    let strategy = state.settings.translationStrategy
+    let source = state.settings.languages.source.localeLanguage
+    let target = state.settings.languages.target.localeLanguage
+    let strategy = state.settings.translation.strategy
     let cache = state.translationCache
 
     // Reuse line identity when the source text matches the previous OCR
@@ -197,7 +197,7 @@ struct CaptureFeature {
       let key = TranslationCacheKey(
         source: source.maximalIdentifier,
         strategy: strategy,
-        target: state.settings.targetLanguage.code,
+        target: state.settings.languages.target.code,
         text: line.text
       )
       let cached = cache[key]
@@ -278,7 +278,7 @@ struct CaptureFeature {
     overlayFrame: OverlayFrame,
     excludedWindowIDs: [CGWindowID]
   ) async throws -> OCRResult {
-    let region = settings.overlayEnabled ? overlayFrame.rect : nil
+    let region = settings.overlay.enabled ? overlayFrame.rect : nil
     let displayID = screenDisplayID(screenForOverlay(frame: overlayFrame.rect))
     let image = try await screenCapture.captureImage(
       region,
@@ -286,7 +286,7 @@ struct CaptureFeature {
       displayID,
       Bundle.main.bundleIdentifier
     )
-    return try await ocr.recognizeText(image, settings.sourceLanguage, settings.ocrMode)
+    return try await ocr.recognizeText(image, settings.languages.source, settings.recognition.mode)
   }
 }
 

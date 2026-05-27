@@ -10,10 +10,6 @@ struct OCRResult: Equatable, Sendable {
 
   var lines: [Line]
 
-  /// Most frequent language Vision actually used to read the captured frame.
-  /// Populated when the request runs with auto language detection.
-  var detectedLanguage: Locale.Language?
-
   var joinedText: String {
     lines.map(\.text).joined(separator: "\n")
   }

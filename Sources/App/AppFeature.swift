@@ -45,7 +45,7 @@ struct AppFeature {
           .run { [updater] _ in
             @Shared(.settings) var settings
             for await config in Observations({
-              (settings.automaticallyChecksForUpdates, settings.updateCheckInterval)
+              (settings.updates.automaticChecks, settings.updates.checkInterval)
             }) {
               updater.configure(automaticallyChecks: config.0, interval: config.1.seconds)
             }
@@ -53,7 +53,7 @@ struct AppFeature {
           .run { send in
             @Shared(.settings) var settings
             var isFirst = true
-            for await _ in Observations({ settings.overlayEnabled }) {
+            for await _ in Observations({ settings.overlay.enabled }) {
               // Skip the initial emission; only clear on actual toggles so a
               // stale capture doesn't linger when the overlay is switched.
               if isFirst {
@@ -68,7 +68,7 @@ struct AppFeature {
             // config.toml is the source of truth for hotkeys; push it into the
             // registrar on launch and whenever it changes (incl. hand edits).
             for await keys in Observations({
-              (settings.captureOnceHotKey, settings.toggleLiveHotKey, settings.toggleOverlayHotKey)
+              (settings.shortcuts.captureOnce, settings.shortcuts.toggleLive, settings.shortcuts.toggleOverlay)
             }) {
               keyboardShortcuts.setShortcut(.captureOnce, keys.0)
               keyboardShortcuts.setShortcut(.toggleLive, keys.1)
@@ -78,8 +78,8 @@ struct AppFeature {
         )
 
       case .toggleOverlayRequested:
-        state.$settings.withLock { $0.overlayEnabled.toggle() }
-        if !state.settings.overlayEnabled, state.capture.isLive {
+        state.$settings.withLock { $0.overlay.enabled.toggle() }
+        if !state.settings.overlay.enabled, state.capture.isLive {
           return .send(.capture(.setLive(false)))
         }
         return .none
