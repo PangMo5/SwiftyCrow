@@ -4,10 +4,18 @@ import KeyboardShortcuts
 
 // MARK: - KeyboardShortcutEvent
 
-enum KeyboardShortcutEvent: Equatable {
+enum KeyboardShortcutEvent: Equatable, CaseIterable {
   case captureOnce
   case toggleLive
   case toggleOverlay
+
+  var name: KeyboardShortcuts.Name {
+    switch self {
+    case .captureOnce: .captureOnce
+    case .toggleLive: .toggleLive
+    case .toggleOverlay: .toggleOverlay
+    }
+  }
 }
 
 // MARK: - KeyboardShortcutsClient
@@ -15,6 +23,9 @@ enum KeyboardShortcutEvent: Equatable {
 @DependencyClient
 struct KeyboardShortcutsClient {
   var events: @Sendable () -> AsyncStream<KeyboardShortcutEvent> = { .finished }
+  /// Pushes a persisted hotkey (from config) into the underlying registrar.
+  /// `nil` clears the shortcut.
+  var setShortcut: @Sendable (_ event: KeyboardShortcutEvent, _ hotKey: HotKey?) -> Void
 }
 
 // MARK: DependencyKey
@@ -35,6 +46,11 @@ extension KeyboardShortcutsClient: DependencyKey {
           }
         }
         continuation.onTermination = { _ in task.cancel() }
+      }
+    },
+    setShortcut: { event, hotKey in
+      Task { @MainActor in
+        KeyboardShortcuts.setShortcut(hotKey?.shortcut, for: event.name)
       }
     }
   )

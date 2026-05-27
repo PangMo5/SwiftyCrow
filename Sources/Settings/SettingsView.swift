@@ -190,19 +190,33 @@ private struct OverlaySection: View {
 // MARK: - ShortcutsSection
 
 private struct ShortcutsSection: View {
+
+  // MARK: Internal
+
   var body: some View {
     Section {
-      KeyboardShortcuts.Recorder("Capture once", name: .captureOnce)
-      KeyboardShortcuts.Recorder("Toggle Live Mode", name: .toggleLive)
-      KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay)
+      KeyboardShortcuts.Recorder("Capture once", name: .captureOnce) { shortcut in
+        $settings.withLock { $0.captureOnceHotKey = shortcut.map(HotKey.init) }
+      }
+      KeyboardShortcuts.Recorder("Toggle Live Mode", name: .toggleLive) { shortcut in
+        $settings.withLock { $0.toggleLiveHotKey = shortcut.map(HotKey.init) }
+      }
+      KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay) { shortcut in
+        $settings.withLock { $0.toggleOverlayHotKey = shortcut.map(HotKey.init) }
+      }
     } header: {
       Text("Global Shortcuts")
     } footer: {
-      Text("These hotkeys work even when the app is in the background.")
+      Text("These hotkeys work even when the app is in the background, and are saved to config.toml.")
         .font(.caption)
         .foregroundStyle(.secondary)
     }
   }
+
+  // MARK: Private
+
+  @Shared(.settings) private var settings
+
 }
 
 // MARK: - UpdatesSection

@@ -35,7 +35,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
         // of truth and forcing setFrame here would snap the window back
         // mid-translation.
         if needsInitialFrame {
-          window.setFrame(settings.overlayFrame.rect, display: true)
+          window.setFrame(overlayFrame.rect, display: true)
           window.makeKeyAndOrderFront(nil)
         }
       }
@@ -66,7 +66,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
   // MARK: Private
 
-  @Shared(.settings) private var settings
+  @Shared(.overlayFrame) private var overlayFrame
 
   private let model = OverlayWindowModel()
   private var hoverMonitor: Any?
@@ -95,7 +95,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingFrameSaveTask = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .milliseconds(200))
       guard !Task.isCancelled, let self else { return }
-      $settings.withLock { $0.overlayFrame = OverlayFrame(rect: frame) }
+      $overlayFrame.withLock { $0 = OverlayFrame(rect: frame) }
     }
   }
 
@@ -103,7 +103,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingFrameSaveTask?.cancel()
     pendingFrameSaveTask = nil
     guard let window else { return }
-    $settings.withLock { $0.overlayFrame = OverlayFrame(rect: window.frame) }
+    $overlayFrame.withLock { $0 = OverlayFrame(rect: window.frame) }
   }
 
   private func showWindowIfNeeded() {

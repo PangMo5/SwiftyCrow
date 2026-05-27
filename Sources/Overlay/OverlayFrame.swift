@@ -45,3 +45,25 @@ struct OverlayFrame: Codable, Equatable, Sendable {
   }
 
 }
+
+// MARK: RawRepresentable
+
+// Lets OverlayFrame live in UserDefaults via @Shared(.appStorage), keeping
+// window geometry out of the user-editable config.toml.
+extension OverlayFrame: RawRepresentable {
+  init?(rawValue: String) {
+    guard
+      let data = rawValue.data(using: .utf8),
+      let decoded = try? JSONDecoder().decode(OverlayFrame.self, from: data)
+    else { return nil }
+    self = decoded
+  }
+
+  var rawValue: String {
+    guard
+      let data = try? JSONEncoder().encode(self),
+      let string = String(data: data, encoding: .utf8)
+    else { return "" }
+    return string
+  }
+}

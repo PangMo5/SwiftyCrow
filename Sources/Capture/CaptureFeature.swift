@@ -43,12 +43,14 @@ struct CaptureFeature {
     var overlayLines = [OverlayLine]()
     var translationCache = [TranslationCacheKey: String]()
 
+    @Shared(.overlayFrame) var overlayFrame
     @Shared(.settings) var settings
   }
 
   enum Action {
     case captureOnceRequested
     case captureResponse(Result<OCRResult, any Error>)
+    case clearResults
     case copyTranslationRequested
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
@@ -67,7 +69,16 @@ struct CaptureFeature {
       case .captureOnceRequested:
         guard state.settings.overlayEnabled else { return .none }
         state.isCapturing = true
-        return captureEffect(settings: state.settings, excludedWindowIDs: state.excludedWindowIDs)
+        return captureEffect(
+          settings: state.settings,
+          overlayFrame: state.overlayFrame,
+          excludedWindowIDs: state.excludedWindowIDs
+        )
+
+      case .clearResults:
+        state.overlayLines = []
+        state.isTranslating = false
+        return .cancel(id: CancelID.translation)
 
       case .captureResponse(.failure(let error)):
         state.isCapturing = false
@@ -105,26 +116,39 @@ struct CaptureFeature {
         }
         state.isLive = isLive
         state.isCapturing = isLive
+        // Toggling Live discards stale results so the overlay doesn't keep
+        // showing the previous capture across the transition.
+        state.overlayLines = []
+        state.isTranslating = false
         if isLive {
-          return .run { [
-            settings = state.$settings,
-            excludedWindowIDs = state.excludedWindowIDs
-          ] send in
-            while !Task.isCancelled {
-              let snapshot = settings.wrappedValue
-              await send(
-                .captureResponse(
-                  Result {
-                    try await runCapture(settings: snapshot, excludedWindowIDs: excludedWindowIDs)
-                  }
+          return .merge(
+            .cancel(id: CancelID.translation),
+            .run { [
+              settings = state.$settings,
+              overlayFrame = state.$overlayFrame,
+              excludedWindowIDs = state.excludedWindowIDs
+            ] send in
+              while !Task.isCancelled {
+                let snapshot = settings.wrappedValue
+                let frame = overlayFrame.wrappedValue
+                await send(
+                  .captureResponse(
+                    Result {
+                      try await runCapture(
+                        settings: snapshot,
+                        overlayFrame: frame,
+                        excludedWindowIDs: excludedWindowIDs
+                      )
+                    }
+                  )
                 )
-              )
-              try await clock.sleep(for: .seconds(snapshot.captureInterval))
+                try await clock.sleep(for: .seconds(snapshot.captureInterval))
+              }
             }
-          }
-          .cancellable(id: CancelID.live, cancelInFlight: true)
+            .cancellable(id: CancelID.live, cancelInFlight: true)
+          )
         } else {
-          return .cancel(id: CancelID.live)
+          return .merge(.cancel(id: CancelID.live), .cancel(id: CancelID.translation))
         }
 
       case .toggleLiveRequested:
@@ -233,21 +257,29 @@ struct CaptureFeature {
     .cancellable(id: CancelID.translation, cancelInFlight: true)
   }
 
-  private func captureEffect(settings: AppSettings, excludedWindowIDs: [CGWindowID]) -> Effect<Action> {
+  private func captureEffect(
+    settings: AppSettings,
+    overlayFrame: OverlayFrame,
+    excludedWindowIDs: [CGWindowID]
+  ) -> Effect<Action> {
     .run { send in
       await send(
         .captureResponse(
           Result {
-            try await runCapture(settings: settings, excludedWindowIDs: excludedWindowIDs)
+            try await runCapture(settings: settings, overlayFrame: overlayFrame, excludedWindowIDs: excludedWindowIDs)
           }
         )
       )
     }
   }
 
-  private func runCapture(settings: AppSettings, excludedWindowIDs: [CGWindowID]) async throws -> OCRResult {
-    let region = settings.overlayEnabled ? settings.overlayFrame.rect : nil
-    let displayID = screenDisplayID(screenForOverlay(frame: settings.overlayFrame.rect))
+  private func runCapture(
+    settings: AppSettings,
+    overlayFrame: OverlayFrame,
+    excludedWindowIDs: [CGWindowID]
+  ) async throws -> OCRResult {
+    let region = settings.overlayEnabled ? overlayFrame.rect : nil
+    let displayID = screenDisplayID(screenForOverlay(frame: overlayFrame.rect))
     let image = try await screenCapture.captureImage(
       region,
       excludedWindowIDs,

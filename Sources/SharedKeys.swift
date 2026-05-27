@@ -2,6 +2,14 @@ import Foundation
 import Sharing
 import TOML
 
+extension SharedKey where Self == AppStorageKey<OverlayFrame>.Default {
+  // Window geometry is UI state, not user config — keep it in UserDefaults
+  // rather than the hand-editable config.toml.
+  static var overlayFrame: Self {
+    Self[.appStorage("overlayFrame"), default: .default]
+  }
+}
+
 extension SharedKey where Self == FileStorageKey<AppSettings>.Default {
   static var settings: Self {
     let url = ConfigPath.url

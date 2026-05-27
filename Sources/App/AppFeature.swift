@@ -49,6 +49,31 @@ struct AppFeature {
             }) {
               updater.configure(automaticallyChecks: config.0, interval: config.1.seconds)
             }
+          },
+          .run { send in
+            @Shared(.settings) var settings
+            var isFirst = true
+            for await _ in Observations({ settings.overlayEnabled }) {
+              // Skip the initial emission; only clear on actual toggles so a
+              // stale capture doesn't linger when the overlay is switched.
+              if isFirst {
+                isFirst = false
+                continue
+              }
+              await send(.capture(.clearResults))
+            }
+          },
+          .run { [keyboardShortcuts] _ in
+            @Shared(.settings) var settings
+            // config.toml is the source of truth for hotkeys; push it into the
+            // registrar on launch and whenever it changes (incl. hand edits).
+            for await keys in Observations({
+              (settings.captureOnceHotKey, settings.toggleLiveHotKey, settings.toggleOverlayHotKey)
+            }) {
+              keyboardShortcuts.setShortcut(.captureOnce, keys.0)
+              keyboardShortcuts.setShortcut(.toggleLive, keys.1)
+              keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
+            }
           }
         )
 
