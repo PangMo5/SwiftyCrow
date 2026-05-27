@@ -23,15 +23,18 @@ extension KeyboardShortcutsClient: DependencyKey {
   static let liveValue = KeyboardShortcutsClient(
     events: {
       AsyncStream { continuation in
-        KeyboardShortcuts.onKeyUp(for: .captureOnce) {
-          continuation.yield(.captureOnce)
+        let task = Task { @MainActor in
+          KeyboardShortcuts.onKeyUp(for: .captureOnce) {
+            continuation.yield(.captureOnce)
+          }
+          KeyboardShortcuts.onKeyUp(for: .toggleLive) {
+            continuation.yield(.toggleLive)
+          }
+          KeyboardShortcuts.onKeyUp(for: .toggleOverlay) {
+            continuation.yield(.toggleOverlay)
+          }
         }
-        KeyboardShortcuts.onKeyUp(for: .toggleLive) {
-          continuation.yield(.toggleLive)
-        }
-        KeyboardShortcuts.onKeyUp(for: .toggleOverlay) {
-          continuation.yield(.toggleOverlay)
-        }
+        continuation.onTermination = { _ in task.cancel() }
       }
     }
   )

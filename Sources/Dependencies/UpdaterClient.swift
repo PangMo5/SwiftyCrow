@@ -25,13 +25,18 @@ extension UpdaterClient: DependencyKey {
     return UpdaterClient(
       canCheckForUpdates: {
         AsyncStream { continuation in
-          continuation.yield(updater.canCheckForUpdates)
-          let cancellable = updater.publisher(for: \.canCheckForUpdates)
-            .sink { continuation.yield($0) }
-          continuation.onTermination = { _ in cancellable.cancel() }
+          let task = Task { @MainActor in
+            for await value in updater.publisher(for: \.canCheckForUpdates).values {
+              continuation.yield(value)
+            }
+            continuation.finish()
+          }
+          continuation.onTermination = { _ in task.cancel() }
         }
       },
-      checkForUpdates: { updater.checkForUpdates() }
+      checkForUpdates: {
+        Task { @MainActor in updater.checkForUpdates() }
+      }
     )
   }()
 }
