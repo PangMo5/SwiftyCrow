@@ -35,6 +35,10 @@ struct SettingsView: View {
         Form { UpdatesSection() }
           .formStyle(.grouped)
       }
+      Tab("About", systemImage: "info.circle") {
+        Form { AboutSection() }
+          .formStyle(.grouped)
+      }
     }
     .scenePadding()
     .frame(minWidth: 520, minHeight: 360)
@@ -270,5 +274,70 @@ private struct UpdatesSection: View {
   @Dependency(\.updater) private var updater
 
   @Shared(.settings) private var settings
+
+}
+
+// MARK: - AboutSection
+
+private struct AboutSection: View {
+
+  // MARK: Internal
+
+  var body: some View {
+    Section {
+      HStack(spacing: 14) {
+        if let icon = NSApplication.shared.applicationIconImage {
+          Image(nsImage: icon)
+            .resizable()
+            .frame(width: 56, height: 56)
+        }
+        VStack(alignment: .leading, spacing: 2) {
+          Text("SwiftyCrow")
+            .font(.title2.weight(.semibold))
+          Text("On-device screen translator")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .padding(.vertical, 4)
+    }
+
+    Section("About") {
+      LabeledContent("Version", value: Self.appVersion)
+      LabeledContent("Created by") {
+        Link("PangMo5", destination: URL(string: "https://github.com/PangMo5")!)
+      }
+      Link("GitHub", destination: URL(string: "https://github.com/PangMo5/SwiftyCrow")!)
+    }
+
+    Section("Built with") {
+      ForEach(Self.acknowledgements, id: \.name) { item in
+        creditLink(item.name, item.url)
+      }
+    }
+  }
+
+  // MARK: Private
+
+  /// Open-source dependencies, credited in the About pane.
+  private static let acknowledgements: [(name: String, url: String)] = [
+    ("The Composable Architecture", "https://github.com/pointfreeco/swift-composable-architecture"),
+    ("swift-sharing", "https://github.com/pointfreeco/swift-sharing"),
+    ("KeyboardShortcuts", "https://github.com/sindresorhus/KeyboardShortcuts"),
+    ("swift-toml", "https://github.com/mattt/swift-toml"),
+    ("Sparkle", "https://github.com/sparkle-project/Sparkle"),
+  ]
+
+  /// Marketing version + build number from the app bundle, e.g. "2.1.0 (42)".
+  private static let appVersion: String = {
+    let info = Bundle.main.infoDictionary
+    let short = info?["CFBundleShortVersionString"] as? String ?? "\u{2014}"
+    let build = info?["CFBundleVersion"] as? String ?? "\u{2014}"
+    return "\(short) (\(build))"
+  }()
+
+  private func creditLink(_ title: String, _ urlString: String) -> some View {
+    Link(title, destination: URL(string: urlString)!)
+  }
 
 }
