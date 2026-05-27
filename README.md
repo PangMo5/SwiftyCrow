@@ -1,5 +1,10 @@
 # SwiftyCrow <img src="Resources/Marketing/app-icon.png" align="right" height="128" />
 
+[![Latest release](https://img.shields.io/github/v/release/PangMo5/SwiftyCrow?sort=semver)](https://github.com/PangMo5/SwiftyCrow/releases/latest)
+[![Download](https://img.shields.io/github/downloads/PangMo5/SwiftyCrow/total)](https://github.com/PangMo5/SwiftyCrow/releases)
+![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue)
+[![License: MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen)](LICENSE)
+
 On-screen translator for macOS, fully on-device. Captures any region of the screen with [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), recognizes text with [Vision](https://developer.apple.com/documentation/vision), and translates with the [Apple Translation](https://developer.apple.com/documentation/translation) framework — no cloud APIs, no keys, no quotas.
 
 ![SwiftyCrow demo](Resources/Marketing/demo.gif)
@@ -16,13 +21,17 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 
 ## Install
 
-Requires **macOS 26+**. Install via the Homebrew tap:
+Requires **macOS 26+**.
+
+**Homebrew** (recommended):
 
 ```sh
 brew install --cask PangMo5/tap/swiftycrow
 ```
 
-On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. Sparkle keeps the app up to date afterward.
+**Direct download**: grab the latest `.dmg` from the [Releases page](https://github.com/PangMo5/SwiftyCrow/releases/latest), open it, and drag the app to Applications.
+
+On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. The app keeps itself up to date afterward.
 
 ## Usage
 
