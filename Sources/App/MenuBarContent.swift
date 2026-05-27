@@ -11,6 +11,13 @@ struct MenuBarContent: View {
     VStack(alignment: .leading, spacing: 12) {
       CaptureView(store: store.scope(state: \.capture, action: \.capture))
 
+      Toggle("Enable Overlay", isOn: Binding(
+        get: { store.settings.overlayEnabled },
+        set: { _ in store.send(.toggleOverlayRequested) }
+      ))
+      .toggleStyle(.switch)
+      .controlSize(.small)
+
       Divider()
 
       HStack {
