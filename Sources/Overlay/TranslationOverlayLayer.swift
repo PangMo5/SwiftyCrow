@@ -11,28 +11,34 @@ struct TranslationOverlayLayer: View {
 
   var body: some View {
     GeometryReader { proxy in
-      ForEach(lines) { line in
-        let box = line.box
-        let width = max(1, box.width * proxy.size.width)
-        let height = max(1, box.height * proxy.size.height)
-        let fontSize = max(8, min(96, height * 0.85))
-
-        chip(for: line, fontSize: fontSize)
-          .frame(width: width + 12, height: height + 4, alignment: .leading)
-          .position(
-            x: box.midX * proxy.size.width,
-            y: box.midY * proxy.size.height
-          )
-      }
+      chips(in: proxy.size)
     }
   }
 
   @ViewBuilder
-  private func chip(for line: OverlayLine, fontSize: CGFloat) -> some View {
+  private func chips(in size: CGSize) -> some View {
+    ForEach(lines) { line in
+      let box = line.box
+      let width = max(1, box.width * size.width)
+      let height = max(1, box.height * size.height)
+      let rows = max(1, line.rowCount)
+      let fontSize = max(8, min(96, height / CGFloat(rows) * 0.85))
+
+      chip(for: line, fontSize: fontSize, rows: rows)
+        .frame(width: width + 12, height: height + 4, alignment: .leading)
+        .position(
+          x: box.midX * size.width,
+          y: box.midY * size.height
+        )
+    }
+  }
+
+  @ViewBuilder
+  private func chip(for line: OverlayLine, fontSize: CGFloat, rows: Int) -> some View {
     let label = Text(line.translated ?? line.sourceText)
       .font(.system(size: fontSize, weight: .semibold))
       .multilineTextAlignment(.leading)
-      .lineLimit(1)
+      .lineLimit(rows)
       .truncationMode(.tail)
       .minimumScaleFactor(0.4)
       .padding(.horizontal, 6)

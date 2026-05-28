@@ -49,11 +49,11 @@ struct CaptureFeature {
   }
 
   @Dependency(\.continuousClock) var clock
-  @Dependency(OCRClient.self) var ocr
+  @Dependency(\.ocr) var ocr
   @Dependency(\.regionResult) var regionResult
   @Dependency(\.regionSelector) var regionSelector
-  @Dependency(ScreenCaptureClient.self) var screenCapture
-  @Dependency(TranslationClient.self) var translation
+  @Dependency(\.screenCapture) var screenCapture
+  @Dependency(\.translation) var translation
   @Dependency(\.uuid) var uuid
 
   var body: some Reducer<State, Action> {
@@ -196,6 +196,7 @@ struct CaptureFeature {
       if var bucket = reused[line.text], let recycled = bucket.popLast() {
         overlayLine = recycled
         overlayLine.box = line.boundingBoxNormalized
+        overlayLine.rowCount = line.rowCount
         if let cached {
           overlayLine.translated = cached
         }
@@ -205,7 +206,8 @@ struct CaptureFeature {
           id: uuid(),
           box: line.boundingBoxNormalized,
           sourceText: line.text,
-          translated: cached
+          translated: cached,
+          rowCount: line.rowCount
         )
       }
 

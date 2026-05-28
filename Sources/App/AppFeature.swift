@@ -16,7 +16,7 @@ struct AppFeature {
     case toggleOverlayRequested
   }
 
-  @Dependency(KeyboardShortcutsClient.self) var keyboardShortcuts
+  @Dependency(\.keyboardShortcuts) var keyboardShortcuts
   @Dependency(\.updater) var updater
 
   var body: some Reducer<State, Action> {

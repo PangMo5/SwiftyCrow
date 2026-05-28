@@ -9,4 +9,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
   var box: CGRect
   var sourceText: String
   var translated: String?
+  /// Number of source rows `box` spans; >1 for sentences stitched from wrapped
+  /// lines, so the renderer wraps the text instead of drawing one giant row.
+  var rowCount = 1
 }

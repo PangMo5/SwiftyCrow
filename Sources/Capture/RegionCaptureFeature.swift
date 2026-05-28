@@ -19,13 +19,14 @@ struct RegionCaptureFeature {
     var imageData: Data?
     var imageSize: CGSize = .zero
     var overlayLines = [OverlayLine]()
-    /// Screenshot with each box blurred + translation drawn in, built once
-    /// translation finishes. Shown on screen and used for copy/save so both
-    /// match exactly.
-    var composedImageData: Data?
+    /// Screenshot with each recognized box blurred (no text) — the backdrop the
+    /// glass translation chips are drawn over, so the original text is hidden.
+    var backgroundImageData: Data?
     var isTranslating = false
     var lastError: String?
-    /// Set once the user copies or saves; the window observes this to close.
+    /// Set once the user copies the text; the window observes this to close.
+    /// (Image save/copy is handled by the window controller, which captures
+    /// the live glass result on screen and then closes the window itself.)
     var finished = false
 
     @Shared(.settings) var settings
@@ -35,20 +36,15 @@ struct RegionCaptureFeature {
     case task
     case captured(Result<CapturedRegion, any Error>)
     case translated(id: UUID, text: String)
-    case composedReady(Data?)
-    case copyImageRequested
+    case backgroundReady(Data?)
     case copyOriginalRequested
     case copyTranslationRequested
-    case saveRequested
-    case saved
   }
 
-  @Dependency(\.date.now) var now
-  @Dependency(OCRClient.self) var ocr
+  @Dependency(\.ocr) var ocr
   @Dependency(\.pasteboard) var pasteboard
-  @Dependency(\.savePanel) var savePanel
-  @Dependency(ScreenCaptureClient.self) var screenCapture
-  @Dependency(TranslationClient.self) var translation
+  @Dependency(\.screenCapture) var screenCapture
+  @Dependency(\.translation) var translation
   @Dependency(\.uuid) var uuid
 
   var body: some Reducer<State, Action> {
@@ -78,15 +74,22 @@ struct RegionCaptureFeature {
         state.imageData = captured.pngData
         state.imageSize = captured.size
         state.overlayLines = captured.lines.map {
-          OverlayLine(id: uuid(), box: $0.boundingBoxNormalized, sourceText: $0.text, translated: nil)
+          OverlayLine(id: uuid(), box: $0.boundingBoxNormalized, sourceText: $0.text, translated: nil, rowCount: $0.rowCount)
         }
-        guard !state.overlayLines.isEmpty else { return .none }
+        guard !state.overlayLines.isEmpty, let data = captured.pngData else { return .none }
         state.isTranslating = true
         let source = state.settings.languages.source.localeLanguage
         let target = state.settings.languages.target.localeLanguage
         let strategy = state.settings.translation.strategy
         let lines = state.overlayLines
-        return .run { send in
+        let size = state.imageSize
+        // Build the blurred backdrop (boxes blurred, no text) once up front; the
+        // glass chips are drawn over it live as translations arrive.
+        let background = Effect<Action>.run { send in
+          let bg = await MainActor.run { blurredBackground(baseData: data, lines: lines, pixelSize: size) }
+          await send(.backgroundReady(bg))
+        }
+        let translate = Effect<Action>.run { send in
           await withTaskGroup(of: Void.self) { group in
             for line in lines {
               group.addTask {
@@ -96,9 +99,14 @@ struct RegionCaptureFeature {
             }
           }
         }
+        return .merge(background, translate)
 
       case .captured(.failure(let error)):
         state.lastError = error.localizedDescription
+        return .none
+
+      case .backgroundReady(let data):
+        state.backgroundImageData = data
         return .none
 
       case .translated(let id, let text):
@@ -106,22 +114,7 @@ struct RegionCaptureFeature {
           state.overlayLines[index].translated = text
         }
         state.isTranslating = state.overlayLines.contains { $0.translated == nil }
-        guard !state.isTranslating, let data = state.imageData else { return .none }
-        let lines = state.overlayLines
-        let size = state.imageSize
-        return .run { send in
-          let composed = await MainActor.run { composeBlurredImage(baseData: data, lines: lines, pixelSize: size) }
-          await send(.composedReady(composed))
-        }
-
-      case .composedReady(let data):
-        state.composedImageData = data
         return .none
-
-      case .copyImageRequested:
-        guard let data = state.composedImageData else { return .none }
-        state.finished = true
-        return .run { _ in await pasteboard.copyImage(data) }
 
       case .copyOriginalRequested:
         let text = state.overlayLines.map(\.sourceText).joined(separator: "\n")
@@ -134,21 +127,6 @@ struct RegionCaptureFeature {
         guard !text.isEmpty else { return .none }
         state.finished = true
         return .run { _ in await pasteboard.copyString(text) }
-
-      case .saveRequested:
-        guard let data = state.composedImageData else { return .none }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-        let name = "SwiftyCrow-\(formatter.string(from: now)).png"
-        return .run { send in
-          if await savePanel.savePNG(data, name) {
-            await send(.saved)
-          }
-        }
-
-      case .saved:
-        state.finished = true
-        return .none
       }
     }
   }
@@ -171,24 +149,22 @@ extension CGImage {
   }
 }
 
-// MARK: - Blurred composition
+// MARK: - Blurred backdrop
 
-/// Builds the result image: the screenshot with each recognized box gaussian
-/// blurred, darkened for legibility, and the translation drawn on top. Used for
-/// both the on-screen preview and copy/save so they're identical.
+/// The screenshot with each recognized box gaussian blurred (rounded), so the
+/// original text behind the translation chips is obscured. The glass chips are
+/// drawn over this on screen.
 @MainActor
-func composeBlurredImage(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) -> Data? {
+func blurredBackground(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) -> Data? {
   guard
+    pixelSize.width > 0, pixelSize.height > 0,
     let baseImage = NSImage(data: baseData),
-    let baseCG = baseImage.cgImage(forProposedRect: nil, context: nil, hints: nil),
-    pixelSize.width > 0, pixelSize.height > 0
+    let baseCG = baseImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
   else { return nil }
 
   let result = NSImage(size: pixelSize)
   result.lockFocus()
-
-  let fullRect = CGRect(origin: .zero, size: pixelSize)
-  baseImage.draw(in: fullRect)
+  baseImage.draw(in: CGRect(origin: .zero, size: pixelSize))
 
   // Blur the whole image once, then crop each box region out of it.
   let ciContext = CIContext()
@@ -201,10 +177,7 @@ func composeBlurredImage(baseData: Data, lines: [OverlayLine], pixelSize: CGSize
   let pixelWidth = CGFloat(baseCG.width)
   let pixelHeight = CGFloat(baseCG.height)
 
-  for line in lines {
-    let text = line.translated ?? line.sourceText
-    guard !text.isEmpty else { continue }
-
+  for line in lines where !(line.translated ?? line.sourceText).isEmpty {
     // box is top-left normalized; convert to AppKit bottom-left points.
     let rect = CGRect(
       x: line.box.minX * pixelSize.width,
@@ -212,32 +185,20 @@ func composeBlurredImage(baseData: Data, lines: [OverlayLine], pixelSize: CGSize
       width: line.box.width * pixelSize.width,
       height: line.box.height * pixelSize.height
     )
-
-    // Crop the blurred copy in top-left pixel coords and draw it in the box.
     let cropRect = CGRect(
       x: line.box.minX * pixelWidth,
       y: line.box.minY * pixelHeight,
       width: line.box.width * pixelWidth,
       height: line.box.height * pixelHeight
     )
+    let corner = min(6, rect.height * 0.2)
+    let clip = NSBezierPath(roundedRect: rect, xRadius: corner, yRadius: corner)
+    NSGraphicsContext.saveGraphicsState()
+    clip.addClip()
     if let blurredCG, let cropped = blurredCG.cropping(to: cropRect) {
       NSImage(cgImage: cropped, size: rect.size).draw(in: rect)
     }
-
-    NSColor.black.withAlphaComponent(0.35).setFill()
-    NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-
-    let fontSize = max(8, rect.height * 0.58)
-    let style = NSMutableParagraphStyle()
-    style.lineBreakMode = .byTruncatingTail
-    let attrs: [NSAttributedString.Key: Any] = [
-      .font: NSFont.systemFont(ofSize: fontSize, weight: .semibold),
-      .foregroundColor: NSColor.white,
-      .paragraphStyle: style,
-    ]
-    let inset = max(0, (rect.height - fontSize * 1.2) / 2)
-    let textRect = rect.insetBy(dx: 6, dy: inset)
-    (text as NSString).draw(in: textRect, withAttributes: attrs)
+    NSGraphicsContext.restoreGraphicsState()
   }
 
   result.unlockFocus()
@@ -312,9 +273,15 @@ private final class RegionResultWindowController {
 
     // NSHostingController (not NSHostingView) joins the responder chain, so
     // SwiftUI .keyboardShortcut and .help work inside the window.
-    let hosting = NSHostingController(rootView: RegionResultView(store: store) { [weak panel] in
-      panel?.close()
-    })
+    let hosting = NSHostingController(
+      rootView: RegionResultView(
+        store: store,
+        onImageFrame: { [weak self] rect in self?.imageContentFrame = rect },
+        onSaveImage: { [weak self] in self?.saveImage() },
+        onCopyImage: { [weak self] in self?.copyImage() },
+        onClose: { [weak panel] in panel?.close() }
+      )
+    )
     panel.contentViewController = hosting
 
     panel.center()
@@ -343,8 +310,49 @@ private final class RegionResultWindowController {
 
   // MARK: Private
 
+  @Dependency(\.date.now) private var now
+  @Dependency(\.pasteboard) private var pasteboard
+  @Dependency(\.savePanel) private var savePanel
+  @Dependency(\.screenCapture) private var screenCapture
+
   private var panel: NSWindow?
   private var observeToken: ObserveToken?
+  /// Latest on-screen rect of the image area, in the window's top-left SwiftUI
+  /// coordinates. Used to screen-capture the glass result for save/copy.
+  private var imageContentFrame = CGRect.zero
+
+  /// Captures the live glass result on screen (the image area only), so the
+  /// saved/copied PNG is pixel-for-pixel what the user sees.
+  private func captureContentPNG() async -> Data? {
+    guard let panel, let contentView = panel.contentView, imageContentFrame.width > 1 else { return nil }
+    // SwiftUI .global is top-left within the window content; AppKit is
+    // bottom-left. Flip, then convert window → screen coordinates.
+    let f = imageContentFrame
+    let windowRect = CGRect(x: f.minX, y: contentView.bounds.height - f.maxY, width: f.width, height: f.height)
+    let screenRect = panel.convertToScreen(windowRect)
+    let image = try? await screenCapture.captureImage(screenRect, [], displayID(coveringMostOf: screenRect), nil)
+    return image?.pngData
+  }
+
+  private func saveImage() {
+    Task { @MainActor in
+      guard let data = await captureContentPNG() else { return }
+      let formatter = DateFormatter()
+      formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+      let name = "SwiftyCrow-\(formatter.string(from: now)).png"
+      if await savePanel.savePNG(data, name) {
+        panel?.close()
+      }
+    }
+  }
+
+  private func copyImage() {
+    Task { @MainActor in
+      guard let data = await captureContentPNG() else { return }
+      await pasteboard.copyImage(data)
+      panel?.close()
+    }
+  }
 
   private func fitWindow(_ panel: NSWindow, toPixelSize pixelSize: CGSize) {
     let screen = panel.screen ?? NSScreen.main

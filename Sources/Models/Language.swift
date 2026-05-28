@@ -18,6 +18,14 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   var localeLanguage: Locale.Language {
     Locale.Language(identifier: code)
   }
+
+  /// Scripts that don't separate words with spaces (Japanese, Chinese, Thai,
+  /// …). Used when stitching wrapped OCR lines: these join with no space,
+  /// while space-delimited languages — including Korean — join with one.
+  var omitsWordSpaces: Bool {
+    let base = code.split(separator: "-").first.map(String.init)?.lowercased() ?? code.lowercased()
+    return ["ja", "zh", "yue", "wuu", "th", "lo", "km", "my"].contains(base)
+  }
 }
 
 extension Language {

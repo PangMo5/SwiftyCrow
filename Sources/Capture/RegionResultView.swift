@@ -8,6 +8,11 @@ struct RegionResultView: View {
   // MARK: Internal
 
   let store: StoreOf<RegionCaptureFeature>
+  /// Reports the on-screen rect of the image area (window top-left coords) so
+  /// the controller can screen-capture exactly that region for save/copy.
+  let onImageFrame: (CGRect) -> Void
+  let onSaveImage: () -> Void
+  let onCopyImage: () -> Void
   let onClose: () -> Void
 
   var body: some View {
@@ -36,21 +41,27 @@ struct RegionResultView: View {
   @State private var hoveredHelp: String?
   @State private var keyMonitor: Any?
 
+  /// Blurred screenshot (original text hidden) when ready, else the raw capture
+  /// while the backdrop is being built; glass translation chips on top — the
+  /// same TranslationOverlayLayer the live overlay uses.
   @ViewBuilder
   private var translatedImage: some View {
-    if let composed = store.composedImageData, let image = NSImage(data: composed) {
-      // Finished: blurred composition (identical to copy/save).
-      Image(nsImage: image)
-        .resizable()
-        .aspectRatio(aspectRatio, contentMode: .fit)
-    } else if let data = store.imageData, let image = NSImage(data: data) {
-      // In progress: live overlay while translations land.
+    let backdrop = store.backgroundImageData.flatMap(NSImage.init(data:))
+      ?? store.imageData.flatMap(NSImage.init(data:))
+    if let backdrop {
       ZStack {
-        Image(nsImage: image)
+        Image(nsImage: backdrop)
           .resizable()
-        TranslationOverlayLayer(lines: store.overlayLines, glass: false)
+        TranslationOverlayLayer(lines: store.overlayLines, glass: true)
       }
       .aspectRatio(aspectRatio, contentMode: .fit)
+      .background(
+        GeometryReader { proxy in
+          Color.clear
+            .onAppear { onImageFrame(proxy.frame(in: .global)) }
+            .onChange(of: proxy.frame(in: .global)) { _, frame in onImageFrame(frame) }
+        }
+      )
     }
   }
 
@@ -69,12 +80,8 @@ struct RegionResultView: View {
         ProgressView().controlSize(.small)
       }
       Spacer()
-      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave)) {
-        store.send(.saveRequested)
-      }
-      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage)) {
-        store.send(.copyImageRequested)
-      }
+      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave), action: onSaveImage)
+      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage), action: onCopyImage)
       toolbarButton("text.quote", help: helpText("Copy original text", .regionCopyOriginal)) {
         store.send(.copyOriginalRequested)
       }
@@ -137,8 +144,8 @@ struct RegionResultView: View {
           onClose()
           return nil
         }
-        if matches(event, .regionSave) { store.send(.saveRequested); return nil }
-        if matches(event, .regionCopyImage) { store.send(.copyImageRequested); return nil }
+        if matches(event, .regionSave) { onSaveImage(); return nil }
+        if matches(event, .regionCopyImage) { onCopyImage(); return nil }
         if matches(event, .regionCopyOriginal) { store.send(.copyOriginalRequested); return nil }
         if matches(event, .regionCopyTranslation) { store.send(.copyTranslationRequested); return nil }
         return event
