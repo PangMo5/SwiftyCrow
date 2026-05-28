@@ -8,6 +8,10 @@ import SwiftUI
 struct SettingsView: View {
   var body: some View {
     TabView {
+      Tab("General", systemImage: "gearshape") {
+        Form { GeneralSection() }
+          .formStyle(.grouped)
+      }
       Tab("Languages", systemImage: "globe") {
         Form { LanguagesSection() }
           .formStyle(.grouped)
@@ -43,6 +47,37 @@ struct SettingsView: View {
     .scenePadding()
     .frame(minWidth: 520, minHeight: 360)
   }
+}
+
+// MARK: - GeneralSection
+
+private struct GeneralSection: View {
+
+  // MARK: Internal
+
+  var body: some View {
+    Section {
+      Toggle(isOn: $launchAtLogin) {
+        Text("Launch at login")
+        Text("Start SwiftyCrow automatically when you log in.")
+      }
+      .onChange(of: launchAtLogin) { _, enabled in
+        loginItem.setEnabled(enabled)
+      }
+    } header: {
+      Text("General")
+    }
+    .task {
+      launchAtLogin = loginItem.isEnabled()
+    }
+  }
+
+  // MARK: Private
+
+  @State private var launchAtLogin = false
+
+  @Dependency(\.loginItem) private var loginItem
+
 }
 
 // MARK: - LanguagesSection
