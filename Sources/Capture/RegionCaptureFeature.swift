@@ -290,9 +290,11 @@ private final class RegionResultWindowController {
 
     self.panel = panel
     // Resize the window to the screenshot's aspect ratio once the capture
-    // lands, so the image fits without scrolling.
+    // lands, so the image fits without scrolling; also remember the source
+    // pixel size so save/copy can momentarily resize to 1:1 for capture.
     observeToken = observe { [weak self, weak panel] in
       guard let self, let panel, store.imageSize != .zero else { return }
+      capturedPixelSize = store.imageSize
       fitWindow(panel, toPixelSize: store.imageSize)
     }
     NotificationCenter.default.addObserver(
@@ -320,18 +322,60 @@ private final class RegionResultWindowController {
   /// Latest on-screen rect of the image area, in the window's top-left SwiftUI
   /// coordinates. Used to screen-capture the glass result for save/copy.
   private var imageContentFrame = CGRect.zero
+  /// Source-screenshot pixel size; lets capture resize the panel to 1:1 with
+  /// the original pixels so the saved PNG isn't limited by on-screen scaling.
+  private var capturedPixelSize = CGSize.zero
 
   /// Captures the live glass result on screen (the image area only), so the
-  /// saved/copied PNG is pixel-for-pixel what the user sees.
+  /// saved/copied PNG is pixel-for-pixel what the user sees — and at the
+  /// original screenshot resolution. Briefly resizes the window so the image
+  /// area maps 1:1 to source pixels, then restores.
   private func captureContentPNG() async -> Data? {
     guard let panel, let contentView = panel.contentView, imageContentFrame.width > 1 else { return nil }
+    let originalFrame = panel.frame
+    let didResize = resizeForNativeCapture(panel: panel, contentView: contentView)
+    if didResize {
+      // Give SwiftUI a tick to relayout so imageContentFrame reflects the new
+      // window size before we read it for the capture rect.
+      try? await Task.sleep(for: .milliseconds(80))
+    }
+
     // SwiftUI .global is top-left within the window content; AppKit is
     // bottom-left. Flip, then convert window → screen coordinates.
     let f = imageContentFrame
     let windowRect = CGRect(x: f.minX, y: contentView.bounds.height - f.maxY, width: f.width, height: f.height)
     let screenRect = panel.convertToScreen(windowRect)
     let image = try? await screenCapture.captureImage(screenRect, [], displayID(coveringMostOf: screenRect), nil)
-    return image?.pngData
+    let data = image?.pngData
+
+    if didResize {
+      panel.setFrame(originalFrame, display: true)
+    }
+    return data
+  }
+
+  /// Resizes the panel so the image area matches the source's native points
+  /// (= original pixels at this display's backing scale). Skips when already
+  /// near 1:1 or when the native size wouldn't fit on screen.
+  private func resizeForNativeCapture(panel: NSWindow, contentView: NSView) -> Bool {
+    guard
+      capturedPixelSize.width > 0,
+      imageContentFrame.width > 1,
+      let screen = panel.screen ?? NSScreen.main
+    else { return false }
+    let scale = screen.backingScaleFactor
+    let nativeImageWidth = capturedPixelSize.width / scale
+    let ratio = nativeImageWidth / imageContentFrame.width
+    guard abs(ratio - 1.0) > 0.02 else { return false }
+
+    let current = contentView.frame.size
+    let target = CGSize(width: current.width * ratio, height: current.height * ratio)
+    let visible = screen.visibleFrame.size
+    guard target.width <= visible.width, target.height <= visible.height else { return false }
+
+    panel.setContentSize(target)
+    panel.center()
+    return true
   }
 
   private func saveImage() {
