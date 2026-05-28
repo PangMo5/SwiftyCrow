@@ -43,45 +43,13 @@ All hotkeys are customizable in Settings → Shortcuts.
 
 ## Configuration
 
-All persisted settings live in a single TOML file:
+Settings live in `~/.config/SwiftyCrow/config.toml`, grouped into tables that
+mirror the in-app Settings tabs — `[capture]`, `[languages]`, `[overlay]`,
+`[recognition]`, `[shortcuts]`, `[translation]`, and `[updates]`. Edits made in
+the app or by hand are kept in sync.
 
-```sh
-${XDG_CONFIG_HOME:-$HOME/.config}/SwiftyCrow/config.toml
-```
-
-The file is written by the app and can also be edited by hand — changes are picked up on next launch. Settings are grouped into sections that mirror the in-app Settings tabs:
-
-```toml
-[capture]
-interval = 0.8                      # Live Mode re-capture interval (seconds)
-
-[languages]
-[languages.source]
-code = "en-US"
-[languages.target]
-code = "ko-KR"
-
-[overlay]
-enabled = true
-hideOnHover = false
-
-[recognition]
-mode = "text"                       # "text" or "document"
-
-[shortcuts]
-selectRegion = "cmd + shift - c"    # skhd-style; omit a key to leave it unset
-toggleLive = "cmd + shift - l"
-toggleOverlay = "cmd + shift - o"
-
-[translation]
-strategy = "lowLatency"             # or "highFidelity" (macOS 26.4+)
-
-[updates]
-automaticChecks = true
-checkInterval = "daily"             # "hourly", "daily", or "weekly"
-```
-
-Window position/size is UI state, so it lives in `~/Library/Application Support/SwiftyCrow/overlay-frame.json`, not here. The capture-window Save/Copy keys are stored by macOS (set them in Settings → Shortcuts), also not in this file.
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the full reference —
+every key, its default, and the shortcut syntax.
 
 ## Development
 
