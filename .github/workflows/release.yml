@@ -158,6 +158,27 @@ jobs:
             --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/" \
             "$RUNNER_TEMP/release"
 
+      - name: Add release-notes links to appcast
+        env:
+          APPCAST: ${{ runner.temp }}/release/appcast.xml
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          sparkle = "http://www.andymatuschak.org/xml-namespaces/sparkle"
+          ET.register_namespace("sparkle", sparkle)
+          path, repo = os.environ["APPCAST"], os.environ["REPO"]
+          tree = ET.parse(path)
+          for item in tree.getroot().iter("item"):
+              version = item.find(f"{{{sparkle}}}shortVersionString")
+              if version is None or item.find(f"{{{sparkle}}}releaseNotesLink") is not None:
+                  continue
+              link = ET.SubElement(item, f"{{{sparkle}}}releaseNotesLink")
+              link.text = f"https://github.com/{repo}/releases/tag/v{version.text}"
+          tree.write(path, xml_declaration=True, encoding="utf-8")
+          print("appcast: release-notes links added")
+          PY
+
       - name: Publish GitHub Release
         run: |
           gh release create "${{ github.ref_name }}" \
