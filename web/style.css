@@ -76,6 +76,13 @@ img { display: block; max-width: 100%; }
 .nav-links a { color: var(--text); font-size: 12px; opacity: 0.85; letter-spacing: -0.01em; }
 .nav-links a:hover { opacity: 1; text-decoration: none; }
 .nav-links a.active { opacity: 1; color: var(--blue); }
+/* On phones, drop the wordmark (icon stays) and tighten links so the bar
+   never overflows. */
+@media (max-width: 640px) {
+  .nav-inner { gap: 12px; padding: 0 16px; }
+  .nav-brand .brand-name { display: none; }
+  .nav-links { gap: 16px; }
+}
 
 /* Generic sections */
 section { padding: 100px 22px; text-align: center; }
