@@ -161,6 +161,8 @@ footer { background: var(--bg-gray); color: var(--text-secondary); font-size: 12
 .footer-links { display: flex; gap: 20px; flex-wrap: wrap; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--hairline); }
 .footer-links a { color: var(--text-secondary); }
 footer p { line-height: 1.5; }
+.footer-apps { margin-top: 10px; }
+.footer-apps .cur { color: var(--text); font-weight: 600; }
 
 /* ---------- Landing page ---------- */
 .hero { padding-top: 70px; padding-bottom: 40px; }
