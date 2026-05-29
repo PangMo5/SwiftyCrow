@@ -24,7 +24,7 @@ jobs:
       TUIST_DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
       TUIST_SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Resolve version
         id: version
@@ -38,7 +38,7 @@ jobs:
           fi
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
 
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
 
       - name: Import Developer ID certificate
         env:
@@ -281,7 +281,7 @@ jobs:
           # Sparkle feed.
           cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ runner.temp }}/site
 
@@ -293,4 +293,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
