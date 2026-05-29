@@ -1,0 +1,75 @@
+name: Deploy site
+
+# Publishes the marketing/docs site to GitHub Pages independently of releases.
+# The release workflow owns appcast.xml (it signs + regenerates it); this
+# workflow re-publishes the currently live appcast alongside the site so a site
+# deploy never wipes the Sparkle feed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "Resources/Marketing/app-icon.png"
+      - "Resources/Marketing/demo.gif"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          SITE="$RUNNER_TEMP/site"
+          mkdir -p "$SITE"
+
+          # Latest release version for the no-JS download/version fallback in
+          # index.html (the page also resolves this live via the API).
+          VERSION="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)"
+          echo "Latest version: ${VERSION:-<none>}"
+
+          cp web/*.html web/*.css "$SITE/"
+          if [ -n "$VERSION" ]; then
+            sed -i "s/__VERSION__/${VERSION}/g" "$SITE/index.html"
+          fi
+          cp Resources/Marketing/app-icon.png "$SITE/icon.png"
+          cp Resources/Marketing/demo.gif "$SITE/demo.gif"
+
+          # Preserve the Sparkle feed. GitHub Pages replaces the whole site on
+          # deploy, so re-publish the live appcast.xml. Fail rather than deploy
+          # without it (deploying without it would break in-app updates).
+          OWNER_LC="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          NAME="${REPO##*/}"
+          curl -fsSL "https://${OWNER_LC}.github.io/${NAME}/appcast.xml" -o "$SITE/appcast.xml"
+          echo "Bundled appcast.xml ($(wc -c < "$SITE/appcast.xml") bytes)"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
