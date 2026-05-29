@@ -274,9 +274,6 @@ jobs:
           sed "s/__VERSION__/${VERSION}/g" web/index.html > "$RUNNER_TEMP/site/index.html"
           cp Resources/Marketing/app-icon.png "$RUNNER_TEMP/site/icon.png"
           cp Resources/Marketing/demo.gif "$RUNNER_TEMP/site/demo.gif"
-          # Custom domain (keep in the artifact so a release deploy doesn't
-          # drop it).
-          echo "swiftycrow.pangmo5.dev" > "$RUNNER_TEMP/site/CNAME"
           # Cache-bust the stylesheet so a CSS change is never masked by a
           # stale browser cache.
           BUST="${GITHUB_SHA:0:8}"
