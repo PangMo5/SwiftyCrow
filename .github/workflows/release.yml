@@ -158,33 +158,82 @@ jobs:
             --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/" \
             "$RUNNER_TEMP/release"
 
-      - name: Add release-notes links to appcast
+      - name: Embed release notes in appcast
         env:
           APPCAST: ${{ runner.temp }}/release/appcast.xml
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # This version's changelog section (### promoted to ##), without the
+          # install boilerplate — Sparkle shows the actual changes inline.
+          awk -v h="## ${VERSION} " 'index($0, h) == 1 { g = 1; next } g && /^## / { exit } g { print }' \
+            CHANGELOG.md | sed 's/^### /## /' > "$RUNNER_TEMP/changelog-section.md"
+          SECTION="$RUNNER_TEMP/changelog-section.md" python3 - <<'PY'
+          import os, re, html as H
+          def inline(s):
+              s = H.escape(s)
+              s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+              s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+              s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+              s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", s)
+              return s
+          out, in_ul = [], False
+          for line in open(os.environ["SECTION"], encoding="utf-8").read().splitlines():
+              if line.startswith("## "):
+                  if in_ul: out.append("</ul>"); in_ul = False
+                  out.append("<h2>" + inline(line[3:].strip()) + "</h2>")
+              elif line.startswith("- "):
+                  if not in_ul: out.append("<ul>"); in_ul = True
+                  out.append("<li>" + inline(line[2:].strip()) + "</li>")
+              elif line.strip() == "":
+                  if in_ul: out.append("</ul>"); in_ul = False
+              else:
+                  if in_ul: out.append("</ul>"); in_ul = False
+                  out.append("<p>" + inline(line.strip()) + "</p>")
+          if in_ul: out.append("</ul>")
+          html = "\n".join(out).strip()
+          appcast = os.environ["APPCAST"]
+          xml = open(appcast, encoding="utf-8").read()
+          if html and "<description>" not in xml:
+              desc = "<description><![CDATA[\n" + html + "\n]]></description>\n    "
+              xml = xml.replace("</item>", desc + "</item>", 1)
+              open(appcast, "w", encoding="utf-8").write(xml)
+              print("appcast: embedded release notes")
+          else:
+              print("appcast: skipped (no notes or description already present)")
+          PY
+
+      - name: Build release notes from CHANGELOG
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
         run: |
-          python3 - <<'PY'
-          import os, xml.etree.ElementTree as ET
-          sparkle = "http://www.andymatuschak.org/xml-namespaces/sparkle"
-          ET.register_namespace("sparkle", sparkle)
-          path, repo = os.environ["APPCAST"], os.environ["REPO"]
-          tree = ET.parse(path)
-          for item in tree.getroot().iter("item"):
-              version = item.find(f"{{{sparkle}}}shortVersionString")
-              if version is None or item.find(f"{{{sparkle}}}releaseNotesLink") is not None:
-                  continue
-              link = ET.SubElement(item, f"{{{sparkle}}}releaseNotesLink")
-              link.text = f"https://github.com/{repo}/releases/tag/v{version.text}"
-          tree.write(path, xml_declaration=True, encoding="utf-8")
-          print("appcast: release-notes links added")
-          PY
+          set -euo pipefail
+          NOTES="$RUNNER_TEMP/release-notes.md"
+          # Pull this version's section from CHANGELOG.md (the source of truth),
+          # promoting its ### subheadings to ## for the GitHub release.
+          awk -v h="## ${VERSION} " 'index($0, h) == 1 { g = 1; next } g && /^## / { exit } g { print }' \
+            CHANGELOG.md | sed 's/^### /## /' > "$NOTES"
+          if [ ! -s "$NOTES" ]; then
+            echo "See the [changelog](https://github.com/${REPO}/blob/main/CHANGELOG.md)." > "$NOTES"
+          fi
+          # Append the install/update boilerplate (kept out of CHANGELOG.md).
+          cat >> "$NOTES" <<EOF
+
+## Install / Update
+
+- Homebrew: \`brew upgrade --cask swiftycrow\`
+- Direct: [SwiftyCrow-${VERSION}.dmg](https://github.com/${REPO}/releases/download/${TAG}/SwiftyCrow-${VERSION}.dmg)
+- In-app: Sparkle will pick this up on its next check.
+EOF
 
       - name: Publish GitHub Release
         run: |
           gh release create "${{ github.ref_name }}" \
             "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
             --title "${{ github.ref_name }}" \
-            --generate-notes
+            --notes-file "$RUNNER_TEMP/release-notes.md"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -213,10 +262,19 @@ jobs:
           git commit -am "swiftycrow ${VERSION}"
           git push
 
-      - name: Publish appcast to GitHub Pages
+      - name: Assemble GitHub Pages site (landing page + appcast)
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/site"
+          # Static pages (configuration.html / releases.html render their source
+          # of truth at runtime; index.html gets the release version injected).
+          cp web/*.html web/*.css "$RUNNER_TEMP/site/"
+          sed "s/__VERSION__/${VERSION}/g" web/index.html > "$RUNNER_TEMP/site/index.html"
+          cp Resources/Marketing/app-icon.png "$RUNNER_TEMP/site/icon.png"
+          cp Resources/Marketing/demo.gif "$RUNNER_TEMP/site/demo.gif"
+          # Sparkle feed.
           cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 
       - uses: actions/upload-pages-artifact@v3
