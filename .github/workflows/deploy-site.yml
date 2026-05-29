@@ -52,6 +52,10 @@ jobs:
           cp Resources/Marketing/app-icon.png "$SITE/icon.png"
           cp Resources/Marketing/demo.gif "$SITE/demo.gif"
 
+          # Custom domain for this project's Pages site (must be in the
+          # artifact or the deploy would drop the custom domain).
+          echo "swiftycrow.pangmo5.dev" > "$SITE/CNAME"
+
           # Cache-bust the stylesheet so a CSS change is never masked by a
           # stale browser cache (HTML + CSS stay in lockstep per deploy).
           BUST="${GITHUB_SHA:0:8}"
