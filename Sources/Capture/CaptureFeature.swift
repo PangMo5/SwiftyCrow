@@ -45,7 +45,9 @@ struct CaptureFeature {
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
-    case translationResponse(lineID: UUID, key: TranslationCacheKey, Result<String, any Error>)
+    case translationCompleted
+    case translationFailed(String)
+    case translationResponse(lineID: UUID, key: TranslationCacheKey, translated: String)
   }
 
   @Dependency(\.continuousClock) var clock
@@ -144,17 +146,19 @@ struct CaptureFeature {
       case .toggleLiveRequested:
         return .send(.setLive(!state.isLive))
 
-      case .translationResponse(_, _, .failure(let error)):
-        state.lastError = error.localizedDescription
-        state.isTranslating = state.overlayLines.contains { $0.translated == nil }
+      case .translationCompleted:
+        state.isTranslating = false
         return .none
 
-      case .translationResponse(let lineID, let key, .success(let translated)):
+      case .translationFailed(let message):
+        state.lastError = message
+        return .none
+
+      case .translationResponse(let lineID, let key, let translated):
         state.translationCache[key] = translated
         if let index = state.overlayLines.firstIndex(where: { $0.id == lineID }) {
           state.overlayLines[index].translated = translated
         }
-        state.isTranslating = state.overlayLines.contains { $0.translated == nil }
         return .none
       }
     }
@@ -224,27 +228,21 @@ struct CaptureFeature {
       return .cancel(id: CancelID.translation)
     }
 
+    let items = pending.map { TranslationLine(id: $0.line.id, text: $0.line.sourceText) }
+    let keys = Dictionary(uniqueKeysWithValues: pending.map { ($0.line.id, $0.key) })
     return .run { send in
-      await withTaskGroup(of: Void.self) { group in
-        for item in pending {
-          group.addTask {
-            await send(
-              .translationResponse(
-                lineID: item.line.id,
-                key: item.key,
-                Result {
-                  try await translation.translate(
-                    item.line.sourceText,
-                    source,
-                    target,
-                    strategy
-                  )
-                }
-              )
-            )
+      // One session for the whole batch; chips update as each result streams
+      // back. translationCompleted clears the spinner once the stream ends.
+      do {
+        for try await result in translation.translateBatch(items, source, target, strategy) {
+          if let key = keys[result.id] {
+            await send(.translationResponse(lineID: result.id, key: key, translated: result.text))
           }
         }
+      } catch {
+        await send(.translationFailed(error.localizedDescription))
       }
+      await send(.translationCompleted)
     }
     .cancellable(id: CancelID.translation, cancelInFlight: true)
   }

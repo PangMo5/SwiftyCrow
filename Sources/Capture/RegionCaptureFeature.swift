@@ -1,8 +1,10 @@
 import AppKit
 import ComposableArchitecture
 import CoreGraphics
+import CoreImage
 import DependenciesMacros
 import Foundation
+import ImageIO
 import Sharing
 import SwiftUI
 
@@ -86,17 +88,23 @@ struct RegionCaptureFeature {
         // Build the blurred backdrop (boxes blurred, no text) once up front; the
         // glass chips are drawn over it live as translations arrive.
         let background = Effect<Action>.run { send in
-          let bg = await MainActor.run { blurredBackground(baseData: data, lines: lines, pixelSize: size) }
+          // Pure Core Graphics / Core Image — runs off the main actor.
+          let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
           await send(.backgroundReady(bg))
         }
+        let items = lines.map { TranslationLine(id: $0.id, text: $0.sourceText) }
         let translate = Effect<Action>.run { send in
-          await withTaskGroup(of: Void.self) { group in
-            for line in lines {
-              group.addTask {
-                let translated = try? await translation.translate(line.sourceText, source, target, strategy)
-                await send(.translated(id: line.id, text: translated ?? line.sourceText))
-              }
+          // Any line the batch doesn't return (or an error) falls back to its
+          // source text, so every chip resolves and the spinner clears.
+          var remaining = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0.sourceText) })
+          do {
+            for try await result in translation.translateBatch(items, source, target, strategy) {
+              remaining[result.id] = nil
+              await send(.translated(id: result.id, text: result.text))
             }
+          } catch {}
+          for (id, sourceText) in remaining {
+            await send(.translated(id: id, text: sourceText))
           }
         }
         return .merge(background, translate)
@@ -154,57 +162,68 @@ extension CGImage {
 /// The screenshot with each recognized box gaussian blurred (rounded), so the
 /// original text behind the translation chips is obscured. The glass chips are
 /// drawn over this on screen.
-@MainActor
+///
+/// Built entirely with thread-safe Core Graphics / Core Image (no AppKit
+/// `lockFocus`), so it runs off the main actor and doesn't stall the UI while
+/// the gaussian blur and per-box compositing happen.
 func blurredBackground(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) -> Data? {
   guard
     pixelSize.width > 0, pixelSize.height > 0,
-    let baseImage = NSImage(data: baseData),
-    let baseCG = baseImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    let source = CGImageSourceCreateWithData(baseData as CFData, nil),
+    let baseCG = CGImageSourceCreateImageAtIndex(source, 0, nil)
   else { return nil }
 
-  let result = NSImage(size: pixelSize)
-  result.lockFocus()
-  baseImage.draw(in: CGRect(origin: .zero, size: pixelSize))
+  let width = baseCG.width
+  let height = baseCG.height
+  let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+  guard let context = CGContext(
+    data: nil,
+    width: width,
+    height: height,
+    bitsPerComponent: 8,
+    bytesPerRow: 0,
+    space: colorSpace,
+    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+  ) else { return nil }
+
+  let w = CGFloat(width)
+  let h = CGFloat(height)
+  context.draw(baseCG, in: CGRect(x: 0, y: 0, width: w, height: h))
 
   // Blur the whole image once, then crop each box region out of it.
   let ciContext = CIContext()
   let ciBase = CIImage(cgImage: baseCG)
-  let blurredCI = ciBase
+  let blurred = ciBase
     .clampedToExtent()
-    .applyingGaussianBlur(sigma: max(6, CGFloat(baseCG.height) * 0.012))
+    .applyingGaussianBlur(sigma: max(6, h * 0.012))
     .cropped(to: ciBase.extent)
-  let blurredCG = ciContext.createCGImage(blurredCI, from: ciBase.extent)
-  let pixelWidth = CGFloat(baseCG.width)
-  let pixelHeight = CGFloat(baseCG.height)
+  let blurredCG = ciContext.createCGImage(blurred, from: ciBase.extent)
 
   for line in lines where !(line.translated ?? line.sourceText).isEmpty {
-    // box is top-left normalized; convert to AppKit bottom-left points.
+    // box is top-left normalized; convert to the context's bottom-left space.
     let rect = CGRect(
-      x: line.box.minX * pixelSize.width,
-      y: (1 - line.box.maxY) * pixelSize.height,
-      width: line.box.width * pixelSize.width,
-      height: line.box.height * pixelSize.height
+      x: line.box.minX * w,
+      y: (1 - line.box.maxY) * h,
+      width: line.box.width * w,
+      height: line.box.height * h
     )
+    // CGImage cropping is top-left, matching the normalized box directly.
     let cropRect = CGRect(
-      x: line.box.minX * pixelWidth,
-      y: line.box.minY * pixelHeight,
-      width: line.box.width * pixelWidth,
-      height: line.box.height * pixelHeight
+      x: line.box.minX * w,
+      y: line.box.minY * h,
+      width: line.box.width * w,
+      height: line.box.height * h
     )
+    guard let blurredCG, let cropped = blurredCG.cropping(to: cropRect) else { continue }
     let corner = min(6, rect.height * 0.2)
-    let clip = NSBezierPath(roundedRect: rect, xRadius: corner, yRadius: corner)
-    NSGraphicsContext.saveGraphicsState()
-    clip.addClip()
-    if let blurredCG, let cropped = blurredCG.cropping(to: cropRect) {
-      NSImage(cgImage: cropped, size: rect.size).draw(in: rect)
-    }
-    NSGraphicsContext.restoreGraphicsState()
+    context.saveGState()
+    context.addPath(CGPath(roundedRect: rect, cornerWidth: corner, cornerHeight: corner, transform: nil))
+    context.clip()
+    context.draw(cropped, in: rect)
+    context.restoreGState()
   }
 
-  result.unlockFocus()
-
-  guard let tiff = result.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) else { return nil }
-  return rep.representation(using: .png, properties: [:])
+  return context.makeImage()?.pngData
 }
 
 // MARK: - RegionResultClient
