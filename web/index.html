@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SwiftyCrow — On-device screen translator for macOS</title>
+<meta name="description" content="SwiftyCrow translates any text on your Mac's screen — fully on-device with Apple's Vision and Translation frameworks. No cloud, no keys, no quotas." />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" type="image/png" href="./icon.png" />
+<link rel="stylesheet" href="./style.css" />
+<meta property="og:title" content="SwiftyCrow" />
+<meta property="og:description" content="On-device screen translator for macOS." />
+<meta property="og:image" content="./icon.png" />
+<meta property="og:type" content="website" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="./"><img src="./icon.png" alt="" /> SwiftyCrow</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="./configuration.html">Configuration</a>
+      <a href="./releases.html">Releases</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <img class="hero-icon" src="./icon.png" alt="SwiftyCrow app icon" />
+    <h1>SwiftyCrow</h1>
+    <p class="sub">Translate anything on your screen.<br />Entirely on your Mac.</p>
+    <div class="cta">
+      <a class="btn btn-primary download-link" href="https://github.com/PangMo5/SwiftyCrow/releases/download/v__VERSION__/SwiftyCrow-__VERSION__.dmg">Download for macOS</a>
+      <a class="btn btn-link" href="https://github.com/PangMo5/SwiftyCrow">View on GitHub&nbsp;&rsaquo;</a>
+    </div>
+    <div class="brew">
+      <code id="brew-cmd">brew install --cask PangMo5/tap/swiftycrow</code>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('brew-cmd').textContent)">Copy</button>
+    </div>
+    <p class="meta">Version <span id="version">__VERSION__</span> · Requires macOS 26 · Free &amp; open source</p>
+  </div>
+</section>
+
+<section class="showcase">
+  <div class="scene">
+    <div class="scene-rows">
+      <div class="scene-line">
+        <span class="scene-orig">これは画面上のテキストです</span>
+        <span class="scene-chip">This is text on your screen</span>
+      </div>
+      <div class="scene-line">
+        <span class="scene-orig">Traducción en el mismo lugar</span>
+        <span class="scene-chip">Translated right in place</span>
+      </div>
+      <div class="scene-line">
+        <span class="scene-orig">완전히 기기 내에서 처리됩니다</span>
+        <span class="scene-chip">Entirely on-device</span>
+      </div>
+    </div>
+    <p class="scene-caption">The translation is drawn right where you're reading.</p>
+  </div>
+</section>
+
+<section class="section-gray">
+  <div class="wrap">
+    <div class="demo-frame">
+      <img src="./demo.gif" alt="SwiftyCrow translating text on screen" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <p class="eyebrow">Private by design</p>
+    <h2>No cloud. No keys. No quotas.</h2>
+    <p class="sub">Text recognition and translation run on-device with Apple's Vision and Translation frameworks. Nothing leaves your Mac.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">✂️</div>
+        <h3>Region capture</h3>
+        <p>Drag to select any part of the screen. The translation appears in place, drawn over the blurred original.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🪟</div>
+        <h3>Live overlay</h3>
+        <p>A floating window you place over text — flip on Live mode to keep translating as the content changes.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔒</div>
+        <h3>Fully on-device</h3>
+        <p>Powered by Apple's on-device models. Works offline, with no API keys and nothing sent to a server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-dark" id="download">
+  <div class="wrap">
+    <h2>Get SwiftyCrow.</h2>
+    <p class="sub">Free, open source, and lives in your menu bar.</p>
+    <div class="cta">
+      <a class="btn btn-primary download-link" href="https://github.com/PangMo5/SwiftyCrow/releases/download/v__VERSION__/SwiftyCrow-__VERSION__.dmg">Download for macOS</a>
+      <a class="btn btn-link" href="./releases.html">Release notes&nbsp;&rsaquo;</a>
+    </div>
+    <div class="brew">
+      <code id="brew-cmd-2">brew install --cask PangMo5/tap/swiftycrow</code>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('brew-cmd-2').textContent)">Copy</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+      <a href="./releases.html">Releases</a>
+      <a href="./configuration.html">Configuration</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
+    </div>
+    <p>SwiftyCrow is open source under the Mozilla Public License 2.0. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.</p>
+  </div>
+</footer>
+
+<script>
+  // Point the download buttons + version label at the latest GitHub release.
+  // The build-time values stay as a no-JS / offline fallback.
+  (async () => {
+    try {
+      const res = await fetch("https://api.github.com/repos/PangMo5/SwiftyCrow/releases/latest", {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) return;
+      const rel = await res.json();
+      const version = (rel.tag_name || "").replace(/^v/, "");
+      const dmg = (rel.assets || []).find((a) => /\.dmg$/i.test(a.name));
+      if (version) {
+        const v = document.getElementById("version");
+        if (v) v.textContent = version;
+      }
+      // Only trust an https github.com asset URL before rewriting the button.
+      if (dmg && /^https:\/\/github\.com\//.test(dmg.browser_download_url)) {
+        document.querySelectorAll("a.download-link").forEach((a) => { a.href = dmg.browser_download_url; });
+      }
+    } catch (e) { /* keep the static fallback */ }
+  })();
+</script>
+
+</body>
+</html>

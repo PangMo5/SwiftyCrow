@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Release Notes — SwiftyCrow</title>
+<meta name="description" content="SwiftyCrow release notes — what's new in each version." />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" type="image/png" href="./icon.png" />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="./"><img src="./icon.png" alt="" /> SwiftyCrow</a>
+    <div class="nav-links">
+      <a href="./configuration.html">Configuration</a>
+      <a href="./releases.html" class="active">Releases</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="releases-head">
+  <p class="eyebrow">Release notes</p>
+  <h1>What's new</h1>
+  <p class="sub">Every version of SwiftyCrow, newest first.</p>
+</header>
+
+<div class="release-list" id="list">
+  <p class="state">Loading releases…</p>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/releases">All releases</a>
+      <a href="./configuration.html">Configuration</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
+    </div>
+    <p>Rendered from <code>CHANGELOG.md</code> on the <code>main</code> branch — the single source of truth. Not affiliated with Apple Inc.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"
+  integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi"
+  crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"
+  integrity="sha384-XQqX/4yiUGu+oyr87jvWzRuqBUK/adrY0DunhL+tID9m/9dwSpV8h9Fk/Sg6ifVQ"
+  crossorigin="anonymous"></script>
+<script>
+  const SRC = "https://raw.githubusercontent.com/PangMo5/SwiftyCrow/main/CHANGELOG.md";
+  const REPO = "https://github.com/PangMo5/SwiftyCrow";
+  const list = document.getElementById("list");
+
+  function fmtDate(s) {
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  }
+  function escapeHTML(s) {
+    return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  // Split CHANGELOG.md into version sections (each starts with a "## " heading).
+  function parse(md) {
+    const entries = [];
+    let cur = null;
+    for (const line of md.split("\n")) {
+      const h = line.match(/^##\s+(.+?)\s*$/);
+      if (h) {
+        if (cur) entries.push(cur);
+        cur = { head: h[1], body: [] };
+      } else if (cur) {
+        cur.body.push(line);
+      }
+    }
+    if (cur) entries.push(cur);
+    return entries;
+  }
+
+  async function load() {
+    if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return fail();
+    let md;
+    try {
+      const res = await fetch(SRC, { cache: "no-cache" });
+      if (!res.ok) throw new Error(res.status);
+      md = await res.text();
+    } catch (e) {
+      return fail();
+    }
+
+    const entries = parse(md);
+    if (!entries.length) return fail();
+
+    list.innerHTML = "";
+    for (const e of entries) {
+      const m = e.head.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+      const version = (m ? m[1] : e.head).trim();
+      const date = m ? fmtDate(m[2].trim()) : "";
+      const tag = "v" + version.replace(/^v/, "");
+      const body = e.body.join("\n").trim();
+
+      const el = document.createElement("article");
+      el.className = "release";
+      el.innerHTML =
+        '<div class="release-top">' +
+          '<h2>' + escapeHTML(version) + '</h2>' +
+          '<a class="release-tag" href="' + REPO + '/releases/tag/' + encodeURIComponent(tag) + '">' + escapeHTML(tag) + '</a>' +
+          (date ? '<span class="release-date">' + escapeHTML(date) + '</span>' : "") +
+        '</div>' +
+        '<div class="md">' + (body ? DOMPurify.sanitize(marked.parse(body)) : "<p>No notes.</p>") + '</div>';
+      list.appendChild(el);
+    }
+  }
+
+  function fail() {
+    list.innerHTML =
+      '<p class="state">Couldn\'t load the changelog. ' +
+      'See releases on <a href="' + REPO + '/releases">GitHub</a>.</p>';
+  }
+
+  load();
+</script>
+
+</body>
+</html>

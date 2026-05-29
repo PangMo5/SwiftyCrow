@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Configuration — SwiftyCrow</title>
+<meta name="description" content="SwiftyCrow configuration reference: every config.toml key, its default, and the shortcut syntax." />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" type="image/png" href="./icon.png" />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="./"><img src="./icon.png" alt="" /> SwiftyCrow</a>
+    <div class="nav-links">
+      <a href="./configuration.html" class="active">Configuration</a>
+      <a href="./releases.html">Releases</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="doc">
+  <aside class="doc-side" id="side" hidden>
+    <div class="side-title">Configuration</div>
+    <nav id="side-nav"></nav>
+  </aside>
+  <main class="doc-main">
+    <p class="doc-eyebrow">Reference</p>
+    <div class="md" id="content">
+      <p class="state">Loading configuration…</p>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
+      <a href="./releases.html">Releases</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/docs/CONFIGURATION.md">Source (main)</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
+    </div>
+    <p>This page renders <code>docs/CONFIGURATION.md</code> from the <code>main</code> branch — the single source of truth. Not affiliated with Apple Inc.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"
+  integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi"
+  crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"
+  integrity="sha384-XQqX/4yiUGu+oyr87jvWzRuqBUK/adrY0DunhL+tID9m/9dwSpV8h9Fk/Sg6ifVQ"
+  crossorigin="anonymous"></script>
+<script>
+  const SRC = "https://raw.githubusercontent.com/PangMo5/SwiftyCrow/main/docs/CONFIGURATION.md";
+  const content = document.getElementById("content");
+
+  function slug(text) {
+    return text.toLowerCase().trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
+
+  async function load() {
+    if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return fail();
+    let md;
+    try {
+      const res = await fetch(SRC, { cache: "no-cache" });
+      if (!res.ok) throw new Error(res.status);
+      md = await res.text();
+    } catch (e) {
+      return fail();
+    }
+
+    content.innerHTML = DOMPurify.sanitize(marked.parse(md));
+
+    // Assign stable ids and build the DocC-style sidebar from headings.
+    const sideNav = document.getElementById("side-nav");
+    const used = {};
+    const headings = content.querySelectorAll("h2, h3");
+    headings.forEach((h) => {
+      let id = slug(h.textContent) || "section";
+      if (used[id] != null) { used[id]++; id = id + "-" + used[id]; } else { used[id] = 0; }
+      h.id = id;
+      const a = document.createElement("a");
+      a.href = "#" + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === "H3" ? "lvl-3" : "lvl-2";
+      a.dataset.target = id;
+      sideNav.appendChild(a);
+    });
+    if (headings.length) document.getElementById("side").hidden = false;
+
+    // Scroll-spy: highlight the section currently in view.
+    const links = Array.from(sideNav.querySelectorAll("a"));
+    const byId = Object.fromEntries(links.map((a) => [a.dataset.target, a]));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          links.forEach((a) => a.classList.remove("active"));
+          (byId[entry.target.id] || {}).classList?.add("active");
+        }
+      });
+    }, { rootMargin: "-64px 0px -70% 0px", threshold: 0 });
+    headings.forEach((h) => observer.observe(h));
+  }
+
+  function fail() {
+    content.innerHTML =
+      '<p class="state">Couldn\'t load the configuration reference. ' +
+      'Read it on <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/docs/CONFIGURATION.md">GitHub</a>.</p>';
+  }
+
+  load();
+</script>
+
+</body>
+</html>
