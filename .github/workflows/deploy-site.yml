@@ -52,6 +52,11 @@ jobs:
           cp Resources/Marketing/app-icon.png "$SITE/icon.png"
           cp Resources/Marketing/demo.gif "$SITE/demo.gif"
 
+          # Cache-bust the stylesheet so a CSS change is never masked by a
+          # stale browser cache (HTML + CSS stay in lockstep per deploy).
+          BUST="${GITHUB_SHA:0:8}"
+          sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$SITE"/*.html
+
           # Preserve the Sparkle feed. GitHub Pages replaces the whole site on
           # deploy, so re-publish the live appcast.xml. Fail rather than deploy
           # without it (deploying without it would break in-app updates).

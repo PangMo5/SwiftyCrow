@@ -219,14 +219,14 @@ jobs:
             echo "See the [changelog](https://github.com/${REPO}/blob/main/CHANGELOG.md)." > "$NOTES"
           fi
           # Append the install/update boilerplate (kept out of CHANGELOG.md).
-          cat >> "$NOTES" <<EOF
-
-## Install / Update
-
-- Homebrew: \`brew upgrade --cask swiftycrow\`
-- Direct: [SwiftyCrow-${VERSION}.dmg](https://github.com/${REPO}/releases/download/${TAG}/SwiftyCrow-${VERSION}.dmg)
-- In-app: Sparkle will pick this up on its next check.
-EOF
+          {
+            echo ""
+            echo "## Install / Update"
+            echo ""
+            echo "- Homebrew: \`brew upgrade --cask swiftycrow\`"
+            echo "- Direct: [SwiftyCrow-${VERSION}.dmg](https://github.com/${REPO}/releases/download/${TAG}/SwiftyCrow-${VERSION}.dmg)"
+            echo "- In-app: Sparkle will pick this up on its next check."
+          } >> "$NOTES"
 
       - name: Publish GitHub Release
         run: |
@@ -274,6 +274,10 @@ EOF
           sed "s/__VERSION__/${VERSION}/g" web/index.html > "$RUNNER_TEMP/site/index.html"
           cp Resources/Marketing/app-icon.png "$RUNNER_TEMP/site/icon.png"
           cp Resources/Marketing/demo.gif "$RUNNER_TEMP/site/demo.gif"
+          # Cache-bust the stylesheet so a CSS change is never masked by a
+          # stale browser cache.
+          BUST="${GITHUB_SHA:0:8}"
+          sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$RUNNER_TEMP/site"/*.html
           # Sparkle feed.
           cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 
