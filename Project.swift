@@ -22,7 +22,7 @@ let project = Project(
         "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
         "LSUIElement": true,
         "NSScreenCaptureDescription": "SwiftyCrow captures the region under its overlay window to read text.",
-        "SUFeedURL": "https://pangmo5.github.io/SwiftyCrow/appcast.xml",
+        "SUFeedURL": "https://pangmo5.dev/SwiftyCrow/appcast.xml",
         "SUEnableAutomaticChecks": true,
         "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
       ]),
