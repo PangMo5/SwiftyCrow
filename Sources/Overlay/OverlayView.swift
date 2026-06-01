@@ -10,16 +10,24 @@ struct OverlayView: View {
   let lines: [OverlayLine]
   let isTranslating: Bool
   let isLive: Bool
+  var passThrough = false
+  var showGuide = true
 
   var body: some View {
     bodyContent
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       .overlay(
         RoundedRectangle(cornerRadius: 22, style: .continuous)
-          .strokeBorder(.white.opacity(0.35), lineWidth: 1.5)
+          .strokeBorder(
+            passThrough ? Color.accentColor.opacity(0.95) : .white.opacity(0.35),
+            lineWidth: passThrough ? 3 : 1.5
+          )
       )
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
+          if passThrough {
+            PassThroughBadge()
+          }
           if isLive {
             LiveBadge()
           }
@@ -30,13 +38,16 @@ struct OverlayView: View {
         }
         .padding(10)
       }
+      .animation(.easeOut(duration: 0.15), value: passThrough)
   }
 
   // MARK: Private
 
   @ViewBuilder
   private var bodyContent: some View {
-    if lines.isEmpty {
+    if !lines.isEmpty {
+      TranslationOverlayLayer(lines: lines)
+    } else if showGuide {
       ScrollView(.vertical, showsIndicators: false) {
         EmptyOverlayGuide()
       }
@@ -46,8 +57,26 @@ struct OverlayView: View {
       .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
       .padding(12)
     } else {
-      TranslationOverlayLayer(lines: lines)
+      // Idle after a Live toggle: just a transparent, draggable frame.
+      Color.clear
     }
+  }
+}
+
+// MARK: - PassThroughBadge
+
+private struct PassThroughBadge: View {
+  var body: some View {
+    HStack(spacing: 4) {
+      Image(systemName: "cursorarrow.rays")
+        .font(.system(size: 9, weight: .bold))
+      Text("PASS-THROUGH")
+        .font(.system(size: 10, weight: .bold, design: .rounded))
+    }
+    .foregroundStyle(.tint)
+    .padding(.horizontal, 7)
+    .padding(.vertical, 3)
+    .glassEffect(.regular, in: Capsule())
   }
 }
 

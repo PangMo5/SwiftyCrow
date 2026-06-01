@@ -72,10 +72,15 @@ struct OverlaySettings: Codable, Equatable, Sendable {
     let d = OverlaySettings()
     enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? d.enabled
     hideOnHover = try c.decodeIfPresent(Bool.self, forKey: .hideOnHover) ?? d.hideOnHover
+    passThrough = try c.decodeIfPresent(Bool.self, forKey: .passThrough) ?? d.passThrough
   }
 
   var enabled = true
   var hideOnHover = false
+  /// When true, the overlay lets all mouse interaction (clicks, scrolling,
+  /// dragging) pass through to the apps below it. The edges still resize it and
+  /// the top-right badge still drags it.
+  var passThrough = false
 }
 
 // MARK: - RecognitionSettings
@@ -98,6 +103,7 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
   var selectRegion: HotKey?
   var toggleLive: HotKey?
   var toggleOverlay: HotKey?
+  var togglePassThrough: HotKey?
 }
 
 // MARK: - TranslationSettings

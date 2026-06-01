@@ -79,8 +79,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       lines: store.capture.overlayLines,
       isVisible: store.settings.overlay.enabled,
       hideOnHover: store.settings.overlay.hideOnHover,
+      passThrough: store.settings.overlay.passThrough,
       isTranslating: store.capture.isTranslating,
-      isLive: store.capture.isLive
+      isLive: store.capture.isLive,
+      showGuide: store.capture.showGuide
     )
   }
 

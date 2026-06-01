@@ -14,6 +14,7 @@ struct AppFeature {
     case capture(CaptureFeature.Action)
     case task
     case toggleOverlayRequested
+    case togglePassThroughRequested
   }
 
   @Dependency(\.keyboardShortcuts) var keyboardShortcuts
@@ -39,6 +40,8 @@ struct AppFeature {
                 await send(.capture(.toggleLiveRequested))
               case .toggleOverlay:
                 await send(.toggleOverlayRequested)
+              case .togglePassThrough:
+                await send(.togglePassThroughRequested)
               }
             }
           },
@@ -51,14 +54,14 @@ struct AppFeature {
           },
           .run { [settings = state.$settings] send in
             var isFirst = true
-            for await _ in Observations({ settings.wrappedValue.overlay.enabled }) {
-              // Skip the initial emission; only clear on actual toggles so a
+            for await enabled in Observations({ settings.wrappedValue.overlay.enabled }) {
+              // Skip the initial emission; only react to actual toggles so a
               // stale capture doesn't linger when the overlay is switched.
               if isFirst {
                 isFirst = false
                 continue
               }
-              await send(.capture(.clearResults))
+              await send(.capture(.overlayToggled(enabled)))
             }
           },
           .run { [keyboardShortcuts, settings = state.$settings] _ in
@@ -68,12 +71,14 @@ struct AppFeature {
               (
                 settings.wrappedValue.shortcuts.selectRegion,
                 settings.wrappedValue.shortcuts.toggleLive,
-                settings.wrappedValue.shortcuts.toggleOverlay
+                settings.wrappedValue.shortcuts.toggleOverlay,
+                settings.wrappedValue.shortcuts.togglePassThrough
               )
             }) {
               keyboardShortcuts.setShortcut(.selectRegion, keys.0)
               keyboardShortcuts.setShortcut(.toggleLive, keys.1)
               keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
+              keyboardShortcuts.setShortcut(.togglePassThrough, keys.3)
             }
           }
         )
@@ -83,6 +88,10 @@ struct AppFeature {
         if !state.settings.overlay.enabled, state.capture.isLive {
           return .send(.capture(.setLive(false)))
         }
+        return .none
+
+      case .togglePassThroughRequested:
+        state.$settings.withLock { $0.overlay.passThrough.toggle() }
         return .none
       }
     }

@@ -8,12 +8,14 @@ enum KeyboardShortcutEvent: Equatable, CaseIterable {
   case selectRegion
   case toggleLive
   case toggleOverlay
+  case togglePassThrough
 
   var name: KeyboardShortcuts.Name {
     switch self {
     case .selectRegion: .selectRegion
     case .toggleLive: .toggleLive
     case .toggleOverlay: .toggleOverlay
+    case .togglePassThrough: .togglePassThrough
     }
   }
 }
@@ -44,6 +46,9 @@ extension KeyboardShortcutsClient: DependencyKey {
           KeyboardShortcuts.onKeyUp(for: .toggleOverlay) {
             continuation.yield(.toggleOverlay)
           }
+          KeyboardShortcuts.onKeyUp(for: .togglePassThrough) {
+            continuation.yield(.togglePassThrough)
+          }
         }
         continuation.onTermination = { _ in task.cancel() }
       }
@@ -67,6 +72,7 @@ extension KeyboardShortcuts.Name {
   static let selectRegion = Self("selectRegion")
   static let toggleLive = Self("toggleLive")
   static let toggleOverlay = Self("toggleOverlay")
+  static let togglePassThrough = Self("togglePassThrough")
 
   // Capture-result-window actions. These are matched locally by an NSEvent
   // monitor while the window is focused (never globally registered), so they

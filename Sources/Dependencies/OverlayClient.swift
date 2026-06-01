@@ -8,8 +8,10 @@ struct OverlayRenderState: Equatable, Sendable {
   var lines: [OverlayLine]
   var isVisible: Bool
   var hideOnHover: Bool
+  var passThrough: Bool
   var isTranslating: Bool
   var isLive: Bool
+  var showGuide: Bool
 }
 
 // MARK: - OverlayClient
@@ -40,8 +42,10 @@ extension OverlayClient: DependencyKey {
           lines: state.lines,
           isVisible: state.isVisible,
           hideOnHover: state.hideOnHover,
+          passThrough: state.passThrough,
           isTranslating: state.isTranslating,
-          isLive: state.isLive
+          isLive: state.isLive,
+          showGuide: state.showGuide
         )
       },
       windowID: { await resolve().windowID }

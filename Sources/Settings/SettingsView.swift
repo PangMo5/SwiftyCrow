@@ -209,6 +209,10 @@ private struct OverlaySection: View {
     Section {
       Toggle("Enable overlay", isOn: Binding($settings.overlay.enabled))
       Toggle("Hide on hover", isOn: Binding($settings.overlay.hideOnHover))
+      Toggle(isOn: Binding($settings.overlay.passThrough)) {
+        Text("Pass-through interaction")
+        Text("Clicks, scrolling, and dragging go to the apps below; the overlay can't be moved while on.")
+      }
     } header: {
       Text("Overlay")
     } footer: {
@@ -240,6 +244,9 @@ private struct ShortcutsSection: View {
       }
       KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay) { shortcut in
         $settings.withLock { $0.shortcuts.toggleOverlay = shortcut.map(HotKey.init) }
+      }
+      KeyboardShortcuts.Recorder("Toggle pass-through", name: .togglePassThrough) { shortcut in
+        $settings.withLock { $0.shortcuts.togglePassThrough = shortcut.map(HotKey.init) }
       }
     } header: {
       Text("Global Shortcuts")

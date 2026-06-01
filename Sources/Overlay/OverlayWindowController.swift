@@ -18,13 +18,17 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     lines: [OverlayLine],
     isVisible: Bool,
     hideOnHover: Bool,
+    passThrough: Bool,
     isTranslating: Bool,
-    isLive: Bool
+    isLive: Bool,
+    showGuide: Bool
   ) {
     model.lines = lines
     model.hideOnHover = hideOnHover
+    model.passThrough = passThrough
     model.isTranslating = isTranslating
     model.isLive = isLive
+    model.showGuide = showGuide
 
     if isVisible {
       let needsInitialFrame = window == nil || !(window?.isVisible ?? false)
@@ -39,7 +43,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
           window.makeKeyAndOrderFront(nil)
         }
       }
+      applyPassThrough()
     } else {
+      stopResizeEdgeTracking()
       window?.orderOut(nil)
     }
   }
@@ -80,7 +86,12 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   @Shared(.overlayFrame) private var overlayFrame
 
   private let model = OverlayWindowModel()
+  private let resizeMargin: CGFloat = 14
+  /// Top-right zone (matching the badge chips) that drags the window while
+  /// passing through.
+  private let badgeHandleSize = CGSize(width: 190, height: 44)
   private var hoverMonitor: Any?
+  private var resizeEdgeMonitors = [Any]()
   private var isHiddenForHover = false
   private var pendingFrameSaveTask: Task<Void, Never>?
   private var pendingInteractionReset: Task<Void, Never>?
@@ -161,6 +172,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   private func handleHover(_ hovering: Bool) {
+    // Pass-through owns mouse handling while it's on; don't hover-hide.
+    guard !model.passThrough else { return }
     guard model.hideOnHover, let window else {
       restoreFromHover()
       return
@@ -180,8 +193,78 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     guard let window else { return }
     isHiddenForHover = false
     window.alphaValue = 1.0
-    window.ignoresMouseEvents = false
+    window.ignoresMouseEvents = model.passThrough
     stopHoverMonitor()
+  }
+
+  /// While passing through, the overlay lets all mouse interaction reach the
+  /// apps below — except within a thin margin around the edges, where it stays
+  /// interactive so the window can still be resized. We can't do this with a
+  /// static `ignoresMouseEvents` (it's all-or-nothing per window), so we track
+  /// the cursor and flip it based on whether it's near an edge. Moving the
+  /// window is disabled while passing through; only resizing remains.
+  private func applyPassThrough() {
+    guard let window else { return }
+    window.isMovableByWindowBackground = !model.passThrough
+    if model.passThrough {
+      startResizeEdgeTracking()
+      updatePassThroughForCursor()
+    } else {
+      stopResizeEdgeTracking()
+      window.ignoresMouseEvents = isHiddenForHover
+    }
+  }
+
+  private func startResizeEdgeTracking() {
+    guard resizeEdgeMonitors.isEmpty else { return }
+    // Global fires while events pass through to apps below (interior); local
+    // fires while the window is interactive near an edge. Together they keep
+    // the near-edge state current as the cursor moves in and out.
+    let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
+      MainActor.assumeIsolated { self?.updatePassThroughForCursor() }
+    }
+    let local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
+      MainActor.assumeIsolated { self?.updatePassThroughForCursor() }
+      return event
+    }
+    resizeEdgeMonitors = [global, local].compactMap { $0 }
+  }
+
+  private func stopResizeEdgeTracking() {
+    resizeEdgeMonitors.forEach(NSEvent.removeMonitor)
+    resizeEdgeMonitors.removeAll()
+  }
+
+  /// While passing through, the overlay stays interactive in two places: the
+  /// top-right badge zone (a move handle) and a thin margin around the edges
+  /// (resize). Everywhere else, events pass through to the apps below.
+  private func updatePassThroughForCursor() {
+    guard model.passThrough, let window else { return }
+    let mouse = NSEvent.mouseLocation
+    let frame = window.frame
+
+    // Top-right badge zone (where the LIVE / PASS-THROUGH chips sit) drags the
+    // window — the only way to move it while passing through.
+    let badgeZone = CGRect(
+      x: frame.maxX - badgeHandleSize.width,
+      y: frame.maxY - badgeHandleSize.height,
+      width: badgeHandleSize.width,
+      height: badgeHandleSize.height
+    )
+    if badgeZone.contains(mouse) {
+      window.isMovableByWindowBackground = true
+      window.ignoresMouseEvents = false
+      return
+    }
+
+    // Edges stay interactive for resizing (but not moving).
+    window.isMovableByWindowBackground = false
+    let withinX = mouse.x >= frame.minX - resizeMargin && mouse.x <= frame.maxX + resizeMargin
+    let withinY = mouse.y >= frame.minY - resizeMargin && mouse.y <= frame.maxY + resizeMargin
+    let nearHorizontalEdge = min(abs(mouse.x - frame.minX), abs(mouse.x - frame.maxX)) < resizeMargin
+    let nearVerticalEdge = min(abs(mouse.y - frame.minY), abs(mouse.y - frame.maxY)) < resizeMargin
+    let nearEdge = withinX && withinY && (nearHorizontalEdge || nearVerticalEdge)
+    window.ignoresMouseEvents = !nearEdge
   }
 
   private func startHoverMonitor() {
@@ -215,9 +298,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 private final class OverlayWindowModel {
   var lines = [OverlayLine]()
   var hideOnHover = false
+  var passThrough = false
   var isInteracting = false
   var isLive = false
   var isTranslating = false
+  var showGuide = true
 }
 
 // MARK: - OverlayRootView
@@ -235,7 +320,9 @@ private struct OverlayRootView: View {
     OverlayView(
       lines: model.isInteracting ? [] : model.lines,
       isTranslating: model.isTranslating,
-      isLive: model.isLive
+      isLive: model.isLive,
+      passThrough: model.passThrough,
+      showGuide: model.showGuide
     )
     .onHover { hovering in
       onHover(hovering)
