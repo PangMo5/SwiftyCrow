@@ -53,14 +53,14 @@ struct AppFeature {
             }
           },
           .run { [settings = state.$settings] send in
-            var isFirst = true
+            // Observations re-emits on any settings change (it doesn't dedupe),
+            // so track the last value and react only when `enabled` actually
+            // flips — otherwise toggling another overlay setting (e.g.
+            // pass-through) would re-trigger the guide and clear results.
+            var last: Bool?
             for await enabled in Observations({ settings.wrappedValue.overlay.enabled }) {
-              // Skip the initial emission; only react to actual toggles so a
-              // stale capture doesn't linger when the overlay is switched.
-              if isFirst {
-                isFirst = false
-                continue
-              }
+              defer { last = enabled }
+              guard let previous = last, previous != enabled else { continue }
               await send(.capture(.overlayToggled(enabled)))
             }
           },
