@@ -230,10 +230,19 @@ jobs:
 
       - name: Publish GitHub Release
         run: |
-          gh release create "${{ github.ref_name }}" \
-            "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
-            --title "${{ github.ref_name }}" \
-            --notes-file "$RUNNER_TEMP/release-notes.md"
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          DMG="$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+          # Idempotent so a re-run after a partial failure (e.g. a later step
+          # failing) updates the existing release instead of erroring.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DMG" --clobber
+            gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
+          else
+            gh release create "$TAG" "$DMG" \
+              --title "$TAG" \
+              --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -275,9 +284,11 @@ jobs:
           cp Resources/Marketing/app-icon.png "$RUNNER_TEMP/site/icon.png"
           cp Resources/Marketing/demo.gif "$RUNNER_TEMP/site/demo.gif"
           # Cache-bust the stylesheet so a CSS change is never masked by a
-          # stale browser cache.
+          # stale browser cache. (macOS sed needs an explicit -i suffix; drop
+          # the .bak copies so they don't get deployed.)
           BUST="${GITHUB_SHA:0:8}"
-          sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$RUNNER_TEMP/site"/*.html
+          sed -i.bak "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$RUNNER_TEMP/site"/*.html
+          rm -f "$RUNNER_TEMP/site"/*.html.bak
           # Sparkle feed.
           cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 

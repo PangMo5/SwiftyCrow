@@ -4,6 +4,20 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.3.0 — 2026-06-01
+
+### What's New
+
+- **Pass-through mode.** A new toggle (Settings → Overlay) and global shortcut let the overlay forward all mouse interaction — clicks, scrolling, dragging — to the apps below it, while the translation stays on top. You can still resize it from the edges and drag it by the top-right badge; the border turns accent-colored and a PASS-THROUGH badge shows while it's on.
+
+### Changed
+
+- **The idle guide shows once per enable.** It appears when you turn the overlay on, then stays out of the way — toggling Live on and off just leaves a transparent frame instead of bringing the guide back.
+
+### Fixed
+
+- **Multi-monitor region capture.** The selector now opens on the screen under the cursor, so the selection and capture target the display you're actually pointing at instead of spanning all of them.
+
 ## 2.2.2 — 2026-05-29
 
 ### Performance
