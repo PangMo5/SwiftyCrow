@@ -57,14 +57,18 @@ private final class RegionSelectorController {
   private var continuation: CheckedContinuation<CGRect?, Never>?
 
   private func present(_ continuation: CheckedContinuation<CGRect?, Never>) {
-    let unionFrame = NSScreen.screens.reduce(CGRect.null) { $0.union($1.frame) }
-    guard !unionFrame.isNull else {
+    // Select on the screen under the cursor, so multi-monitor captures target
+    // the display the user is actually pointing at.
+    guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) })
+      ?? NSScreen.main
+    else {
       continuation.resume(returning: nil)
       return
     }
+    let screenFrame = screen.frame
 
     let panel = SelectorPanel(
-      contentRect: unionFrame,
+      contentRect: screenFrame,
       styleMask: [.borderless, .nonactivatingPanel],
       backing: .buffered,
       defer: false
@@ -76,10 +80,10 @@ private final class RegionSelectorController {
     panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
     panel.ignoresMouseEvents = false
 
-    let view = SelectionView(unionOrigin: unionFrame.origin) { [weak self] rect in
+    let view = SelectionView(screenOrigin: screenFrame.origin) { [weak self] rect in
       self?.finish(rect)
     }
-    view.frame = CGRect(origin: .zero, size: unionFrame.size)
+    view.frame = CGRect(origin: .zero, size: screenFrame.size)
     panel.contentView = view
 
     self.continuation = continuation
@@ -110,8 +114,8 @@ private final class SelectionView: NSView {
 
   // MARK: Lifecycle
 
-  init(unionOrigin: CGPoint, onFinish: @escaping (CGRect?) -> Void) {
-    self.unionOrigin = unionOrigin
+  init(screenOrigin: CGPoint, onFinish: @escaping (CGRect?) -> Void) {
+    self.screenOrigin = screenOrigin
     self.onFinish = onFinish
     super.init(frame: .zero)
   }
@@ -154,10 +158,10 @@ private final class SelectionView: NSView {
       onFinish(nil)
       return
     }
-    // Convert from view-local (origin at union's bottom-left) to global.
+    // Convert from view-local (origin at the screen's bottom-left) to global.
     let global = CGRect(
-      x: unionOrigin.x + selection.minX,
-      y: unionOrigin.y + selection.minY,
+      x: screenOrigin.x + selection.minX,
+      y: screenOrigin.y + selection.minY,
       width: selection.width,
       height: selection.height
     )
@@ -188,7 +192,7 @@ private final class SelectionView: NSView {
 
   // MARK: Private
 
-  private let unionOrigin: CGPoint
+  private let screenOrigin: CGPoint
   private let onFinish: (CGRect?) -> Void
   private var startPoint: CGPoint?
   private var selection: CGRect = .zero
