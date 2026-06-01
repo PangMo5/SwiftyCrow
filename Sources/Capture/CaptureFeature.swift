@@ -31,6 +31,10 @@ struct CaptureFeature {
     var isTranslating = false
     var lastError: String?
     var overlayLines = [OverlayLine]()
+    /// Show the idle hint once after the overlay is enabled. Cleared once a
+    /// capture/Live session starts, so toggling Live just shows a transparent
+    /// overlay rather than the guide again.
+    var showGuide = true
     var translationCache = [TranslationCacheKey: String]()
 
     @Shared(.overlayFrame) var overlayFrame
@@ -39,9 +43,9 @@ struct CaptureFeature {
 
   enum Action {
     case captureResponse(Result<OCRResult, any Error>)
-    case clearResults
     case copyTranslationRequested
     case selectRegionRequested
+    case overlayToggled(Bool)
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
@@ -61,9 +65,12 @@ struct CaptureFeature {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case .clearResults:
+      case .overlayToggled(let enabled):
+        // Drop any stale capture across the transition, and show the idle hint
+        // once when the overlay is (re-)enabled.
         state.overlayLines = []
         state.isTranslating = false
+        state.showGuide = enabled
         return .cancel(id: CancelID.translation)
 
       case .selectRegionRequested:
@@ -109,9 +116,11 @@ struct CaptureFeature {
         state.isLive = isLive
         state.isCapturing = isLive
         // Toggling Live discards stale results so the overlay doesn't keep
-        // showing the previous capture across the transition.
+        // showing the previous capture across the transition. The guide never
+        // shows for Live toggles — just a transparent overlay.
         state.overlayLines = []
         state.isTranslating = false
+        state.showGuide = false
         if isLive {
           return .merge(
             .cancel(id: CancelID.translation),
