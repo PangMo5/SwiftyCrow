@@ -12,7 +12,13 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayName: String {
-    Locale.current.localizedString(forIdentifier: code) ?? code
+    if isAuto { return "Auto (detect)" }
+    return Locale.current.localizedString(forIdentifier: code) ?? code
+  }
+
+  /// Whether this is the "detect the source language automatically" sentinel.
+  var isAuto: Bool {
+    code == Language.autoCode
   }
 
   var localeLanguage: Locale.Language {
@@ -29,6 +35,13 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
 }
 
 extension Language {
+  /// Reserved code for the auto-detect source sentinel.
+  static let autoCode = "auto"
+
+  /// "Detect the source language automatically" — OCR detects the recognition
+  /// language and the text's dominant language drives translation.
+  static let auto = Language(code: autoCode)
+
   /// Default source language for new installs (most screen text users
   /// translate is English).
   static let defaultSource = Language(code: "en-US")

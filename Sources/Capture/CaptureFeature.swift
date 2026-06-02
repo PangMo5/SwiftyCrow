@@ -55,6 +55,7 @@ struct CaptureFeature {
   }
 
   @Dependency(\.continuousClock) var clock
+  @Dependency(\.languageDetection) var languageDetection
   @Dependency(\.ocr) var ocr
   @Dependency(\.regionResult) var regionResult
   @Dependency(\.regionSelector) var regionSelector
@@ -182,10 +183,15 @@ struct CaptureFeature {
       return .cancel(id: CancelID.translation)
     }
 
-    let source = state.settings.languages.source.localeLanguage
-    let target = state.settings.languages.target.localeLanguage
+    let configured = state.settings.languages.source
+    let targetLanguage = state.settings.languages.target
+    let target = targetLanguage.localeLanguage
     let strategy = state.settings.translation.strategy
     let cache = state.translationCache
+    // Auto resolves a source per line (with a whole-capture fallback for short
+    // lines); an explicit source applies to every line. A line already in the
+    // target language shows its source text instead of being translated.
+    let lineSources = languageDetection.resolveSources(for: result.lines.map(\.text), configured: configured)
 
     // Reuse line identity when the source text matches the previous OCR
     // pass, so SwiftUI's transitions stay stable across live captures.
@@ -194,16 +200,20 @@ struct CaptureFeature {
 
     var reused = previousByText
     var newLines = [OverlayLine]()
-    var pending = [(line: OverlayLine, key: TranslationCacheKey)]()
+    var keys = [UUID: TranslationCacheKey]()
+    // Pending translations grouped by source language (one session per group).
+    var groups = [String: (source: Locale.Language, items: [TranslationLine])]()
 
-    for line in result.lines {
+    for (index, line) in result.lines.enumerated() {
+      let source = lineSources[index].localeLanguage
+      let sameLanguage = source.languageCode == target.languageCode
       let key = TranslationCacheKey(
         source: source.maximalIdentifier,
         strategy: strategy,
-        target: state.settings.languages.target.code,
+        target: targetLanguage.code,
         text: line.text
       )
-      let cached = cache[key]
+      let cached = sameLanguage ? line.text : cache[key]
 
       var overlayLine: OverlayLine
       if var bucket = reused[line.text], let recycled = bucket.popLast() {
@@ -226,30 +236,37 @@ struct CaptureFeature {
 
       newLines.append(overlayLine)
       if overlayLine.translated == nil {
-        pending.append((overlayLine, key))
+        keys[overlayLine.id] = key
+        groups[source.maximalIdentifier, default: (source, [])].items
+          .append(TranslationLine(id: overlayLine.id, text: overlayLine.sourceText))
       }
     }
 
     state.overlayLines = newLines
-    state.isTranslating = !pending.isEmpty
+    state.isTranslating = !groups.isEmpty
 
-    if pending.isEmpty {
+    if groups.isEmpty {
       return .cancel(id: CancelID.translation)
     }
 
-    let items = pending.map { TranslationLine(id: $0.line.id, text: $0.line.sourceText) }
-    let keys = Dictionary(uniqueKeysWithValues: pending.map { ($0.line.id, $0.key) })
+    let batches = Array(groups.values)
     return .run { send in
-      // One session for the whole batch; chips update as each result streams
-      // back. translationCompleted clears the spinner once the stream ends.
-      do {
-        for try await result in translation.translateBatch(items, source, target, strategy) {
-          if let key = keys[result.id] {
-            await send(.translationResponse(lineID: result.id, key: key, translated: result.text))
+      // One session per source language; chips update as results stream back.
+      // translationCompleted clears the spinner once every batch finishes.
+      await withTaskGroup(of: Void.self) { group in
+        for batch in batches {
+          group.addTask {
+            do {
+              for try await result in translation.translateBatch(batch.items, batch.source, target, strategy) {
+                if let key = keys[result.id] {
+                  await send(.translationResponse(lineID: result.id, key: key, translated: result.text))
+                }
+              }
+            } catch {
+              await send(.translationFailed(error.localizedDescription))
+            }
           }
         }
-      } catch {
-        await send(.translationFailed(error.localizedDescription))
       }
       await send(.translationCompleted)
     }

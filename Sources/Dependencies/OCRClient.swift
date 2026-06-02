@@ -21,7 +21,11 @@ extension OCRClient: DependencyKey {
         var request = RecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
-        request.recognitionLanguages = [Locale.Language(identifier: language.code)]
+        if language.isAuto {
+          request.automaticallyDetectsLanguage = true
+        } else {
+          request.recognitionLanguages = [Locale.Language(identifier: language.code)]
+        }
         let observations = try await request.perform(on: image)
 
         let lines: [OCRResult.Line] = observations.compactMap { observation in
@@ -40,7 +44,11 @@ extension OCRClient: DependencyKey {
 
       case .document:
         var request = RecognizeDocumentsRequest()
-        request.textRecognitionOptions.recognitionLanguages = [Locale.Language(identifier: language.code)]
+        if language.isAuto {
+          request.textRecognitionOptions.automaticallyDetectLanguage = true
+        } else {
+          request.textRecognitionOptions.recognitionLanguages = [Locale.Language(identifier: language.code)]
+        }
         let observations = try await request.perform(on: image)
         let paragraphs = observations.flatMap(\.document.paragraphs)
         let count = max(paragraphs.count, 1)

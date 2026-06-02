@@ -58,7 +58,7 @@ struct LanguageSettings: Codable, Equatable, Sendable {
     target = try c.decodeIfPresent(Language.self, forKey: .target) ?? d.target
   }
 
-  var source = Language.defaultSource
+  var source = Language.auto
   var target = Language.systemPreferred()
 }
 

@@ -43,6 +43,7 @@ struct RegionCaptureFeature {
     case copyTranslationRequested
   }
 
+  @Dependency(\.languageDetection) var languageDetection
   @Dependency(\.ocr) var ocr
   @Dependency(\.pasteboard) var pasteboard
   @Dependency(\.screenCapture) var screenCapture
@@ -75,14 +76,35 @@ struct RegionCaptureFeature {
       case .captured(.success(let captured)):
         state.imageData = captured.pngData
         state.imageSize = captured.size
-        state.overlayLines = captured.lines.map {
-          OverlayLine(id: uuid(), box: $0.boundingBoxNormalized, sourceText: $0.text, translated: nil, rowCount: $0.rowCount)
-        }
-        guard !state.overlayLines.isEmpty, let data = captured.pngData else { return .none }
-        state.isTranslating = true
-        let source = state.settings.languages.source.localeLanguage
+        let configured = state.settings.languages.source
         let target = state.settings.languages.target.localeLanguage
         let strategy = state.settings.translation.strategy
+        // Auto resolves a source per line (with a whole-capture fallback for
+        // short lines). Lines already in the target language show their source.
+        let lineSources = languageDetection.resolveSources(for: captured.lines.map(\.text), configured: configured)
+
+        var newLines = [OverlayLine]()
+        // Lines to translate, grouped by source language (one session per group).
+        var groups = [String: (source: Locale.Language, items: [TranslationLine])]()
+        for (index, line) in captured.lines.enumerated() {
+          let source = lineSources[index].localeLanguage
+          let sameLanguage = source.languageCode == target.languageCode
+          let overlayLine = OverlayLine(
+            id: uuid(),
+            box: line.boundingBoxNormalized,
+            sourceText: line.text,
+            translated: sameLanguage ? line.text : nil,
+            rowCount: line.rowCount
+          )
+          newLines.append(overlayLine)
+          if !sameLanguage {
+            groups[source.maximalIdentifier, default: (source, [])].items
+              .append(TranslationLine(id: overlayLine.id, text: line.text))
+          }
+        }
+        state.overlayLines = newLines
+
+        guard !state.overlayLines.isEmpty, let data = captured.pngData else { return .none }
         let lines = state.overlayLines
         let size = state.imageSize
         // Build the blurred backdrop (boxes blurred, no text) once up front; the
@@ -92,19 +114,28 @@ struct RegionCaptureFeature {
           let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
           await send(.backgroundReady(bg))
         }
-        let items = lines.map { TranslationLine(id: $0.id, text: $0.sourceText) }
+        // Every line already in the target language — just build the backdrop.
+        guard !groups.isEmpty else { return background }
+        state.isTranslating = true
+        let batches = Array(groups.values)
         let translate = Effect<Action>.run { send in
-          // Any line the batch doesn't return (or an error) falls back to its
-          // source text, so every chip resolves and the spinner clears.
-          var remaining = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0.sourceText) })
-          do {
-            for try await result in translation.translateBatch(items, source, target, strategy) {
-              remaining[result.id] = nil
-              await send(.translated(id: result.id, text: result.text))
+          await withTaskGroup(of: Void.self) { group in
+            for batch in batches {
+              group.addTask {
+                // Any line the batch doesn't return (or an error) falls back to
+                // its source text, so every chip resolves and the spinner clears.
+                var remaining = Set(batch.items.map(\.id))
+                do {
+                  for try await result in translation.translateBatch(batch.items, batch.source, target, strategy) {
+                    remaining.remove(result.id)
+                    await send(.translated(id: result.id, text: result.text))
+                  }
+                } catch {}
+                for item in batch.items where remaining.contains(item.id) {
+                  await send(.translated(id: item.id, text: item.text))
+                }
+              }
             }
-          } catch {}
-          for (id, sourceText) in remaining {
-            await send(.translated(id: id, text: sourceText))
           }
         }
         return .merge(background, translate)

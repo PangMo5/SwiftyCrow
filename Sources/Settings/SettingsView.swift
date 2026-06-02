@@ -106,7 +106,8 @@ private struct LanguagesSection: View {
         .foregroundStyle(.secondary)
     }
     .task {
-      sourceLanguages = await Language.systemSupported(intersectedWithOCR: true)
+      // Auto detects the source from the captured text.
+      sourceLanguages = [.auto] + (await Language.systemSupported(intersectedWithOCR: true))
       targetLanguages = await Language.systemSupported(intersectedWithOCR: false)
     }
   }
