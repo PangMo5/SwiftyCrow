@@ -33,7 +33,12 @@ extension SharedKey where Self == FileStorageKey<AppSettings>.Default {
           return try TOMLDecoder().decode(AppSettings.self, from: string)
         },
         encode: { value in
-          try TOMLEncoder().encode(value)
+          // Sort keys so the file has a stable order; without this the encoder
+          // emits keys in the dictionary's (non-deterministic) order, churning
+          // config.toml on every write.
+          let encoder = TOMLEncoder()
+          encoder.outputFormatting = [.sortedKeys]
+          return try encoder.encode(value)
         }
       ),
       default: AppSettings()
