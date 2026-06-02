@@ -4,6 +4,12 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.4.1 — 2026-06-02
+
+### Fixed
+
+- **Stable `config.toml` ordering.** The config file's sections and keys were written in a non-deterministic order, churning the file on every change. Keys are now written sorted, so edits produce clean, minimal diffs.
+
 ## 2.4.0 — 2026-06-02
 
 ### What's New
