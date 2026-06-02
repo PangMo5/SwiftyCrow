@@ -4,7 +4,7 @@ let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
 // Single source of truth for the marketing version. The release workflow
 // verifies the pushed tag matches this before building.
-let appVersion = "2.3.0"
+let appVersion = "2.4.0"
 // Build number is injected by CI (github.run_number); 1 for local builds.
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
