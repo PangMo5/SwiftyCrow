@@ -57,7 +57,7 @@ available in the app are the languages installed on your Mac.
 
 ```toml
 [languages.source]
-code = "en-US"
+code = "auto"
 
 [languages.target]
 code = "ko-KR"
@@ -65,7 +65,7 @@ code = "ko-KR"
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `source.code` | string | `"en-US"` | Language to translate **from**. |
+| `source.code` | string | `"auto"` | Language to translate **from**. Defaults to `"auto"`, which detects it per line from the captured text; set a specific code (e.g. `"en-US"`) to pin it. |
 | `target.code` | string | system | Language to translate **to**; defaults to your system's preferred language. |
 
 ## `[overlay]`

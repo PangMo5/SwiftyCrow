@@ -4,6 +4,12 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.4.0 — 2026-06-02
+
+### What's New
+
+- **Auto source language, now the default.** SwiftyCrow detects the language to translate from instead of you picking it. Detection is per line — on a mixed-language screen each line is translated from its own language, with a whole-capture fallback for short or ambiguous lines — and lines already in your target language are left as-is. Pin a specific source any time in Settings → Languages.
+
 ## 2.3.0 — 2026-06-01
 
 ### What's New

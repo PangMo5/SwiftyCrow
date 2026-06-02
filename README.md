@@ -16,7 +16,7 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 - **Live overlay** — a floating window you drag and resize over text; flip on **Live mode** to keep translating in place as the content changes
 - **Pass-through mode** — let clicks, scrolling, and dragging fall through to the apps below while the translation stays on top; resize from the edges or drag it by the badge
 - **Instant re-captures** — translating the same screen again is cached
-- **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text
+- **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text, or set the source to **Auto** to detect it per line (handy for mixed-language screens)
 - **Customizable shortcuts** — capture, Live mode, overlay, pass-through, and the save/copy keys, all in Settings → Shortcuts
 - **Launch at login** — start SwiftyCrow automatically when you log in (Settings → General)
 - **Editable config file** — a plain-text file you can hand-edit, kept in sync with the in-app Settings
