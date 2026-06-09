@@ -26,10 +26,18 @@ extension UpdaterClient: DependencyKey {
     let updater = controller.updater
     return UpdaterClient(
       canCheckForUpdates: {
+        // Sparkle doesn't reliably emit KVO change notifications for
+        // canCheckForUpdates, so poll it and yield only on change.
         AsyncStream { continuation in
           let task = Task { @MainActor in
-            for await value in updater.publisher(for: \.canCheckForUpdates).values {
-              continuation.yield(value)
+            var last: Bool?
+            while !Task.isCancelled {
+              let value = updater.canCheckForUpdates
+              if value != last {
+                last = value
+                continuation.yield(value)
+              }
+              try? await Task.sleep(for: .seconds(1))
             }
             continuation.finish()
           }
