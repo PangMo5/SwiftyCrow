@@ -4,6 +4,22 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.5.0 — 2026-06-09
+
+### What's New
+
+- **Window live mode.** Live translation can now show in a separate, live-updating window while the overlay stays a thin region frame — so the source app underneath stays visible and usable. Switch between **In-place** and **Window** in the popover, Settings → Overlay, or with the new "Toggle live mode" shortcut.
+- **Pass-through is automatic.** Once a translation is on screen, clicks and scrolling pass through to the app underneath (edges still resize, the badge still drags). No more toggle — only the idle guide stays interactive.
+
+### Changed
+
+- **Redesigned menu bar popover** — a compact control panel: Capture Region, an Overlay section (show / Live / display mode), and a slim footer. The old Recognized/Translated text panels are gone.
+- **Refreshed the idle overlay guide** with a cleaner, centered card.
+
+### Fixed
+
+- The "Check for Updates" buttons could stay disabled; updater availability now stays current.
+
 ## 2.4.1 — 2026-06-02
 
 ### Fixed
