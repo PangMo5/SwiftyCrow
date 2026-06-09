@@ -6,16 +6,21 @@ struct AppFeature {
   @ObservableState
   struct State {
     var capture = CaptureFeature.State()
+    var settingsScreen = SettingsFeature.State()
+    var canCheckForUpdates = false
 
     @Shared(.settings) var settings
   }
 
   enum Action {
     case capture(CaptureFeature.Action)
+    case settingsScreen(SettingsFeature.Action)
     case task
     case toggleOverlayRequested
     case toggleLiveModeRequested
     case setLiveMode(OverlayLiveMode)
+    case canCheckForUpdatesChanged(Bool)
+    case checkForUpdatesTapped
   }
 
   @Dependency(\.keyboardShortcuts) var keyboardShortcuts
@@ -25,9 +30,15 @@ struct AppFeature {
     Scope(state: \.capture, action: \.capture) {
       CaptureFeature()
     }
+    Scope(state: \.settingsScreen, action: \.settingsScreen) {
+      SettingsFeature()
+    }
     Reduce { state, action in
       switch action {
       case .capture:
+        return .none
+
+      case .settingsScreen:
         return .none
 
       case .task:
@@ -81,6 +92,11 @@ struct AppFeature {
               keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
               keyboardShortcuts.setShortcut(.toggleLiveMode, keys.3)
             }
+          },
+          .run { [updater] send in
+            for await value in updater.canCheckForUpdates() {
+              await send(.canCheckForUpdatesChanged(value))
+            }
           }
         )
 
@@ -100,6 +116,13 @@ struct AppFeature {
       case .setLiveMode(let mode):
         state.$settings.withLock { $0.overlay.liveMode = mode }
         return .none
+
+      case .canCheckForUpdatesChanged(let value):
+        state.canCheckForUpdates = value
+        return .none
+
+      case .checkForUpdatesTapped:
+        return .run { [updater] _ in updater.checkForUpdates() }
       }
     }
   }

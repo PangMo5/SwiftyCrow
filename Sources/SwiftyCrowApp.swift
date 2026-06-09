@@ -17,7 +17,7 @@ struct SwiftyCrowApp: App {
     .menuBarExtraStyle(.window)
 
     Settings {
-      SettingsView()
+      SettingsView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
     }
   }
 

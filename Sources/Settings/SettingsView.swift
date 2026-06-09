@@ -6,14 +6,16 @@ import SwiftUI
 // MARK: - SettingsView
 
 struct SettingsView: View {
+  let store: StoreOf<SettingsFeature>
+
   var body: some View {
     TabView {
       Tab("General", systemImage: "gearshape") {
-        Form { GeneralSection() }
+        Form { GeneralSection(store: store) }
           .formStyle(.grouped)
       }
       Tab("Languages", systemImage: "globe") {
-        Form { LanguagesSection() }
+        Form { LanguagesSection(store: store) }
           .formStyle(.grouped)
       }
       Tab("Recognition", systemImage: "viewfinder") {
@@ -36,7 +38,7 @@ struct SettingsView: View {
           .formStyle(.grouped)
       }
       Tab("Updates", systemImage: "arrow.down.circle") {
-        Form { UpdatesSection() }
+        Form { UpdatesSection(store: store) }
           .formStyle(.grouped)
       }
       Tab("About", systemImage: "info.circle") {
@@ -46,38 +48,28 @@ struct SettingsView: View {
     }
     .scenePadding()
     .frame(minWidth: 520, minHeight: 360)
+    .task { store.send(.task) }
   }
 }
 
 // MARK: - GeneralSection
 
 private struct GeneralSection: View {
-
-  // MARK: Internal
+  let store: StoreOf<SettingsFeature>
 
   var body: some View {
     Section {
-      Toggle(isOn: $launchAtLogin) {
+      Toggle(isOn: Binding(
+        get: { store.launchAtLogin },
+        set: { store.send(.launchAtLoginChanged($0)) }
+      )) {
         Text("Launch at login")
         Text("Start SwiftyCrow automatically when you log in.")
-      }
-      .onChange(of: launchAtLogin) { _, enabled in
-        loginItem.setEnabled(enabled)
       }
     } header: {
       Text("General")
     }
-    .task {
-      launchAtLogin = loginItem.isEnabled()
-    }
   }
-
-  // MARK: Private
-
-  @State private var launchAtLogin = false
-
-  @Dependency(\.loginItem) private var loginItem
-
 }
 
 // MARK: - LanguagesSection
@@ -86,15 +78,17 @@ private struct LanguagesSection: View {
 
   // MARK: Internal
 
+  let store: StoreOf<SettingsFeature>
+
   var body: some View {
     Section {
       Picker("Source", selection: Binding($settings.languages.source)) {
-        ForEach(sourceLanguages) { language in
+        ForEach(store.sourceLanguages) { language in
           Text(language.displayName).tag(language)
         }
       }
       Picker("Target", selection: Binding($settings.languages.target)) {
-        ForEach(targetLanguages) { language in
+        ForEach(store.targetLanguages) { language in
           Text(language.displayName).tag(language)
         }
       }
@@ -105,17 +99,9 @@ private struct LanguagesSection: View {
         .font(.caption)
         .foregroundStyle(.secondary)
     }
-    .task {
-      // Auto detects the source from the captured text.
-      sourceLanguages = [.auto] + (await Language.systemSupported(intersectedWithOCR: true))
-      targetLanguages = await Language.systemSupported(intersectedWithOCR: false)
-    }
   }
 
   // MARK: Private
-
-  @State private var sourceLanguages = [Language]()
-  @State private var targetLanguages = [Language]()
 
   @Shared(.settings) private var settings
 
@@ -284,6 +270,8 @@ private struct UpdatesSection: View {
 
   // MARK: Internal
 
+  let store: StoreOf<SettingsFeature>
+
   var body: some View {
     Section {
       Toggle("Automatically check for updates", isOn: Binding($settings.updates.automaticChecks))
@@ -294,14 +282,9 @@ private struct UpdatesSection: View {
       }
       .disabled(!settings.updates.automaticChecks)
       Button("Check for Updates Now") {
-        updater.checkForUpdates()
+        store.send(.checkForUpdatesTapped)
       }
-      .disabled(!canCheckForUpdates)
-      .task {
-        for await value in updater.canCheckForUpdates() {
-          canCheckForUpdates = value
-        }
-      }
+      .disabled(!store.canCheckForUpdates)
     } header: {
       Text("Software Update")
     } footer: {
@@ -312,10 +295,6 @@ private struct UpdatesSection: View {
   }
 
   // MARK: Private
-
-  @State private var canCheckForUpdates = false
-
-  @Dependency(\.updater) private var updater
 
   @Shared(.settings) private var settings
 

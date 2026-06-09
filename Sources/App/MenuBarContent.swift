@@ -16,20 +16,11 @@ struct MenuBarContent: View {
     }
     .padding(16)
     .frame(width: 300)
-    .task {
-      for await value in updater.canCheckForUpdates() {
-        canCheckForUpdates = value
-      }
-    }
   }
 
   // MARK: Private
 
-  @State private var canCheckForUpdates = false
-
   @Environment(\.openSettings) private var openSettings
-
-  @Dependency(\.updater) private var updater
 
   private var header: some View {
     HStack(spacing: 7) {
@@ -107,12 +98,12 @@ struct MenuBarContent: View {
       .keyboardShortcut(",", modifiers: .command)
 
       Button {
-        updater.checkForUpdates()
+        store.send(.checkForUpdatesTapped)
       } label: {
         Label("Updates", systemImage: "arrow.triangle.2.circlepath")
       }
       .help("Check for Updates")
-      .disabled(!canCheckForUpdates)
+      .disabled(!store.canCheckForUpdates)
 
       Spacer()
 
