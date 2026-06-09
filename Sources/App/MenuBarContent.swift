@@ -8,45 +8,19 @@ struct MenuBarContent: View {
   let store: StoreOf<AppFeature>
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 14) {
+      header
       CaptureView(store: store.scope(state: \.capture, action: \.capture))
-
-      Toggle("Enable Overlay", isOn: Binding(
-        get: { store.settings.overlay.enabled },
-        set: { _ in store.send(.toggleOverlayRequested) }
-      ))
-      .toggleStyle(.switch)
-      .controlSize(.small)
-
-      Divider()
-
-      HStack {
-        Button("Settings…") {
-          openSettings()
-        }
-        .keyboardShortcut(",", modifiers: .command)
-
-        Button("Check for Updates…") {
-          updater.checkForUpdates()
-        }
-        .disabled(!canCheckForUpdates)
-        .task {
-          for await value in updater.canCheckForUpdates() {
-            canCheckForUpdates = value
-          }
-        }
-
-        Spacer()
-
-        Button("Quit") {
-          NSApplication.shared.terminate(nil)
-        }
-        .keyboardShortcut("q", modifiers: .command)
-      }
-      .controlSize(.small)
+      overlaySection
+      footer
     }
     .padding(16)
-    .frame(width: 520)
+    .frame(width: 300)
+    .task {
+      for await value in updater.canCheckForUpdates() {
+        canCheckForUpdates = value
+      }
+    }
   }
 
   // MARK: Private
@@ -57,4 +31,80 @@ struct MenuBarContent: View {
 
   @Dependency(\.updater) private var updater
 
+  private var header: some View {
+    HStack(spacing: 7) {
+      Image(systemName: "character.bubble.fill")
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(.tint)
+      Text("SwiftyCrow")
+        .font(.headline)
+      Spacer()
+    }
+  }
+
+  private var overlaySection: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text("OVERLAY")
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .padding(.leading, 4)
+
+      VStack(spacing: 0) {
+        Toggle(isOn: Binding(
+          get: { store.settings.overlay.enabled },
+          set: { _ in store.send(.toggleOverlayRequested) }
+        )) {
+          Label("Show overlay", systemImage: "rectangle.dashed")
+        }
+        .padding(.vertical, 8)
+
+        Divider().padding(.leading, 28)
+
+        Toggle(isOn: Binding(
+          get: { store.capture.isLive },
+          set: { store.send(.capture(.setLive($0))) }
+        )) {
+          Label("Live translation", systemImage: "dot.radiowaves.left.and.right")
+        }
+        .disabled(!store.settings.overlay.enabled)
+        .padding(.vertical, 8)
+      }
+      .toggleStyle(.switch)
+      .controlSize(.small)
+      .padding(.horizontal, 12)
+      .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+  }
+
+  private var footer: some View {
+    HStack(spacing: 14) {
+      Button {
+        openSettings()
+      } label: {
+        Label("Settings", systemImage: "gearshape")
+      }
+      .keyboardShortcut(",", modifiers: .command)
+
+      Button {
+        updater.checkForUpdates()
+      } label: {
+        Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+      }
+      .help("Check for Updates")
+      .disabled(!canCheckForUpdates)
+
+      Spacer()
+
+      Button {
+        NSApplication.shared.terminate(nil)
+      } label: {
+        Image(systemName: "power")
+      }
+      .help("Quit SwiftyCrow")
+      .keyboardShortcut("q", modifiers: .command)
+    }
+    .buttonStyle(.plain)
+    .font(.callout)
+    .foregroundStyle(.secondary)
+  }
 }
