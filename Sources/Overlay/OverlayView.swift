@@ -101,45 +101,35 @@ private struct EmptyOverlayGuide: View {
   // MARK: Internal
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(spacing: 6) {
-        Image(systemName: "rectangle.dashed")
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(.secondary)
-        Text("Drag this window over text to translate.")
+    VStack(spacing: 16) {
+      Image(systemName: "text.viewfinder")
+        .font(.system(size: 36, weight: .light))
+        .foregroundStyle(.tint)
+        .symbolRenderingMode(.hierarchical)
+
+      VStack(spacing: 4) {
+        Text("Drag over text to translate")
+          .font(.headline)
+        Text("Position this window, then capture or turn on Live.")
           .font(.subheadline)
-          .foregroundStyle(.primary)
+          .foregroundStyle(.secondary)
+          .multilineTextAlignment(.center)
       }
 
-      VStack(alignment: .leading, spacing: 4) {
-        GuideRow(
-          icon: "camera.viewfinder",
-          title: "Capture region",
-          shortcut: shortcutDescription(for: .selectRegion)
-        )
-        GuideRow(
-          icon: "play.fill",
-          title: "Toggle Live Mode",
-          shortcut: shortcutDescription(for: .toggleLive)
-        )
-        GuideRow(
-          icon: "rectangle.on.rectangle",
-          title: "Toggle overlay",
-          shortcut: shortcutDescription(for: .toggleOverlay)
-        )
+      VStack(spacing: 8) {
+        GuideRow(icon: "viewfinder", title: "Capture region", shortcut: shortcut(for: .selectRegion))
+        GuideRow(icon: "dot.radiowaves.left.and.right", title: "Toggle Live", shortcut: shortcut(for: .toggleLive))
+        GuideRow(icon: "rectangle.on.rectangle", title: "Toggle overlay", shortcut: shortcut(for: .toggleOverlay))
       }
-
-      Text("Bind hotkeys in Settings → Shortcuts.")
-        .font(.caption2)
-        .foregroundStyle(.tertiary)
+      .padding(.top, 2)
     }
-    .padding(16)
-    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(22)
+    .frame(maxWidth: .infinity)
   }
 
   // MARK: Private
 
-  private func shortcutDescription(for name: KeyboardShortcuts.Name) -> String? {
+  private func shortcut(for name: KeyboardShortcuts.Name) -> String? {
     KeyboardShortcuts.getShortcut(for: name)?.description
   }
 }
@@ -152,18 +142,24 @@ private struct GuideRow: View {
   let shortcut: String?
 
   var body: some View {
-    HStack(spacing: 8) {
+    HStack(spacing: 10) {
       Image(systemName: icon)
-        .font(.system(size: 11, weight: .semibold))
+        .font(.system(size: 12, weight: .semibold))
         .foregroundStyle(.secondary)
-        .frame(width: 14)
+        .frame(width: 18)
       Text(title)
         .font(.callout)
-        .foregroundStyle(.primary)
-      Spacer(minLength: 8)
-      Text(shortcut ?? "Unbound")
-        .font(.system(.caption, design: .monospaced))
+      Spacer(minLength: 12)
+      Text(shortcut ?? "Set in Settings")
+        .font(shortcut == nil ? .caption : .system(.caption, design: .rounded).weight(.medium))
         .foregroundStyle(shortcut == nil ? .tertiary : .secondary)
+        .padding(.horizontal, shortcut == nil ? 0 : 7)
+        .padding(.vertical, shortcut == nil ? 0 : 3)
+        .background {
+          if shortcut != nil {
+            Capsule().fill(.secondary.opacity(0.15))
+          }
+        }
     }
   }
 }
