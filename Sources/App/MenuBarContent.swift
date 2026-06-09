@@ -67,10 +67,31 @@ struct MenuBarContent: View {
           Label("Live translation", systemImage: "dot.radiowaves.left.and.right")
         }
         .disabled(!store.settings.overlay.enabled)
+        .toggleStyle(.switch)
+        .controlSize(.small)
+        .padding(.vertical, 8)
+
+        Divider().padding(.leading, 28)
+
+        HStack {
+          Label("Display", systemImage: "rectangle.on.rectangle.angled")
+          Spacer()
+          Picker("", selection: Binding(
+            get: { store.settings.overlay.liveMode },
+            set: { mode in store.send(.setLiveMode(mode)) }
+          )) {
+            ForEach(OverlayLiveMode.allCases) { mode in
+              Text(mode.displayName).tag(mode)
+            }
+          }
+          .pickerStyle(.segmented)
+          .labelsHidden()
+          .fixedSize()
+        }
+        .controlSize(.small)
+        .disabled(!store.settings.overlay.enabled)
         .padding(.vertical, 8)
       }
-      .toggleStyle(.switch)
-      .controlSize(.small)
       .padding(.horizontal, 12)
       .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }

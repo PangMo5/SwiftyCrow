@@ -72,15 +72,32 @@ struct OverlaySettings: Codable, Equatable, Sendable {
     let d = OverlaySettings()
     enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? d.enabled
     hideOnHover = try c.decodeIfPresent(Bool.self, forKey: .hideOnHover) ?? d.hideOnHover
-    passThrough = try c.decodeIfPresent(Bool.self, forKey: .passThrough) ?? d.passThrough
+    liveMode = try c.decodeIfPresent(OverlayLiveMode.self, forKey: .liveMode) ?? d.liveMode
   }
 
   var enabled = true
   var hideOnHover = false
-  /// When true, the overlay lets all mouse interaction (clicks, scrolling,
-  /// dragging) pass through to the apps below it. The edges still resize it and
-  /// the top-right badge still drags it.
-  var passThrough = false
+  /// How a live translation is shown: drawn in place over the source, or in a
+  /// separate window while the overlay stays a thin region frame.
+  var liveMode = OverlayLiveMode.inPlace
+}
+
+// MARK: - OverlayLiveMode
+
+enum OverlayLiveMode: String, Codable, Equatable, Sendable, CaseIterable, Identifiable {
+  case inPlace
+  case window
+
+  var id: String {
+    rawValue
+  }
+
+  var displayName: String {
+    switch self {
+    case .inPlace: "In-place"
+    case .window: "Window"
+    }
+  }
 }
 
 // MARK: - RecognitionSettings
@@ -103,7 +120,7 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
   var selectRegion: HotKey?
   var toggleLive: HotKey?
   var toggleOverlay: HotKey?
-  var togglePassThrough: HotKey?
+  var toggleLiveMode: HotKey?
 }
 
 // MARK: - TranslationSettings

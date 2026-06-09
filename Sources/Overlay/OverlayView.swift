@@ -10,7 +10,9 @@ struct OverlayView: View {
   let lines: [OverlayLine]
   let isTranslating: Bool
   let isLive: Bool
-  var passThrough = false
+  /// Window live mode: the overlay is a thin region frame; the translation
+  /// shows in a detached window.
+  var frameOnly = false
   var showGuide = true
 
   var body: some View {
@@ -19,15 +21,12 @@ struct OverlayView: View {
       .overlay(
         RoundedRectangle(cornerRadius: 22, style: .continuous)
           .strokeBorder(
-            passThrough ? Color.accentColor.opacity(0.95) : .white.opacity(0.35),
-            lineWidth: passThrough ? 3 : 1.5
+            frameOnly ? AnyShapeStyle(.tint) : AnyShapeStyle(.white.opacity(0.35)),
+            lineWidth: frameOnly ? 2.5 : 1.5
           )
       )
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
-          if passThrough {
-            PassThroughBadge()
-          }
           if isLive {
             LiveBadge()
           }
@@ -38,14 +37,17 @@ struct OverlayView: View {
         }
         .padding(10)
       }
-      .animation(.easeOut(duration: 0.15), value: passThrough)
+      .animation(.easeOut(duration: 0.15), value: frameOnly)
   }
 
   // MARK: Private
 
   @ViewBuilder
   private var bodyContent: some View {
-    if !lines.isEmpty {
+    if frameOnly {
+      // Region marker only — the translation lives in the detached window.
+      Color.clear
+    } else if !lines.isEmpty {
       TranslationOverlayLayer(lines: lines)
     } else if showGuide {
       ScrollView(.vertical, showsIndicators: false) {
@@ -60,23 +62,6 @@ struct OverlayView: View {
       // Idle after a Live toggle: just a transparent, draggable frame.
       Color.clear
     }
-  }
-}
-
-// MARK: - PassThroughBadge
-
-private struct PassThroughBadge: View {
-  var body: some View {
-    HStack(spacing: 4) {
-      Image(systemName: "cursorarrow.rays")
-        .font(.system(size: 9, weight: .bold))
-      Text("PASS-THROUGH")
-        .font(.system(size: 10, weight: .bold, design: .rounded))
-    }
-    .foregroundStyle(.tint)
-    .padding(.horizontal, 7)
-    .padding(.vertical, 3)
-    .glassEffect(.regular, in: Capsule())
   }
 }
 

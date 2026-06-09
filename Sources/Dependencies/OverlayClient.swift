@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import CoreGraphics
 import DependenciesMacros
+import Foundation
 
 // MARK: - OverlayRenderState
 
@@ -8,10 +9,15 @@ struct OverlayRenderState: Equatable, Sendable {
   var lines: [OverlayLine]
   var isVisible: Bool
   var hideOnHover: Bool
-  var passThrough: Bool
   var isTranslating: Bool
   var isLive: Bool
   var showGuide: Bool
+  /// In-place draws chips on the overlay; window draws a thin region frame and
+  /// shows the translation in a detached result window.
+  var liveMode: OverlayLiveMode
+  /// Blurred screenshot backdrop for the detached window (window mode only).
+  var backgroundImageData: Data?
+  var imageSize: CGSize
 }
 
 // MARK: - OverlayClient
@@ -38,15 +44,7 @@ extension OverlayClient: DependencyKey {
     }
     return OverlayClient(
       render: { state in
-        await resolve().update(
-          lines: state.lines,
-          isVisible: state.isVisible,
-          hideOnHover: state.hideOnHover,
-          passThrough: state.passThrough,
-          isTranslating: state.isTranslating,
-          isLive: state.isLive,
-          showGuide: state.showGuide
-        )
+        await resolve().update(state)
       },
       windowID: { await resolve().windowID }
     )

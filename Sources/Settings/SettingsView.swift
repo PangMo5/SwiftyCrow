@@ -210,14 +210,15 @@ private struct OverlaySection: View {
     Section {
       Toggle("Enable overlay", isOn: Binding($settings.overlay.enabled))
       Toggle("Hide on hover", isOn: Binding($settings.overlay.hideOnHover))
-      Toggle(isOn: Binding($settings.overlay.passThrough)) {
-        Text("Pass-through interaction")
-        Text("Clicks, scrolling, and dragging go to the apps below; the overlay can't be moved while on.")
+      Picker("Live mode", selection: Binding($settings.overlay.liveMode)) {
+        ForEach(OverlayLiveMode.allCases) { mode in
+          Text(mode.displayName).tag(mode)
+        }
       }
     } header: {
       Text("Overlay")
     } footer: {
-      Text("Translations are drawn in-place over each recognized line.")
+      Text("In-place draws the translation over the text. Window keeps the overlay a thin region frame and shows the translation in a separate window. Clicks pass through to the apps below once a translation is shown.")
         .font(.caption)
         .foregroundStyle(.secondary)
     }
@@ -246,8 +247,8 @@ private struct ShortcutsSection: View {
       KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay) { shortcut in
         $settings.withLock { $0.shortcuts.toggleOverlay = shortcut.map(HotKey.init) }
       }
-      KeyboardShortcuts.Recorder("Toggle pass-through", name: .togglePassThrough) { shortcut in
-        $settings.withLock { $0.shortcuts.togglePassThrough = shortcut.map(HotKey.init) }
+      KeyboardShortcuts.Recorder("Toggle live mode (In-place / Window)", name: .toggleLiveMode) { shortcut in
+        $settings.withLock { $0.shortcuts.toggleLiveMode = shortcut.map(HotKey.init) }
       }
     } header: {
       Text("Global Shortcuts")

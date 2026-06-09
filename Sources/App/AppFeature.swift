@@ -14,7 +14,8 @@ struct AppFeature {
     case capture(CaptureFeature.Action)
     case task
     case toggleOverlayRequested
-    case togglePassThroughRequested
+    case toggleLiveModeRequested
+    case setLiveMode(OverlayLiveMode)
   }
 
   @Dependency(\.keyboardShortcuts) var keyboardShortcuts
@@ -40,8 +41,8 @@ struct AppFeature {
                 await send(.capture(.toggleLiveRequested))
               case .toggleOverlay:
                 await send(.toggleOverlayRequested)
-              case .togglePassThrough:
-                await send(.togglePassThroughRequested)
+              case .toggleLiveMode:
+                await send(.toggleLiveModeRequested)
               }
             }
           },
@@ -72,13 +73,13 @@ struct AppFeature {
                 settings.wrappedValue.shortcuts.selectRegion,
                 settings.wrappedValue.shortcuts.toggleLive,
                 settings.wrappedValue.shortcuts.toggleOverlay,
-                settings.wrappedValue.shortcuts.togglePassThrough
+                settings.wrappedValue.shortcuts.toggleLiveMode
               )
             }) {
               keyboardShortcuts.setShortcut(.selectRegion, keys.0)
               keyboardShortcuts.setShortcut(.toggleLive, keys.1)
               keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
-              keyboardShortcuts.setShortcut(.togglePassThrough, keys.3)
+              keyboardShortcuts.setShortcut(.toggleLiveMode, keys.3)
             }
           }
         )
@@ -90,8 +91,14 @@ struct AppFeature {
         }
         return .none
 
-      case .togglePassThroughRequested:
-        state.$settings.withLock { $0.overlay.passThrough.toggle() }
+      case .toggleLiveModeRequested:
+        state.$settings.withLock {
+          $0.overlay.liveMode = $0.overlay.liveMode == .inPlace ? .window : .inPlace
+        }
+        return .none
+
+      case .setLiveMode(let mode):
+        state.$settings.withLock { $0.overlay.liveMode = mode }
         return .none
       }
     }

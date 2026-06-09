@@ -14,23 +14,17 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     return CGWindowID(window.windowNumber)
   }
 
-  func update(
-    lines: [OverlayLine],
-    isVisible: Bool,
-    hideOnHover: Bool,
-    passThrough: Bool,
-    isTranslating: Bool,
-    isLive: Bool,
-    showGuide: Bool
-  ) {
-    model.lines = lines
-    model.hideOnHover = hideOnHover
-    model.passThrough = passThrough
-    model.isTranslating = isTranslating
-    model.isLive = isLive
-    model.showGuide = showGuide
+  func update(_ state: OverlayRenderState) {
+    model.lines = state.lines
+    model.hideOnHover = state.hideOnHover
+    model.isTranslating = state.isTranslating
+    model.isLive = state.isLive
+    model.showGuide = state.showGuide
+    model.liveMode = state.liveMode
+    model.backgroundImageData = state.backgroundImageData
+    model.imageSize = state.imageSize
 
-    if isVisible {
+    if state.isVisible {
       let needsInitialFrame = window == nil || !(window?.isVisible ?? false)
       showWindowIfNeeded()
       if let window {
@@ -48,6 +42,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       stopResizeEdgeTracking()
       window?.orderOut(nil)
     }
+
+    // In Window mode the translation lives in a detached panel; the overlay
+    // above is just a thin region frame.
+    let showResult = state.isVisible && model.isWindowFrame && !state.lines.isEmpty
+    updateResultWindow(visible: showResult)
   }
 
   /// Copies the currently shown translation (falling back to source text) to
@@ -96,6 +95,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var pendingFrameSaveTask: Task<Void, Never>?
   private var pendingInteractionReset: Task<Void, Never>?
   private var window: OverlayPanel?
+  private var resultWindow: NSPanel?
 
   /// `windowDidMove` has no will-start / did-end pair, so debounce a reset
   /// instead. 150 ms is short enough to feel responsive once the drag ends
@@ -290,19 +290,91 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       restoreFromHover()
     }
   }
+
+  // MARK: Detached result window (Window live mode)
+
+  private func updateResultWindow(visible: Bool) {
+    guard visible else {
+      resultWindow?.orderOut(nil)
+      return
+    }
+    if let resultWindow {
+      resultWindow.orderFront(nil)
+      return
+    }
+    let panel = NSPanel(
+      contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+      styleMask: [.borderless, .resizable, .nonactivatingPanel, .fullSizeContentView],
+      backing: .buffered,
+      defer: false
+    )
+    panel.isOpaque = false
+    panel.backgroundColor = .clear
+    panel.hasShadow = true
+    panel.level = .floating
+    panel.isFloatingPanel = true
+    panel.isMovableByWindowBackground = true
+    panel.becomesKeyOnlyIfNeeded = true
+    panel.hidesOnDeactivate = false
+    panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+    let hosting = NSHostingView(rootView: LiveResultView(model: model))
+    panel.contentView = hosting
+    resultWindow = panel
+    sizeResultWindow(panel)
+    panel.orderFront(nil)
+  }
+
+  /// Size the detached window to the captured region's aspect and park it in the
+  /// bottom-right of the screen. Only done once, on creation — after that the
+  /// user owns its position/size.
+  private func sizeResultWindow(_ panel: NSPanel) {
+    let screen = window?.screen ?? NSScreen.main
+    let visible = screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let scale = screen?.backingScaleFactor ?? 2
+    guard model.imageSize.width > 0, model.imageSize.height > 0 else { return }
+
+    var w = model.imageSize.width / scale + 20
+    var h = model.imageSize.height / scale + 20
+    let ratio = min(min(visible.width * 0.4 / w, visible.height * 0.6 / h), 1)
+    w *= ratio
+    h *= ratio
+    panel.setContentSize(CGSize(width: max(220, w), height: max(140, h)))
+    panel.setFrameOrigin(CGPoint(x: visible.maxX - panel.frame.width - 24, y: visible.minY + 24))
+  }
 }
 
 // MARK: - OverlayWindowModel
 
 @Observable
-private final class OverlayWindowModel {
+final class OverlayWindowModel {
   var lines = [OverlayLine]()
   var hideOnHover = false
-  var passThrough = false
   var isInteracting = false
   var isLive = false
   var isTranslating = false
   var showGuide = true
+  var liveMode = OverlayLiveMode.inPlace
+  var backgroundImageData: Data?
+  var imageSize: CGSize = .zero
+
+  /// In Window mode while live, the overlay is just a thin region frame and the
+  /// translation lives in a detached window.
+  var isWindowFrame: Bool {
+    liveMode == .window && isLive
+  }
+
+  /// The idle hint that's shown when there's nothing translated yet. It stays
+  /// interactive (you can read it and drag the overlay).
+  var showingGuide: Bool {
+    showGuide && lines.isEmpty
+  }
+
+  /// Click-through is the default: once a translation is on screen (or the
+  /// overlay is a region frame) the overlay forwards clicks/scroll to the apps
+  /// below. Only the idle guide stays interactive.
+  var passThrough: Bool {
+    isWindowFrame || !lines.isEmpty
+  }
 }
 
 // MARK: - OverlayRootView
@@ -321,7 +393,7 @@ private struct OverlayRootView: View {
       lines: model.isInteracting ? [] : model.lines,
       isTranslating: model.isTranslating,
       isLive: model.isLive,
-      passThrough: model.passThrough,
+      frameOnly: model.isWindowFrame,
       showGuide: model.showGuide
     )
     .onHover { hovering in
@@ -346,4 +418,49 @@ private struct OverlayRootView: View {
 
   @Environment(\.openSettings) private var openSettings
 
+}
+
+// MARK: - LiveResultView
+
+/// The detached translation window shown in Window live mode: the blurred
+/// screenshot with glass translation chips, updating live.
+private struct LiveResultView: View {
+
+  // MARK: Internal
+
+  let model: OverlayWindowModel
+
+  var body: some View {
+    content
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding(10)
+      .background(.ultraThinMaterial)
+      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+      .overlay(
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+      )
+  }
+
+  // MARK: Private
+
+  @ViewBuilder
+  private var content: some View {
+    if let data = model.backgroundImageData, let image = NSImage(data: data) {
+      ZStack {
+        Image(nsImage: image)
+          .resizable()
+        TranslationOverlayLayer(lines: model.lines, glass: true)
+      }
+      .aspectRatio(aspectRatio, contentMode: .fit)
+      .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    } else {
+      ProgressView()
+    }
+  }
+
+  private var aspectRatio: CGFloat {
+    guard model.imageSize.height > 0 else { return 1 }
+    return model.imageSize.width / model.imageSize.height
+  }
 }

@@ -74,7 +74,7 @@ code = "ko-KR"
 | --- | --- | --- | --- |
 | `enabled` | bool | `true` | Show the live translation overlay window. |
 | `hideOnHover` | bool | `false` | Temporarily hide the overlay while the cursor is over it. |
-| `passThrough` | bool | `false` | Let all mouse interaction (clicks, scrolling, dragging) pass through to the apps below. The edges still resize the overlay and the top-right badge still drags it; the border turns accent-colored while on. |
+| `liveMode` | string | `"inPlace"` | How a live translation is shown: `inPlace` draws it over the text, `window` keeps the overlay a thin region frame and shows the translation in a separate window. Once a translation is on screen, clicks/scroll pass through to the apps below. |
 
 ## `[recognition]`
 
@@ -93,14 +93,14 @@ that action unbound (the default).
 | `selectRegion` | Start a region capture |
 | `toggleLive` | Toggle Live Mode on the overlay |
 | `toggleOverlay` | Show/hide the overlay window |
-| `togglePassThrough` | Toggle pass-through interaction on the overlay |
+| `toggleLiveMode` | Switch the live mode between In-place and Window |
 
 ```toml
 [shortcuts]
 selectRegion = "cmd + shift - c"
 toggleLive = "cmd + shift - l"
 toggleOverlay = "cmd + shift - o"
-togglePassThrough = "cmd + shift - p"
+toggleLiveMode = "cmd + shift - m"
 ```
 
 ## `[translation]`

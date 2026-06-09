@@ -12,8 +12,17 @@ struct CaptureFeature {
   // MARK: Internal
 
   enum CancelID {
+    case background
     case live
     case translation
+  }
+
+  /// One live capture: the screenshot (for the Window-mode blurred backdrop)
+  /// plus the recognized lines.
+  struct LiveCapture: Sendable {
+    var imageData: Data?
+    var imageSize: CGSize
+    var result: OCRResult
   }
 
   struct TranslationCacheKey: Hashable, Sendable {
@@ -31,6 +40,10 @@ struct CaptureFeature {
     var isTranslating = false
     var lastError: String?
     var overlayLines = [OverlayLine]()
+    /// Window-mode backdrop: the screenshot with each box blurred. Nil in
+    /// In-place mode (the chips draw directly on the overlay).
+    var backgroundImageData: Data?
+    var imageSize: CGSize = .zero
     /// Show the idle hint once after the overlay is enabled. Cleared once a
     /// capture/Live session starts, so toggling Live just shows a transparent
     /// overlay rather than the guide again.
@@ -42,7 +55,8 @@ struct CaptureFeature {
   }
 
   enum Action {
-    case captureResponse(Result<OCRResult, any Error>)
+    case backgroundReady(Data?)
+    case captureResponse(Result<LiveCapture, any Error>)
     case copyTranslationRequested
     case selectRegionRequested
     case overlayToggled(Bool)
@@ -89,10 +103,15 @@ struct CaptureFeature {
         }
         return .none
 
-      case .captureResponse(.success(let result)):
+      case .backgroundReady(let data):
+        state.backgroundImageData = data
+        return .none
+
+      case .captureResponse(.success(let capture)):
         state.isCapturing = false
         state.lastError = nil
-        return applyOCRResult(result, into: &state)
+        state.imageSize = capture.imageSize
+        return applyOCRResult(capture, into: &state)
 
       case .copyTranslationRequested:
         let text = state.overlayLines
@@ -176,11 +195,15 @@ struct CaptureFeature {
 
   // MARK: Private
 
-  private func applyOCRResult(_ result: OCRResult, into state: inout State) -> Effect<Action> {
+  private func applyOCRResult(_ capture: LiveCapture, into state: inout State) -> Effect<Action> {
+    let result = capture.result
+    let windowMode = state.settings.overlay.liveMode == .window
+
     guard !result.lines.isEmpty else {
       state.overlayLines = []
       state.isTranslating = false
-      return .cancel(id: CancelID.translation)
+      state.backgroundImageData = nil
+      return .merge(.cancel(id: CancelID.translation), .cancel(id: CancelID.background))
     }
 
     let configured = state.settings.languages.source
@@ -243,14 +266,31 @@ struct CaptureFeature {
     }
 
     state.overlayLines = newLines
-    state.isTranslating = !groups.isEmpty
 
+    // Window mode draws a blurred screenshot backdrop in the detached window;
+    // In-place mode draws chips directly on the overlay, so no backdrop.
+    let background: Effect<Action>
+    if windowMode, let data = capture.imageData {
+      let lines = newLines
+      let size = capture.imageSize
+      background = .run { send in
+        // Pure Core Graphics / Core Image — runs off the main actor.
+        let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
+        await send(.backgroundReady(bg))
+      }
+      .cancellable(id: CancelID.background, cancelInFlight: true)
+    } else {
+      state.backgroundImageData = nil
+      background = .cancel(id: CancelID.background)
+    }
+
+    state.isTranslating = !groups.isEmpty
     if groups.isEmpty {
-      return .cancel(id: CancelID.translation)
+      return .merge(background, .cancel(id: CancelID.translation))
     }
 
     let batches = Array(groups.values)
-    return .run { send in
+    let translate = Effect<Action>.run { send in
       // One session per source language; chips update as results stream back.
       // translationCompleted clears the spinner once every batch finishes.
       await withTaskGroup(of: Void.self) { group in
@@ -271,13 +311,14 @@ struct CaptureFeature {
       await send(.translationCompleted)
     }
     .cancellable(id: CancelID.translation, cancelInFlight: true)
+    return .merge(background, translate)
   }
 
   private func runCapture(
     settings: AppSettings,
     overlayFrame: OverlayFrame,
     excludedWindowIDs: [CGWindowID]
-  ) async throws -> OCRResult {
+  ) async throws -> LiveCapture {
     let region = settings.overlay.enabled ? overlayFrame.rect : nil
     let image = try await screenCapture.captureImage(
       region,
@@ -285,6 +326,13 @@ struct CaptureFeature {
       displayID(coveringMostOf: overlayFrame.rect),
       Bundle.main.bundleIdentifier
     )
-    return try await ocr.recognizeText(image, settings.languages.source, settings.recognition.mode)
+    let result = try await ocr.recognizeText(image, settings.languages.source, settings.recognition.mode)
+    // Only carry the screenshot when Window mode needs it for the backdrop.
+    let needsImage = settings.overlay.liveMode == .window
+    return LiveCapture(
+      imageData: needsImage ? image.pngData : nil,
+      imageSize: CGSize(width: image.width, height: image.height),
+      result: result
+    )
   }
 }
