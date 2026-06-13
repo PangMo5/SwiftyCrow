@@ -115,12 +115,40 @@ struct RecognitionSettings: Codable, Equatable, Sendable {
 // MARK: - ShortcutSettings
 
 struct ShortcutSettings: Codable, Equatable, Sendable {
+
+  // MARK: Lifecycle
+
+  init() { }
+
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = ShortcutSettings()
+    selectRegion = try c.decodeIfPresent(HotKey.self, forKey: .selectRegion) ?? d.selectRegion
+    liveOverlay = try c.decodeIfPresent(HotKey.self, forKey: .liveOverlay) ?? d.liveOverlay
+    toggleLive = try c.decodeIfPresent(HotKey.self, forKey: .toggleLive) ?? d.toggleLive
+    toggleLiveMode = try c.decodeIfPresent(HotKey.self, forKey: .toggleLiveMode) ?? d.toggleLiveMode
+    regionSave = try c.decodeIfPresent(HotKey.self, forKey: .regionSave) ?? d.regionSave
+    regionCopyImage = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyImage) ?? d.regionCopyImage
+    regionCopyOriginal = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyOriginal) ?? d.regionCopyOriginal
+    regionCopyTranslation = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyTranslation) ?? d.regionCopyTranslation
+  }
+
+  // MARK: Internal
+
+  /// Global hotkeys — unbound by default; the user assigns them.
   var selectRegion: HotKey?
-  var toggleLive: HotKey?
   /// Starts (or re-places) the live overlay by selecting a region/window.
   /// Renamed from `toggleOverlay` in 2.6.0.
   var liveOverlay: HotKey?
+  var toggleLive: HotKey?
   var toggleLiveMode: HotKey?
+
+  // Capture-result-window shortcuts — ⌘ defaults, active only while that window
+  // is focused (matched locally, never registered globally).
+  var regionSave: HotKey? = HotKey(carbonKeyCode: 1, carbonModifiers: 256) // ⌘S
+  var regionCopyImage: HotKey? = HotKey(carbonKeyCode: 8, carbonModifiers: 256) // ⌘C
+  var regionCopyOriginal: HotKey? = HotKey(carbonKeyCode: 31, carbonModifiers: 256) // ⌘O
+  var regionCopyTranslation: HotKey? = HotKey(carbonKeyCode: 17, carbonModifiers: 256) // ⌘T
 }
 
 // MARK: - TranslationSettings

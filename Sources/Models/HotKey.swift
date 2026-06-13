@@ -1,5 +1,5 @@
 import Foundation
-import KeyboardShortcuts
+import Magnet
 
 // MARK: - HotKey
 
@@ -11,48 +11,33 @@ import KeyboardShortcuts
 struct HotKey: Hashable, Sendable {
   var carbonKeyCode: Int
   var carbonModifiers: Int
-
-  init(carbonKeyCode: Int, carbonModifiers: Int) {
-    self.carbonKeyCode = carbonKeyCode
-    self.carbonModifiers = carbonModifiers
-  }
 }
 
 extension HotKey {
-  init(_ shortcut: KeyboardShortcuts.Shortcut) {
+
+  // MARK: Lifecycle
+
+  init(_ keyCombo: KeyCombo) {
     self.init(
-      carbonKeyCode: shortcut.carbonKeyCode,
-      carbonModifiers: shortcut.carbonModifiers
+      carbonKeyCode: keyCombo.QWERTYKeyCode,
+      carbonModifiers: keyCombo.modifiers
     )
   }
 
-  var shortcut: KeyboardShortcuts.Shortcut {
-    KeyboardShortcuts.Shortcut(
-      carbonKeyCode: carbonKeyCode,
-      carbonModifiers: carbonModifiers
-    )
+  // MARK: Internal
+
+  /// A Magnet `KeyCombo` for registering/recording. Nil if the stored codes
+  /// don't form a valid combo.
+  var keyCombo: KeyCombo? {
+    KeyCombo(QWERTYKeyCode: carbonKeyCode, carbonModifiers: carbonModifiers)
   }
 }
 
 // MARK: - skhd-style string
 
 extension HotKey {
-  // Carbon modifier bit masks.
-  private static let cmd = 256
-  private static let shift = 512
-  private static let option = 2048
-  private static let control = 4096
 
-  /// skhd-style description: `"<mods joined by ' + '> - <key>"`.
-  var displayString: String {
-    var mods = [String]()
-    if carbonModifiers & Self.control != 0 { mods.append("ctrl") }
-    if carbonModifiers & Self.option != 0 { mods.append("alt") }
-    if carbonModifiers & Self.shift != 0 { mods.append("shift") }
-    if carbonModifiers & Self.cmd != 0 { mods.append("cmd") }
-    let key = Self.keyCodeToName[carbonKeyCode] ?? "0x" + String(carbonKeyCode, radix: 16)
-    return mods.isEmpty ? key : mods.joined(separator: " + ") + " - " + key
-  }
+  // MARK: Lifecycle
 
   /// Parse a skhd-style string. Accepts `"ctrl + alt - h"` and the looser
   /// `"ctrl+alt+h"`. Returns nil on an unknown key/modifier.
@@ -84,11 +69,20 @@ extension HotKey {
     if let modPart {
       for token in modPart.split(whereSeparator: { $0 == "+" || $0 == "-" }) {
         switch token.trimmingCharacters(in: .whitespaces) {
-        case "cmd", "command", "⌘": mods |= Self.cmd
-        case "shift", "⇧": mods |= Self.shift
-        case "alt", "opt", "option", "⌥": mods |= Self.option
-        case "ctrl", "control", "⌃": mods |= Self.control
-        case "", "fn": break
+        case "cmd",
+             "command",
+             "⌘": mods |= Self.cmd
+        case "shift",
+             "⇧": mods |= Self.shift
+        case "alt",
+             "opt",
+             "option",
+             "⌥": mods |= Self.option
+        case "ctrl",
+             "control",
+             "⌃": mods |= Self.control
+        case "",
+             "fn": break
         default: return nil
         }
       }
@@ -97,14 +91,35 @@ extension HotKey {
     guard let code = Self.nameToKeyCode[keyPart.trimmingCharacters(in: .whitespaces)] else { return nil }
     self.init(carbonKeyCode: code, carbonModifiers: mods)
   }
+
+  // MARK: Internal
+
+  /// skhd-style description: `"<mods joined by ' + '> - <key>"`.
+  var displayString: String {
+    var mods = [String]()
+    if carbonModifiers & Self.control != 0 { mods.append("ctrl") }
+    if carbonModifiers & Self.option != 0 { mods.append("alt") }
+    if carbonModifiers & Self.shift != 0 { mods.append("shift") }
+    if carbonModifiers & Self.cmd != 0 { mods.append("cmd") }
+    let key = Self.keyCodeToName[carbonKeyCode] ?? "0x" + String(carbonKeyCode, radix: 16)
+    return mods.isEmpty ? key : mods.joined(separator: " + ") + " - " + key
+  }
+
+  // MARK: Private
+
+  // Carbon modifier bit masks.
+  private static let cmd = 256
+  private static let shift = 512
+  private static let option = 2048
+  private static let control = 4096
+
 }
 
 // MARK: Codable
 
 extension HotKey: Codable {
-  private enum CodingKeys: String, CodingKey {
-    case carbonKeyCode, carbonModifiers
-  }
+
+  // MARK: Lifecycle
 
   init(from decoder: any Decoder) throws {
     // Preferred: skhd-style string.
@@ -124,9 +139,56 @@ extension HotKey: Codable {
     )
   }
 
+  // MARK: Internal
+
   func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode(displayString)
+  }
+
+  // MARK: Private
+
+  private enum CodingKeys: String, CodingKey {
+    case carbonKeyCode
+    case carbonModifiers
+  }
+
+}
+
+// MARK: - Symbol display
+
+extension HotKey {
+
+  // MARK: Internal
+
+  /// macOS-style glyphs using the stable English/QWERTY key (e.g. `⌘S`),
+  /// independent of the active keyboard layout.
+  var symbols: String {
+    var out = ""
+    if carbonModifiers & Self.control != 0 { out += "⌃" }
+    if carbonModifiers & Self.option != 0 { out += "⌥" }
+    if carbonModifiers & Self.shift != 0 { out += "⇧" }
+    if carbonModifiers & Self.cmd != 0 { out += "⌘" }
+    return out + keySymbol
+  }
+
+  // MARK: Private
+
+  private var keySymbol: String {
+    switch carbonKeyCode {
+    case 36,
+         76: "↩"
+    case 48: "⇥"
+    case 49: "Space"
+    case 51: "⌫"
+    case 53: "⎋"
+    case 117: "⌦"
+    case 123: "←"
+    case 124: "→"
+    case 125: "↓"
+    case 126: "↑"
+    default: (Self.keyCodeToName[carbonKeyCode] ?? "0x" + String(carbonKeyCode, radix: 16)).uppercased()
+    }
   }
 }
 
@@ -134,18 +196,82 @@ extension HotKey: Codable {
 
 extension HotKey {
   fileprivate static let keyCodeToName: [Int: String] = [
-    0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "z", 7: "x", 8: "c", 9: "v",
-    11: "b", 12: "q", 13: "w", 14: "e", 15: "r", 16: "y", 17: "t",
-    18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 24: "=", 25: "9",
-    26: "7", 27: "-", 28: "8", 29: "0", 30: "]", 31: "o", 32: "u", 33: "[",
-    34: "i", 35: "p", 36: "return", 37: "l", 38: "j", 39: "'", 40: "k",
-    41: ";", 42: "\\", 43: ",", 44: "/", 45: "n", 46: "m", 47: ".",
-    48: "tab", 49: "space", 50: "`", 51: "delete", 53: "escape",
-    76: "enter", 96: "f5", 97: "f6", 98: "f7", 99: "f3", 100: "f8",
-    101: "f9", 103: "f11", 105: "f13", 109: "f10", 111: "f12",
-    114: "help", 115: "home", 116: "pageup", 117: "forwarddelete",
-    118: "f4", 119: "end", 120: "f2", 121: "pagedown", 122: "f1",
-    123: "left", 124: "right", 125: "down", 126: "up",
+    0: "a",
+    1: "s",
+    2: "d",
+    3: "f",
+    4: "h",
+    5: "g",
+    6: "z",
+    7: "x",
+    8: "c",
+    9: "v",
+    11: "b",
+    12: "q",
+    13: "w",
+    14: "e",
+    15: "r",
+    16: "y",
+    17: "t",
+    18: "1",
+    19: "2",
+    20: "3",
+    21: "4",
+    22: "6",
+    23: "5",
+    24: "=",
+    25: "9",
+    26: "7",
+    27: "-",
+    28: "8",
+    29: "0",
+    30: "]",
+    31: "o",
+    32: "u",
+    33: "[",
+    34: "i",
+    35: "p",
+    36: "return",
+    37: "l",
+    38: "j",
+    39: "'",
+    40: "k",
+    41: ";",
+    42: "\\",
+    43: ",",
+    44: "/",
+    45: "n",
+    46: "m",
+    47: ".",
+    48: "tab",
+    49: "space",
+    50: "`",
+    51: "delete",
+    53: "escape",
+    76: "enter",
+    96: "f5",
+    97: "f6",
+    98: "f7",
+    99: "f3",
+    100: "f8",
+    101: "f9",
+    103: "f11",
+    105: "f13",
+    109: "f10",
+    111: "f12",
+    114: "help",
+    115: "home",
+    116: "pageup",
+    117: "forwarddelete",
+    118: "f4",
+    119: "end",
+    120: "f2",
+    121: "pagedown",
+    122: "f1",
+    123: "left",
+    124: "right",
+    125: "down",
+    126: "up",
   ]
 
   fileprivate static let nameToKeyCode: [String: Int] = {

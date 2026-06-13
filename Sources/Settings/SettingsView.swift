@@ -1,5 +1,5 @@
+import AppKit
 import ComposableArchitecture
-import KeyboardShortcuts
 import Sharing
 import SwiftUI
 
@@ -225,18 +225,10 @@ private struct ShortcutsSection: View {
 
   var body: some View {
     Section {
-      KeyboardShortcuts.Recorder("Capture region", name: .selectRegion) { shortcut in
-        $settings.withLock { $0.shortcuts.selectRegion = shortcut.map(HotKey.init) }
-      }
-      KeyboardShortcuts.Recorder("Live overlay (select a region)", name: .liveOverlay) { shortcut in
-        $settings.withLock { $0.shortcuts.liveOverlay = shortcut.map(HotKey.init) }
-      }
-      KeyboardShortcuts.Recorder("Pause / resume Live", name: .toggleLive) { shortcut in
-        $settings.withLock { $0.shortcuts.toggleLive = shortcut.map(HotKey.init) }
-      }
-      KeyboardShortcuts.Recorder("Switch display (In-place / Window)", name: .toggleLiveMode) { shortcut in
-        $settings.withLock { $0.shortcuts.toggleLiveMode = shortcut.map(HotKey.init) }
-      }
+      recorder("Capture region", \.selectRegion)
+      recorder("Live overlay (select a region)", \.liveOverlay)
+      recorder("Pause / resume Live", \.toggleLive)
+      recorder("Switch display (In-place / Window)", \.toggleLiveMode)
     } header: {
       Text("Global Shortcuts")
     } footer: {
@@ -246,10 +238,10 @@ private struct ShortcutsSection: View {
     }
 
     Section {
-      KeyboardShortcuts.Recorder("Save image", name: .regionSave)
-      KeyboardShortcuts.Recorder("Copy image", name: .regionCopyImage)
-      KeyboardShortcuts.Recorder("Copy original text", name: .regionCopyOriginal)
-      KeyboardShortcuts.Recorder("Copy translation", name: .regionCopyTranslation)
+      recorder("Save image", \.regionSave)
+      recorder("Copy image", \.regionCopyImage)
+      recorder("Copy original text", \.regionCopyOriginal)
+      recorder("Copy translation", \.regionCopyTranslation)
     } header: {
       Text("Capture Window")
     } footer: {
@@ -261,7 +253,38 @@ private struct ShortcutsSection: View {
 
   // MARK: Private
 
+  /// Action name + key path for every recordable shortcut, used both to detect
+  /// conflicts and to name the offending action in the recorder.
+  private static let allShortcuts: [(title: String, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
+    ("Capture region", \.selectRegion),
+    ("Live overlay", \.liveOverlay),
+    ("Pause / resume Live", \.toggleLive),
+    ("Switch display", \.toggleLiveMode),
+    ("Save image", \.regionSave),
+    ("Copy image", \.regionCopyImage),
+    ("Copy original text", \.regionCopyOriginal),
+    ("Copy translation", \.regionCopyTranslation),
+  ]
+
   @Shared(.settings) private var settings
+
+  private func recorder(_ title: String, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> some View {
+    LabeledContent(title) {
+      ShortcutRecorder(
+        hotKey: settings.shortcuts[keyPath: keyPath],
+        conflict: { candidate in conflictTitle(for: candidate, excluding: keyPath) }
+      ) { hotKey in
+        $settings.withLock { $0.shortcuts[keyPath: keyPath] = hotKey }
+      }
+    }
+  }
+
+  /// The name of another action already bound to `candidate`, or nil if free.
+  private func conflictTitle(for candidate: HotKey, excluding keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> String? {
+    Self.allShortcuts.first { entry in
+      entry.keyPath != keyPath && settings.shortcuts[keyPath: entry.keyPath] == candidate
+    }?.title
+  }
 
 }
 
@@ -347,7 +370,7 @@ private struct AboutSection: View {
   private static let acknowledgements: [(name: String, url: String)] = [
     ("The Composable Architecture", "https://github.com/pointfreeco/swift-composable-architecture"),
     ("swift-sharing", "https://github.com/pointfreeco/swift-sharing"),
-    ("KeyboardShortcuts", "https://github.com/sindresorhus/KeyboardShortcuts"),
+    ("Magnet", "https://github.com/Clipy/Magnet"),
     ("swift-toml", "https://github.com/mattt/swift-toml"),
     ("Sparkle", "https://github.com/sparkle-project/Sparkle"),
   ]

@@ -23,7 +23,7 @@ struct AppFeature {
     case checkForUpdatesTapped
   }
 
-  @Dependency(\.keyboardShortcuts) var keyboardShortcuts
+  @Dependency(\.globalShortcuts) var globalShortcuts
   @Dependency(\.overlay) var overlay
   @Dependency(\.updater) var updater
 
@@ -45,7 +45,7 @@ struct AppFeature {
       case .task:
         return .merge(
           .run { send in
-            for await event in keyboardShortcuts.events() {
+            for await event in globalShortcuts.events() {
               switch event {
               case .selectRegion:
                 await send(.capture(.selectRegionRequested))
@@ -76,7 +76,7 @@ struct AppFeature {
               }
             }
           },
-          .run { [keyboardShortcuts, settings = state.$settings] _ in
+          .run { [globalShortcuts, settings = state.$settings] _ in
             // config.toml is the source of truth for hotkeys; push it into the
             // registrar on launch and whenever it changes (incl. hand edits).
             for await keys in Observations({
@@ -87,10 +87,10 @@ struct AppFeature {
                 settings.wrappedValue.shortcuts.toggleLiveMode
               )
             }) {
-              keyboardShortcuts.setShortcut(.selectRegion, keys.0)
-              keyboardShortcuts.setShortcut(.toggleLive, keys.1)
-              keyboardShortcuts.setShortcut(.liveOverlay, keys.2)
-              keyboardShortcuts.setShortcut(.toggleLiveMode, keys.3)
+              globalShortcuts.setShortcut(.selectRegion, keys.0)
+              globalShortcuts.setShortcut(.toggleLive, keys.1)
+              globalShortcuts.setShortcut(.liveOverlay, keys.2)
+              globalShortcuts.setShortcut(.toggleLiveMode, keys.3)
             }
           },
           .run { [updater] send in

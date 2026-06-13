@@ -1,6 +1,5 @@
 import AppKit
 import ComposableArchitecture
-import KeyboardShortcuts
 import SwiftUI
 
 struct RegionResultView: View {
@@ -76,12 +75,12 @@ struct RegionResultView: View {
         ProgressView().controlSize(.small)
       }
       Spacer()
-      toolbarButton("square.and.arrow.down", help: helpText("Save image", .regionSave), action: onSaveImage)
-      toolbarButton("doc.on.doc", help: helpText("Copy image", .regionCopyImage), action: onCopyImage)
-      toolbarButton("text.quote", help: helpText("Copy original text", .regionCopyOriginal)) {
+      toolbarButton("square.and.arrow.down", help: helpText("Save image", shortcuts.regionSave), action: onSaveImage)
+      toolbarButton("doc.on.doc", help: helpText("Copy image", shortcuts.regionCopyImage), action: onCopyImage)
+      toolbarButton("text.quote", help: helpText("Copy original text", shortcuts.regionCopyOriginal)) {
         store.send(.copyOriginalRequested)
       }
-      toolbarButton("character.bubble", help: helpText("Copy translation", .regionCopyTranslation)) {
+      toolbarButton("character.bubble", help: helpText("Copy translation", shortcuts.regionCopyTranslation)) {
         store.send(.copyTranslationRequested)
       }
       toolbarButton("xmark", help: "Close (Esc)", action: onClose)
@@ -106,6 +105,10 @@ struct RegionResultView: View {
     }
   }
 
+  private var shortcuts: ShortcutSettings {
+    store.settings.shortcuts
+  }
+
   private func toolbarButton(_ systemName: String, help: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: systemName)
@@ -123,11 +126,9 @@ struct RegionResultView: View {
     }
   }
 
-  private func helpText(_ label: String, _ name: KeyboardShortcuts.Name) -> String {
-    if let shortcut = KeyboardShortcuts.getShortcut(for: name) {
-      return "\(label) (\(shortcut))"
-    }
-    return label
+  private func helpText(_ label: String, _ hotKey: HotKey?) -> String {
+    guard let hotKey else { return label }
+    return "\(label) (\(hotKey.displayString))"
   }
 
   /// Match the customizable shortcuts locally; they aren't registered globally,
@@ -140,16 +141,16 @@ struct RegionResultView: View {
           onClose()
           return nil
         }
-        if matches(event, .regionSave) { onSaveImage()
+        if matches(event, shortcuts.regionSave) { onSaveImage()
           return nil
         }
-        if matches(event, .regionCopyImage) { onCopyImage()
+        if matches(event, shortcuts.regionCopyImage) { onCopyImage()
           return nil
         }
-        if matches(event, .regionCopyOriginal) { store.send(.copyOriginalRequested)
+        if matches(event, shortcuts.regionCopyOriginal) { store.send(.copyOriginalRequested)
           return nil
         }
-        if matches(event, .regionCopyTranslation) { store.send(.copyTranslationRequested)
+        if matches(event, shortcuts.regionCopyTranslation) { store.send(.copyTranslationRequested)
           return nil
         }
         return event
@@ -164,9 +165,14 @@ struct RegionResultView: View {
     }
   }
 
-  private func matches(_ event: NSEvent, _ name: KeyboardShortcuts.Name) -> Bool {
-    guard let shortcut = KeyboardShortcuts.getShortcut(for: name) else { return false }
-    let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
-    return Int(event.keyCode) == shortcut.carbonKeyCode && flags == shortcut.modifiers
+  private func matches(_ event: NSEvent, _ hotKey: HotKey?) -> Bool {
+    guard let hotKey, Int(event.keyCode) == hotKey.carbonKeyCode else { return false }
+    var carbon = 0
+    let flags = event.modifierFlags
+    if flags.contains(.command) { carbon |= 256 }
+    if flags.contains(.shift) { carbon |= 512 }
+    if flags.contains(.option) { carbon |= 2048 }
+    if flags.contains(.control) { carbon |= 4096 }
+    return carbon == hotKey.carbonModifiers
   }
 }

@@ -15,6 +15,7 @@ appends an Install / Update section when publishing).
 ### Changed
 
 - **The overlay is always click-through.** Whenever a live overlay is on screen it lets clicks and scrolling pass through to the apps below; grab the LIVE handle to move it, the edges to resize it. There's no longer a persistent, manually-positioned overlay or an idle guide — the overlay exists only while a live session is placed.
+- **Reworked the shortcut recorder.** A new recorder field (matching the app's Liquid Glass) shows shortcuts with stable English glyphs (e.g. `⌘S`) regardless of the active keyboard layout, records on a single click, flags a combo that's already in use, and clears with a dedicated button. The capture-window Save/Copy keys now live in `config.toml`'s `[shortcuts]` table (with `⌘S`/`⌘C`/`⌘O`/`⌘T` defaults) instead of being stored separately. Global hotkeys are now registered with **Magnet**.
 
 ### Breaking Changes
 

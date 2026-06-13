@@ -32,7 +32,7 @@ let project = Project(
         .external(name: "ComposableArchitecture"),
         .external(name: "DependenciesMacros"),
         .external(name: "Sharing"),
-        .external(name: "KeyboardShortcuts"),
+        .external(name: "Magnet"),
         .external(name: "TOML"),
         .external(name: "Sparkle"),
       ],

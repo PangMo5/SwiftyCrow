@@ -89,7 +89,7 @@ app can verify update signatures. For local debug builds it can be empty.
 - **Tuist** generated workspace (`Project.swift`, `Tuist/Package.swift`)
 - **TCA** (`swift-composable-architecture`) for app + capture state; dependencies wired with `@DependencyClient`
 - **swift-sharing** with a `fileStorage` strategy bridged to **swift-toml**
-- **KeyboardShortcuts** by sindresorhus for global hotkeys
+- **Magnet** for global hotkey registration, plus a small custom recorder view
 - **Sparkle** for in-app updates
 - **Apple Vision** for OCR, **Apple Translation** for translation, **ScreenCaptureKit** for capture
 - Source style enforced by the [Airbnb SwiftFormat](https://github.com/airbnb/swift) configuration in `.swiftformat`

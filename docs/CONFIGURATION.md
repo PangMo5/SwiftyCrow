@@ -18,16 +18,14 @@ Settings are grouped into tables that mirror the in-app Settings tabs:
 - `[languages]` — source/target language pair
 - `[overlay]` — the live translation overlay
 - `[recognition]` — OCR mode
-- `[shortcuts]` — global hotkeys
+- `[shortcuts]` — global hotkeys + capture-window keys
 - `[translation]` — translation strategy
 - `[updates]` — automatic update checks
 
-Two things are intentionally **not** in this file:
+One thing is intentionally **not** in this file:
 
 - Overlay window position/size is UI state, saved to
   `~/Library/Application Support/SwiftyCrow/overlay-frame.json`.
-- The capture-window Save/Copy keys are stored by macOS (set them in
-  Settings → Shortcuts).
 
 ## Shortcut syntax
 
@@ -89,9 +87,10 @@ the **×** button to close it.
 
 ## `[shortcuts]`
 
-All values are skhd-style shortcut strings (see above). These hotkeys are
-global — they fire even when the app is in the background. Omit a key to leave
-that action unbound (the default).
+All values are skhd-style shortcut strings (see above). Omit a global key to
+leave that action unbound (the default).
+
+**Global hotkeys** — fire even when the app is in the background:
 
 | Key | Action |
 | --- | --- |
@@ -99,6 +98,16 @@ that action unbound (the default).
 | `liveOverlay` | Start/replace the live overlay (same selection; then translates live) |
 | `toggleLive` | Pause/resume Live on the active overlay |
 | `toggleLiveMode` | Switch the live display between In-place and Window |
+
+**Capture-window keys** — active only while a capture result window is focused;
+they have ⌘ defaults:
+
+| Key | Action | Default |
+| --- | --- | --- |
+| `regionSave` | Save the image | `cmd - s` |
+| `regionCopyImage` | Copy the image | `cmd - c` |
+| `regionCopyOriginal` | Copy the original text | `cmd - o` |
+| `regionCopyTranslation` | Copy the translation | `cmd - t` |
 
 ```toml
 [shortcuts]
