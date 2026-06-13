@@ -164,12 +164,43 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          # This version's changelog section (### promoted to ##), without the
-          # install boilerplate — Sparkle shows the actual changes inline.
-          awk -v h="## ${VERSION} " 'index($0, h) == 1 { g = 1; next } g && /^## / { exit } g { print }' \
-            CHANGELOG.md | sed 's/^### /## /' > "$RUNNER_TEMP/changelog-section.md"
-          SECTION="$RUNNER_TEMP/changelog-section.md" python3 - <<'PY'
+          # The appcast is a single <item> (this release), but a user updating
+          # from an older patch should see everything that landed since. So
+          # Sparkle's notes accumulate every section from this version down to
+          # the start of its minor series (2.6.2 → 2.6.1 → 2.6.0), stopping at
+          # the previous minor (those users already had it). The website /
+          # GitHub release show only this version's own section — CHANGELOG.md
+          # stays one-section-per-version, no hand-carried notes.
+          APPCAST="$APPCAST" VERSION="$VERSION" python3 - <<'PY'
           import os, re, html as H
+
+          version = os.environ["VERSION"]
+          minor = ".".join(version.split(".")[:2])  # 2.6.1 -> 2.6
+
+          # Split CHANGELOG into (heading, body-lines) version sections.
+          sections, cur = [], None
+          for line in open("CHANGELOG.md", encoding="utf-8").read().splitlines():
+              if line.startswith("## "):
+                  cur = {"head": line[3:].strip(), "lines": []}
+                  sections.append(cur)
+              elif cur is not None:
+                  cur["lines"].append(line)
+
+          def secver(head):
+              m = re.match(r"v?(\d+\.\d+\.\d+)", head)
+              return m.group(1) if m else None
+
+          collected, started = [], False
+          for s in sections:
+              v = secver(s["head"])
+              if v == version:
+                  started = True
+              if not started:
+                  continue
+              if v is None or ".".join(v.split(".")[:2]) != minor:
+                  break
+              collected.append(s)
+
           def inline(s):
               s = H.escape(s)
               s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
@@ -177,20 +208,25 @@ jobs:
               s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
               s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", s)
               return s
+
           out, in_ul = [], False
-          for line in open(os.environ["SECTION"], encoding="utf-8").read().splitlines():
-              if line.startswith("## "):
-                  if in_ul: out.append("</ul>"); in_ul = False
-                  out.append("<h2>" + inline(line[3:].strip()) + "</h2>")
-              elif line.startswith("- "):
-                  if not in_ul: out.append("<ul>"); in_ul = True
-                  out.append("<li>" + inline(line[2:].strip()) + "</li>")
-              elif line.strip() == "":
-                  if in_ul: out.append("</ul>"); in_ul = False
-              else:
-                  if in_ul: out.append("</ul>"); in_ul = False
-                  out.append("<p>" + inline(line.strip()) + "</p>")
+          for s in collected:
+              if in_ul: out.append("</ul>"); in_ul = False
+              out.append("<h2>" + inline(s["head"]) + "</h2>")
+              for line in s["lines"]:
+                  if line.startswith("### "):
+                      if in_ul: out.append("</ul>"); in_ul = False
+                      out.append("<h3>" + inline(line[4:].strip()) + "</h3>")
+                  elif line.startswith("- "):
+                      if not in_ul: out.append("<ul>"); in_ul = True
+                      out.append("<li>" + inline(line[2:].strip()) + "</li>")
+                  elif line.strip() == "":
+                      if in_ul: out.append("</ul>"); in_ul = False
+                  else:
+                      if in_ul: out.append("</ul>"); in_ul = False
+                      out.append("<p>" + inline(line.strip()) + "</p>")
           if in_ul: out.append("</ul>")
+
           html = "\n".join(out).strip()
           appcast = os.environ["APPCAST"]
           xml = open(appcast, encoding="utf-8").read()
@@ -198,7 +234,7 @@ jobs:
               desc = "<description><![CDATA[\n" + html + "\n]]></description>\n    "
               xml = xml.replace("</item>", desc + "</item>", 1)
               open(appcast, "w", encoding="utf-8").write(xml)
-              print("appcast: embedded release notes")
+              print("appcast: embedded release notes (%d section(s))" % len(collected))
           else:
               print("appcast: skipped (no notes or description already present)")
           PY

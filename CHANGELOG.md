@@ -12,6 +12,11 @@ appends an Install / Update section when publishing).
 
 ## 2.6.0 — 2026-06-13
 
+### ⚠️ Breaking Changes
+
+- **`[shortcuts] toggleOverlay` is renamed to `liveOverlay`.** It now starts/replaces the live overlay by selecting a region (Space to pick a window). An old `toggleOverlay` entry in `config.toml` is ignored — re-add your binding under `liveOverlay` (or in Settings → Shortcuts).
+- **`[overlay] enabled` is removed.** The overlay no longer has a persistent on/off; you place it by selecting a region/window and close it with the overlay's **×** button. The key is ignored if present.
+
 ### What's New
 
 - **Pick a window like the macOS screenshot tool.** While selecting a region, press **Space** to switch to window mode — the window under the cursor highlights and a click selects it. Region capture then grabs just that window (occlusion-independent); the live overlay snaps exactly onto it. Works across every display.
@@ -22,11 +27,6 @@ appends an Install / Update section when publishing).
 
 - **The overlay is always click-through.** Whenever a live overlay is on screen it lets clicks and scrolling pass through to the apps below; grab the LIVE handle to move it, the edges to resize it. There's no longer a persistent, manually-positioned overlay or an idle guide — the overlay exists only while a live session is placed.
 - **Reworked the shortcut recorder.** A new recorder field (matching the app's Liquid Glass) shows shortcuts with stable English glyphs (e.g. `⌘S`) regardless of the active keyboard layout, records on a single click, flags a combo that's already in use, and clears with a dedicated button. The capture-window Save/Copy keys now live in `config.toml`'s `[shortcuts]` table (with `⌘S`/`⌘C`/`⌘O`/`⌘T` defaults) instead of being stored separately. Global hotkeys are now registered with **Magnet**.
-
-### Breaking Changes
-
-- **`[shortcuts] toggleOverlay` is renamed to `liveOverlay`.** It now starts/replaces the live overlay by selecting a region (Space to pick a window). An old `toggleOverlay` entry in `config.toml` is ignored — re-add your binding under `liveOverlay` (or in Settings → Shortcuts).
-- **`[overlay] enabled` is removed.** The overlay no longer has a persistent on/off; you place it by selecting a region/window and close it with the overlay's **×** button. The key is ignored if present.
 
 ## 2.5.0 — 2026-06-09
 
