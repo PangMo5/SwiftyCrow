@@ -19,6 +19,10 @@ struct ScreenCaptureClient {
     _ displayID: CGDirectDisplayID?,
     _ excludingBundleIdentifier: String?
   ) async throws -> CGImage
+
+  /// Captures a single window by id, independent of what's stacked on top of it
+  /// (matches the macOS screenshot window mode).
+  var captureWindow: @Sendable (_ windowID: CGWindowID) async throws -> CGImage
 }
 
 // MARK: - ScreenCaptureError
@@ -27,6 +31,7 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
   case emptyRegion
   case noDisplay
   case permissionRequired
+  case windowUnavailable
 
   var errorDescription: String? {
     switch self {
@@ -36,6 +41,8 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
       "No display available for capture."
     case .permissionRequired:
       "Screen Recording permission is required. Allow it in System Settings and restart the app."
+    case .windowUnavailable:
+      "That window is no longer available to capture."
     }
   }
 }
@@ -96,6 +103,34 @@ extension ScreenCaptureClient: DependencyKey {
         configuration.height = Int(Double(display.height) * scale)
       }
 
+      return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
+    },
+    captureWindow: { windowID in
+      try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
+      let content = try await SCShareableContent.excludingDesktopWindows(
+        false,
+        onScreenWindowsOnly: true
+      )
+      guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
+        throw ScreenCaptureError.windowUnavailable
+      }
+
+      // The window may live on a non-main display; match its display's backing
+      // scale so the screenshot keeps native resolution.
+      let display = content.displays.first { $0.frame.intersects(window.frame) }
+      let nsScreen = NSScreen.screens.first { screen in
+        let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        return number?.uint32Value == display?.displayID
+      }
+      let scale = nsScreen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+
+      let configuration = SCStreamConfiguration()
+      configuration.pixelFormat = kCVPixelFormatType_32BGRA
+      configuration.showsCursor = false
+      configuration.width = max(1, Int(window.frame.width * scale))
+      configuration.height = max(1, Int(window.frame.height * scale))
+
+      let filter = SCContentFilter(desktopIndependentWindow: window)
       return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
     }
   )

@@ -4,6 +4,23 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.6.0 — 2026-06-13
+
+### What's New
+
+- **Pick a window like the macOS screenshot tool.** While selecting a region, press **Space** to switch to window mode — the window under the cursor highlights and a click selects it. Region capture then grabs just that window (occlusion-independent); the live overlay snaps exactly onto it. Works across every display.
+- **Drag-to-select live overlay.** Starting a live overlay now works just like a region capture: trigger **Live overlay…** (menu bar or shortcut), drag a region (or Space to pick a window), and an overlay snaps onto your selection and starts translating live immediately. No more "enable the overlay, position the floating panel, then turn on Live."
+- **Built-in overlay controls.** The overlay carries an always-visible **LIVE** handle (coloured while live, monochrome when paused — click to toggle) and an **×** button to close it.
+
+### Changed
+
+- **The overlay is always click-through.** Whenever a live overlay is on screen it lets clicks and scrolling pass through to the apps below; grab the LIVE handle to move it, the edges to resize it. There's no longer a persistent, manually-positioned overlay or an idle guide — the overlay exists only while a live session is placed.
+
+### Breaking Changes
+
+- **`[shortcuts] toggleOverlay` is renamed to `liveOverlay`.** It now starts/replaces the live overlay by selecting a region (Space to pick a window). An old `toggleOverlay` entry in `config.toml` is ignored — re-add your binding under `liveOverlay` (or in Settings → Shortcuts).
+- **`[overlay] enabled` is removed.** The overlay no longer has a persistent on/off; you place it by selecting a region/window and close it with the overlay's **×** button. The key is ignored if present.
+
 ## 2.5.0 — 2026-06-09
 
 ### What's New

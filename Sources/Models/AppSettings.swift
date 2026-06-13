@@ -70,12 +70,10 @@ struct OverlaySettings: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     let d = OverlaySettings()
-    enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? d.enabled
     hideOnHover = try c.decodeIfPresent(Bool.self, forKey: .hideOnHover) ?? d.hideOnHover
     liveMode = try c.decodeIfPresent(OverlayLiveMode.self, forKey: .liveMode) ?? d.liveMode
   }
 
-  var enabled = true
   var hideOnHover = false
   /// How a live translation is shown: drawn in place over the source, or in a
   /// separate window while the overlay stays a thin region frame.
@@ -119,7 +117,9 @@ struct RecognitionSettings: Codable, Equatable, Sendable {
 struct ShortcutSettings: Codable, Equatable, Sendable {
   var selectRegion: HotKey?
   var toggleLive: HotKey?
-  var toggleOverlay: HotKey?
+  /// Starts (or re-places) the live overlay by selecting a region/window.
+  /// Renamed from `toggleOverlay` in 2.6.0.
+  var liveOverlay: HotKey?
   var toggleLiveMode: HotKey?
 }
 
@@ -159,6 +159,8 @@ enum UpdateCheckInterval: String, Codable, Equatable, Sendable, CaseIterable, Id
   case hourly
   case daily
   case weekly
+
+  // MARK: Internal
 
   var id: String {
     rawValue

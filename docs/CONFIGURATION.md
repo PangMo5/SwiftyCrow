@@ -70,11 +70,16 @@ code = "ko-KR"
 
 ## `[overlay]`
 
+The overlay is no longer a persistent window you toggle on; you place it by
+selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
+shortcut), and it starts translating live right away. It always lets clicks pass
+through to the apps below — use its built-in **LIVE** handle to pause/resume and
+the **×** button to close it.
+
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `enabled` | bool | `true` | Show the live translation overlay window. |
-| `hideOnHover` | bool | `false` | Temporarily hide the overlay while the cursor is over it. |
-| `liveMode` | string | `"inPlace"` | How a live translation is shown: `inPlace` draws it over the text, `window` keeps the overlay a thin region frame and shows the translation in a separate window. Once a translation is on screen, clicks/scroll pass through to the apps below. |
+| `hideOnHover` | bool | `false` | Fade the overlay out while the cursor is over it, so the original text underneath is readable. |
+| `liveMode` | string | `"inPlace"` | How a live translation is shown: `inPlace` draws it over the text, `window` keeps the overlay a thin region frame and shows the translation in a separate window. |
 
 ## `[recognition]`
 
@@ -90,18 +95,21 @@ that action unbound (the default).
 
 | Key | Action |
 | --- | --- |
-| `selectRegion` | Start a region capture |
-| `toggleLive` | Toggle Live Mode on the overlay |
-| `toggleOverlay` | Show/hide the overlay window |
-| `toggleLiveMode` | Switch the live mode between In-place and Window |
+| `selectRegion` | Capture a region (drag to select; press Space to pick a window) |
+| `liveOverlay` | Start/replace the live overlay (same selection; then translates live) |
+| `toggleLive` | Pause/resume Live on the active overlay |
+| `toggleLiveMode` | Switch the live display between In-place and Window |
 
 ```toml
 [shortcuts]
 selectRegion = "cmd + shift - c"
+liveOverlay = "cmd + shift - o"
 toggleLive = "cmd + shift - l"
-toggleOverlay = "cmd + shift - o"
 toggleLiveMode = "cmd + shift - m"
 ```
+
+> **Renamed in 2.6.0:** the `toggleOverlay` key is now `liveOverlay`. An old
+> `toggleOverlay` entry is ignored — re-add the binding under `liveOverlay`.
 
 ## `[translation]`
 

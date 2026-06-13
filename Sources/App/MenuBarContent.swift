@@ -41,12 +41,17 @@ struct MenuBarContent: View {
         .padding(.leading, 4)
 
       VStack(spacing: 0) {
-        Toggle(isOn: Binding(
-          get: { store.settings.overlay.enabled },
-          set: { _ in store.send(.toggleOverlayRequested) }
-        )) {
-          Label("Show overlay", systemImage: "rectangle.dashed")
+        Button {
+          store.send(.capture(.liveSelectRequested))
+        } label: {
+          Label(
+            store.capture.overlayActive ? "Move live overlay…" : "Live overlay…",
+            systemImage: "viewfinder.rectangular"
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .contentShape(.rect)
         }
+        .buttonStyle(.plain)
         .padding(.vertical, 8)
 
         Divider().padding(.leading, 28)
@@ -57,7 +62,7 @@ struct MenuBarContent: View {
         )) {
           Label("Live translation", systemImage: "dot.radiowaves.left.and.right")
         }
-        .disabled(!store.settings.overlay.enabled)
+        .disabled(!store.capture.overlayActive)
         .toggleStyle(.switch)
         .controlSize(.small)
         .padding(.vertical, 8)
@@ -80,7 +85,7 @@ struct MenuBarContent: View {
           .fixedSize()
         }
         .controlSize(.small)
-        .disabled(!store.settings.overlay.enabled)
+        .disabled(!store.capture.overlayActive)
         .padding(.vertical, 8)
       }
       .padding(.horizontal, 12)

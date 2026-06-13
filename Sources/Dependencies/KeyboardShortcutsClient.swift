@@ -7,14 +7,14 @@ import KeyboardShortcuts
 enum KeyboardShortcutEvent: Equatable, CaseIterable {
   case selectRegion
   case toggleLive
-  case toggleOverlay
+  case liveOverlay
   case toggleLiveMode
 
   var name: KeyboardShortcuts.Name {
     switch self {
     case .selectRegion: .selectRegion
     case .toggleLive: .toggleLive
-    case .toggleOverlay: .toggleOverlay
+    case .liveOverlay: .liveOverlay
     case .toggleLiveMode: .toggleLiveMode
     }
   }
@@ -43,8 +43,8 @@ extension KeyboardShortcutsClient: DependencyKey {
           KeyboardShortcuts.onKeyUp(for: .toggleLive) {
             continuation.yield(.toggleLive)
           }
-          KeyboardShortcuts.onKeyUp(for: .toggleOverlay) {
-            continuation.yield(.toggleOverlay)
+          KeyboardShortcuts.onKeyUp(for: .liveOverlay) {
+            continuation.yield(.liveOverlay)
           }
           KeyboardShortcuts.onKeyUp(for: .toggleLiveMode) {
             continuation.yield(.toggleLiveMode)
@@ -71,7 +71,7 @@ extension DependencyValues {
 extension KeyboardShortcuts.Name {
   static let selectRegion = Self("selectRegion")
   static let toggleLive = Self("toggleLive")
-  static let toggleOverlay = Self("toggleOverlay")
+  static let liveOverlay = Self("liveOverlay")
   static let toggleLiveMode = Self("toggleLiveMode")
 
   // Capture-result-window actions. These are matched locally by an NSEvent

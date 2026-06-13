@@ -22,12 +22,8 @@ struct RegionResultView: View {
       content
     }
     .frame(minWidth: 360, minHeight: 280)
-    .background(.ultraThinMaterial)
+    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    .overlay(
-      RoundedRectangle(cornerRadius: 16, style: .continuous)
-        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-    )
     .task { store.send(.task) }
     .onAppear(perform: installMonitor)
     .onDisappear(perform: removeMonitor)
@@ -134,8 +130,8 @@ struct RegionResultView: View {
     return label
   }
 
-  // Match the customizable shortcuts locally; they aren't registered globally,
-  // so they only fire while this window has focus.
+  /// Match the customizable shortcuts locally; they aren't registered globally,
+  /// so they only fire while this window has focus.
   private func installMonitor() {
     guard keyMonitor == nil else { return }
     keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -144,10 +140,18 @@ struct RegionResultView: View {
           onClose()
           return nil
         }
-        if matches(event, .regionSave) { onSaveImage(); return nil }
-        if matches(event, .regionCopyImage) { onCopyImage(); return nil }
-        if matches(event, .regionCopyOriginal) { store.send(.copyOriginalRequested); return nil }
-        if matches(event, .regionCopyTranslation) { store.send(.copyTranslationRequested); return nil }
+        if matches(event, .regionSave) { onSaveImage()
+          return nil
+        }
+        if matches(event, .regionCopyImage) { onCopyImage()
+          return nil
+        }
+        if matches(event, .regionCopyOriginal) { store.send(.copyOriginalRequested)
+          return nil
+        }
+        if matches(event, .regionCopyTranslation) { store.send(.copyTranslationRequested)
+          return nil
+        }
         return event
       }
     }

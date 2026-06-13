@@ -194,7 +194,6 @@ private struct OverlaySection: View {
 
   var body: some View {
     Section {
-      Toggle("Enable overlay", isOn: Binding($settings.overlay.enabled))
       Toggle("Hide on hover", isOn: Binding($settings.overlay.hideOnHover))
       Picker("Live mode", selection: Binding($settings.overlay.liveMode)) {
         ForEach(OverlayLiveMode.allCases) { mode in
@@ -204,9 +203,11 @@ private struct OverlaySection: View {
     } header: {
       Text("Overlay")
     } footer: {
-      Text("In-place draws the translation over the text. Window keeps the overlay a thin region frame and shows the translation in a separate window. Clicks pass through to the apps below once a translation is shown.")
-        .font(.caption)
-        .foregroundStyle(.secondary)
+      Text(
+        "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The overlay always lets clicks pass through to the apps below."
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
     }
   }
 
@@ -227,13 +228,13 @@ private struct ShortcutsSection: View {
       KeyboardShortcuts.Recorder("Capture region", name: .selectRegion) { shortcut in
         $settings.withLock { $0.shortcuts.selectRegion = shortcut.map(HotKey.init) }
       }
-      KeyboardShortcuts.Recorder("Toggle Live Mode", name: .toggleLive) { shortcut in
+      KeyboardShortcuts.Recorder("Live overlay (select a region)", name: .liveOverlay) { shortcut in
+        $settings.withLock { $0.shortcuts.liveOverlay = shortcut.map(HotKey.init) }
+      }
+      KeyboardShortcuts.Recorder("Pause / resume Live", name: .toggleLive) { shortcut in
         $settings.withLock { $0.shortcuts.toggleLive = shortcut.map(HotKey.init) }
       }
-      KeyboardShortcuts.Recorder("Toggle overlay", name: .toggleOverlay) { shortcut in
-        $settings.withLock { $0.shortcuts.toggleOverlay = shortcut.map(HotKey.init) }
-      }
-      KeyboardShortcuts.Recorder("Toggle live mode (In-place / Window)", name: .toggleLiveMode) { shortcut in
+      KeyboardShortcuts.Recorder("Switch display (In-place / Window)", name: .toggleLiveMode) { shortcut in
         $settings.withLock { $0.shortcuts.toggleLiveMode = shortcut.map(HotKey.init) }
       }
     } header: {

@@ -1,4 +1,3 @@
-import KeyboardShortcuts
 import SwiftUI
 
 // MARK: - OverlayView
@@ -13,7 +12,10 @@ struct OverlayView: View {
   /// Window live mode: the overlay is a thin region frame; the translation
   /// shows in a detached window.
   var frameOnly = false
-  var showGuide = true
+  /// Whether the cursor is over the overlay — fades the move handle in/out.
+  var showMoveHandle = false
+  let onToggleLive: () -> Void
+  let onClose: () -> Void
 
   var body: some View {
     bodyContent
@@ -25,15 +27,24 @@ struct OverlayView: View {
             lineWidth: frameOnly ? 2.5 : 1.5
           )
       )
+      .overlay(alignment: .topLeading) {
+        // Drag handle: the only way to move the overlay. The window-background
+        // drag is gated to this corner by the controller; the view itself takes
+        // no hits, so the drag falls through to the window.
+        MoveHandle()
+          .opacity(showMoveHandle ? 1 : 0)
+          .animation(.easeOut(duration: 0.15), value: showMoveHandle)
+          .padding(8)
+          .allowsHitTesting(false)
+      }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
-          if isLive {
-            LiveBadge()
-          }
           if isTranslating {
             ProgressView()
               .controlSize(.small)
           }
+          LiveHandle(isLive: isLive, action: onToggleLive)
+          CloseHandle(action: onClose)
         }
         .padding(10)
       }
@@ -49,43 +60,46 @@ struct OverlayView: View {
       Color.clear
     } else if !lines.isEmpty {
       TranslationOverlayLayer(lines: lines)
-    } else if showGuide {
-      ScrollView(.vertical, showsIndicators: false) {
-        EmptyOverlayGuide()
-      }
-      .scrollBounceBehavior(.basedOnSize)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 8)
-      .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-      .padding(12)
     } else {
-      // Idle after a Live toggle: just a transparent, draggable frame.
+      // Idle (live off / waiting): a transparent, pass-through frame.
       Color.clear
     }
   }
 }
 
-// MARK: - LiveBadge
+// MARK: - LiveHandle
 
-private struct LiveBadge: View {
+/// Always-present control that toggles Live. It carries colour while Live is on
+/// (a pulsing red dot + red-tinted glass) and goes monochrome when off.
+private struct LiveHandle: View {
 
   // MARK: Internal
 
+  let isLive: Bool
+  let action: () -> Void
+
   var body: some View {
-    HStack(spacing: 4) {
-      Circle()
-        .fill(.red)
-        .frame(width: 7, height: 7)
-        .opacity(pulse ? 0.35 : 1)
-        .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: pulse)
-        .onAppear { pulse = true }
-      Text("LIVE")
-        .font(.system(size: 10, weight: .bold, design: .rounded))
-        .foregroundStyle(.primary)
+    Button(action: action) {
+      HStack(spacing: 4) {
+        Circle()
+          .fill(isLive ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+          .frame(width: 7, height: 7)
+          .opacity(isLive && pulse ? 0.35 : 1)
+          .animation(
+            isLive ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default,
+            value: pulse
+          )
+        Text("LIVE")
+          .font(.system(size: 10, weight: .bold, design: .rounded))
+          .foregroundStyle(isLive ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+      }
+      .padding(.horizontal, 7)
+      .padding(.vertical, 3)
+      .glassEffect(.regular.tint(isLive ? .red : nil), in: Capsule())
     }
-    .padding(.horizontal, 7)
-    .padding(.vertical, 3)
-    .glassEffect(.regular, in: Capsule())
+    .buttonStyle(.plain)
+    .onAppear { pulse = true }
+    .help(isLive ? "Live translation on — click to pause" : "Live translation off — click to resume")
   }
 
   // MARK: Private
@@ -94,72 +108,35 @@ private struct LiveBadge: View {
 
 }
 
-// MARK: - EmptyOverlayGuide
+// MARK: - MoveHandle
 
-private struct EmptyOverlayGuide: View {
-
-  // MARK: Internal
-
+/// Purely visual grab affordance shown at the top-left while the cursor is over
+/// the overlay. The actual move is the window-background drag the controller
+/// enables in this corner, so the handle takes no hits itself.
+private struct MoveHandle: View {
   var body: some View {
-    VStack(spacing: 16) {
-      Image(systemName: "text.viewfinder")
-        .font(.system(size: 36, weight: .light))
-        .foregroundStyle(.tint)
-        .symbolRenderingMode(.hierarchical)
-
-      VStack(spacing: 4) {
-        Text("Drag over text to translate")
-          .font(.headline)
-        Text("Position this window, then capture or turn on Live.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.center)
-      }
-
-      VStack(spacing: 8) {
-        GuideRow(icon: "viewfinder", title: "Capture region", shortcut: shortcut(for: .selectRegion))
-        GuideRow(icon: "dot.radiowaves.left.and.right", title: "Toggle Live", shortcut: shortcut(for: .toggleLive))
-        GuideRow(icon: "rectangle.on.rectangle", title: "Toggle overlay", shortcut: shortcut(for: .toggleOverlay))
-      }
-      .padding(.top, 2)
-    }
-    .padding(22)
-    .frame(maxWidth: .infinity)
-  }
-
-  // MARK: Private
-
-  private func shortcut(for name: KeyboardShortcuts.Name) -> String? {
-    KeyboardShortcuts.getShortcut(for: name)?.description
+    Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+      .font(.system(size: 9, weight: .bold))
+      .foregroundStyle(.secondary)
+      .frame(width: 24, height: 18)
+      .glassEffect(.regular, in: Capsule())
   }
 }
 
-// MARK: - GuideRow
+// MARK: - CloseHandle
 
-private struct GuideRow: View {
-  let icon: String
-  let title: String
-  let shortcut: String?
+private struct CloseHandle: View {
+  let action: () -> Void
 
   var body: some View {
-    HStack(spacing: 10) {
-      Image(systemName: icon)
-        .font(.system(size: 12, weight: .semibold))
+    Button(action: action) {
+      Image(systemName: "xmark")
+        .font(.system(size: 9, weight: .bold))
         .foregroundStyle(.secondary)
-        .frame(width: 18)
-      Text(title)
-        .font(.callout)
-      Spacer(minLength: 12)
-      Text(shortcut ?? "Set in Settings")
-        .font(shortcut == nil ? .caption : .system(.caption, design: .rounded).weight(.medium))
-        .foregroundStyle(shortcut == nil ? .tertiary : .secondary)
-        .padding(.horizontal, shortcut == nil ? 0 : 7)
-        .padding(.vertical, shortcut == nil ? 0 : 3)
-        .background {
-          if shortcut != nil {
-            Capsule().fill(.secondary.opacity(0.15))
-          }
-        }
+        .frame(width: 18, height: 18)
+        .glassEffect(.regular, in: Circle())
     }
+    .buttonStyle(.plain)
+    .help("Close overlay")
   }
 }

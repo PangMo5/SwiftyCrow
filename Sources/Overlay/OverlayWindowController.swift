@@ -14,25 +14,28 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     return CGWindowID(window.windowNumber)
   }
 
+  /// Registers the sink for controls drawn on the overlay (live toggle, close).
+  func setEventHandler(_ handler: @escaping @Sendable (OverlayUserAction) -> Void) {
+    eventHandler = handler
+  }
+
   func update(_ state: OverlayRenderState) {
     model.lines = state.lines
     model.hideOnHover = state.hideOnHover
     model.isTranslating = state.isTranslating
     model.isLive = state.isLive
-    model.showGuide = state.showGuide
     model.liveMode = state.liveMode
     model.backgroundImageData = state.backgroundImageData
     model.imageSize = state.imageSize
 
     if state.isVisible {
-      let needsInitialFrame = window == nil || !(window?.isVisible ?? false)
+      let isNewWindow = window == nil
       showWindowIfNeeded()
       if let window {
-        // Only sync the panel back to the stored settings frame when we're
-        // first showing it. After that the user's drag/resize is the source
-        // of truth and forcing setFrame here would snap the window back
-        // mid-translation.
-        if needsInitialFrame {
+        // Snap to the stored frame on first show or whenever a fresh placement
+        // arrives (the user picked a new region/window). Otherwise the user's
+        // own drag/resize is the source of truth and we leave the frame alone.
+        if isNewWindow || state.placementID != lastPlacementID {
           window.setFrame(overlayFrame.rect, display: true)
           window.makeKeyAndOrderFront(nil)
         }
@@ -42,6 +45,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       stopResizeEdgeTracking()
       window?.orderOut(nil)
     }
+    lastPlacementID = state.placementID
 
     // In Window mode the translation lives in a detached panel; the overlay
     // above is just a thin region frame.
@@ -86,16 +90,19 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
   private let model = OverlayWindowModel()
   private let resizeMargin: CGFloat = 14
-  /// Top-right zone (matching the badge chips) that drags the window while
-  /// passing through.
-  private let badgeHandleSize = CGSize(width: 190, height: 44)
-  private var hoverMonitor: Any?
+  /// Top-left grab handle — the only region that moves the window. Its hit zone
+  /// stays live even while the handle is faded out (so you can always grab it).
+  private let moveHandleSize = CGSize(width: 56, height: 40)
+  /// Top-right cluster (LIVE toggle + close) — clickable, but never moves the
+  /// window.
+  private let controlsZoneSize = CGSize(width: 170, height: 52)
   private var resizeEdgeMonitors = [Any]()
-  private var isHiddenForHover = false
   private var pendingFrameSaveTask: Task<Void, Never>?
   private var pendingInteractionReset: Task<Void, Never>?
   private var window: OverlayPanel?
   private var resultWindow: NSPanel?
+  private var lastPlacementID = 0
+  private var eventHandler: (@Sendable (OverlayUserAction) -> Void)?
 
   /// `windowDidMove` has no will-start / did-end pair, so debounce a reset
   /// instead. 150 ms is short enough to feel responsive once the drag ends
@@ -137,7 +144,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       backing: .buffered,
       defer: false
     )
-    panel.isMovableByWindowBackground = true
+    // Movement is gated to the move-handle zone in updatePassThroughForCursor;
+    // never move on a plain background drag.
+    panel.isMovableByWindowBackground = false
     panel.isMovable = true
     panel.isOpaque = false
     panel.backgroundColor = .clear
@@ -151,12 +160,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
     let rootView = OverlayRootView(
       model: model,
-      onHover: { [weak self] hovering in
-        self?.handleHover(hovering)
-      },
-      onCopy: { [weak self] in
-        self?.copyTranslation()
-      }
+      onToggleLive: { [weak self] in self?.eventHandler?(.toggleLive) },
+      onClose: { [weak self] in self?.eventHandler?(.close) },
+      onCopy: { [weak self] in self?.copyTranslation() }
     )
     let hosting = NSHostingView(rootView: rootView)
     hosting.frame = panel.contentLayoutRect
@@ -171,55 +177,22 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     window = panel
   }
 
-  private func handleHover(_ hovering: Bool) {
-    // Pass-through owns mouse handling while it's on; don't hover-hide.
-    guard !model.passThrough else { return }
-    guard model.hideOnHover, let window else {
-      restoreFromHover()
-      return
-    }
-
-    if hovering, !isHiddenForHover {
-      isHiddenForHover = true
-      window.alphaValue = 0.0
-      window.ignoresMouseEvents = true
-      startHoverMonitor()
-    } else if !hovering, isHiddenForHover {
-      restoreFromHover()
-    }
-  }
-
-  private func restoreFromHover() {
-    guard let window else { return }
-    isHiddenForHover = false
-    window.alphaValue = 1.0
-    window.ignoresMouseEvents = model.passThrough
-    stopHoverMonitor()
-  }
-
-  /// While passing through, the overlay lets all mouse interaction reach the
-  /// apps below — except within a thin margin around the edges, where it stays
-  /// interactive so the window can still be resized. We can't do this with a
-  /// static `ignoresMouseEvents` (it's all-or-nothing per window), so we track
-  /// the cursor and flip it based on whether it's near an edge. Moving the
-  /// window is disabled while passing through; only resizing remains.
+  /// The overlay always lets mouse interaction reach the apps below — except in
+  /// a thin margin around the edges (resize) and the top-right handle cluster
+  /// (live toggle / close / drag-to-move). We can't express that with a static
+  /// `ignoresMouseEvents` (it's all-or-nothing per window), so we track the
+  /// cursor and flip the window's mouse handling based on where it sits.
   private func applyPassThrough() {
-    guard let window else { return }
-    window.isMovableByWindowBackground = !model.passThrough
-    if model.passThrough {
-      startResizeEdgeTracking()
-      updatePassThroughForCursor()
-    } else {
-      stopResizeEdgeTracking()
-      window.ignoresMouseEvents = isHiddenForHover
-    }
+    guard window != nil else { return }
+    startResizeEdgeTracking()
+    updatePassThroughForCursor()
   }
 
   private func startResizeEdgeTracking() {
     guard resizeEdgeMonitors.isEmpty else { return }
     // Global fires while events pass through to apps below (interior); local
-    // fires while the window is interactive near an edge. Together they keep
-    // the near-edge state current as the cursor moves in and out.
+    // fires while the window is interactive near an edge / on the handle.
+    // Together they keep the cursor state current as it moves in and out.
     let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
       MainActor.assumeIsolated { self?.updatePassThroughForCursor() }
     }
@@ -233,65 +206,67 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private func stopResizeEdgeTracking() {
     resizeEdgeMonitors.forEach(NSEvent.removeMonitor)
     resizeEdgeMonitors.removeAll()
+    window?.alphaValue = 1
   }
 
-  /// While passing through, the overlay stays interactive in two places: the
-  /// top-right badge zone (a move handle) and a thin margin around the edges
-  /// (resize). Everywhere else, events pass through to the apps below.
   private func updatePassThroughForCursor() {
-    guard model.passThrough, let window else { return }
+    guard let window else { return }
     let mouse = NSEvent.mouseLocation
     let frame = window.frame
 
-    // Top-right badge zone (where the LIVE / PASS-THROUGH chips sit) drags the
-    // window — the only way to move it while passing through.
-    let badgeZone = CGRect(
-      x: frame.maxX - badgeHandleSize.width,
-      y: frame.maxY - badgeHandleSize.height,
-      width: badgeHandleSize.width,
-      height: badgeHandleSize.height
+    // Drive the move handle's hover visibility from the global cursor position
+    // (interior pass-through means SwiftUI's .onHover never fires here).
+    let inside = frame.contains(mouse)
+    if model.cursorInside != inside { model.cursorInside = inside }
+
+    // Top-left move handle: the ONLY region that drags the window. Its hit zone
+    // is always live, even while the handle itself is faded out.
+    let moveZone = CGRect(
+      x: frame.minX,
+      y: frame.maxY - moveHandleSize.height,
+      width: moveHandleSize.width,
+      height: moveHandleSize.height
     )
-    if badgeZone.contains(mouse) {
+    if moveZone.contains(mouse) {
+      window.alphaValue = 1
       window.isMovableByWindowBackground = true
       window.ignoresMouseEvents = false
       return
     }
 
-    // Edges stay interactive for resizing (but not moving).
+    // Everywhere else, a background drag must not move the window.
     window.isMovableByWindowBackground = false
+
+    // Top-right controls (LIVE toggle, close): clickable, but don't move.
+    let controlsZone = CGRect(
+      x: frame.maxX - controlsZoneSize.width,
+      y: frame.maxY - controlsZoneSize.height,
+      width: controlsZoneSize.width,
+      height: controlsZoneSize.height
+    )
+    if controlsZone.contains(mouse) {
+      window.alphaValue = 1
+      window.ignoresMouseEvents = false
+      return
+    }
+
+    // Edges stay interactive for resizing.
     let withinX = mouse.x >= frame.minX - resizeMargin && mouse.x <= frame.maxX + resizeMargin
     let withinY = mouse.y >= frame.minY - resizeMargin && mouse.y <= frame.maxY + resizeMargin
     let nearHorizontalEdge = min(abs(mouse.x - frame.minX), abs(mouse.x - frame.maxX)) < resizeMargin
     let nearVerticalEdge = min(abs(mouse.y - frame.minY), abs(mouse.y - frame.maxY)) < resizeMargin
-    let nearEdge = withinX && withinY && (nearHorizontalEdge || nearVerticalEdge)
-    window.ignoresMouseEvents = !nearEdge
-  }
-
-  private func startHoverMonitor() {
-    guard hoverMonitor == nil else { return }
-    hoverMonitor = NSEvent.addGlobalMonitorForEvents(
-      matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged]
-    ) { [weak self] _ in
-      Task { @MainActor in self?.handleGlobalMouseMove() }
+    if withinX, withinY, nearHorizontalEdge || nearVerticalEdge {
+      window.alphaValue = 1
+      window.ignoresMouseEvents = false
+      return
     }
-  }
 
-  private func stopHoverMonitor() {
-    if let hoverMonitor {
-      NSEvent.removeMonitor(hoverMonitor)
-      self.hoverMonitor = nil
-    }
+    // Interior: clicks pass through. With "hide on hover" on, fade the overlay
+    // out while the cursor is over it so the original text is readable; the
+    // monitors restore it once the cursor moves back to an edge or off it.
+    window.ignoresMouseEvents = true
+    window.alphaValue = (model.hideOnHover && inside) ? 0 : 1
   }
-
-  private func handleGlobalMouseMove() {
-    guard let window, isHiddenForHover else { return }
-    let location = NSEvent.mouseLocation
-    if !window.frame.contains(location) {
-      restoreFromHover()
-    }
-  }
-
-  // MARK: Detached result window (Window live mode)
 
   private func updateResultWindow(visible: Bool) {
     guard visible else {
@@ -350,30 +325,19 @@ final class OverlayWindowModel {
   var lines = [OverlayLine]()
   var hideOnHover = false
   var isInteracting = false
+  /// Whether the cursor is over the overlay — drives the move handle's
+  /// hover-visibility (set from the controller's global cursor tracking).
+  var cursorInside = false
   var isLive = false
   var isTranslating = false
-  var showGuide = true
   var liveMode = OverlayLiveMode.inPlace
   var backgroundImageData: Data?
-  var imageSize: CGSize = .zero
+  var imageSize = CGSize.zero
 
   /// In Window mode while live, the overlay is just a thin region frame and the
   /// translation lives in a detached window.
   var isWindowFrame: Bool {
     liveMode == .window && isLive
-  }
-
-  /// The idle hint that's shown when there's nothing translated yet. It stays
-  /// interactive (you can read it and drag the overlay).
-  var showingGuide: Bool {
-    showGuide && lines.isEmpty
-  }
-
-  /// Click-through is the default: once a translation is on screen (or the
-  /// overlay is a region frame) the overlay forwards clicks/scroll to the apps
-  /// below. Only the idle guide stays interactive.
-  var passThrough: Bool {
-    isWindowFrame || !lines.isEmpty
   }
 }
 
@@ -385,7 +349,8 @@ private struct OverlayRootView: View {
 
   let model: OverlayWindowModel
 
-  let onHover: (Bool) -> Void
+  let onToggleLive: () -> Void
+  let onClose: () -> Void
   let onCopy: () -> Void
 
   var body: some View {
@@ -394,11 +359,10 @@ private struct OverlayRootView: View {
       isTranslating: model.isTranslating,
       isLive: model.isLive,
       frameOnly: model.isWindowFrame,
-      showGuide: model.showGuide
+      showMoveHandle: model.cursorInside,
+      onToggleLive: onToggleLive,
+      onClose: onClose
     )
-    .onHover { hovering in
-      onHover(hovering)
-    }
     .background {
       // Hidden affordances: ⌘, opens Settings, ⌘C copies the translated text.
       Group {
@@ -434,12 +398,8 @@ private struct LiveResultView: View {
     content
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .padding(10)
-      .background(.ultraThinMaterial)
+      .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
       .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .overlay(
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-      )
   }
 
   // MARK: Private

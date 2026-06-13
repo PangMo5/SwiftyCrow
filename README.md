@@ -12,11 +12,11 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 ## Features
 
 - **Lives in the menu bar** — no Dock icon; open the popover from the menu bar item, `⌘,` for Settings
-- **Region capture** — drag to select any part of the screen; it's translated and shown in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original / translated text
-- **Live overlay** — a floating window you drag and resize over text; turn on **Live** to keep translating as the content changes. Show it **in place** over the source, or in a separate **window** while the overlay stays a thin region frame. Once a translation is up, clicks and scrolling pass through to the app underneath
+- **Region capture** — drag to select any part of the screen (or press **Space** to highlight and click a whole window, like the macOS screenshot tool); it's translated and shown in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original / translated text
+- **Live overlay** — pick a target the same way (drag a region, or Space to click a window) and an overlay snaps onto it and keeps translating as the content changes. It always lets clicks and scrolling pass through to the app underneath; its built-in **LIVE** handle pauses/resumes and the **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame
 - **Instant re-captures** — translating the same screen again is cached
 - **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text, or set the source to **Auto** to detect it per line (handy for mixed-language screens)
-- **Customizable shortcuts** — capture, Live, overlay, live mode (In-place / Window), and the save/copy keys, all in Settings → Shortcuts
+- **Customizable shortcuts** — capture, live overlay, pause/resume Live, display mode (In-place / Window), and the save/copy keys, all in Settings → Shortcuts
 - **Launch at login** — start SwiftyCrow automatically when you log in (Settings → General)
 - **Editable config file** — a plain-text file you can hand-edit, kept in sync with the in-app Settings
 
@@ -37,8 +37,8 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 ## Usage
 
 1. Pick the **Source** and **Target** languages in Settings (`⌘,`).
-2. **Capture a region**: trigger **Capture Region** (the popover button or your hotkey), then drag over the text. A floating preview window shows the translation over the screenshot — `⌘S` save, `⌘C` copy image, `⌘O` copy original, `⌘T` copy translation, `Esc` to close.
-3. **Or use the live overlay**: drag/resize the floating overlay over text and flip **Live** to keep translating in place; `⌘C` copies the joined translation.
+2. **Capture a region**: trigger **Capture Region** (the popover button or your hotkey), then drag over the text — or press **Space** to highlight and click a whole window. A floating preview window shows the translation over the screenshot — `⌘S` save, `⌘C` copy image, `⌘O` copy original, `⌘T` copy translation, `Esc` to close.
+3. **Or use the live overlay**: trigger **Live overlay…** (menu bar or hotkey), then drag a region — or press **Space** to click a window — and an overlay snaps onto it and starts translating live. Use the **LIVE** handle to pause/resume, `⌘C` to copy the joined translation, and **×** to close.
 
 All hotkeys are customizable in Settings → Shortcuts.
 

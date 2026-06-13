@@ -16,7 +16,7 @@ struct AppFeature {
     case capture(CaptureFeature.Action)
     case settingsScreen(SettingsFeature.Action)
     case task
-    case toggleOverlayRequested
+    case liveOverlayRequested
     case toggleLiveModeRequested
     case setLiveMode(OverlayLiveMode)
     case canCheckForUpdatesChanged(Bool)
@@ -24,6 +24,7 @@ struct AppFeature {
   }
 
   @Dependency(\.keyboardShortcuts) var keyboardShortcuts
+  @Dependency(\.overlay) var overlay
   @Dependency(\.updater) var updater
 
   var body: some Reducer<State, Action> {
@@ -50,8 +51,8 @@ struct AppFeature {
                 await send(.capture(.selectRegionRequested))
               case .toggleLive:
                 await send(.capture(.toggleLiveRequested))
-              case .toggleOverlay:
-                await send(.toggleOverlayRequested)
+              case .liveOverlay:
+                await send(.liveOverlayRequested)
               case .toggleLiveMode:
                 await send(.toggleLiveModeRequested)
               }
@@ -64,16 +65,15 @@ struct AppFeature {
               updater.configure(automaticallyChecks: config.0, interval: config.1.seconds)
             }
           },
-          .run { [settings = state.$settings] send in
-            // Observations re-emits on any settings change (it doesn't dedupe),
-            // so track the last value and react only when `enabled` actually
-            // flips — otherwise toggling another overlay setting (e.g.
-            // pass-through) would re-trigger the guide and clear results.
-            var last: Bool?
-            for await enabled in Observations({ settings.wrappedValue.overlay.enabled }) {
-              defer { last = enabled }
-              guard let previous = last, previous != enabled else { continue }
-              await send(.capture(.overlayToggled(enabled)))
+          .run { [overlay] send in
+            // Controls drawn on the overlay (LIVE toggle, close) route back here.
+            for await action in overlay.events() {
+              switch action {
+              case .toggleLive:
+                await send(.capture(.toggleLiveRequested))
+              case .close:
+                await send(.capture(.dismissOverlay))
+              }
             }
           },
           .run { [keyboardShortcuts, settings = state.$settings] _ in
@@ -83,13 +83,13 @@ struct AppFeature {
               (
                 settings.wrappedValue.shortcuts.selectRegion,
                 settings.wrappedValue.shortcuts.toggleLive,
-                settings.wrappedValue.shortcuts.toggleOverlay,
+                settings.wrappedValue.shortcuts.liveOverlay,
                 settings.wrappedValue.shortcuts.toggleLiveMode
               )
             }) {
               keyboardShortcuts.setShortcut(.selectRegion, keys.0)
               keyboardShortcuts.setShortcut(.toggleLive, keys.1)
-              keyboardShortcuts.setShortcut(.toggleOverlay, keys.2)
+              keyboardShortcuts.setShortcut(.liveOverlay, keys.2)
               keyboardShortcuts.setShortcut(.toggleLiveMode, keys.3)
             }
           },
@@ -100,12 +100,10 @@ struct AppFeature {
           }
         )
 
-      case .toggleOverlayRequested:
-        state.$settings.withLock { $0.overlay.enabled.toggle() }
-        if !state.settings.overlay.enabled, state.capture.isLive {
-          return .send(.capture(.setLive(false)))
-        }
-        return .none
+      case .liveOverlayRequested:
+        // The overlay is placed by selecting a region/window; this just starts
+        // that selection (closing is handled by the overlay's own × button).
+        return .send(.capture(.liveSelectRequested))
 
       case .toggleLiveModeRequested:
         state.$settings.withLock {

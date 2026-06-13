@@ -13,13 +13,11 @@ import SwiftUI
 @Reducer
 struct RegionCaptureFeature {
 
-  // MARK: Internal
-
   @ObservableState
   struct State: Equatable {
-    var region: CGRect
+    var target: CaptureTarget
     var imageData: Data?
-    var imageSize: CGSize = .zero
+    var imageSize = CGSize.zero
     var overlayLines = [OverlayLine]()
     /// Screenshot with each recognized box blurred (no text) — the backdrop the
     /// glass translation chips are drawn over, so the original text is hidden.
@@ -54,16 +52,23 @@ struct RegionCaptureFeature {
     Reduce { state, action in
       switch action {
       case .task:
-        let region = state.region
+        let target = state.target
         return .run { [settings = state.$settings] send in
           await send(.captured(Result {
             let snapshot = settings.wrappedValue
-            let image = try await screenCapture.captureImage(
-              region,
-              [],
-              displayID(coveringMostOf: region),
-              Bundle.main.bundleIdentifier
-            )
+            let image: CGImage =
+              switch target {
+              case .region(let region):
+                try await screenCapture.captureImage(
+                  region,
+                  [],
+                  displayID(coveringMostOf: region),
+                  Bundle.main.bundleIdentifier
+                )
+
+              case .window(let id, _):
+                try await screenCapture.captureWindow(id)
+              }
             let result = try await ocr.recognizeText(image, snapshot.languages.source, snapshot.recognition.mode)
             return CapturedRegion(
               pngData: image.pngData,
@@ -130,7 +135,7 @@ struct RegionCaptureFeature {
                     remaining.remove(result.id)
                     await send(.translated(id: result.id, text: result.text))
                   }
-                } catch {}
+                } catch { }
                 for item in batch.items where remaining.contains(item.id) {
                   await send(.translated(id: item.id, text: item.text))
                 }
@@ -207,15 +212,17 @@ func blurredBackground(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) 
   let width = baseCG.width
   let height = baseCG.height
   let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-  guard let context = CGContext(
-    data: nil,
-    width: width,
-    height: height,
-    bitsPerComponent: 8,
-    bytesPerRow: 0,
-    space: colorSpace,
-    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-  ) else { return nil }
+  guard
+    let context = CGContext(
+      data: nil,
+      width: width,
+      height: height,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: colorSpace,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )
+  else { return nil }
 
   let w = CGFloat(width)
   let h = CGFloat(height)
@@ -261,10 +268,13 @@ func blurredBackground(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) 
 
 @DependencyClient
 struct RegionResultClient {
-  /// Captures `region`, runs OCR + per-line translation, and shows the result
-  /// window with the translation drawn in place over the screenshot.
-  var present: @Sendable (_ region: CGRect) async -> Void
+  /// Captures `target` (a dragged region or a picked window), runs OCR + per-line
+  /// translation, and shows the result window with the translation drawn in place
+  /// over the screenshot.
+  var present: @Sendable (_ target: CaptureTarget) async -> Void
 }
+
+// MARK: DependencyKey
 
 extension RegionResultClient: DependencyKey {
   static let liveValue: RegionResultClient = {
@@ -278,7 +288,7 @@ extension RegionResultClient: DependencyKey {
       return new
     }
     return RegionResultClient(
-      present: { region in await resolve().present(region: region) }
+      present: { target in await resolve().present(target: target) }
     )
   }()
 }
@@ -297,7 +307,7 @@ private final class RegionResultWindowController {
 
   // MARK: Internal
 
-  func present(region: CGRect) {
+  func present(target: CaptureTarget) {
     panel?.close()
 
     // The app is normally a menu-bar agent (.accessory), which can't become
@@ -305,7 +315,7 @@ private final class RegionResultWindowController {
     // a result window is open so its shortcuts work, then revert on close.
     NSApp.setActivationPolicy(.regular)
 
-    let store = Store(initialState: RegionCaptureFeature.State(region: region)) {
+    let store = Store(initialState: RegionCaptureFeature.State(target: target)) {
       RegionCaptureFeature()
     }
     let panel = ResultPanel(
@@ -470,9 +480,14 @@ private final class RegionResultWindowController {
 
 // MARK: - ResultPanel
 
-// A borderless NSWindow (not NSPanel) so it reliably becomes the key window
-// and receives ⌘-key events.
+/// A borderless NSWindow (not NSPanel) so it reliably becomes the key window
+/// and receives ⌘-key events.
 private final class ResultPanel: NSWindow {
-  override var canBecomeKey: Bool { true }
-  override var canBecomeMain: Bool { true }
+  override var canBecomeKey: Bool {
+    true
+  }
+
+  override var canBecomeMain: Bool {
+    true
+  }
 }

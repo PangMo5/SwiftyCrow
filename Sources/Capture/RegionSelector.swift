@@ -2,15 +2,45 @@ import AppKit
 import ComposableArchitecture
 import DependenciesMacros
 
+// MARK: - CaptureTarget
+
+/// What the selector resolved to. A drag yields a free-form region; the
+/// window-highlight mode yields a specific window (with its id, so capture can
+/// grab just that window, plus its frame for snapping an overlay onto it).
+enum CaptureTarget: Equatable, Sendable {
+  case region(CGRect)
+  case window(id: CGWindowID, frame: CGRect)
+
+  /// The on-screen rect either target occupies, in global AppKit coordinates.
+  var frame: CGRect {
+    switch self {
+    case .region(let rect): rect
+    case .window(_, let frame): frame
+    }
+  }
+}
+
+// MARK: - SelectionMode
+
+/// Which way the selector starts. Space toggles between the two at any time,
+/// mirroring the macOS screenshot UI.
+enum SelectionMode: Equatable, Sendable {
+  case region
+  case window
+}
+
 // MARK: - RegionSelectorClient
 
 @DependencyClient
 struct RegionSelectorClient {
-  /// Presents a full-screen drag-to-select overlay. Returns the chosen rect in
-  /// global AppKit screen coordinates (points, bottom-left origin), or nil if
-  /// the user cancels (Escape or a zero-size drag).
-  var selectRegion: @Sendable () async -> CGRect?
+  /// Presents a full-screen selector across every display. In `.region` mode the
+  /// user drags a rectangle; in `.window` mode the window under the cursor
+  /// highlights and a click picks it. Space toggles modes, Escape cancels.
+  /// Returns the chosen target in global AppKit coordinates, or nil if cancelled.
+  var selectRegion: @Sendable (_ initialMode: SelectionMode) async -> CaptureTarget?
 }
+
+// MARK: DependencyKey
 
 extension RegionSelectorClient: DependencyKey {
   static let liveValue: RegionSelectorClient = {
@@ -24,7 +54,7 @@ extension RegionSelectorClient: DependencyKey {
       return new
     }
     return RegionSelectorClient(
-      selectRegion: { await resolve().selectRegion() }
+      selectRegion: { mode in await resolve().selectRegion(initialMode: mode) }
     )
   }()
 }
@@ -43,60 +73,150 @@ private final class RegionSelectorController {
 
   // MARK: Internal
 
-  func selectRegion() async -> CGRect? {
+  /// The mode the selector views read while drawing and handling clicks.
+  private(set) var mode = SelectionMode.region
+  /// The window currently under the cursor in `.window` mode (global AppKit).
+  private(set) var hovered: PickableWindow?
+
+  func selectRegion(initialMode: SelectionMode) async -> CaptureTarget? {
     // Tear down any selector still on screen from a previous, abandoned call.
     finish(nil)
     return await withCheckedContinuation { continuation in
-      present(continuation)
+      present(initialMode: initialMode, continuation)
     }
+  }
+
+  /// A selector view reports a completed drag (already in global coordinates).
+  func reportRegion(_ rect: CGRect?) {
+    guard mode == .region else { return }
+    finish(rect.map(CaptureTarget.region))
+  }
+
+  /// A selector view reports a click in `.window` mode.
+  func reportWindowClick() {
+    guard mode == .window, let hovered else { return }
+    finish(.window(id: hovered.id, frame: hovered.frame))
   }
 
   // MARK: Private
 
-  private var panel: SelectorPanel?
-  private var continuation: CheckedContinuation<CGRect?, Never>?
+  private var panels = [SelectorPanel]()
+  private var views = [SelectionView]()
+  private var continuation: CheckedContinuation<CaptureTarget?, Never>?
+  private var windows = [PickableWindow]()
+  private var mouseMonitors = [Any]()
+  private var keyMonitor: Any?
 
-  private func present(_ continuation: CheckedContinuation<CGRect?, Never>) {
-    // Select on the screen under the cursor, so multi-monitor captures target
-    // the display the user is actually pointing at.
-    guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) })
-      ?? NSScreen.main
-    else {
-      continuation.resume(returning: nil)
-      return
+  private func present(initialMode: SelectionMode, _ continuation: CheckedContinuation<CaptureTarget?, Never>) {
+    mode = initialMode
+    refreshWindows()
+
+    let cursor = NSEvent.mouseLocation
+    var keyPanel: SelectorPanel?
+    for screen in NSScreen.screens {
+      let panel = SelectorPanel(
+        contentRect: screen.frame,
+        styleMask: [.borderless, .nonactivatingPanel],
+        backing: .buffered,
+        defer: false
+      )
+      panel.level = .screenSaver
+      panel.isOpaque = false
+      panel.backgroundColor = .clear
+      panel.hasShadow = false
+      panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+      panel.ignoresMouseEvents = false
+      // The panels cover every screen, so mouse-moved events land on us (not the
+      // apps below); the local monitor needs them to track the hovered window.
+      panel.acceptsMouseMovedEvents = true
+
+      let view = SelectionView(screen: screen, controller: self)
+      view.frame = CGRect(origin: .zero, size: screen.frame.size)
+      panel.contentView = view
+
+      panels.append(panel)
+      views.append(view)
+      panel.orderFrontRegardless()
+      if screen.frame.contains(cursor) { keyPanel = panel }
     }
-    let screenFrame = screen.frame
-
-    let panel = SelectorPanel(
-      contentRect: screenFrame,
-      styleMask: [.borderless, .nonactivatingPanel],
-      backing: .buffered,
-      defer: false
-    )
-    panel.level = .screenSaver
-    panel.isOpaque = false
-    panel.backgroundColor = .clear
-    panel.hasShadow = false
-    panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-    panel.ignoresMouseEvents = false
-
-    let view = SelectionView(screenOrigin: screenFrame.origin) { [weak self] rect in
-      self?.finish(rect)
-    }
-    view.frame = CGRect(origin: .zero, size: screenFrame.size)
-    panel.contentView = view
 
     self.continuation = continuation
-    self.panel = panel
-    panel.makeKeyAndOrderFront(nil)
     NSApp.activate(ignoringOtherApps: true)
-    panel.makeFirstResponder(view)
+    (keyPanel ?? panels.first)?.makeKey()
+
+    startMonitors()
+    refreshHover()
   }
 
-  private func finish(_ rect: CGRect?) {
-    panel?.orderOut(nil)
-    panel = nil
-    continuation?.resume(returning: rect)
+  private func toggleMode() {
+    mode = mode == .region ? .window : .region
+    if mode == .window {
+      refreshWindows()
+      refreshHover()
+    }
+    for view in views { view.resetSelection()
+      view.needsDisplay = true
+    }
+    for panel in panels { panel.invalidateCursorRects(for: panel.contentView!) }
+  }
+
+  private func refreshWindows() {
+    windows = onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
+  }
+
+  private func refreshHover() {
+    guard mode == .window else { return }
+    let next = windowUnderCursor(windows, at: NSEvent.mouseLocation)
+    guard next != hovered else { return }
+    hovered = next
+    for view in views { view.needsDisplay = true }
+  }
+
+  private func startMonitors() {
+    // Mouse moves/drags update the window highlight without consuming the event,
+    // so region-mode drags still reach the view under the cursor.
+    let mouse = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
+      MainActor.assumeIsolated { self?.refreshHover() }
+      return event
+    }
+    let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
+      MainActor.assumeIsolated { self?.refreshHover() }
+    }
+    // Space toggles mode; Escape cancels. Consume both so they don't beep.
+    let key = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+      MainActor.assumeIsolated {
+        guard let self else { return event }
+        switch event.keyCode {
+        case 49: // Space
+          self.toggleMode()
+          return nil
+
+        case 53: // Escape
+          self.finish(nil)
+          return nil
+
+        default:
+          return event
+        }
+      }
+    }
+    mouseMonitors = [mouse, global].compactMap { $0 }
+    keyMonitor = key
+  }
+
+  private func finish(_ target: CaptureTarget?) {
+    mouseMonitors.forEach(NSEvent.removeMonitor)
+    mouseMonitors.removeAll()
+    if let keyMonitor {
+      NSEvent.removeMonitor(keyMonitor)
+      self.keyMonitor = nil
+    }
+    for panel in panels { panel.orderOut(nil) }
+    panels.removeAll()
+    views.removeAll()
+    hovered = nil
+    windows = []
+    continuation?.resume(returning: target)
     continuation = nil
   }
 }
@@ -104,8 +224,13 @@ private final class RegionSelectorController {
 // MARK: - SelectorPanel
 
 private final class SelectorPanel: NSPanel {
-  override var canBecomeKey: Bool { true }
-  override var canBecomeMain: Bool { false }
+  override var canBecomeKey: Bool {
+    true
+  }
+
+  override var canBecomeMain: Bool {
+    false
+  }
 }
 
 // MARK: - SelectionView
@@ -114,33 +239,41 @@ private final class SelectionView: NSView {
 
   // MARK: Lifecycle
 
-  init(screenOrigin: CGPoint, onFinish: @escaping (CGRect?) -> Void) {
-    self.screenOrigin = screenOrigin
-    self.onFinish = onFinish
+  init(screen: NSScreen, controller: RegionSelectorController) {
+    self.screen = screen
+    self.controller = controller
     super.init(frame: .zero)
   }
 
   @available(*, unavailable)
-  required init?(coder: NSCoder) {
+  required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
   // MARK: Internal
 
-  override var acceptsFirstResponder: Bool { true }
+  override var acceptsFirstResponder: Bool {
+    true
+  }
+
+  func resetSelection() {
+    startPoint = nil
+    selection = .zero
+  }
 
   override func resetCursorRects() {
-    addCursorRect(bounds, cursor: .crosshair)
+    addCursorRect(bounds, cursor: controller.mode == .window ? .pointingHand : .crosshair)
   }
 
   override func mouseDown(with event: NSEvent) {
+    guard controller.mode == .region else { return }
     startPoint = convert(event.locationInWindow, from: nil)
     selection = .zero
     needsDisplay = true
   }
 
   override func mouseDragged(with event: NSEvent) {
-    guard let start = startPoint else { return }
+    guard controller.mode == .region, let start = startPoint else { return }
     let point = convert(event.locationInWindow, from: nil)
     selection = CGRect(
       x: min(start.x, point.x),
@@ -151,35 +284,47 @@ private final class SelectionView: NSView {
     needsDisplay = true
   }
 
-  override func mouseUp(with event: NSEvent) {
+  override func mouseUp(with _: NSEvent) {
+    if controller.mode == .window {
+      controller.reportWindowClick()
+      return
+    }
     defer { startPoint = nil }
     // A click or a tiny drag means "never mind".
     guard selection.width >= 8, selection.height >= 8 else {
-      onFinish(nil)
+      controller.reportRegion(nil)
       return
     }
     // Convert from view-local (origin at the screen's bottom-left) to global.
     let global = CGRect(
-      x: screenOrigin.x + selection.minX,
-      y: screenOrigin.y + selection.minY,
+      x: screen.frame.minX + selection.minX,
+      y: screen.frame.minY + selection.minY,
       width: selection.width,
       height: selection.height
     )
-    onFinish(global)
+    controller.reportRegion(global)
   }
 
-  override func keyDown(with event: NSEvent) {
-    if event.keyCode == 53 { // Escape
-      onFinish(nil)
-    } else {
-      super.keyDown(with: event)
-    }
-  }
-
-  override func draw(_ dirtyRect: NSRect) {
+  override func draw(_: NSRect) {
     NSColor.black.withAlphaComponent(0.28).setFill()
     bounds.fill()
 
+    switch controller.mode {
+    case .region:
+      drawRegionSelection()
+    case .window:
+      drawWindowHighlight()
+    }
+  }
+
+  // MARK: Private
+
+  private let screen: NSScreen
+  private unowned let controller: RegionSelectorController
+  private var startPoint: CGPoint?
+  private var selection = CGRect.zero
+
+  private func drawRegionSelection() {
     guard selection.width > 0, selection.height > 0 else { return }
     // Punch the selection clear so the live screen shows through.
     selection.fill(using: .clear)
@@ -190,10 +335,20 @@ private final class SelectionView: NSView {
     border.stroke()
   }
 
-  // MARK: Private
+  private func drawWindowHighlight() {
+    guard let hovered = controller.hovered else { return }
+    // The hovered window's rect is global; bring it into this view's local space
+    // and bail if it doesn't fall on this screen.
+    let local = hovered.frame.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
+    guard local.intersects(bounds) else { return }
 
-  private let screenOrigin: CGPoint
-  private let onFinish: (CGRect?) -> Void
-  private var startPoint: CGPoint?
-  private var selection: CGRect = .zero
+    local.fill(using: .clear)
+    NSColor.controlAccentColor.withAlphaComponent(0.18).setFill()
+    local.fill()
+
+    let border = NSBezierPath(rect: local)
+    border.lineWidth = 2.5
+    NSColor.controlAccentColor.setStroke()
+    border.stroke()
+  }
 }

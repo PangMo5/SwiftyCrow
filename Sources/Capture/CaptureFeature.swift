@@ -43,11 +43,13 @@ struct CaptureFeature {
     /// Window-mode backdrop: the screenshot with each box blurred. Nil in
     /// In-place mode (the chips draw directly on the overlay).
     var backgroundImageData: Data?
-    var imageSize: CGSize = .zero
-    /// Show the idle hint once after the overlay is enabled. Cleared once a
-    /// capture/Live session starts, so toggling Live just shows a transparent
-    /// overlay rather than the guide again.
-    var showGuide = true
+    var imageSize = CGSize.zero
+    /// Whether a live overlay is currently placed on screen. There's no overlay
+    /// until the user selects a region/window; `dismissOverlay` clears it.
+    var overlayActive = false
+    /// Bumped each time the overlay is (re)placed, so the window controller knows
+    /// to snap to the new frame even when it's already on screen.
+    var overlayPlacementID = 0
     var translationCache = [TranslationCacheKey: String]()
 
     @Shared(.overlayFrame) var overlayFrame
@@ -58,8 +60,10 @@ struct CaptureFeature {
     case backgroundReady(Data?)
     case captureResponse(Result<LiveCapture, any Error>)
     case copyTranslationRequested
+    case dismissOverlay
     case selectRegionRequested
-    case overlayToggled(Bool)
+    case liveSelectRequested
+    case overlayPlaced(CGRect)
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
@@ -80,19 +84,39 @@ struct CaptureFeature {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case .overlayToggled(let enabled):
-        // Drop any stale capture across the transition, and show the idle hint
-        // once when the overlay is (re-)enabled.
-        state.overlayLines = []
+      case .dismissOverlay:
+        state.overlayActive = false
+        state.isLive = false
+        state.isCapturing = false
         state.isTranslating = false
-        state.showGuide = enabled
-        return .cancel(id: CancelID.translation)
+        state.overlayLines = []
+        state.backgroundImageData = nil
+        state.lastError = nil
+        return .merge(
+          .cancel(id: CancelID.live),
+          .cancel(id: CancelID.translation),
+          .cancel(id: CancelID.background)
+        )
 
       case .selectRegionRequested:
         return .run { _ in
-          guard let rect = await regionSelector.selectRegion() else { return }
-          await regionResult.present(rect)
+          guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
+          await regionResult.present(target)
         }
+
+      case .liveSelectRequested:
+        // Same drag-to-select (Space toggles to window mode) as a region
+        // capture, but the result snaps a live overlay onto the selection.
+        return .run { send in
+          guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
+          await send(.overlayPlaced(target.frame))
+        }
+
+      case .overlayPlaced(let frame):
+        state.$overlayFrame.withLock { $0 = OverlayFrame(rect: frame) }
+        state.overlayActive = true
+        state.overlayPlacementID += 1
+        return .send(.setLive(true))
 
       case .captureResponse(.failure(let error)):
         state.isCapturing = false
@@ -128,7 +152,7 @@ struct CaptureFeature {
         return .none
 
       case .setLive(let isLive):
-        if isLive, !state.settings.overlay.enabled {
+        if isLive, !state.overlayActive {
           state.isLive = false
           state.isCapturing = false
           return .cancel(id: CancelID.live)
@@ -136,11 +160,9 @@ struct CaptureFeature {
         state.isLive = isLive
         state.isCapturing = isLive
         // Toggling Live discards stale results so the overlay doesn't keep
-        // showing the previous capture across the transition. The guide never
-        // shows for Live toggles — just a transparent overlay.
+        // showing the previous capture across the transition.
         state.overlayLines = []
         state.isTranslating = false
-        state.showGuide = false
         if isLive {
           return .merge(
             .cancel(id: CancelID.translation),
@@ -173,6 +195,7 @@ struct CaptureFeature {
         }
 
       case .toggleLiveRequested:
+        guard state.overlayActive else { return .none }
         return .send(.setLive(!state.isLive))
 
       case .translationCompleted:
@@ -319,9 +342,10 @@ struct CaptureFeature {
     overlayFrame: OverlayFrame,
     excludedWindowIDs: [CGWindowID]
   ) async throws -> LiveCapture {
-    let region = settings.overlay.enabled ? overlayFrame.rect : nil
+    // The live overlay is always placed over a region while running, so capture
+    // that region (excluding our own windows via the bundle id below).
     let image = try await screenCapture.captureImage(
-      region,
+      overlayFrame.rect,
       excludedWindowIDs,
       displayID(coveringMostOf: overlayFrame.rect),
       Bundle.main.bundleIdentifier

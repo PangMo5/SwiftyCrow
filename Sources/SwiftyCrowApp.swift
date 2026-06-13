@@ -6,6 +6,9 @@ import SwiftUI
 
 @main
 struct SwiftyCrowApp: App {
+
+  // MARK: Internal
+
   var body: some Scene {
     // The App owns the store; the delegate handles menu-bar-app lifetime
     // (keyboard listener + overlay sync), so we hand the store to it here.
@@ -20,6 +23,8 @@ struct SwiftyCrowApp: App {
       SettingsView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
     }
   }
+
+  // MARK: Private
 
   @State private var store = Store(initialState: AppFeature.State()) {
     AppFeature()
@@ -77,14 +82,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     guard let store else { return nil }
     return OverlayRenderState(
       lines: store.capture.overlayLines,
-      isVisible: store.settings.overlay.enabled,
+      isVisible: store.capture.overlayActive,
       hideOnHover: store.settings.overlay.hideOnHover,
       isTranslating: store.capture.isTranslating,
       isLive: store.capture.isLive,
-      showGuide: store.capture.showGuide,
       liveMode: store.settings.overlay.liveMode,
       backgroundImageData: store.capture.backgroundImageData,
-      imageSize: store.capture.imageSize
+      imageSize: store.capture.imageSize,
+      placementID: store.capture.overlayPlacementID
     )
   }
 
