@@ -4,6 +4,12 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.6.1 — 2026-06-13
+
+### Fixed
+
+- **Recording a shortcut no longer fires other shortcuts.** While the recorder is capturing, all global hotkeys are suspended — so pressing a combo that's already bound (e.g. your capture key) records it instead of triggering that action.
+
 ## 2.6.0 — 2026-06-13
 
 ### What's New

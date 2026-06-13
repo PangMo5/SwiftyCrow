@@ -1,4 +1,5 @@
 import AppKit
+import ComposableArchitecture
 import SwiftUI
 
 // MARK: - ShortcutRecorder
@@ -8,6 +9,9 @@ import SwiftUI
 /// active keyboard layout, and records on a single click even when its window
 /// isn't key (via `acceptsFirstMouse`) — which matters for this menu-bar app.
 struct ShortcutRecorder: View {
+
+  // MARK: Internal
+
   let hotKey: HotKey?
   /// Returns the name of another action already bound to a candidate combo, or
   /// nil if it's free (the recorder's own current key is treated as free).
@@ -15,10 +19,18 @@ struct ShortcutRecorder: View {
   let onChange: (HotKey?) -> Void
 
   var body: some View {
-    HStack(spacing: 4) {
-      RecorderRepresentable(hotKey: hotKey, conflict: conflict, onChange: onChange)
-        .glassEffect(.regular, in: Capsule())
-        .frame(width: 150, height: 24)
+    // Suspend global hotkeys while recording so pressing one doesn't fire its
+    // action instead of being captured.
+    let shortcuts = globalShortcuts
+    return HStack(spacing: 4) {
+      RecorderRepresentable(
+        hotKey: hotKey,
+        conflict: conflict,
+        onChange: onChange,
+        onRecordingChange: { recording in shortcuts.setEnabled(!recording) }
+      )
+      .glassEffect(.regular, in: Capsule())
+      .frame(width: 150, height: 24)
 
       Button {
         onChange(nil)
@@ -33,6 +45,11 @@ struct ShortcutRecorder: View {
       .disabled(hotKey == nil)
     }
   }
+
+  // MARK: Private
+
+  @Dependency(\.globalShortcuts) private var globalShortcuts
+
 }
 
 // MARK: - RecorderRepresentable
@@ -41,11 +58,13 @@ private struct RecorderRepresentable: NSViewRepresentable {
   let hotKey: HotKey?
   let conflict: (HotKey) -> String?
   let onChange: (HotKey?) -> Void
+  let onRecordingChange: (Bool) -> Void
 
   func makeNSView(context _: Context) -> RecorderField {
     let field = RecorderField()
     field.onChange = onChange
     field.conflict = conflict
+    field.onRecordingChange = onRecordingChange
     field.hotKey = hotKey
     return field
   }
@@ -53,6 +72,7 @@ private struct RecorderRepresentable: NSViewRepresentable {
   func updateNSView(_ field: RecorderField, context _: Context) {
     field.onChange = onChange
     field.conflict = conflict
+    field.onRecordingChange = onRecordingChange
     // Don't clobber an in-progress recording with the bound value.
     if !field.isRecording {
       field.hotKey = hotKey
@@ -68,13 +88,18 @@ final class RecorderField: NSView {
 
   var onChange: ((HotKey?) -> Void)?
   var conflict: ((HotKey) -> String?)?
+  var onRecordingChange: ((Bool) -> Void)?
 
   var hotKey: HotKey? {
     didSet { needsDisplay = true }
   }
 
   private(set) var isRecording = false {
-    didSet { needsDisplay = true }
+    didSet {
+      guard isRecording != oldValue else { return }
+      needsDisplay = true
+      onRecordingChange?(isRecording)
+    }
   }
 
   override var acceptsFirstResponder: Bool {

@@ -25,6 +25,9 @@ struct GlobalShortcutsClient {
   var events: @Sendable () -> AsyncStream<ShortcutEvent> = { .finished }
   /// Registers the global hotkey for an event, or clears it when `hotKey` is nil.
   var setShortcut: @Sendable (_ event: ShortcutEvent, _ hotKey: HotKey?) -> Void
+  /// Temporarily suspends/resumes all global hotkeys — used while the shortcut
+  /// recorder is capturing so a press doesn't trigger the action it's binding.
+  var setEnabled: @Sendable (_ enabled: Bool) -> Void
 }
 
 // MARK: DependencyKey
@@ -42,6 +45,11 @@ extension GlobalShortcutsClient: DependencyKey {
     setShortcut: { event, hotKey in
       Task { @MainActor in
         GlobalHotKeyRegistrar.shared.setShortcut(event, hotKey)
+      }
+    },
+    setEnabled: { enabled in
+      Task { @MainActor in
+        GlobalHotKeyRegistrar.shared.setEnabled(enabled)
       }
     }
   )
@@ -72,14 +80,32 @@ private final class GlobalHotKeyRegistrar {
 
   func setShortcut(_ event: ShortcutEvent, _ hotKey: HotKey?) {
     HotKeyCenter.shared.unregisterHotKey(with: event.identifier)
+    hotKeys[event] = nil
     guard let keyCombo = hotKey?.keyCombo else { return }
-    let hotKey = Magnet.HotKey(identifier: event.identifier, keyCombo: keyCombo) { [weak self] _ in
+    let magnetHotKey = Magnet.HotKey(identifier: event.identifier, keyCombo: keyCombo) { [weak self] _ in
       self?.continuation?.yield(event)
     }
-    HotKeyCenter.shared.register(with: hotKey)
+    hotKeys[event] = magnetHotKey
+    if enabled {
+      HotKeyCenter.shared.register(with: magnetHotKey)
+    }
+  }
+
+  func setEnabled(_ enabled: Bool) {
+    guard enabled != self.enabled else { return }
+    self.enabled = enabled
+    if enabled {
+      for value in hotKeys.values { HotKeyCenter.shared.register(with: value) }
+    } else {
+      for key in hotKeys.keys { HotKeyCenter.shared.unregisterHotKey(with: key.identifier) }
+    }
   }
 
   // MARK: Private
 
   private var continuation: AsyncStream<ShortcutEvent>.Continuation?
+  /// The currently configured hotkeys, kept so they can be re-registered after
+  /// being suspended (registering takes a handler, so we can't rebuild blindly).
+  private var hotKeys = [ShortcutEvent: Magnet.HotKey]()
+  private var enabled = true
 }
