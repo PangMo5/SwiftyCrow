@@ -13,7 +13,7 @@ appends an Install / Update section when publishing).
 
 ### Fixed
 
-- **A missing language model now tells you what to do.** Translation runs on on-device models you download in System Settings. When the captured language's model isn't installed, SwiftyCrow now shows a "Translation model not installed" hint with an **Open Settings** button — on the region result, the live overlay, the window-mode result, and the menu bar — instead of silently leaving the text untranslated.
+- **A missing language model now tells you what to do.** Translation runs on on-device models you download in System Settings. When the captured language's model isn't installed, SwiftyCrow now shows a "Translation model not installed" hint with an **Open Settings** button — on the region result, the live overlay, the window-mode result, and the menu bar — instead of silently leaving the text untranslated. A **Don't show again** button dismisses it for good.
 
 ### Changed
 

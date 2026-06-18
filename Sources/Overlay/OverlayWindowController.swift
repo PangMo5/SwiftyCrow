@@ -251,10 +251,10 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       return
     }
 
-    // Bottom hint banner (shown when the translation model is missing): keep it
-    // clickable so its "Open Settings" button works.
-    if model.translationUnavailable {
-      let hintZone = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: 56)
+    // Bottom hint banner (shown when the translation model is missing, unless
+    // the user dismissed it): keep it clickable so its buttons work.
+    if model.translationUnavailable, !UserDefaults.standard.bool(forKey: translationModelHintDismissedKey) {
+      let hintZone = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: 64)
       if hintZone.contains(mouse) {
         window.alphaValue = 1
         window.ignoresMouseEvents = false
