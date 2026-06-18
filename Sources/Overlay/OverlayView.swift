@@ -9,6 +9,9 @@ struct OverlayView: View {
   let lines: [OverlayLine]
   let isTranslating: Bool
   let isLive: Bool
+  /// Translation failed (usually a missing model) — shows the "open Settings"
+  /// hint banner along the bottom.
+  var translationUnavailable = false
   /// Window live mode: the overlay is a thin region frame; the translation
   /// shows in a detached window.
   var frameOnly = false
@@ -48,7 +51,16 @@ struct OverlayView: View {
         }
         .padding(10)
       }
+      .overlay(alignment: .bottom) {
+        if translationUnavailable, !frameOnly {
+          TranslationModelHint()
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(8)
+            .transition(.opacity)
+        }
+      }
       .animation(.easeOut(duration: 0.15), value: frameOnly)
+      .animation(.easeOut(duration: 0.15), value: translationUnavailable)
   }
 
   // MARK: Private

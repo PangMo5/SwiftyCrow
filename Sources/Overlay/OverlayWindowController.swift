@@ -27,6 +27,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     model.liveMode = state.liveMode
     model.backgroundImageData = state.backgroundImageData
     model.imageSize = state.imageSize
+    model.translationUnavailable = state.translationUnavailable
 
     if state.isVisible {
       let isNewWindow = window == nil
@@ -250,6 +251,17 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       return
     }
 
+    // Bottom hint banner (shown when the translation model is missing): keep it
+    // clickable so its "Open Settings" button works.
+    if model.translationUnavailable {
+      let hintZone = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: 56)
+      if hintZone.contains(mouse) {
+        window.alphaValue = 1
+        window.ignoresMouseEvents = false
+        return
+      }
+    }
+
     // Edges stay interactive for resizing.
     let withinX = mouse.x >= frame.minX - resizeMargin && mouse.x <= frame.maxX + resizeMargin
     let withinY = mouse.y >= frame.minY - resizeMargin && mouse.y <= frame.maxY + resizeMargin
@@ -333,6 +345,7 @@ final class OverlayWindowModel {
   var liveMode = OverlayLiveMode.inPlace
   var backgroundImageData: Data?
   var imageSize = CGSize.zero
+  var translationUnavailable = false
 
   /// In Window mode while live, the overlay is just a thin region frame and the
   /// translation lives in a detached window.
@@ -358,6 +371,7 @@ private struct OverlayRootView: View {
       lines: model.isInteracting ? [] : model.lines,
       isTranslating: model.isTranslating,
       isLive: model.isLive,
+      translationUnavailable: model.translationUnavailable,
       frameOnly: model.isWindowFrame,
       showMoveHandle: model.cursorInside,
       onToggleLive: onToggleLive,
@@ -397,6 +411,15 @@ private struct LiveResultView: View {
   var body: some View {
     content
       .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .overlay(alignment: .bottom) {
+        if model.translationUnavailable {
+          TranslationModelHint()
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(8)
+            .transition(.opacity)
+        }
+      }
+      .animation(.easeOut(duration: 0.15), value: model.translationUnavailable)
       .padding(10)
       .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
       .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

@@ -20,6 +20,9 @@ struct OverlayRenderState: Equatable, Sendable {
   /// Bumped whenever the overlay is (re)placed onto a new selection, so the
   /// controller snaps the window to the stored frame even if it's already shown.
   var placementID: Int
+  /// Translation failed (usually a missing on-device model) — shows the
+  /// "open Settings" hint on the overlay.
+  var translationUnavailable: Bool
 }
 
 // MARK: - OverlayUserAction

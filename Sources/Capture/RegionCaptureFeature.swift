@@ -24,6 +24,9 @@ struct RegionCaptureFeature {
     var backgroundImageData: Data?
     var isTranslating = false
     var lastError: String?
+    /// True when a translation failed — almost always because the language's
+    /// on-device model isn't installed. Drives the "open Settings" hint.
+    var translationUnavailable = false
     /// Set once the user copies the text; the window observes this to close.
     /// (Image save/copy is handled by the window controller, which captures
     /// the live glass result on screen and then closes the window itself.)
@@ -36,6 +39,7 @@ struct RegionCaptureFeature {
     case task
     case captured(Result<CapturedRegion, any Error>)
     case translated(id: UUID, text: String)
+    case translationUnavailable
     case backgroundReady(Data?)
     case copyOriginalRequested
     case copyTranslationRequested
@@ -136,7 +140,13 @@ struct RegionCaptureFeature {
                     remaining.remove(result.id)
                     await send(.translated(id: result.id, text: result.text))
                   }
-                } catch { }
+                } catch is CancellationError {
+                  // Window closed mid-flight — nothing to report.
+                } catch {
+                  // The model for this language likely isn't installed; show the
+                  // hint pointing the user to System Settings to download it.
+                  await send(.translationUnavailable)
+                }
                 for item in batch.items where remaining.contains(item.id) {
                   await send(.translated(id: item.id, text: item.text))
                 }
@@ -159,6 +169,10 @@ struct RegionCaptureFeature {
           state.overlayLines[index].translated = text
         }
         state.isTranslating = state.overlayLines.contains { $0.translated == nil }
+        return .none
+
+      case .translationUnavailable:
+        state.translationUnavailable = true
         return .none
 
       case .copyOriginalRequested:

@@ -18,6 +18,9 @@ struct RegionResultView: View {
     VStack(spacing: 0) {
       toolbar
       Divider().opacity(0.4)
+      if store.translationUnavailable {
+        TranslationModelHint()
+      }
       content
     }
     .frame(minWidth: 360, minHeight: 280)

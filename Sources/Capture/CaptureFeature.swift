@@ -39,6 +39,9 @@ struct CaptureFeature {
     var isLive = false
     var isTranslating = false
     var lastError: String?
+    /// True when a translation failed — almost always a missing on-device model.
+    /// Drives the "open Settings" hint in the menu bar.
+    var translationUnavailable = false
     var overlayLines = [OverlayLine]()
     /// Window-mode backdrop: the screenshot with each box blurred. Nil in
     /// In-place mode (the chips draw directly on the overlay).
@@ -92,6 +95,7 @@ struct CaptureFeature {
         state.overlayLines = []
         state.backgroundImageData = nil
         state.lastError = nil
+        state.translationUnavailable = false
         return .merge(
           .cancel(id: CancelID.live),
           .cancel(id: CancelID.translation),
@@ -163,6 +167,7 @@ struct CaptureFeature {
         // showing the previous capture across the transition.
         state.overlayLines = []
         state.isTranslating = false
+        state.translationUnavailable = false
         if isLive {
           return .merge(
             .cancel(id: CancelID.translation),
@@ -204,10 +209,13 @@ struct CaptureFeature {
 
       case .translationFailed(let message):
         state.lastError = message
+        state.translationUnavailable = true
         return .none
 
       case .translationResponse(let lineID, let key, let translated):
         state.translationCache[key] = translated
+        // A real translation arrived — the model is installed after all.
+        state.translationUnavailable = false
         if let index = state.overlayLines.firstIndex(where: { $0.id == lineID }) {
           state.overlayLines[index].translated = translated
         }

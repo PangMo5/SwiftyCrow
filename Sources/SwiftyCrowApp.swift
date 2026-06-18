@@ -89,7 +89,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       liveMode: store.settings.overlay.liveMode,
       backgroundImageData: store.capture.backgroundImageData,
       imageSize: store.capture.imageSize,
-      placementID: store.capture.overlayPlacementID
+      placementID: store.capture.overlayPlacementID,
+      translationUnavailable: store.capture.translationUnavailable
     )
   }
 

@@ -23,7 +23,11 @@ struct CaptureView: View {
       .controlSize(.large)
       .keyboardShortcut(.defaultAction)
 
-      if let error = store.lastError {
+      if store.translationUnavailable {
+        TranslationModelHint()
+          .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .transition(.opacity)
+      } else if let error = store.lastError {
         Label(error, systemImage: "exclamationmark.triangle.fill")
           .font(.caption)
           .foregroundStyle(.red)
@@ -32,5 +36,6 @@ struct CaptureView: View {
       }
     }
     .animation(.easeOut(duration: 0.15), value: store.lastError)
+    .animation(.easeOut(duration: 0.15), value: store.translationUnavailable)
   }
 }
