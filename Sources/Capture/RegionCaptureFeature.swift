@@ -99,7 +99,8 @@ struct RegionCaptureFeature {
             box: line.boundingBoxNormalized,
             sourceText: line.text,
             translated: sameLanguage ? line.text : nil,
-            rowCount: line.rowCount
+            rowCount: line.rowCount,
+            isVerticalBlock: line.isVerticalBlock
           )
           newLines.append(overlayLine)
           if !sameLanguage {

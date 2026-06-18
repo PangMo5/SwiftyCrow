@@ -21,38 +21,71 @@ struct TranslationOverlayLayer: View {
       let box = line.box
       let width = max(1, box.width * size.width)
       let height = max(1, box.height * size.height)
-      let rows = max(1, line.rowCount)
-      let fontSize = max(8, min(96, height / CGFloat(rows) * 0.85))
 
-      chip(for: line, fontSize: fontSize, rows: rows)
-        .frame(width: width + 12, height: height + 4, alignment: .leading)
-        .position(
-          x: box.midX * size.width,
-          y: box.midY * size.height
-        )
+      Group {
+        if line.isVerticalBlock {
+          blockChip(for: line, width: width, height: height)
+        } else {
+          let rows = max(1, line.rowCount)
+          let fontSize = max(8, min(96, height / CGFloat(rows) * 0.85))
+          lineChip(for: line, fontSize: fontSize, rows: rows)
+            .frame(width: width + 12, height: height + 4, alignment: .leading)
+        }
+      }
+      .position(
+        x: box.midX * size.width,
+        y: box.midY * size.height
+      )
     }
   }
 
   @ViewBuilder
-  private func chip(for line: OverlayLine, fontSize: CGFloat, rows: Int) -> some View {
-    let label = Text(line.translated ?? line.sourceText)
-      .font(.system(size: fontSize, weight: .semibold))
-      .multilineTextAlignment(.leading)
-      .lineLimit(rows)
-      .truncationMode(.tail)
-      .minimumScaleFactor(0.4)
-      .padding(.horizontal, 6)
-      .padding(.vertical, 2)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+  private func lineChip(for line: OverlayLine, fontSize: CGFloat, rows: Int) -> some View {
+    background(
+      for: line,
+      cornerRadius: 8,
+      label: Text(line.translated ?? line.sourceText)
+        .font(.system(size: fontSize, weight: .semibold))
+        .multilineTextAlignment(.leading)
+        .lineLimit(rows)
+        .truncationMode(.tail)
+        .minimumScaleFactor(0.4)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    )
+  }
 
+  /// A stitched block of vertical CJK columns: fill the whole box with the
+  /// translation as a wrapped paragraph, sized so it roughly fills the area, and
+  /// scaled in by `minimumScaleFactor` if the wrapped text would overflow.
+  @ViewBuilder
+  private func blockChip(for line: OverlayLine, width: CGFloat, height: CGFloat) -> some View {
+    let text = line.translated ?? line.sourceText
+    let fontSize = max(8, min(96, (width * height / CGFloat(max(text.count, 1))).squareRoot() * 1.1))
+    background(
+      for: line,
+      cornerRadius: 12,
+      label: Text(text)
+        .font(.system(size: fontSize, weight: .semibold))
+        .multilineTextAlignment(.leading)
+        .lineLimit(nil)
+        .minimumScaleFactor(0.3)
+        .padding(8)
+        .frame(width: width, height: height, alignment: .topLeading)
+    )
+  }
+
+  @ViewBuilder
+  private func background(for line: OverlayLine, cornerRadius: CGFloat, label: some View) -> some View {
     if glass {
       label
         .foregroundStyle(line.translated == nil ? .secondary : .primary)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     } else {
       label
         .foregroundStyle(.white)
-        .background(.black.opacity(0.62), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(.black.opacity(0.62), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
   }
 }

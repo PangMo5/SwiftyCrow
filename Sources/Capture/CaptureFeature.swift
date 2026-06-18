@@ -266,6 +266,7 @@ struct CaptureFeature {
         overlayLine = recycled
         overlayLine.box = line.boundingBoxNormalized
         overlayLine.rowCount = line.rowCount
+        overlayLine.isVerticalBlock = line.isVerticalBlock
         if let cached {
           overlayLine.translated = cached
         }
@@ -276,7 +277,8 @@ struct CaptureFeature {
           box: line.boundingBoxNormalized,
           sourceText: line.text,
           translated: cached,
-          rowCount: line.rowCount
+          rowCount: line.rowCount,
+          isVerticalBlock: line.isVerticalBlock
         )
       }
 
