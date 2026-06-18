@@ -14,6 +14,7 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 - **Lives in the menu bar** — no Dock icon; open the popover from the menu bar item, `⌘,` for Settings
 - **Region capture** — drag to select any part of the screen (or press **Space** to highlight and click a whole window, like the macOS screenshot tool); it's translated and shown in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original / translated text
 - **Live overlay** — pick a target the same way (drag a region, or Space to click a window) and an overlay snaps onto it and keeps translating as the content changes. It always lets clicks and scrolling pass through to the app underneath; its built-in **LIVE** handle pauses/resumes and the **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame
+- **Reads the layout** — recognition follows the document structure: vertical (top-to-bottom) Japanese/Chinese and multi-column text are read in reading order and the translation is laid out to match — vertical text stays vertical, in place over the original
 - **Instant re-captures** — translating the same screen again is cached
 - **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text, or set the source to **Auto** to detect it per line (handy for mixed-language screens)
 - **Customizable shortcuts** — capture, live overlay, pause/resume Live, display mode (In-place / Window), and the save/copy keys, all in Settings → Shortcuts
@@ -46,8 +47,8 @@ All hotkeys are customizable in Settings → Shortcuts.
 
 Settings live in `~/.config/SwiftyCrow/config.toml`, grouped into tables that
 mirror the in-app Settings tabs — `[capture]`, `[languages]`, `[overlay]`,
-`[recognition]`, `[shortcuts]`, `[translation]`, and `[updates]`. Edits made in
-the app or by hand are kept in sync.
+`[shortcuts]`, `[translation]`, and `[updates]`. Edits made in the app or by
+hand are kept in sync.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the full reference —
 every key, its default, and the shortcut syntax.

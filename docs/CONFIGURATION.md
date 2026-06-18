@@ -17,7 +17,6 @@ Settings are grouped into tables that mirror the in-app Settings tabs:
 - `[capture]` — Live Mode capture cadence
 - `[languages]` — source/target language pair
 - `[overlay]` — the live translation overlay
-- `[recognition]` — OCR mode
 - `[shortcuts]` — global hotkeys + capture-window keys
 - `[translation]` — translation strategy
 - `[updates]` — automatic update checks
@@ -78,12 +77,6 @@ the **×** button to close it.
 | --- | --- | --- | --- |
 | `hideOnHover` | bool | `false` | Fade the overlay out while the cursor is over it, so the original text underneath is readable. |
 | `liveMode` | string | `"inPlace"` | How a live translation is shown: `inPlace` draws it over the text, `window` keeps the overlay a thin region frame and shows the translation in a separate window. |
-
-## `[recognition]`
-
-| Key | Type | Default | Description |
-| --- | --- | --- | --- |
-| `mode` | string | `"text"` | OCR mode: `text`, or `document` to group lines into paragraphs (macOS 26+). |
 
 ## `[shortcuts]`
 

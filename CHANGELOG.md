@@ -4,6 +4,21 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.7.0 — 2026-06-18
+
+### What's New
+
+- **Vertical text is translated in place.** Vertical (top-to-bottom) CJK passages — Japanese, Traditional Chinese, and the like — are recognized in reading order and the translation is drawn over them the same way: characters stacked top-to-bottom, columns right-to-left, at the source's font scale. No more squeezing a sideways translation into a tall, narrow column.
+- **Structure-aware recognition.** Recognition now reads the document's structure — grouping text into reading-order paragraphs, separating ruby (furigana) from the body it annotates, and detecting each block's direction — so busy pages like comics and multi-column layouts come out far cleaner.
+
+### Fixed
+
+- **A missing language model now tells you what to do.** Translation runs on on-device models you download in System Settings. When the captured language's model isn't installed, SwiftyCrow now shows a "Translation model not installed" hint with an **Open Settings** button — on the region result, the live overlay, the window-mode result, and the menu bar — instead of silently leaving the text untranslated.
+
+### Changed
+
+- **The Text / Document recognition toggle is gone.** Recognition always uses document layout analysis now; a `[recognition]` table in `config.toml` is ignored.
+
 ## 2.6.1 — 2026-06-13
 
 ### Fixed
