@@ -13,7 +13,9 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
   /// lines, so the renderer wraps the text instead of drawing one giant row.
   var rowCount = 1
   /// True when `box` covers a block of stitched vertical CJK columns, so the
-  /// renderer fills it with the translation as a wrapped paragraph rather than
-  /// cramming a single horizontal row into the tall, narrow column.
+  /// renderer lays the translation out vertically (top-to-bottom, right-to-left).
   var isVerticalBlock = false
+  /// Source character size for a vertical block (a column's width, 0–1
+  /// normalized), so the renderer can match the original font scale.
+  var verticalCharScale: CGFloat = 0
 }

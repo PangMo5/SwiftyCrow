@@ -73,7 +73,7 @@ struct RegionCaptureFeature {
               case .window(let id, _):
                 try await screenCapture.captureWindow(id)
               }
-            let result = try await ocr.recognizeText(image, snapshot.languages.source, snapshot.recognition.mode)
+            let result = try await ocr.recognizeText(image, snapshot.languages.source)
             return CapturedRegion(
               pngData: image.pngData,
               size: CGSize(width: image.width, height: image.height),
@@ -104,7 +104,8 @@ struct RegionCaptureFeature {
             sourceText: line.text,
             translated: sameLanguage ? line.text : nil,
             rowCount: line.rowCount,
-            isVerticalBlock: line.isVerticalBlock
+            isVerticalBlock: line.isVerticalBlock,
+            verticalCharScale: line.verticalCharScale
           )
           newLines.append(overlayLine)
           if !sameLanguage {

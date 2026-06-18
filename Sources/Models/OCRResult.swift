@@ -11,9 +11,12 @@ struct OCRResult: Equatable, Sendable {
     /// single row and wrap the text instead of stretching it.
     var rowCount = 1
     /// True when this is a block of vertical (top-to-bottom) CJK columns stitched
-    /// together. The renderer fills the whole box with the translation as a
-    /// wrapped paragraph instead of treating it as one horizontal row.
+    /// together. The renderer lays the translation out vertically over the box.
     var isVerticalBlock = false
+    /// For a vertical block, the source character size (a column's width, 0–1
+    /// normalized) — lets the renderer match the original font scale so titles
+    /// stay large and annotations small, preserving the page's text hierarchy.
+    var verticalCharScale: CGFloat = 0
   }
 
   var lines: [Line]

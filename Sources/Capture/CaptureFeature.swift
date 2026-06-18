@@ -275,6 +275,7 @@ struct CaptureFeature {
         overlayLine.box = line.boundingBoxNormalized
         overlayLine.rowCount = line.rowCount
         overlayLine.isVerticalBlock = line.isVerticalBlock
+        overlayLine.verticalCharScale = line.verticalCharScale
         if let cached {
           overlayLine.translated = cached
         }
@@ -286,7 +287,8 @@ struct CaptureFeature {
           sourceText: line.text,
           translated: cached,
           rowCount: line.rowCount,
-          isVerticalBlock: line.isVerticalBlock
+          isVerticalBlock: line.isVerticalBlock,
+          verticalCharScale: line.verticalCharScale
         )
       }
 
@@ -360,7 +362,7 @@ struct CaptureFeature {
       displayID(coveringMostOf: overlayFrame.rect),
       Bundle.main.bundleIdentifier
     )
-    let result = try await ocr.recognizeText(image, settings.languages.source, settings.recognition.mode)
+    let result = try await ocr.recognizeText(image, settings.languages.source)
     // Only carry the screenshot when Window mode needs it for the backdrop.
     let needsImage = settings.overlay.liveMode == .window
     return LiveCapture(

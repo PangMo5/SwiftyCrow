@@ -18,10 +18,9 @@ struct SettingsView: View {
         Form { LanguagesSection(store: store) }
           .formStyle(.grouped)
       }
-      Tab("Recognition", systemImage: "viewfinder") {
+      Tab("Capture", systemImage: "viewfinder") {
         Form {
           LiveCaptureSection()
-          RecognitionSection()
         }
         .formStyle(.grouped)
       }
@@ -135,29 +134,6 @@ private struct LiveCaptureSection: View {
   }
 
   // MARK: Private
-
-  @Shared(.settings) private var settings
-
-}
-
-// MARK: - RecognitionSection
-
-private struct RecognitionSection: View {
-  var body: some View {
-    Section {
-      Picker("OCR mode", selection: Binding($settings.recognition.mode)) {
-        ForEach(OCRMode.allCases) { mode in
-          Text(mode.displayName).tag(mode)
-        }
-      }
-    } header: {
-      Text("Recognition")
-    } footer: {
-      Text("Document mode groups recognized text into paragraphs (macOS 26+).")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-    }
-  }
 
   @Shared(.settings) private var settings
 

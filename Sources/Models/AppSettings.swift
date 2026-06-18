@@ -14,7 +14,6 @@ struct AppSettings: Codable, Equatable, Sendable {
     capture = try c.decodeIfPresent(CaptureSettings.self, forKey: .capture) ?? d.capture
     languages = try c.decodeIfPresent(LanguageSettings.self, forKey: .languages) ?? d.languages
     overlay = try c.decodeIfPresent(OverlaySettings.self, forKey: .overlay) ?? d.overlay
-    recognition = try c.decodeIfPresent(RecognitionSettings.self, forKey: .recognition) ?? d.recognition
     shortcuts = try c.decodeIfPresent(ShortcutSettings.self, forKey: .shortcuts) ?? d.shortcuts
     translation = try c.decodeIfPresent(TranslationSettings.self, forKey: .translation) ?? d.translation
     updates = try c.decodeIfPresent(UpdateSettings.self, forKey: .updates) ?? d.updates
@@ -25,7 +24,6 @@ struct AppSettings: Codable, Equatable, Sendable {
   var capture = CaptureSettings()
   var languages = LanguageSettings()
   var overlay = OverlaySettings()
-  var recognition = RecognitionSettings()
   var shortcuts = ShortcutSettings()
   var translation = TranslationSettings()
   var updates = UpdateSettings()
@@ -96,20 +94,6 @@ enum OverlayLiveMode: String, Codable, Equatable, Sendable, CaseIterable, Identi
     case .window: "Window"
     }
   }
-}
-
-// MARK: - RecognitionSettings
-
-struct RecognitionSettings: Codable, Equatable, Sendable {
-  init() { }
-
-  init(from decoder: any Decoder) throws {
-    let c = try decoder.container(keyedBy: CodingKeys.self)
-    let d = RecognitionSettings()
-    mode = try c.decodeIfPresent(OCRMode.self, forKey: .mode) ?? d.mode
-  }
-
-  var mode = OCRMode.text
 }
 
 // MARK: - ShortcutSettings
@@ -211,23 +195,6 @@ enum UpdateCheckInterval: String, Codable, Equatable, Sendable, CaseIterable, Id
   }
 }
 
-// MARK: - OCRMode
-
-enum OCRMode: String, Codable, Equatable, Sendable, CaseIterable, Identifiable {
-  case text
-  case document
-
-  var id: String {
-    rawValue
-  }
-
-  var displayName: String {
-    switch self {
-    case .text: "Text"
-    case .document: "Document"
-    }
-  }
-}
 
 // MARK: - TranslationStrategy
 
