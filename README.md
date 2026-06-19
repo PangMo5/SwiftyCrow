@@ -45,23 +45,18 @@ All hotkeys are customizable in Settings → Shortcuts.
 
 ## Troubleshooting
 
-### Translation says "Unable to translate" or shows a language error
+### "Unable to translate" or a missing-model hint
 
-SwiftyCrow uses Apple's on-device translation framework, which requires translation models to be installed for each language you translate. If translation fails, it's usually because the detected source language doesn't have a model installed yet.
+SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails — or SwiftyCrow shows a **"Translation model not installed"** hint — the model for the detected language usually isn't downloaded yet.
 
 **To install translation models:**
 
 1. Open **System Settings** → **General** → **Language & Region**
-2. Scroll down to **Translation** 
-3. For each language you want to translate, click **Download** to install its model (1–3 GB per language)
-4. Once downloaded, relaunch SwiftyCrow and try translating again
+2. Scroll down to **Translation Languages…**
+3. Click **Download** next to your source *and* target language (1–3 GB each). With **Auto** source, install every language that might appear in your captures
+4. Relaunch SwiftyCrow and try again
 
-**Which languages do I need?**
-- Install your source language (the language you're translating *from*, e.g., English if you're translating English text)
-- Install your target language (the language you're translating *to*, e.g., Spanish if you want Spanish translations)
-- If you use **Auto** source detection, make sure you have models installed for every language that might appear in your captures
-
-**Note:** Translation models are managed by macOS and stored locally. If you're short on disk space, you can uninstall unused language models from the same Settings panel.
+The in-app hint has an **Open Settings** button that jumps straight there (and a **Don't show again** once you've got the point). Models are managed by macOS and stored locally — free up space by removing unused ones from the same panel.
 
 For more details, see [docs/LANGUAGE_MODELS.md](docs/LANGUAGE_MODELS.md).
 

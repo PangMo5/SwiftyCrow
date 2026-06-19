@@ -8,7 +8,7 @@ If translation is failing with "Unable to translate":
 
 1. Open **System Settings** on your Mac
 2. Go to **General** → **Language & Region**
-3. Scroll to **Translation** at the bottom
+3. Scroll to **Translation Languages…** near the bottom
 4. Click **Download** next to any language you want to translate
 5. Wait for the download to complete (1–5 minutes per language)
 6. Relaunch SwiftyCrow and try translating again
@@ -25,8 +25,8 @@ If translation is failing with "Unable to translate":
 ### Via System Settings (Recommended)
 
 1. Click the Apple menu (top-left corner) → **System Settings**
-2. In the sidebar, click **General**
-3. Scroll down to find the **Translation** section
+2. In the sidebar, click **General**, then **Language & Region**
+3. Scroll down to find **Translation Languages…**
 4. You'll see a list of languages with status badges:
    - **Download** (blue button) — model not installed; click to download
    - **Remove** (blue button) — model installed; click to delete it if you need disk space
@@ -39,7 +39,7 @@ If translation is failing with "Unable to translate":
 
 To confirm a language model is installed:
 
-1. Return to System Settings → General → Language & Region → Translation
+1. Return to System Settings → General → Language & Region → Translation Languages…
 2. If the button shows **Remove** instead of **Download**, the model is installed
 3. That language is ready to use in SwiftyCrow
 
@@ -66,7 +66,7 @@ To confirm a language model is installed:
 
 **Solution:**
 1. Check which language SwiftyCrow detected: the error message should mention it
-2. Go to System Settings → General → Language & Region → Translation
+2. Go to System Settings → General → Language & Region → Translation Languages…
 3. Look for that language and click **Download**
 4. Once complete, try translating again in SwiftyCrow
 
@@ -93,32 +93,21 @@ To confirm a language model is installed:
 **Problem:** Language models take up 1–3 GB each; multiple languages can use a lot of space.
 
 **Solution:**
-1. Go to System Settings → General → Language & Region → Translation
+1. Go to System Settings → General → Language & Region → Translation Languages…
 2. Click **Remove** next to languages you don't actively use
 3. This frees up disk space without affecting any other part of your Mac
 4. You can always download them again later
 
-### Slow translation or "lowLatency vs. highFidelity"
+### Slow translation, or Low Latency vs. High Fidelity
 
-SwiftyCrow has a **Translation Strategy** setting in Settings → Translation:
-- **Low Latency** (default) — faster, uses less AI resources; good for casual reading
-- **High Fidelity** — slower, more accurate; uses Apple Intelligence if available on your Mac
+SwiftyCrow has a **Strategy** setting in Settings → Translation:
+- **Low Latency** (default) — faster, uses fewer resources; good for casual reading
+- **High Fidelity** — more accurate; uses Apple Intelligence on devices that support it (macOS 26.4+)
 
 If translation feels slow:
 1. Try **Low Latency** mode (Settings → Translation)
 2. Ensure your Mac isn't under heavy load (too many apps open)
 3. For long captures, translation may take a few seconds regardless of strategy
-
-## Advanced: Command-Line Check (macOS Terminal)
-
-If you want to check translation models from the Terminal:
-
-```bash
-# Check what translation models are installed
-defaults read com.apple.translation 2>/dev/null | grep -i "installed" || echo "No models found or translation framework unavailable"
-```
-
-This is optional — System Settings is the easiest way to manage models.
 
 ## Feedback
 
