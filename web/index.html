@@ -21,7 +21,10 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" />
     <label for="nav-toggle" class="nav-burger" aria-label="Menu"><span></span></label>
     <div class="nav-links">
-      <a href="#features">Features</a>
+      <a href="#capture">Capture</a>
+      <a href="#live">Live</a>
+      <a href="#layout">Recognition</a>
+      <a href="#privacy">Privacy</a>
       <a href="./configuration.html">Configuration</a>
       <a href="./releases.html">Releases</a>
       <a href="https://github.com/PangMo5/SwiftyCrow">GitHub</a>
@@ -75,26 +78,126 @@
   </div>
 </section>
 
-<section id="features">
+<section id="capture">
   <div class="wrap">
-    <p class="eyebrow">Private by design</p>
-    <h2>No cloud. No keys. No quotas.</h2>
-    <p class="sub">Text recognition and translation run on-device with Apple's Vision and Translation frameworks. Nothing leaves your Mac.</p>
+    <p class="eyebrow">Capture</p>
+    <h2>Grab any text on screen.</h2>
+    <p class="sub">Drag a region or pick a whole window. The translation lands over a blurred copy of the original.</p>
     <div class="features">
       <div class="feature">
         <div class="ico">✂️</div>
-        <h3>Region capture</h3>
-        <p>Drag to select any part of the screen. The translation appears in place, drawn over the blurred original.</p>
+        <h3>Region or window</h3>
+        <p>Drag to select any area, or press Space to highlight and click a whole window, like the macOS screenshot tool.</p>
       </div>
       <div class="feature">
-        <div class="ico">🪟</div>
-        <h3>Live overlay</h3>
-        <p>A floating window you place over text — flip on Live mode to keep translating as the content changes.</p>
+        <div class="ico">🖼️</div>
+        <h3>Translated preview</h3>
+        <p>The result opens in a floating window with each line blurred behind its translation.</p>
       </div>
+      <div class="feature">
+        <div class="ico">💾</div>
+        <h3>Save or copy</h3>
+        <p>Save a PNG, copy the image, or copy just the original or translated text.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="live" class="section-gray">
+  <div class="wrap">
+    <p class="eyebrow">Live overlay</p>
+    <h2>Translation that keeps up.</h2>
+    <p class="sub">Place an overlay on a region or window and it keeps translating as the content changes.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">🪟</div>
+        <h3>Snaps into place</h3>
+        <p>Pick a region or a window and the overlay lands right on it, translating live from the first frame.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">👆</div>
+        <h3>Stays out of the way</h3>
+        <p>Clicks and scrolling pass straight through to the app below. Grab the LIVE handle to move it, the edges to resize.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">↔️</div>
+        <h3>In place or in a window</h3>
+        <p>Draw the translation over the source, or send it to a separate window while the overlay stays a thin frame.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="layout">
+  <div class="wrap">
+    <p class="eyebrow">Recognition</p>
+    <h2>It reads the way you do.</h2>
+    <p class="sub">Recognition follows the page's structure, so even busy and vertical layouts come out right.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">📑</div>
+        <h3>Reads in order</h3>
+        <p>Groups text into reading-order paragraphs, so comics and multi-column pages don't get scrambled.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">↕️</div>
+        <h3>Vertical, in place</h3>
+        <p>Vertical Japanese and Chinese stay vertical, with the translation drawn over the original.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔎</div>
+        <h3>Clean on busy pages</h3>
+        <p>Separates ruby (furigana) from the body text it annotates and handles dense layouts without jumbling lines.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="section-gray">
+  <div class="wrap">
+    <p class="eyebrow">Private by design</p>
+    <h2>No cloud. No keys. No quotas.</h2>
+    <p class="sub">Recognition and translation run on-device with Apple's Vision and Translation frameworks. Nothing leaves your Mac.</p>
+    <div class="features">
       <div class="feature">
         <div class="ico">🔒</div>
         <h3>Fully on-device</h3>
-        <p>Powered by Apple's on-device models. Works offline, with no API keys and nothing sent to a server.</p>
+        <p>Powered by Apple's on-device models. Works offline, with nothing sent to a server.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🌐</div>
+        <h3>Your Mac's languages</h3>
+        <p>Source and target lists come from the languages installed on your Mac. Set the source to Auto to detect it per line.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">⚡</div>
+        <h3>Instant re-captures</h3>
+        <p>Translating the same screen again is served from cache, so repeat captures are immediate.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="workflow">
+  <div class="wrap">
+    <p class="eyebrow">Always at hand</p>
+    <h2>Lives in your menu bar.</h2>
+    <p class="sub">No Dock icon, no clutter. Trigger everything with a shortcut and keep it current automatically.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">🐦‍⬛</div>
+        <h3>Menu bar agent</h3>
+        <p>Open the popover or fire any action from a global shortcut, even with no window open.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">⌨️</div>
+        <h3>Your shortcuts</h3>
+        <p>Bind capture, live overlay, pause/resume, display mode, and the save/copy keys in Settings.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔄</div>
+        <h3>Updates itself</h3>
+        <p>Sparkle keeps SwiftyCrow up to date, and it can launch at login if you want.</p>
       </div>
     </div>
   </div>
