@@ -12,7 +12,7 @@ and written back whenever you change something in the app. Hand edits are
 picked up on the next launch, so you can keep it in your dotfiles and edit it
 in your editor.
 
-Settings are grouped into tables that mirror the in-app Settings tabs:
+Settings are grouped into tables that mirror the in-app Settings panes:
 
 - `[capture]` — Live Mode capture cadence
 - `[languages]` — source/target language pair

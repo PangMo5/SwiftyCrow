@@ -104,8 +104,10 @@ SwiftyCrow has a **Strategy** setting in Settings → Translation:
 - **Low Latency** (default) — faster, uses fewer resources; good for casual reading
 - **High Fidelity** — more accurate; uses Apple Intelligence on devices that support it (macOS 26.4+)
 
+> **The Strategy setting only takes effect on macOS 26.4+.** On macOS 26.0–26.3 SwiftyCrow uses the Translation framework's own default and the choice has no effect, so switching modes there won't change speed or accuracy.
+
 If translation feels slow:
-1. Try **Low Latency** mode (Settings → Translation)
+1. On macOS 26.4+, try **Low Latency** mode (Settings → Translation)
 2. Ensure your Mac isn't under heavy load (too many apps open)
 3. For long captures, translation may take a few seconds regardless of strategy
 

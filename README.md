@@ -18,6 +18,7 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 - **Reads the layout** — recognition follows the document structure: vertical (top-to-bottom) Japanese/Chinese and multi-column text are read in reading order and the translation is laid out to match — vertical text stays vertical, in place over the original
 - **Instant re-captures** — translating the same screen again is cached
 - **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text, or set the source to **Auto** to detect it per line (handy for mixed-language screens)
+- **Two translation modes** — **Low latency** (default) for speed, or **High fidelity** powered by Apple Intelligence where supported (macOS 26.4+); choose in Settings → Translation
 - **Customizable shortcuts** — capture, live overlay, show/hide overlay on the last region, pause/resume Live, display mode (In-place / Window), and the save/copy keys, all in Settings → Shortcuts
 - **Launch at login** — start SwiftyCrow automatically when you log in (Settings → General)
 - **Editable config file** — a plain-text file you can hand-edit, kept in sync with the in-app Settings
