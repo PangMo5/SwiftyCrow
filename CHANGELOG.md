@@ -4,15 +4,16 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
-## Unreleased
+## 2.8.0 — 2026-07-15
 
 ### What's New
 
-- **Predefine an area and translate it on demand.** The live overlay's region is remembered, so a new **Show / hide overlay** shortcut (and menu bar row) flips the overlay on and off over that same spot without dragging again — ideal for a game panel or a fixed HUD you only need to read now and then. Turning it off tears the overlay down completely (no capture, OCR, or translation keeps running until you bring it back). Bind it under `[shortcuts] toggleLiveOverlay` or in Settings → Shortcuts. (#9)
+- **Predefine an area and translate it on demand.** The live overlay now remembers its region, so a new **Show / hide overlay** shortcut — or the menu bar's **Show on last region** / **Hide overlay** row — flips the overlay on and off over that same spot without dragging again. Ideal for a game panel or a fixed HUD you only glance at now and then. Turning it off tears the overlay down completely, so no capture, OCR, or translation keeps running until you bring it back. Bind it under `[shortcuts] toggleLiveOverlay` or in Settings → Shortcuts. (#9)
 
 ### Changed
 
-- **Redesigned Settings.** Settings now opens as a standard window with a System-Settings-style sidebar (a pane list on the left, one grouped form on the right) instead of a row of top tabs, and it brings the app forward as a regular window while open.
+- **Redesigned Settings.** Settings now opens as a standard, resizable window with a System-Settings-style sidebar — a list of panes on the left, one grouped form on the right — instead of a row of tabs, and it comes forward as a regular app window while it's open.
+- **Tidier live overlay.** The **LIVE** toggle and **×** close button now appear only when the pointer is over the overlay, matching the move handle, so a placed overlay stays out of the way. The progress spinner also shows while the overlay is capturing and running OCR — not just during translation — so a slow first capture shows activity right away.
 
 ## 2.7.0 — 2026-06-18
 
