@@ -111,6 +111,7 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
     liveOverlay = try c.decodeIfPresent(HotKey.self, forKey: .liveOverlay) ?? d.liveOverlay
     toggleLive = try c.decodeIfPresent(HotKey.self, forKey: .toggleLive) ?? d.toggleLive
     toggleLiveMode = try c.decodeIfPresent(HotKey.self, forKey: .toggleLiveMode) ?? d.toggleLiveMode
+    toggleLiveOverlay = try c.decodeIfPresent(HotKey.self, forKey: .toggleLiveOverlay) ?? d.toggleLiveOverlay
     regionSave = try c.decodeIfPresent(HotKey.self, forKey: .regionSave) ?? d.regionSave
     regionCopyImage = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyImage) ?? d.regionCopyImage
     regionCopyOriginal = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyOriginal) ?? d.regionCopyOriginal
@@ -126,6 +127,10 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
   var liveOverlay: HotKey?
   var toggleLive: HotKey?
   var toggleLiveMode: HotKey?
+  /// Shows or hides the live overlay on the last-used region — no re-selecting.
+  /// The region persists across launches (overlay-frame.json), so this is the
+  /// "predefine an area, then flip translation on/off" shortcut (issue #9).
+  var toggleLiveOverlay: HotKey?
 
   // Capture-result-window shortcuts — ⌘ defaults, active only while that window
   // is focused (matched locally, never registered globally).

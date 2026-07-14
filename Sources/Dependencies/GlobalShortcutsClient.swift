@@ -11,10 +11,22 @@ enum ShortcutEvent: String, Equatable, CaseIterable, Sendable {
   case liveOverlay
   case toggleLive
   case toggleLiveMode
+  case toggleLiveOverlay
 
   var identifier: String {
     rawValue
   }
+
+  /// Each global hotkey paired with its persisted binding in `ShortcutSettings`,
+  /// so the registrar can be driven by iterating this instead of hand-wiring
+  /// every case. Capture-window keys aren't here — they're matched locally.
+  static let globalKeyPaths: [(event: ShortcutEvent, keyPath: KeyPath<ShortcutSettings, HotKey?>)] = [
+    (.selectRegion, \.selectRegion),
+    (.liveOverlay, \.liveOverlay),
+    (.toggleLive, \.toggleLive),
+    (.toggleLiveMode, \.toggleLiveMode),
+    (.toggleLiveOverlay, \.toggleLiveOverlay),
+  ]
 }
 
 // MARK: - GlobalShortcutsClient

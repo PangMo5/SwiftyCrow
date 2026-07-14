@@ -379,9 +379,14 @@ private struct OverlayRootView: View {
     )
     .background {
       // Hidden affordances: ⌘, opens Settings, ⌘C copies the translated text.
+      // This view is a detached AppKit hosting view with no scene environment,
+      // so it can't call `openWindow`; posting the notification lets the always-
+      // mounted menu-bar label open the settings window on its behalf.
       Group {
-        Button("Open Settings") { openSettings() }
-          .keyboardShortcut(",", modifiers: .command)
+        Button("Open Settings") {
+          NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
+        }
+        .keyboardShortcut(",", modifiers: .command)
         Button("Copy translation") { onCopy() }
           .keyboardShortcut("c", modifiers: .command)
           .disabled(model.lines.isEmpty)
@@ -391,10 +396,6 @@ private struct OverlayRootView: View {
       .accessibilityHidden(true)
     }
   }
-
-  // MARK: Private
-
-  @Environment(\.openSettings) private var openSettings
 
 }
 

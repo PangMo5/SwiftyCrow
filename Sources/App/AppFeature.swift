@@ -55,6 +55,8 @@ struct AppFeature {
                 await send(.liveOverlayRequested)
               case .toggleLiveMode:
                 await send(.toggleLiveModeRequested)
+              case .toggleLiveOverlay:
+                await send(.capture(.toggleLiveOverlayRequested))
               }
             }
           },
@@ -79,18 +81,10 @@ struct AppFeature {
           .run { [globalShortcuts, settings = state.$settings] _ in
             // config.toml is the source of truth for hotkeys; push it into the
             // registrar on launch and whenever it changes (incl. hand edits).
-            for await keys in Observations({
-              (
-                settings.wrappedValue.shortcuts.selectRegion,
-                settings.wrappedValue.shortcuts.toggleLive,
-                settings.wrappedValue.shortcuts.liveOverlay,
-                settings.wrappedValue.shortcuts.toggleLiveMode
-              )
-            }) {
-              globalShortcuts.setShortcut(.selectRegion, keys.0)
-              globalShortcuts.setShortcut(.toggleLive, keys.1)
-              globalShortcuts.setShortcut(.liveOverlay, keys.2)
-              globalShortcuts.setShortcut(.toggleLiveMode, keys.3)
+            for await shortcuts in Observations({ settings.wrappedValue.shortcuts }) {
+              for (event, keyPath) in ShortcutEvent.globalKeyPaths {
+                globalShortcuts.setShortcut(event, shortcuts[keyPath: keyPath])
+              }
             }
           },
           .run { [updater] send in

@@ -73,6 +73,12 @@ shortcut), and it starts translating live right away. It always lets clicks pass
 through to the apps below — use its built-in **LIVE** handle to pause/resume and
 the **×** button to close it.
 
+Once you've placed it, the region is remembered — the `toggleLiveOverlay`
+shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the
+overlay on and off over that same region without dragging again. Hiding it stops
+all capture and translation; showing it re-places on the remembered region and
+goes live. That's the "predefine an area, then translate it on demand" flow.
+
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `hideOnHover` | bool | `false` | Fade the overlay out while the cursor is over it, so the original text underneath is readable. |
@@ -89,7 +95,8 @@ leave that action unbound (the default).
 | --- | --- |
 | `selectRegion` | Capture a region (drag to select; press Space to pick a window) |
 | `liveOverlay` | Start/replace the live overlay (same selection; then translates live) |
-| `toggleLive` | Pause/resume Live on the active overlay |
+| `toggleLiveOverlay` | Show/hide the live overlay on the **last-used region** — no re-selecting. Hiding it stops all capture/translation; showing it re-places on the remembered region and goes live. |
+| `toggleLive` | Pause/resume Live on the active overlay (keeps it on screen) |
 | `toggleLiveMode` | Switch the live display between In-place and Window |
 
 **Capture-window keys** — active only while a capture result window is focused;
@@ -106,6 +113,7 @@ they have ⌘ defaults:
 [shortcuts]
 selectRegion = "cmd + shift - c"
 liveOverlay = "cmd + shift - o"
+toggleLiveOverlay = "cmd + shift - k"
 toggleLive = "cmd + shift - l"
 toggleLiveMode = "cmd + shift - m"
 ```

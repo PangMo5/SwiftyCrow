@@ -327,9 +327,11 @@ private final class RegionResultWindowController {
     panel?.close()
 
     // The app is normally a menu-bar agent (.accessory), which can't become
-    // frontmost — so it never receives ⌘-key events. Switch to .regular while
-    // a result window is open so its shortcuts work, then revert on close.
-    NSApp.setActivationPolicy(.regular)
+    // frontmost — so it never receives ⌘-key events. Promote to .regular while
+    // a result window is open so its shortcuts work, then revert on close. The
+    // shared coordinator ref-counts this against the Settings window so closing
+    // one while the other is open doesn't drop the app back to accessory early.
+    WindowActivation.opened()
 
     let store = Store(initialState: RegionCaptureFeature.State(target: target)) {
       RegionCaptureFeature()
@@ -379,9 +381,11 @@ private final class RegionResultWindowController {
       queue: .main
     ) { [weak self] _ in
       Task { @MainActor in
-        guard self?.panel === panel else { return }
-        self?.panel = nil
-        NSApp.setActivationPolicy(.accessory)
+        // Balance the opened() from this panel's present() exactly once — even
+        // when a newer present() has already replaced `panel` (so the identity
+        // guard below is false). Otherwise the ref-count would leak on replace.
+        WindowActivation.closed()
+        if self?.panel === panel { self?.panel = nil }
       }
     }
   }

@@ -42,13 +42,25 @@ struct OverlayView: View {
       }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
+          // A small spinner while the overlay is busy (capturing / OCR or
+          // translating); nothing otherwise.
           if isTranslating {
             ProgressView()
               .controlSize(.small)
           }
-          LiveHandle(isLive: isLive, action: onToggleLive)
-          CloseHandle(action: onClose)
+          // LIVE toggle + close are chrome: like the move handle, they only
+          // appear while the cursor is over the overlay. Removed from layout
+          // (not just hidden) when away, so the spinner sits flush in the
+          // top-right corner on its own instead of leaving a gap for them.
+          if showMoveHandle {
+            HStack(spacing: 6) {
+              LiveHandle(isLive: isLive, action: onToggleLive)
+              CloseHandle(action: onClose)
+            }
+            .transition(.move(edge: .trailing).combined(with: .opacity))
+          }
         }
+        .animation(.easeOut(duration: 0.18), value: showMoveHandle)
         .padding(10)
       }
       .overlay(alignment: .bottom) {

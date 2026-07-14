@@ -5,50 +5,89 @@ import SwiftUI
 
 // MARK: - SettingsView
 
+/// System-Settings-style layout: a sidebar of panes on the left, one grouped
+/// form per pane on the right. Mirrors the sibling Tatami / Amado apps.
 struct SettingsView: View {
+
+  // MARK: Internal
+
   let store: StoreOf<SettingsFeature>
 
   var body: some View {
-    TabView {
-      Tab("General", systemImage: "gearshape") {
-        Form { GeneralSection(store: store) }
-          .formStyle(.grouped)
+    NavigationSplitView {
+      // `id: \.self` so the ForEach id type matches the optional selection
+      // type — macOS only wires the selection gesture when they line up.
+      List(Pane.allCases, id: \.self, selection: $pane) { pane in
+        Label(pane.title, systemImage: pane.icon)
       }
-      Tab("Languages", systemImage: "globe") {
-        Form { LanguagesSection(store: store) }
-          .formStyle(.grouped)
-      }
-      Tab("Capture", systemImage: "viewfinder") {
-        Form {
-          LiveCaptureSection()
+      .listStyle(.sidebar)
+      .navigationSplitViewColumnWidth(min: 170, ideal: 190)
+    } detail: {
+      Form {
+        switch pane ?? .general {
+        case .general: GeneralSection(store: store)
+        case .languages: LanguagesSection(store: store)
+        case .capture: LiveCaptureSection()
+        case .translation: TranslationSection()
+        case .overlay: OverlaySection()
+        case .shortcuts: ShortcutsSection()
+        case .updates: UpdatesSection(store: store)
+        case .about: AboutSection()
         }
-        .formStyle(.grouped)
       }
-      Tab("Translation", systemImage: "character.bubble") {
-        Form { TranslationSection() }
-          .formStyle(.grouped)
-      }
-      Tab("Overlay", systemImage: "rectangle.dashed") {
-        Form { OverlaySection() }
-          .formStyle(.grouped)
-      }
-      Tab("Shortcuts", systemImage: "command") {
-        Form { ShortcutsSection() }
-          .formStyle(.grouped)
-      }
-      Tab("Updates", systemImage: "arrow.down.circle") {
-        Form { UpdatesSection(store: store) }
-          .formStyle(.grouped)
-      }
-      Tab("About", systemImage: "info.circle") {
-        Form { AboutSection() }
-          .formStyle(.grouped)
-      }
+      .formStyle(.grouped)
+      .navigationTitle((pane ?? .general).title)
     }
-    .scenePadding()
-    .frame(minWidth: 520, minHeight: 360)
+    .frame(minWidth: 640, minHeight: 460)
     .task { store.send(.task) }
   }
+
+  // MARK: Private
+
+  private enum Pane: String, CaseIterable, Identifiable {
+    case general
+    case languages
+    case capture
+    case translation
+    case overlay
+    case shortcuts
+    case updates
+    case about
+
+    // MARK: Internal
+
+    var id: String {
+      rawValue
+    }
+
+    var title: String {
+      switch self {
+      case .general: "General"
+      case .languages: "Languages"
+      case .capture: "Capture"
+      case .translation: "Translation"
+      case .overlay: "Overlay"
+      case .shortcuts: "Shortcuts"
+      case .updates: "Updates"
+      case .about: "About"
+      }
+    }
+
+    var icon: String {
+      switch self {
+      case .general: "gearshape"
+      case .languages: "globe"
+      case .capture: "viewfinder"
+      case .translation: "character.bubble"
+      case .overlay: "rectangle.dashed"
+      case .shortcuts: "command"
+      case .updates: "arrow.down.circle"
+      case .about: "info.circle"
+      }
+    }
+  }
+
+  @State private var pane: Pane? = .general
 }
 
 // MARK: - GeneralSection
@@ -203,6 +242,7 @@ private struct ShortcutsSection: View {
     Section {
       recorder("Capture region", \.selectRegion)
       recorder("Live overlay (select a region)", \.liveOverlay)
+      recorder("Show / hide overlay (last region)", \.toggleLiveOverlay)
       recorder("Pause / resume Live", \.toggleLive)
       recorder("Switch display (In-place / Window)", \.toggleLiveMode)
     } header: {
@@ -234,6 +274,7 @@ private struct ShortcutsSection: View {
   private static let allShortcuts: [(title: String, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
     ("Capture region", \.selectRegion),
     ("Live overlay", \.liveOverlay),
+    ("Show / hide overlay", \.toggleLiveOverlay),
     ("Pause / resume Live", \.toggleLive),
     ("Switch display", \.toggleLiveMode),
     ("Save image", \.regionSave),

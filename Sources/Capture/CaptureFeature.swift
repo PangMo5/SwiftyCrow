@@ -70,6 +70,7 @@ struct CaptureFeature {
     case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
+    case toggleLiveOverlayRequested
     case translationCompleted
     case translationFailed(String)
     case translationResponse(lineID: UUID, key: TranslationCacheKey, translated: String)
@@ -202,6 +203,18 @@ struct CaptureFeature {
       case .toggleLiveRequested:
         guard state.overlayActive else { return .none }
         return .send(.setLive(!state.isLive))
+
+      case .toggleLiveOverlayRequested:
+        // Flip the live overlay on/off on the last-used region without
+        // re-selecting. When it's up, tear it down via dismissOverlay — that
+        // cancels the live-capture loop, the translation task group, and the
+        // background blur, so no capture/OCR/translation keeps running while
+        // it's off. Otherwise re-place it on the remembered frame (persisted in
+        // overlay-frame.json) and go live.
+        if state.overlayActive {
+          return .send(.dismissOverlay)
+        }
+        return .send(.overlayPlaced(state.overlayFrame.rect))
 
       case .translationCompleted:
         state.isTranslating = false

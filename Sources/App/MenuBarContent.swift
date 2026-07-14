@@ -20,7 +20,7 @@ struct MenuBarContent: View {
 
   // MARK: Private
 
-  @Environment(\.openSettings) private var openSettings
+  @Environment(\.openWindow) private var openWindow
 
   private var header: some View {
     HStack(spacing: 7) {
@@ -47,6 +47,21 @@ struct MenuBarContent: View {
           Label(
             store.capture.overlayActive ? "Move live overlay…" : "Live overlay…",
             systemImage: "viewfinder.rectangular"
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 8)
+
+        Divider().padding(.leading, 28)
+
+        Button {
+          store.send(.capture(.toggleLiveOverlayRequested))
+        } label: {
+          Label(
+            store.capture.overlayActive ? "Hide overlay" : "Show on last region",
+            systemImage: store.capture.overlayActive ? "eye.slash" : "viewfinder"
           )
           .frame(maxWidth: .infinity, alignment: .leading)
           .contentShape(.rect)
@@ -96,7 +111,8 @@ struct MenuBarContent: View {
   private var footer: some View {
     HStack(spacing: 14) {
       Button {
-        openSettings()
+        openWindow(id: settingsWindowID)
+        NSApp.activate(ignoringOtherApps: true)
       } label: {
         Label("Settings", systemImage: "gearshape")
       }
