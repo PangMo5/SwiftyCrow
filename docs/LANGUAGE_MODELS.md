@@ -16,7 +16,7 @@ If translation is failing with "Unable to translate":
 ## Understanding Translation Models
 
 - **What are they?** Language models are software files that teach your Mac how to translate text. Each language pair (e.g., English → Spanish) requires models to be installed.
-- **Where do they live?** On your Mac's disk, managed by macOS. They stay on your computer — translation happens fully offline, no cloud services.
+- **Where do they live?** On your Mac's disk, managed by macOS. Translation happens fully offline with no cloud services.
 - **How much space?** Each language model is 1–3 GB. The total depends on how many languages you install.
 - **Do I need both source and target?** Yes. If you translate English text to Spanish, you need both English and Spanish models installed.
 
@@ -28,9 +28,9 @@ If translation is failing with "Unable to translate":
 2. In the sidebar, click **General**, then **Language & Region**
 3. Scroll down to find **Translation Languages…**
 4. You'll see a list of languages with status badges:
-   - **Download** (blue button) — model not installed; click to download
-   - **Remove** (blue button) — model installed; click to delete it if you need disk space
-   - **Downloading...** (gray) — download in progress; wait for it to finish
+   - **Download (blue):** The model is not installed. Click to download it.
+   - **Remove (blue):** The model is installed. Click to delete it if you need disk space.
+   - **Downloading... (gray):** The download is in progress. Wait for it to finish.
 5. For each language you want, click **Download**
 6. Wait for all downloads to finish (your Mac may show a progress indicator in System Settings)
 7. Close System Settings and relaunch SwiftyCrow
@@ -85,12 +85,12 @@ To confirm a language model is installed:
 
 **Solution:** SwiftyCrow requires macOS 26+. Check your system version:
 1. Click the Apple menu → **About This Mac**
-2. Look for "macOS" version — it should be 26 or higher
+2. Look for the **macOS version**. It should be 26 or higher.
 3. If you're on an older version, you'll need to update macOS or use a different translation tool
 
 ### Out of disk space after installing models
 
-**Problem:** Language models take up 1–3 GB each; multiple languages can use a lot of space.
+**Problem:** Language models take up 1–3 GB each. Multiple languages can use a lot of space.
 
 **Solution:**
 1. Go to System Settings → General → Language & Region → Translation Languages…
@@ -101,8 +101,8 @@ To confirm a language model is installed:
 ### Slow translation, or Low Latency vs. High Fidelity
 
 SwiftyCrow has a **Strategy** setting in Settings → Translation:
-- **Low Latency** (default) — faster, uses fewer resources; good for casual reading
-- **High Fidelity** — more accurate; uses Apple Intelligence on devices that support it (macOS 26.4+)
+- **Low Latency (default):** Faster and lighter, making it a good fit for casual reading.
+- **High Fidelity:** More accurate and uses Apple Intelligence on supported devices running macOS 26.4 or later.
 
 > **The Strategy setting only takes effect on macOS 26.4+.** On macOS 26.0–26.3 SwiftyCrow uses the Translation framework's own default and the choice has no effect, so switching modes there won't change speed or accuracy.
 

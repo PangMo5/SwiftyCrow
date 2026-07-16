@@ -6,7 +6,7 @@ SwiftyCrow reads its configuration from:
 ~/.config/SwiftyCrow/config.toml
 ```
 
-The path is XDG-aware — if `$XDG_CONFIG_HOME` is set, the file lives at
+The path is XDG-aware. If `$XDG_CONFIG_HOME` is set, the file lives at
 `$XDG_CONFIG_HOME/SwiftyCrow/config.toml`. The file is created on first launch
 and written back whenever you change something in the app. Hand edits are
 picked up on the next launch, so you can keep it in your dotfiles and edit it
@@ -14,12 +14,12 @@ in your editor.
 
 Settings are grouped into tables that mirror the in-app Settings panes:
 
-- `[capture]` — Live Mode capture cadence
-- `[languages]` — source/target language pair
-- `[overlay]` — the live translation overlay
-- `[shortcuts]` — global hotkeys + capture-window keys
-- `[translation]` — translation strategy
-- `[updates]` — automatic update checks
+- **`[capture]`:** Live Mode capture cadence
+- **`[languages]`:** Source and target language pair
+- **`[overlay]`:** Live translation overlay
+- **`[shortcuts]`:** Global hotkeys and capture-window keys
+- **`[translation]`:** Translation strategy
+- **`[updates]`:** Automatic update checks
 
 One thing is intentionally **not** in this file:
 
@@ -62,21 +62,21 @@ code = "ko-KR"
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `source.code` | string | `"auto"` | Language to translate **from**. Defaults to `"auto"`, which detects it per line from the captured text; set a specific code (e.g. `"en-US"`) to pin it. |
-| `target.code` | string | system | Language to translate **to**; defaults to your system's preferred language. |
+| `source.code` | string | `"auto"` | Language to translate **from**. Defaults to `"auto"`, which detects it per line from the captured text. Set a specific code (e.g. `"en-US"`) to pin it. |
+| `target.code` | string | system | Language to translate **to**. Defaults to your system's preferred language. |
 
 ## `[overlay]`
 
-The overlay is no longer a persistent window you toggle on; you place it by
+The overlay is no longer a persistent window you toggle on. You place it by
 selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
 shortcut), and it starts translating live right away. It always lets clicks pass
-through to the apps below — use its built-in **LIVE** handle to pause/resume and
+through to the apps below. Use its built-in **LIVE** handle to pause or resume and
 the **×** button to close it.
 
-Once you've placed it, the region is remembered — the `toggleLiveOverlay`
+Once you've placed it, the region is remembered. The `toggleLiveOverlay`
 shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the
 overlay on and off over that same region without dragging again. Hiding it stops
-all capture and translation; showing it re-places on the remembered region and
+all capture and translation. Showing it re-places on the remembered region and
 goes live. That's the "predefine an area, then translate it on demand" flow.
 
 | Key | Type | Default | Description |
@@ -89,17 +89,17 @@ goes live. That's the "predefine an area, then translate it on demand" flow.
 All values are skhd-style shortcut strings (see above). Omit a global key to
 leave that action unbound (the default).
 
-**Global hotkeys** — fire even when the app is in the background:
+**Global hotkeys:** Fire even when the app is in the background.
 
 | Key | Action |
 | --- | --- |
-| `selectRegion` | Capture a region (drag to select; press Space to pick a window) |
-| `liveOverlay` | Start/replace the live overlay (same selection; then translates live) |
-| `toggleLiveOverlay` | Show/hide the live overlay on the **last-used region** — no re-selecting. Hiding it stops all capture/translation; showing it re-places on the remembered region and goes live. |
+| `selectRegion` | Capture a region. Drag to select, or press Space to pick a window. |
+| `liveOverlay` | Start or replace the live overlay using the same selection, then translate live. |
+| `toggleLiveOverlay` | Show or hide the live overlay on the **last-used region** without another selection. Hiding it stops capture and translation. Showing it restores the remembered region and goes live. |
 | `toggleLive` | Pause/resume Live on the active overlay (keeps it on screen) |
 | `toggleLiveMode` | Switch the live display between In-place and Window |
 
-**Capture-window keys** — active only while a capture result window is focused;
+**Capture-window keys:** Active only while a capture result window is focused.
 they have ⌘ defaults:
 
 | Key | Action | Default |
@@ -119,7 +119,7 @@ toggleLiveMode = "cmd + shift - m"
 ```
 
 > **Renamed in 2.6.0:** the `toggleOverlay` key is now `liveOverlay`. An old
-> `toggleOverlay` entry is ignored — re-add the binding under `liveOverlay`.
+> `toggleOverlay` entry is ignored. Re-add the binding under `liveOverlay`.
 
 ## `[translation]`
 

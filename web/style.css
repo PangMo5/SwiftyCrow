@@ -1,4 +1,4 @@
-/* SwiftyCrow site — shared styles (Apple-developer-site homage). */
+/* SwiftyCrow site - shared styles (Apple-developer-site homage). */
 
 :root {
   --text: #1d1d1f;
@@ -79,7 +79,7 @@ img { display: block; max-width: 100%; }
 .nav-links a:hover { opacity: 1; text-decoration: none; }
 .nav-links a.active { opacity: 1; color: var(--blue); }
 
-/* Hamburger menu — phones only. Keeps the wordmark and collapses the links
+/* Hamburger menu - phones only. Keeps the wordmark and collapses the links
    into a dropdown so the bar never overflows. CSS-only (checkbox toggle). */
 .nav-toggle { display: none; }
 .nav-burger { display: none; }

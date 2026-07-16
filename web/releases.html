@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Release Notes — SwiftyCrow</title>
-<meta name="description" content="SwiftyCrow release notes — what's new in each version." />
+<title>Release Notes: SwiftyCrow</title>
+<meta name="description" content="SwiftyCrow release notes and version history." />
 <meta name="theme-color" content="#000000" />
 <link rel="icon" type="image/png" href="./icon.png" />
 <link rel="stylesheet" href="./style.css" />
@@ -43,8 +43,8 @@
       <a href="./configuration.html">Configuration</a>
       <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
     </div>
-    <p>Rendered from <code>CHANGELOG.md</code> on the <code>main</code> branch — the single source of truth. Not affiliated with Apple Inc.</p>
-    <p class="footer-apps">Apps by <a href="https://pangmo5.dev/">PangMo5</a> — <span class="cur" aria-current="page">SwiftyCrow</span> · <a href="https://pangmo5.dev/Tatami/">Tatami</a> · <a href="https://pangmo5.dev/Amado/">Amado</a></p>
+    <p>Rendered from <code>CHANGELOG.md</code> on the <code>main</code> branch as the single source of truth. Not affiliated with Apple Inc.</p>
+    <p class="footer-apps">Apps by <a href="https://pangmo5.dev/">PangMo5</a>: <span class="cur" aria-current="page">SwiftyCrow</span> · <a href="https://pangmo5.dev/Tatami/">Tatami</a> · <a href="https://pangmo5.dev/Amado/">Amado</a></p>
   </div>
 </footer>
 
@@ -101,7 +101,7 @@
 
     list.innerHTML = "";
     for (const e of entries) {
-      const m = e.head.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+      const m = e.head.match(/^(.+?)\s+\((\d{4}-\d{2}-\d{2})\)$/);
       const version = (m ? m[1] : e.head).trim();
       const date = m ? fmtDate(m[2].trim()) : "";
       const tag = "v" + version.replace(/^v/, "");

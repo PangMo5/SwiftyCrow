@@ -5,23 +5,23 @@
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen)](LICENSE)
 
-On-screen translator for macOS, fully on-device. Captures any region of the screen with [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), recognizes text with [Vision](https://developer.apple.com/documentation/vision), and translates with the [Apple Translation](https://developer.apple.com/documentation/translation) framework — no cloud APIs, no keys, no quotas.
+On-screen translator for macOS, fully on-device. Captures any region of the screen with [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), recognizes text with [Vision](https://developer.apple.com/documentation/vision), and translates with the [Apple Translation](https://developer.apple.com/documentation/translation) framework. No cloud APIs, no keys, no quotas.
 
 ![SwiftyCrow demo](Resources/Marketing/demo.gif)
 
 ## Features
 
-- **Lives in the menu bar** — no Dock icon; open the popover from the menu bar item, `⌘,` for Settings
-- **Region capture** — drag to select any part of the screen (or press **Space** to highlight and click a whole window, like the macOS screenshot tool); it's translated and shown in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original / translated text
-- **Live overlay** — pick a target the same way (drag a region, or Space to click a window) and an overlay snaps onto it and keeps translating as the content changes. It always lets clicks and scrolling pass through to the app underneath; its built-in **LIVE** handle pauses/resumes and the **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame
-- **Predefine an area, translate on demand** — the overlay's region is remembered, so a single **Show / hide overlay** shortcut flips translation on and off over that same spot without re-selecting — handy for a game panel or a fixed HUD. Hiding it stops all capture and translation until you bring it back
-- **Reads the layout** — recognition follows the document structure: vertical (top-to-bottom) Japanese/Chinese and multi-column text are read in reading order and the translation is laid out to match — vertical text stays vertical, in place over the original
-- **Instant re-captures** — translating the same screen again is cached
-- **Languages from your Mac** — source/target lists are the languages installed on your system; pick the pair that matches the text, or set the source to **Auto** to detect it per line (handy for mixed-language screens)
-- **Two translation modes** — **Low latency** (default) for speed, or **High fidelity** powered by Apple Intelligence where supported (macOS 26.4+); choose in Settings → Translation
-- **Customizable shortcuts** — capture, live overlay, show/hide overlay on the last region, pause/resume Live, display mode (In-place / Window), and the save/copy keys, all in Settings → Shortcuts
-- **Launch at login** — start SwiftyCrow automatically when you log in (Settings → General)
-- **Editable config file** — a plain-text file you can hand-edit, kept in sync with the in-app Settings
+- **Lives in the menu bar:** There is no Dock icon. Open the popover from the menu bar item, or press `⌘,` for Settings.
+- **Region capture:** Drag to select any part of the screen, or press **Space** to highlight and click a whole window like the macOS screenshot tool. The result appears in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original or translated text.
+- **Live overlay:** Pick a target the same way and an overlay snaps onto it, translating as the content changes. Clicks and scrolling pass through to the app underneath. The built-in **LIVE** handle pauses or resumes translation, and **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame.
+- **Predefine an area, translate on demand:** The overlay remembers its region, so **Show / hide overlay** flips translation on and off over the same spot without another selection. This works well for a game panel or fixed HUD. Hiding it stops all capture and translation until you bring it back.
+- **Reads the layout:** Recognition follows document structure. Vertical Japanese or Chinese and multi-column text are read in reading order, and vertical text stays vertical over the original.
+- **Instant re-captures:** Translating the same screen again uses cached results.
+- **Languages from your Mac:** Source and target lists come from the languages installed on your system. Pick a pair, or set the source to **Auto** for per-line detection on mixed-language screens.
+- **Two translation modes:** Choose **Low latency** for speed or **High fidelity** for Apple Intelligence where supported on macOS 26.4 and later.
+- **Customizable shortcuts:** Configure capture, live overlay, show or hide on the last region, pause or resume Live, display mode, and save or copy keys in Settings → Shortcuts.
+- **Launch at login:** Start SwiftyCrow automatically when you log in.
+- **Editable config file:** Hand-edit a plain-text file that stays synchronized with the in-app Settings.
 
 ## Install
 
@@ -40,9 +40,9 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 ## Usage
 
 1. Pick the **Source** and **Target** languages in Settings (`⌘,`).
-2. **Capture a region**: trigger **Capture Region** (the popover button or your hotkey), then drag over the text — or press **Space** to highlight and click a whole window. A floating preview window shows the translation over the screenshot — `⌘S` save, `⌘C` copy image, `⌘O` copy original, `⌘T` copy translation, `Esc` to close.
-3. **Or use the live overlay**: trigger **Live overlay…** (menu bar or hotkey), then drag a region — or press **Space** to click a window — and an overlay snaps onto it and starts translating live. Use the **LIVE** handle to pause/resume, `⌘C` to copy the joined translation, and **×** to close.
-4. **Reuse a fixed area**: once you've placed the overlay, the **Show / hide overlay** shortcut (or the menu bar row) toggles it on and off over that same region — no dragging — so you can translate a game panel or HUD on demand. Hiding it stops all capture and translation.
+2. **Capture a region:** Trigger **Capture Region** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. The preview supports `⌘S` to save, `⌘C` to copy the image, `⌘O` to copy the original, `⌘T` to copy the translation, and `Esc` to close.
+3. **Use the live overlay:** Trigger **Live overlay…** from the menu bar or your hotkey, then drag a region or press **Space** to click a window. Use the **LIVE** handle to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
+4. **Reuse a fixed area:** Once the overlay is placed, **Show / hide overlay** toggles it over the same region without another drag. Hiding it stops all capture and translation.
 
 All hotkeys are customizable in Settings → Shortcuts.
 
@@ -50,7 +50,7 @@ All hotkeys are customizable in Settings → Shortcuts.
 
 ### "Unable to translate" or a missing-model hint
 
-SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails — or SwiftyCrow shows a **"Translation model not installed"** hint — the model for the detected language usually isn't downloaded yet.
+SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails or SwiftyCrow shows a **"Translation model not installed"** hint, the model for the detected language usually is not downloaded yet.
 
 **To install translation models:**
 
@@ -59,18 +59,18 @@ SwiftyCrow translates with Apple's on-device Translation framework, which needs 
 3. Click **Download** next to your source *and* target language (1–3 GB each). With **Auto** source, install every language that might appear in your captures
 4. Relaunch SwiftyCrow and try again
 
-The in-app hint has an **Open Settings** button that jumps straight there (and a **Don't show again** once you've got the point). Models are managed by macOS and stored locally — free up space by removing unused ones from the same panel.
+The in-app hint has an **Open Settings** button that jumps straight there, plus **Don't show again** once you no longer need the reminder. Models are managed by macOS and stored locally. Remove unused models from the same panel to free disk space.
 
 For more details, see [docs/LANGUAGE_MODELS.md](docs/LANGUAGE_MODELS.md).
 
 ## Configuration
 
 Settings live in `~/.config/SwiftyCrow/config.toml`, grouped into tables that
-mirror the in-app Settings tabs — `[capture]`, `[languages]`, `[overlay]`,
+mirror the in-app Settings tabs: `[capture]`, `[languages]`, `[overlay]`,
 `[shortcuts]`, `[translation]`, and `[updates]`. Edits made in the app or by
 hand are kept in sync.
 
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the full reference —
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the full reference:
 every key, its default, and the shortcut syntax.
 
 ## Development
@@ -108,7 +108,7 @@ app can verify update signatures. For local debug builds it can be empty.
 ### Tech stack
 
 - **Tuist** generated workspace (`Project.swift`, `Tuist/Package.swift`)
-- **TCA** (`swift-composable-architecture`) for app + capture state; dependencies wired with `@DependencyClient`
+- **TCA** (`swift-composable-architecture`) for app + capture state, with dependencies wired through `@DependencyClient`
 - **swift-sharing** with a `fileStorage` strategy bridged to **swift-toml**
 - **Magnet** for global hotkey registration, plus a small custom recorder view
 - **Sparkle** for in-app updates
@@ -117,6 +117,6 @@ app can verify update signatures. For local debug builds it can be empty.
 
 ## License
 
-[Mozilla Public License 2.0](LICENSE). Originally MIT (2021); relicensed to MPL-2.0 in 2026.
+[Mozilla Public License 2.0](LICENSE). Originally MIT (2021), then relicensed to MPL-2.0 in 2026.
 
 MPL-2.0 is file-level copyleft: modifications to existing source files must remain under MPL-2.0, but you can add new files under any compatible license. App Store distribution is supported.
