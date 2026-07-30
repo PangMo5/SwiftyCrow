@@ -16,6 +16,35 @@ func openLanguageSettings() {
 /// controller (which isn't a SwiftUI view) to drop the hint's interactive zone.
 let translationModelHintDismissedKey = "hideTranslationModelHint"
 
+// MARK: - PreparingRecognitionNote
+
+/// Shown while Vision loads its document-recognition model. Cold, that costs tens
+/// of seconds, and it happens in the app's own process — so without saying so the
+/// overlay is an empty frame with a spinner, which reads as a hang. Non-interactive
+/// on purpose: it needs no buttons, so the overlay's pass-through stays untouched.
+struct PreparingRecognitionNote: View {
+  var body: some View {
+    HStack(spacing: 10) {
+      ProgressView()
+        .controlSize(.small)
+      VStack(alignment: .leading, spacing: 1) {
+        Text("Preparing text recognition")
+          .font(.caption)
+          .fontWeight(.semibold)
+        Text("macOS is loading the recognition model. This only happens the first time, or after it has been unloaded.")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      Spacer(minLength: 8)
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 8)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(.regularMaterial)
+  }
+}
+
 // MARK: - TranslationModelHint
 
 /// Shown when translation fails because the on-device model isn't installed.

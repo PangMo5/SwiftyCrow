@@ -103,8 +103,25 @@ struct RegionResultView: View {
         .foregroundStyle(.red)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     } else {
-      ProgressView()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      VStack(spacing: 12) {
+        ProgressView()
+        if store.isTakingLong {
+          // Practically always Vision loading a cold document-recognition model,
+          // which takes tens of seconds. Saying so is the difference between a
+          // wait and an apparent hang.
+          VStack(spacing: 4) {
+            Text("Preparing text recognition")
+              .font(.callout.weight(.semibold))
+            Text("macOS is loading the recognition model.\nThis only happens the first time, or after it has been unloaded.")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+          .multilineTextAlignment(.center)
+          .transition(.opacity)
+        }
+      }
+      .animation(.easeOut(duration: 0.2), value: store.isTakingLong)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
   }
 

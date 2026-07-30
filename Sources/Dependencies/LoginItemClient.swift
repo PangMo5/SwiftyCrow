@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import DependenciesMacros
-import OSLog
 import ServiceManagement
 
 // MARK: - LoginItemClient
@@ -29,7 +28,7 @@ extension LoginItemClient: DependencyKey {
           break
         }
       } catch {
-        logger.error("login item \(enabled ? "register" : "unregister") failed: \(error.localizedDescription, privacy: .public)")
+        Log.loginItem.error("login item \(enabled ? "register" : "unregister") failed: \(error.localizedDescription, privacy: .public)")
       }
     },
     isEnabled: { SMAppService.mainApp.status == .enabled }
@@ -42,5 +41,3 @@ extension DependencyValues {
     set { self[LoginItemClient.self] = newValue }
   }
 }
-
-private let logger = Logger(subsystem: "dev.PangMo5.SwiftyCrow", category: "LoginItem")

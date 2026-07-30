@@ -73,11 +73,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_: Notification) {
     // Start Sparkle's background check schedule by reading the dependency.
     _ = updater
+
+    // Vision's document-recognition model is cold at launch and goes cold again
+    // across sleep, and loading it costs ~40s of this process's own time (see
+    // VisionWarmUp). Pay it here, where nobody is waiting, rather than on the
+    // first capture — at utility priority, since the app is usually launched at
+    // login and the user may not capture anything for hours.
+    warmUpTask = Task(priority: .utility) { [ocr] in await ocr.warmUp() }
+    wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+      forName: NSWorkspace.didWakeNotification,
+      object: nil,
+      queue: .main
+    ) { [ocr] _ in
+      Task { await ocr.warmUp() }
+    }
   }
 
   func applicationWillTerminate(_: Notification) {
     lifetimeTask?.cancel()
     overlayObservation = nil
+    renderStates?.finish()
+    renderTask?.cancel()
+    warmUpTask?.cancel()
+    if let wakeObserver {
+      NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+    }
   }
 
   /// Receives the App-owned store once and wires up app-lifetime work.
@@ -92,20 +112,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Drive the overlay from capture/translation state + settings. `observe`
     // re-runs whenever anything the snapshot reads changes — no polling.
+    //
+    // Snapshots go through a single serial consumer. Spawning a Task per
+    // observation instead let two renders race: `syncOverlay` suspends twice, so
+    // an older snapshot could land after a newer one and stick. That latched
+    // `isTranslating` on with `lines` empty — a spinner that never stops and no
+    // translation, until the next state change happened to re-render. Snapshots
+    // are whole states, not deltas, so dropping superseded ones is correct.
+    let (states, continuation) = AsyncStream<OverlayRenderState>.makeStream(
+      bufferingPolicy: .bufferingNewest(1)
+    )
+    renderStates = continuation
+    renderTask = Task { @MainActor [weak self] in
+      for await state in states {
+        await self?.syncOverlay(state)
+      }
+    }
     overlayObservation = observe { [weak self] in
       guard let self, let state = overlaySnapshot() else { return }
-      Task { @MainActor [weak self] in await self?.syncOverlay(state) }
+      renderStates?.yield(state)
     }
   }
 
   // MARK: Private
 
+  @Dependency(\.ocr) private var ocr
   @Dependency(\.overlay) private var overlay
   @Dependency(\.updater) private var updater
 
   private var store: StoreOf<AppFeature>?
   private var lifetimeTask: Task<Void, Never>?
   private var overlayObservation: ObserveToken?
+  private var renderStates: AsyncStream<OverlayRenderState>.Continuation?
+  private var renderTask: Task<Void, Never>?
+  private var warmUpTask: Task<Void, Never>?
+  private var wakeObserver: (any NSObjectProtocol)?
 
   private func overlaySnapshot() -> OverlayRenderState? {
     guard let store else { return nil }
@@ -124,7 +165,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       backgroundImageData: store.capture.backgroundImageData,
       imageSize: store.capture.imageSize,
       placementID: store.capture.overlayPlacementID,
-      translationUnavailable: store.capture.translationUnavailable
+      translationUnavailable: store.capture.translationUnavailable,
+      isPreparingRecognition: store.capture.isPreparingRecognition
     )
   }
 

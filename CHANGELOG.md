@@ -4,6 +4,19 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## Unreleased
+
+### Fixed
+
+- **Live and Capture no longer spin without translating:** Using either one after the app had sat idle could leave a spinner running forever, with no translation, until you closed it and tried again. macOS unloads its text-recognition model when it needs the memory, and reloading it takes tens of seconds — that wait was landing on the capture you had just asked for. SwiftyCrow now loads the model in the background at launch, on wake, and while you drag out a region, so the wait is usually gone before you finish selecting. When it can't be avoided, the capture window and the overlay say **Preparing text recognition** instead of showing a bare spinner.
+- **Closing the live overlay now really stops it:** Hiding the overlay only moved its windows offscreen, so their contents kept animating and burning CPU for as long as the app stayed open, and stale results could leak into the next capture. Both windows are released now.
+- **The overlay spinner no longer sticks on:** Overlay updates could be applied out of order, which left the spinner running with no lines shown until something else happened to refresh it.
+- **Window mode's translation window no longer spins forever:** Its blurred backdrop was restarted on every live capture, so over a large region — where the blur takes longer than the capture interval — it never finished and the window stayed empty.
+
+### Changed
+
+- **A stalled capture reports itself instead of hanging:** Screen capture, text recognition, and translation each have a time budget now, and a stage that stops responding says which one it was. A live capture that stalls fails just that pass and the overlay carries on, rather than stopping for good.
+
 ## 2.8.0 (2026-07-15)
 
 ### What's New

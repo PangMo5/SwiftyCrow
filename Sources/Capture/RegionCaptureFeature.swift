@@ -13,6 +13,8 @@ import SwiftUI
 @Reducer
 struct RegionCaptureFeature {
 
+  // MARK: Internal
+
   @ObservableState
   struct State: Equatable {
     var target: CaptureTarget
@@ -23,6 +25,10 @@ struct RegionCaptureFeature {
     /// glass translation chips are drawn over, so the original text is hidden.
     var backgroundImageData: Data?
     var isTranslating = false
+    /// The capture is taking long enough that it needs explaining — practically
+    /// always Vision loading a cold document model, which takes tens of seconds.
+    /// Without this the window is an unlabelled spinner and reads as a hang.
+    var isTakingLong = false
     var lastError: String?
     /// True when a translation failed — almost always because the language's
     /// on-device model isn't installed. Drives the "open Settings" hint.
@@ -37,6 +43,7 @@ struct RegionCaptureFeature {
 
   enum Action {
     case task
+    case captureIsTakingLong
     case captured(Result<CapturedRegion, any Error>)
     case translated(id: UUID, text: String)
     case translationUnavailable
@@ -45,6 +52,7 @@ struct RegionCaptureFeature {
     case copyTranslationRequested
   }
 
+  @Dependency(\.continuousClock) var clock
   @Dependency(\.languageDetection) var languageDetection
   @Dependency(\.ocr) var ocr
   @Dependency(\.pasteboard) var pasteboard
@@ -57,32 +65,22 @@ struct RegionCaptureFeature {
       switch action {
       case .task:
         let target = state.target
-        return .run { [settings = state.$settings] send in
-          await send(.captured(Result {
-            let snapshot = settings.wrappedValue
-            let image: CGImage =
-              switch target {
-              case .region(let region):
-                try await screenCapture.captureImage(
-                  region,
-                  [],
-                  displayID(coveringMostOf: region),
-                  Bundle.main.bundleIdentifier
-                )
+        return .merge(
+          .run { [clock] send in
+            try await clock.sleep(for: .seconds(2))
+            await send(.captureIsTakingLong)
+          },
+          captureEffect(target: target, settings: state.$settings)
+        )
 
-              case .window(let id, _):
-                try await screenCapture.captureWindow(id)
-              }
-            let result = try await ocr.recognizeText(image, snapshot.languages.source)
-            return CapturedRegion(
-              pngData: image.pngData,
-              size: CGSize(width: image.width, height: image.height),
-              lines: result.lines
-            )
-          }))
-        }
+      case .captureIsTakingLong:
+        // The capture may already have landed; the hint would be stale then.
+        guard state.imageData == nil, state.lastError == nil else { return .none }
+        state.isTakingLong = true
+        return .none
 
       case .captured(.success(let captured)):
+        state.isTakingLong = false
         state.imageData = captured.pngData
         state.imageSize = captured.size
         let configured = state.settings.languages.source
@@ -158,6 +156,7 @@ struct RegionCaptureFeature {
         return .merge(background, translate)
 
       case .captured(.failure(let error)):
+        state.isTakingLong = false
         state.lastError = error.localizedDescription
         return .none
 
@@ -188,6 +187,51 @@ struct RegionCaptureFeature {
         state.finished = true
         return .run { _ in await pasteboard.copyString(text) }
       }
+    }
+  }
+
+  // MARK: Private
+
+  private func captureEffect(target: CaptureTarget, settings: Shared<AppSettings>) -> Effect<Action> {
+    .run { [clock, ocr, screenCapture] send in
+      let captured = await Result {
+        let snapshot = settings.wrappedValue
+        // Both stages are bounded so a daemon that stops answering surfaces as an
+        // error instead of an endlessly spinning window, and the message names
+        // which stage it was.
+        let image = try await withDeadline(
+          CaptureDeadline.screenCapture,
+          stage: .screenCapture,
+          clock: clock
+        ) {
+          let image: CGImage =
+            switch target {
+            case .region(let region):
+              try await screenCapture.captureImage(
+                region,
+                [],
+                displayID(coveringMostOf: region),
+                Bundle.main.bundleIdentifier
+              )
+
+            case .window(let id, _):
+              try await screenCapture.captureWindow(id)
+            }
+          return image
+        }
+        let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) {
+          try await ocr.recognizeText(image, snapshot.languages.source)
+        }
+        return CapturedRegion(
+          pngData: image.pngData,
+          size: CGSize(width: image.width, height: image.height),
+          lines: result.lines
+        )
+      }
+      if case .failure(let error) = captured {
+        Log.capture.error("Region capture failed: \(error.localizedDescription, privacy: .public)")
+      }
+      await send(.captured(captured))
     }
   }
 }

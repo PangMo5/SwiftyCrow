@@ -23,6 +23,9 @@ struct OverlayRenderState: Equatable, Sendable {
   /// Translation failed (usually a missing on-device model) — shows the
   /// "open Settings" hint on the overlay.
   var translationUnavailable: Bool
+  /// Vision is still loading its document model, which takes tens of seconds
+  /// when cold — shows a "preparing" note so the empty overlay isn't a mystery.
+  var isPreparingRecognition: Bool
 }
 
 // MARK: - OverlayUserAction

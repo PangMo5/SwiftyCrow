@@ -38,6 +38,10 @@ struct CaptureFeature {
     var isCapturing = false
     var isLive = false
     var isTranslating = false
+    /// The first capture of this live session is taking long enough to need
+    /// explaining — practically always Vision loading a cold document model.
+    /// Without it the overlay is a bare frame with a spinner and reads as broken.
+    var isPreparingRecognition = false
     var lastError: String?
     /// True when a translation failed — almost always a missing on-device model.
     /// Drives the "open Settings" hint in the menu bar.
@@ -46,6 +50,9 @@ struct CaptureFeature {
     /// Window-mode backdrop: the screenshot with each box blurred. Nil in
     /// In-place mode (the chips draw directly on the overlay).
     var backgroundImageData: Data?
+    /// A backdrop blur is in flight. Live ticks skip queueing another while it
+    /// is set, so a blur slower than the capture interval still finishes.
+    var isBlurringBackground = false
     var imageSize = CGSize.zero
     /// Whether a live overlay is currently placed on screen. There's no overlay
     /// until the user selects a region/window; `dismissOverlay` clears it.
@@ -61,6 +68,7 @@ struct CaptureFeature {
 
   enum Action {
     case backgroundReady(Data?)
+    case captureIsTakingLong
     case captureResponse(Result<LiveCapture, any Error>)
     case copyTranslationRequested
     case dismissOverlay
@@ -95,6 +103,8 @@ struct CaptureFeature {
         state.isTranslating = false
         state.overlayLines = []
         state.backgroundImageData = nil
+        state.isBlurringBackground = false
+        state.isPreparingRecognition = false
         state.lastError = nil
         state.translationUnavailable = false
         return .merge(
@@ -104,18 +114,24 @@ struct CaptureFeature {
         )
 
       case .selectRegionRequested:
-        return .run { _ in
-          guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
-          await regionResult.present(target)
-        }
+        return .merge(
+          warmUpVision(),
+          .run { _ in
+            guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
+            await regionResult.present(target)
+          }
+        )
 
       case .liveSelectRequested:
         // Same drag-to-select (Space toggles to window mode) as a region
         // capture, but the result snaps a live overlay onto the selection.
-        return .run { send in
-          guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
-          await send(.overlayPlaced(target.frame))
-        }
+        return .merge(
+          warmUpVision(),
+          .run { send in
+            guard let target = await regionSelector.selectRegion(initialMode: .region) else { return }
+            await send(.overlayPlaced(target.frame))
+          }
+        )
 
       case .overlayPlaced(let frame):
         state.$overlayFrame.withLock { $0 = OverlayFrame(rect: frame) }
@@ -123,8 +139,16 @@ struct CaptureFeature {
         state.overlayPlacementID += 1
         return .send(.setLive(true))
 
+      case .captureIsTakingLong:
+        // Only while this live session's very first capture is still outstanding;
+        // isCapturing is cleared by the first response either way.
+        guard state.isLive, state.isCapturing else { return .none }
+        state.isPreparingRecognition = true
+        return .none
+
       case .captureResponse(.failure(let error)):
         state.isCapturing = false
+        state.isPreparingRecognition = false
         state.lastError = error.localizedDescription
         if let screenError = error as? ScreenCaptureError, screenError == .permissionRequired {
           state.isLive = false
@@ -133,11 +157,13 @@ struct CaptureFeature {
         return .none
 
       case .backgroundReady(let data):
+        state.isBlurringBackground = false
         state.backgroundImageData = data
         return .none
 
       case .captureResponse(.success(let capture)):
         state.isCapturing = false
+        state.isPreparingRecognition = false
         state.lastError = nil
         state.imageSize = capture.imageSize
         return applyOCRResult(capture, into: &state)
@@ -168,10 +194,18 @@ struct CaptureFeature {
         // showing the previous capture across the transition.
         state.overlayLines = []
         state.isTranslating = false
+        state.isPreparingRecognition = false
         state.translationUnavailable = false
         if isLive {
           return .merge(
             .cancel(id: CancelID.translation),
+            warmUpVision(),
+            .run { [clock] send in
+              // If the first capture hasn't landed by now, say why instead of
+              // leaving an empty frame with a spinner on it.
+              try await clock.sleep(for: .seconds(2))
+              await send(.captureIsTakingLong)
+            },
             .run { [
               settings = state.$settings,
               overlayFrame = state.$overlayFrame,
@@ -180,17 +214,21 @@ struct CaptureFeature {
               while !Task.isCancelled {
                 let snapshot = settings.wrappedValue
                 let frame = overlayFrame.wrappedValue
-                await send(
-                  .captureResponse(
-                    Result {
-                      try await runCapture(
-                        settings: snapshot,
-                        overlayFrame: frame,
-                        excludedWindowIDs: excludedWindowIDs
-                      )
-                    }
+                // Every stage inside runCapture is deadline-bounded, so a tick
+                // that stalls fails and the loop moves on to the next one. An
+                // unbounded tick used to park this loop for good: no retry, no
+                // error, and isCapturing left true — the overlay just spun.
+                let result = await Result {
+                  try await runCapture(
+                    settings: snapshot,
+                    overlayFrame: frame,
+                    excludedWindowIDs: excludedWindowIDs
                   )
-                )
+                }
+                if case .failure(let error) = result {
+                  Log.capture.error("Live tick failed: \(error.localizedDescription, privacy: .public)")
+                }
+                await send(.captureResponse(result))
                 try await clock.sleep(for: .seconds(snapshot.capture.interval))
               }
             }
@@ -239,6 +277,14 @@ struct CaptureFeature {
 
   // MARK: Private
 
+  /// Starts loading Vision's document model alongside whatever the user is about
+  /// to do. Picking a region takes a second or two, and a cold model costs far
+  /// more than that (see `VisionWarmUp`), so overlapping the two shortens — and
+  /// usually removes — the wait that follows. Cheap when it's already warm.
+  private func warmUpVision() -> Effect<Action> {
+    .run { [ocr] _ in await ocr.warmUp() }
+  }
+
   private func applyOCRResult(_ capture: LiveCapture, into state: inout State) -> Effect<Action> {
     let result = capture.result
     let windowMode = state.settings.overlay.liveMode == .window
@@ -247,6 +293,7 @@ struct CaptureFeature {
       state.overlayLines = []
       state.isTranslating = false
       state.backgroundImageData = nil
+      state.isBlurringBackground = false
       return .merge(.cancel(id: CancelID.translation), .cancel(id: CancelID.background))
     }
 
@@ -319,16 +366,27 @@ struct CaptureFeature {
     // In-place mode draws chips directly on the overlay, so no backdrop.
     let background: Effect<Action>
     if windowMode, let data = capture.imageData {
-      let lines = newLines
-      let size = capture.imageSize
-      background = .run { send in
-        // Pure Core Graphics / Core Image — runs off the main actor.
-        let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
-        await send(.backgroundReady(bg))
+      if state.isBlurringBackground {
+        // Leave the running blur alone. Restarting it on every tick (what
+        // cancelInFlight did) meant a blur slower than the capture interval
+        // never finished at all — and the detached window shows a spinner until
+        // the first backdrop lands, so it spun forever. Skipping instead makes
+        // the backdrop trail the capture by at most one blur.
+        background = .none
+      } else {
+        state.isBlurringBackground = true
+        let lines = newLines
+        let size = capture.imageSize
+        background = .run { send in
+          // Pure Core Graphics / Core Image — runs off the main actor.
+          let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
+          await send(.backgroundReady(bg))
+        }
+        .cancellable(id: CancelID.background)
       }
-      .cancellable(id: CancelID.background, cancelInFlight: true)
     } else {
       state.backgroundImageData = nil
+      state.isBlurringBackground = false
       background = .cancel(id: CancelID.background)
     }
 
@@ -369,13 +427,25 @@ struct CaptureFeature {
   ) async throws -> LiveCapture {
     // The live overlay is always placed over a region while running, so capture
     // that region (excluding our own windows via the bundle id below).
-    let image = try await screenCapture.captureImage(
-      overlayFrame.rect,
-      excludedWindowIDs,
-      displayID(coveringMostOf: overlayFrame.rect),
-      Bundle.main.bundleIdentifier
-    )
-    let result = try await ocr.recognizeText(image, settings.languages.source)
+    //
+    // Both stages are bounded separately so the log names whichever one stalled:
+    // ScreenCaptureKit and Vision each talk to a daemon that is cold on the first
+    // use after an idle period and can stop answering entirely.
+    let image = try await withDeadline(
+      CaptureDeadline.screenCapture,
+      stage: .screenCapture,
+      clock: clock
+    ) { [screenCapture] in
+      try await screenCapture.captureImage(
+        overlayFrame.rect,
+        excludedWindowIDs,
+        displayID(coveringMostOf: overlayFrame.rect),
+        Bundle.main.bundleIdentifier
+      )
+    }
+    let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) { [ocr] in
+      try await ocr.recognizeText(image, settings.languages.source)
+    }
     // Only carry the screenshot when Window mode needs it for the backdrop.
     let needsImage = settings.overlay.liveMode == .window
     return LiveCapture(

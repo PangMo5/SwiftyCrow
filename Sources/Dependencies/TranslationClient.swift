@@ -35,16 +35,17 @@ extension TranslationClient: DependencyKey {
   static let liveValue = TranslationClient(
     translateBatch: { lines, source, target, strategy in
       AsyncThrowingStream { continuation in
-        let task = Task {
-          let session =
-            if #available(macOS 26.4, *) {
-              TranslationSession(installedSource: source, target: target, preferredStrategy: strategy.sessionStrategy)
-            } else {
-              TranslationSession(installedSource: source, target: target)
-            }
-          let requests = lines.map {
-            TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id.uuidString)
+        let pair = "\(source.maximalIdentifier)->\(target.maximalIdentifier)"
+        let session =
+          if #available(macOS 26.4, *) {
+            TranslationSession(installedSource: source, target: target, preferredStrategy: strategy.sessionStrategy)
+          } else {
+            TranslationSession(installedSource: source, target: target)
           }
+        let requests = lines.map {
+          TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id.uuidString)
+        }
+        let task = Task {
           do {
             for try await response in session.translate(batch: requests) {
               guard let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)) else { continue }
@@ -55,7 +56,25 @@ extension TranslationClient: DependencyKey {
             continuation.finish(throwing: error)
           }
         }
-        continuation.onTermination = { _ in task.cancel() }
+        // The translation service is launched on demand, and on the first use
+        // after an idle period it can accept a batch and never answer. Nothing
+        // else bounds this stream, so without a watchdog the caller's spinner
+        // runs forever.
+        let watchdog = Task {
+          try? await ContinuousClock().sleep(for: CaptureDeadline.translationBatch)
+          Log.translation.error("Batch of \(lines.count, privacy: .public) lines (\(pair, privacy: .public)) stalled")
+          continuation.finish(throwing: DeadlineExceededError(stage: .translation))
+        }
+        continuation.onTermination = { _ in
+          watchdog.cancel()
+          // `task.cancel()` alone doesn't stop work already handed to the
+          // translation daemon — `cancel()` is the documented way to stop a
+          // session's ongoing work. Without it, every live tick whose batch
+          // outruns the capture interval abandons a session that keeps working
+          // daemon-side, and they accumulate for the life of the process.
+          session.cancel()
+          task.cancel()
+        }
       }
     }
   )

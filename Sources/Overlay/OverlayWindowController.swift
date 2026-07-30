@@ -20,14 +20,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   func update(_ state: OverlayRenderState) {
-    model.lines = state.lines
-    model.hideOnHover = state.hideOnHover
-    model.isTranslating = state.isTranslating
-    model.isLive = state.isLive
-    model.liveMode = state.liveMode
-    model.backgroundImageData = state.backgroundImageData
-    model.imageSize = state.imageSize
-    model.translationUnavailable = state.translationUnavailable
+    // Renders arrive whenever any observed state changes, and plenty of those
+    // changes don't affect the overlay. Skip the identical ones outright.
+    guard state != lastState else { return }
+    lastState = state
+    assign(state)
 
     if state.isVisible {
       let isNewWindow = window == nil
@@ -44,7 +41,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       applyPassThrough()
     } else {
       stopResizeEdgeTracking()
-      window?.orderOut(nil)
+      teardownWindows()
     }
     lastPlacementID = state.placementID
 
@@ -103,7 +100,45 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var window: OverlayPanel?
   private var resultWindow: NSPanel?
   private var lastPlacementID = 0
+  private var lastState: OverlayRenderState?
   private var eventHandler: (@Sendable (OverlayUserAction) -> Void)?
+
+  /// Writes only what changed. `@Observable` notifies on every assignment, equal
+  /// value or not, so blindly re-assigning `lines` or the backdrop `Data` on each
+  /// render invalidated the whole overlay view tree at the live capture rate.
+  private func assign(_ state: OverlayRenderState) {
+    if model.lines != state.lines { model.lines = state.lines }
+    if model.hideOnHover != state.hideOnHover { model.hideOnHover = state.hideOnHover }
+    if model.isTranslating != state.isTranslating { model.isTranslating = state.isTranslating }
+    if model.isLive != state.isLive { model.isLive = state.isLive }
+    if model.liveMode != state.liveMode { model.liveMode = state.liveMode }
+    if model.backgroundImageData != state.backgroundImageData {
+      model.backgroundImageData = state.backgroundImageData
+    }
+    if model.imageSize != state.imageSize { model.imageSize = state.imageSize }
+    if model.translationUnavailable != state.translationUnavailable {
+      model.translationUnavailable = state.translationUnavailable
+    }
+    if model.isPreparingRecognition != state.isPreparingRecognition {
+      model.isPreparingRecognition = state.isPreparingRecognition
+    }
+  }
+
+  /// Releases both overlay windows rather than just hiding them.
+  ///
+  /// `orderOut` leaves the hosting views mounted, and SwiftUI keeps animating
+  /// them: a `ProgressView` or the pulsing LIVE dot goes on running at display
+  /// rate inside an invisible window for the rest of the process's life, and the
+  /// model carries stale state into the next use. Both windows are cheap to
+  /// rebuild on the next show, which also re-snaps them to the stored frame.
+  private func teardownWindows() {
+    if window != nil { flushFrameSave() }
+    window?.delegate = nil
+    window?.orderOut(nil)
+    window = nil
+    resultWindow?.orderOut(nil)
+    resultWindow = nil
+  }
 
   /// `windowDidMove` has no will-start / did-end pair, so debounce a reset
   /// instead. 150 ms is short enough to feel responsive once the drag ends
@@ -346,6 +381,7 @@ final class OverlayWindowModel {
   var backgroundImageData: Data?
   var imageSize = CGSize.zero
   var translationUnavailable = false
+  var isPreparingRecognition = false
 
   /// In Window mode while live, the overlay is just a thin region frame and the
   /// translation lives in a detached window.
@@ -372,6 +408,7 @@ private struct OverlayRootView: View {
       isTranslating: model.isTranslating,
       isLive: model.isLive,
       translationUnavailable: model.translationUnavailable,
+      isPreparingRecognition: model.isPreparingRecognition,
       frameOnly: model.isWindowFrame,
       showMoveHandle: model.cursorInside,
       onToggleLive: onToggleLive,

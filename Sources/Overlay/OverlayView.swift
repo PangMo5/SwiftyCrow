@@ -12,6 +12,8 @@ struct OverlayView: View {
   /// Translation failed (usually a missing model) — shows the "open Settings"
   /// hint banner along the bottom.
   var translationUnavailable = false
+  /// Vision is still loading its document model (tens of seconds when cold).
+  var isPreparingRecognition = false
   /// Window live mode: the overlay is a thin region frame; the translation
   /// shows in a detached window.
   var frameOnly = false
@@ -69,10 +71,18 @@ struct OverlayView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .padding(8)
             .transition(.opacity)
+        } else if isPreparingRecognition {
+          // Shown in Window mode too: there the overlay is just a frame, which
+          // makes an unexplained wait even harder to read.
+          PreparingRecognitionNote()
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(8)
+            .transition(.opacity)
         }
       }
       .animation(.easeOut(duration: 0.15), value: frameOnly)
       .animation(.easeOut(duration: 0.15), value: translationUnavailable)
+      .animation(.easeOut(duration: 0.15), value: isPreparingRecognition)
   }
 
   // MARK: Private
