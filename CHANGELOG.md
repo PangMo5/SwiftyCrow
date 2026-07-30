@@ -4,7 +4,7 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
-## Unreleased
+## 2.9.0 (2026-07-30)
 
 ### Fixed
 
