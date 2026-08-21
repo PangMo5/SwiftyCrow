@@ -1,9 +1,14 @@
+<!--
+SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
+SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
+-->
+
 # SwiftyCrow <img src="Resources/Marketing/app-icon.png" align="right" height="128" />
 
 [![Latest release](https://img.shields.io/github/v/release/PangMo5/SwiftyCrow?sort=semver)](https://github.com/PangMo5/SwiftyCrow/releases/latest)
 [![Download](https://img.shields.io/github/downloads/PangMo5/SwiftyCrow/total)](https://github.com/PangMo5/SwiftyCrow/releases)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue)
-[![License: MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen)](LICENSE)
+[![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](LICENSE)
 
 On-screen translator for macOS, fully on-device. Captures any region of the screen with [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), recognizes text with [Vision](https://developer.apple.com/documentation/vision), and translates with the [Apple Translation](https://developer.apple.com/documentation/translation) framework. No cloud APIs, no keys, no quotas.
 
@@ -33,7 +38,7 @@ Requires **macOS 26+**.
 brew install --cask PangMo5/tap/swiftycrow
 ```
 
-**Direct download**: grab the latest `.dmg` from the [Releases page](https://github.com/PangMo5/SwiftyCrow/releases/latest), open it, and drag the app to Applications.
+**Direct download**: grab the latest `.dmg` from the [Releases page](https://github.com/PangMo5/SwiftyCrow/releases/latest), open it, and drag the app to Applications. Each release also links its exact corresponding source archive.
 
 On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. The app keeps itself up to date afterward.
 
@@ -117,6 +122,10 @@ app can verify update signatures. For local debug builds it can be empty.
 
 ## License
 
-[Mozilla Public License 2.0](LICENSE). Originally MIT (2021), then relicensed to MPL-2.0 in 2026.
+[GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). Copyright (C) 2021-2026 PangMo5.
 
-MPL-2.0 is file-level copyleft: modifications to existing source files must remain under MPL-2.0, but you can add new files under any compatible license. App Store distribution is supported.
+If you distribute a modified version, you must make its corresponding source available under the same license. Section 13 also requires modified versions used over a network to offer their corresponding source to remote users.
+
+This README and `docs/LANGUAGE_MODELS.md` contain earlier documentation contributions made under MPL-2.0 and remain available under either [MPL-2.0](https://www.mozilla.org/MPL/2.0/) or AGPL-3.0-only, as indicated in those files. The project was originally MIT-licensed in 2021 and moved to MPL-2.0, then AGPL-3.0-only, in 2026.
+
+Licenses and exact source revisions for incorporated packages are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Both that file and this license are included in the distributed app bundle.

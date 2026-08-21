@@ -262,6 +262,8 @@ jobs:
             echo "- Homebrew: \`brew upgrade --cask swiftycrow\`"
             echo "- Direct: [SwiftyCrow-${VERSION}.dmg](https://github.com/${REPO}/releases/download/${TAG}/SwiftyCrow-${VERSION}.dmg)"
             echo "- In-app: Sparkle will pick this up on its next check."
+            echo "- Corresponding source: [SwiftyCrow-${VERSION}.tar.gz](https://github.com/${REPO}/archive/refs/tags/${TAG}.tar.gz)"
+            echo "- Third-party sources and licenses: [THIRD_PARTY_NOTICES.md](https://github.com/${REPO}/blob/${TAG}/THIRD_PARTY_NOTICES.md)"
           } >> "$NOTES"
 
       - name: Publish GitHub Release

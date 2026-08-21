@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Dmitry Karasev and contributors
+SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
+-->
+
 # Installing and Managing Translation Language Models
 
 SwiftyCrow translates text using Apple's on-device translation framework, which requires translation models to be installed on your Mac. This guide walks you through installing, checking, and managing language models.

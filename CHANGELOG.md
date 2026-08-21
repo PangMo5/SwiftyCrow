@@ -4,6 +4,17 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.9.1 (2026-08-22)
+
+### Changed
+
+- **SwiftyCrow is now licensed under AGPL-3.0-only:** This release moves the current project code from MPL-2.0 to the GNU Affero General Public License v3. Earlier README and language-model guide contributions remain dual-licensed as marked, and distributions now include exact third-party licenses and source revisions.
+
+### Improvements
+
+- **Legal documents are available in Settings:** About now links to the project source and presents the copyright and warranty notice, AGPL text, and third-party notices inside the app.
+- **Every release exposes its corresponding source:** GitHub release notes and the website now link to the tagged source archive and the third-party notice used for that build.
+
 ## 2.9.0 (2026-07-30)
 
 ### Fixed

@@ -371,7 +371,28 @@ private struct AboutSection: View {
       LabeledContent("Created by") {
         Link("PangMo5", destination: URL(string: "https://github.com/PangMo5")!)
       }
-      Link("GitHub", destination: URL(string: "https://github.com/PangMo5/SwiftyCrow")!)
+      Link("Source Code", destination: URL(string: "https://github.com/PangMo5/SwiftyCrow")!)
+    }
+
+    Section("Legal") {
+      LabeledContent("Copyright", value: "© 2021–2026 PangMo5 and contributors")
+      Text(
+        "This program comes with no warranty. You may redistribute it under the GNU AGPL v3. Select License for details."
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
+
+      ForEach(LegalDocument.allCases) { document in
+        Button {
+          presentedDocument = document
+        } label: {
+          Text(document.title)
+        }
+        .buttonStyle(.link)
+      }
+    }
+    .sheet(item: $presentedDocument) { document in
+      LegalDocumentView(document: document)
     }
 
     Section("Built with") {
@@ -400,8 +421,113 @@ private struct AboutSection: View {
     return "\(short) (\(build))"
   }()
 
+  @State private var presentedDocument: LegalDocument?
+
   private func creditLink(_ title: String, _ urlString: String) -> some View {
     Link(title, destination: URL(string: urlString)!)
   }
+
+}
+
+// MARK: - LegalDocument
+
+/// A legal document shipped in the app bundle and presented without relying on
+/// Launch Services or an external text editor.
+private enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
+  case license
+  case thirdPartyNotices
+
+  // MARK: Internal
+
+  var id: Self {
+    self
+  }
+
+  var title: LocalizedStringResource {
+    switch self {
+    case .license: "License (AGPL-3.0-only)"
+    case .thirdPartyNotices: "Third-Party Notices"
+    }
+  }
+
+  func loadContents() async throws -> String {
+    let resource = resource
+    guard
+      let url = Bundle.main.url(
+        forResource: resource.name,
+        withExtension: resource.extension
+      )
+    else {
+      throw CocoaError(.fileNoSuchFile)
+    }
+
+    return try await Task.detached(priority: .userInitiated) {
+      try String(contentsOf: url, encoding: .utf8)
+    }.value
+  }
+
+  // MARK: Private
+
+  private var resource: (name: String, extension: String?) {
+    switch self {
+    case .license: ("LICENSE", nil)
+    case .thirdPartyNotices: ("THIRD_PARTY_NOTICES", "md")
+    }
+  }
+}
+
+// MARK: - LegalDocumentView
+
+private struct LegalDocumentView: View {
+
+  // MARK: Internal
+
+  let document: LegalDocument
+
+  var body: some View {
+    NavigationStack {
+      Group {
+        if let contents {
+          ScrollView {
+            Text(contents)
+              .font(.system(.body, design: .monospaced))
+              .textSelection(.enabled)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding()
+          }
+        } else if let loadErrorMessage {
+          ContentUnavailableView(
+            "Unable to Open Document",
+            systemImage: "doc.badge.exclamationmark",
+            description: Text(loadErrorMessage)
+          )
+        } else {
+          ProgressView("Loading document…")
+        }
+      }
+      .navigationTitle(Text(document.title))
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
+            dismiss()
+          }
+        }
+      }
+    }
+    .frame(minWidth: 680, minHeight: 520)
+    .task(id: document.id) {
+      do {
+        contents = try await document.loadContents()
+      } catch {
+        loadErrorMessage = error.localizedDescription
+      }
+    }
+  }
+
+  // MARK: Private
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var contents: String?
+  @State private var loadErrorMessage: String?
 
 }

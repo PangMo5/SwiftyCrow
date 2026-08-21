@@ -40,7 +40,7 @@
     <p class="sub">Translate anything on your screen.<br />Entirely on your Mac.</p>
     <div class="cta">
       <a class="btn btn-primary download-link" href="https://github.com/PangMo5/SwiftyCrow/releases/download/v__VERSION__/SwiftyCrow-__VERSION__.dmg">Download for macOS</a>
-      <a class="btn btn-link" href="https://github.com/PangMo5/SwiftyCrow">View on GitHub&nbsp;&rsaquo;</a>
+      <a class="btn btn-link source-link" href="https://github.com/PangMo5/SwiftyCrow/archive/refs/tags/v__VERSION__.tar.gz">Source code&nbsp;&rsaquo;</a>
     </div>
     <div class="brew">
       <code id="brew-cmd">brew install --cask PangMo5/tap/swiftycrow</code>
@@ -210,6 +210,7 @@
     <div class="cta">
       <a class="btn btn-primary download-link" href="https://github.com/PangMo5/SwiftyCrow/releases/download/v__VERSION__/SwiftyCrow-__VERSION__.dmg">Download for macOS</a>
       <a class="btn btn-link" href="./releases.html">Release notes&nbsp;&rsaquo;</a>
+      <a class="btn btn-link source-link" href="https://github.com/PangMo5/SwiftyCrow/archive/refs/tags/v__VERSION__.tar.gz">Source code&nbsp;&rsaquo;</a>
     </div>
     <div class="brew">
       <code id="brew-cmd-2">brew install --cask PangMo5/tap/swiftycrow</code>
@@ -225,8 +226,9 @@
       <a href="./releases.html">Releases</a>
       <a href="./configuration.html">Configuration</a>
       <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
+      <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a>
     </div>
-    <p>SwiftyCrow is open source under the Mozilla Public License 2.0. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.</p>
+    <p>Current SwiftyCrow source is available under the GNU Affero General Public License v3.0 only. Earlier releases retain the license published with their source. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.</p>
     <p class="footer-apps">Apps by <a href="https://pangmo5.dev/">PangMo5</a>: <span class="cur" aria-current="page">SwiftyCrow</span> · <a href="https://pangmo5.dev/Tatami/">Tatami</a> · <a href="https://pangmo5.dev/Amado/">Amado</a></p>
   </div>
 </footer>
@@ -250,6 +252,10 @@
       // Only trust an https github.com asset URL before rewriting the button.
       if (dmg && /^https:\/\/github\.com\//.test(dmg.browser_download_url)) {
         document.querySelectorAll("a.download-link").forEach((a) => { a.href = dmg.browser_download_url; });
+      }
+      if (/^v?\d+\.\d+\.\d+$/.test(rel.tag_name || "")) {
+        const sourceURL = "https://github.com/PangMo5/SwiftyCrow/archive/refs/tags/" + encodeURIComponent(rel.tag_name) + ".tar.gz";
+        document.querySelectorAll("a.source-link").forEach((a) => { a.href = sourceURL; });
       }
     } catch (e) { /* keep the static fallback */ }
   })();

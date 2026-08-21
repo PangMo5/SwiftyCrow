@@ -6,7 +6,7 @@ let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
 // Single source of truth for the marketing version. The release workflow
 // verifies the pushed tag matches this before building.
-let appVersion = "2.9.0"
+let appVersion = "2.9.1"
 // Build number is injected by CI (github.run_number); 1 for local builds.
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
@@ -51,13 +51,19 @@ let project = Project(
         // distinct app from an installed release.
         "CFBundleDisplayName": "$(APP_DISPLAY_NAME)",
         "CFBundleName": "$(APP_DISPLAY_NAME)",
+        "NSHumanReadableCopyright":
+          "© 2021–2026 PangMo5. Released under AGPL-3.0-only.",
         "NSScreenCaptureDescription": "SwiftyCrow captures the region under its overlay window to read text.",
         "SUFeedURL": "https://pangmo5.dev/SwiftyCrow/appcast.xml",
         "SUEnableAutomaticChecks": true,
         "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
       ]),
       sources: ["Sources/**"],
-      resources: ["Resources/**"],
+      resources: [
+        "Resources/**",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+      ],
       dependencies: [
         .external(name: "ComposableArchitecture"),
         .external(name: "DependenciesMacros"),
