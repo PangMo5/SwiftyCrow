@@ -271,13 +271,16 @@ jobs:
           set -euo pipefail
           TAG="${{ github.ref_name }}"
           DMG="$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+          # Keep the signed feed as a release asset so independent site deploys
+          # can always restore the feed that belongs to the latest release.
+          APPCAST="$RUNNER_TEMP/release/appcast.xml"
           # Idempotent so a re-run after a partial failure (e.g. a later step
           # failing) updates the existing release instead of erroring.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$DMG" --clobber
+            gh release upload "$TAG" "$DMG" "$APPCAST" --clobber
             gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           else
-            gh release create "$TAG" "$DMG" \
+            gh release create "$TAG" "$DMG" "$APPCAST" \
               --title "$TAG" \
               --notes-file "$RUNNER_TEMP/release-notes.md"
           fi

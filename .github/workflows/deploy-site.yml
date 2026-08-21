@@ -27,14 +27,35 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.release.outputs.should-deploy }}
     steps:
       - uses: actions/checkout@v6
 
+      - name: Check latest release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          APP_VERSION="$(sed -nE 's/^let appVersion = "([^"]+)"/\1/p' Project.swift)"
+          RELEASE_VERSION="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)"
+          if [ -z "$RELEASE_VERSION" ] || [ "$APP_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Pages: app version ${APP_VERSION:-<unknown>} is ahead of latest release ${RELEASE_VERSION:-<none>}"
+            exit 0
+          fi
+          echo "should-deploy=true" >> "$GITHUB_OUTPUT"
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Assemble site
+        if: steps.release.outputs.should-deploy == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
           SITE="$RUNNER_TEMP/site"
@@ -42,13 +63,10 @@ jobs:
 
           # Latest release version for the no-JS download/version fallback in
           # index.html (the page also resolves this live via the API).
-          VERSION="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)"
-          echo "Latest version: ${VERSION:-<none>}"
+          echo "Latest version: $VERSION"
 
           cp web/*.html web/*.css "$SITE/"
-          if [ -n "$VERSION" ]; then
-            sed -i "s/__VERSION__/${VERSION}/g" "$SITE/index.html"
-          fi
+          sed -i "s/__VERSION__/${VERSION}/g" "$SITE/index.html"
           cp Resources/Marketing/app-icon.png "$SITE/icon.png"
           cp Resources/Marketing/demo.gif "$SITE/demo.gif"
 
@@ -57,20 +75,28 @@ jobs:
           BUST="${GITHUB_SHA:0:8}"
           sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$SITE"/*.html
 
-          # Preserve the Sparkle feed. GitHub Pages replaces the whole site on
-          # deploy, so re-publish the live appcast.xml. Fail rather than deploy
-          # without it (deploying without it would break in-app updates).
-          OWNER_LC="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
-          NAME="${REPO##*/}"
-          curl -fsSL "https://${OWNER_LC}.github.io/${NAME}/appcast.xml" -o "$SITE/appcast.xml"
-          echo "Bundled appcast.xml ($(wc -c < "$SITE/appcast.xml") bytes)"
+          # Preserve the Sparkle feed. The latest release asset is canonical,
+          # while the live site is only a fallback for older releases that did
+          # not publish appcast.xml. This also prevents a release-preparation
+          # commit from winning same-SHA Pages deduplication with a stale feed.
+          if gh release download --repo "$REPO" --pattern appcast.xml --dir "$SITE" 2>/dev/null; then
+            echo "Bundled appcast.xml from the latest release asset"
+          else
+            OWNER_LC="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+            NAME="${REPO##*/}"
+            curl -fsSL "https://${OWNER_LC}.github.io/${NAME}/appcast.xml" -o "$SITE/appcast.xml"
+            echo "Bundled appcast.xml from the live site (no release asset)"
+          fi
+          echo "appcast.xml: $(wc -c < "$SITE/appcast.xml") bytes"
 
       - uses: actions/upload-pages-artifact@v5
+        if: steps.release.outputs.should-deploy == 'true'
         with:
           path: ${{ runner.temp }}/site
 
   deploy:
     needs: build
+    if: needs.build.outputs.should-deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
