@@ -4,6 +4,8 @@ SwiftyCrow incorporates the open-source components listed below. Swift package e
 
 These notices apply only to the named third-party components. SwiftyCrow itself is licensed under `AGPL-3.0-only` as described in `LICENSE`.
 
+<!-- REUSE-IgnoreStart -->
+
 ## Web runtime dependencies
 
 The release-notes page loads these exact browser-side versions from jsDelivr. Their source and license texts are recorded here alongside the app's Swift packages.
@@ -1670,3 +1672,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
+
+<!-- REUSE-IgnoreEnd -->
