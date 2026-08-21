@@ -1,10 +1,11 @@
 # Based on https://github.com/airbnb/swift airbnb.swiftformat
 
 # Exclude generated / vendored sources
---exclude Carthage,Pods,.build,Derived,Tuist/.build
+--exclude Carthage,Pods,.build,Derived,DerivedData,Tuist/.build
 
 # options
 --swift-version 6.0
+--header "SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors\n// SPDX-License-Identifier: AGPL-3.0-only"
 --self remove # redundantSelf
 --import-grouping testable-bottom # sortedImports
 --trailing-commas multi-element-lists # trailingCommas
@@ -59,6 +60,7 @@
 --max-width 130 # wrap
 
 # rules
+--rules fileHeader
 --rules anyObjectProtocol
 --rules blankLinesBetweenScopes
 --rules consecutiveSpaces
