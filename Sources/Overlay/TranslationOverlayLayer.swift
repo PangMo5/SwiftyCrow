@@ -3,12 +3,17 @@
 
 import SwiftUI
 
+// MARK: - TranslationOverlayLayer
+
 /// Draws each translated line at its source bounding box, sized to that box's
 /// height. Shared by the live overlay (Liquid Glass chips) and the
 /// region-capture result. The result uses `glass: false` because ImageRenderer
 /// can't rasterize Liquid Glass, so a solid chip keeps the saved/copied image
 /// matching what's on screen.
 struct TranslationOverlayLayer: View {
+
+  // MARK: Internal
+
   let lines: [OverlayLine]
   var glass = true
 
@@ -18,7 +23,8 @@ struct TranslationOverlayLayer: View {
     }
   }
 
-  @ViewBuilder
+  // MARK: Private
+
   private func chips(in size: CGSize) -> some View {
     ForEach(lines) { line in
       let box = line.box
@@ -26,13 +32,19 @@ struct TranslationOverlayLayer: View {
       let height = max(1, box.height * size.height)
 
       Group {
-        if line.isVerticalBlock {
+        if line.isVerticalBlock, line.verticalLayout {
           // The chip hugs the vertical text (so the glass matches it) and is
           // pinned to the box's top-right, where vertical CJK starts reading.
           // A column's width is the source character size, so render near that
           // scale to keep the page's font hierarchy.
-          blockChip(for: line, width: width, height: height, sourceFont: line.verticalCharScale * size.width)
+          verticalBlockChip(for: line, width: width, height: height, sourceFont: line.verticalCharScale * size.width)
             .frame(width: width, height: height, alignment: .topTrailing)
+        } else if line.isVerticalBlock {
+          // Vertical CJK source but a horizontally-written target, so the
+          // translation is wrapped horizontally and centred on the source box
+          // instead of being stacked one character per row.
+          horizontalBlockChip(for: line, width: width, height: height)
+            .frame(width: width, height: height, alignment: .center)
         } else {
           let rows = max(1, line.rowCount)
           let fontSize = max(8, min(96, height / CGFloat(rows) * 0.85))
@@ -47,7 +59,6 @@ struct TranslationOverlayLayer: View {
     }
   }
 
-  @ViewBuilder
   private func lineChip(for line: OverlayLine, fontSize: CGFloat, rows: Int) -> some View {
     background(
       for: line,
@@ -64,12 +75,12 @@ struct TranslationOverlayLayer: View {
     )
   }
 
-  /// A stitched block of vertical CJK columns: lay the translation out the same
-  /// way the source reads — characters top-to-bottom, columns right-to-left —
-  /// so it sits over the original like an in-place replacement. Sized so the
-  /// text roughly fills the box.
+  /// A stitched block of vertical CJK columns rendered into a vertically-written
+  /// target: lay the translation out the same way the source reads — characters
+  /// top-to-bottom, columns right-to-left — so it sits over the original like an
+  /// in-place replacement. Sized so the text roughly fills the box.
   @ViewBuilder
-  private func blockChip(for line: OverlayLine, width: CGFloat, height: CGFloat, sourceFont: CGFloat) -> some View {
+  private func verticalBlockChip(for line: OverlayLine, width: CGFloat, height: CGFloat, sourceFont: CGFloat) -> some View {
     let text = line.translated ?? line.sourceText
     // Largest font that still fits the box, then prefer the source font scale so
     // the hierarchy is kept — capped to the fit so a long translation can't spill.
@@ -82,6 +93,32 @@ struct TranslationOverlayLayer: View {
       // glass background matches the translation instead of the full box.
       label: VerticalText(text: text, fontSize: fontSize, availableHeight: max(1, height - 12))
         .padding(6)
+    )
+  }
+
+  /// A stitched block of vertical CJK columns rendered into a horizontally-written
+  /// target. The column layout can't be reused: a Latin translation forced through
+  /// it lands one character per row, which is unreadable. Wrap it horizontally over
+  /// the source box instead.
+  @ViewBuilder
+  private func horizontalBlockChip(for line: OverlayLine, width: CGFloat, height: CGFloat) -> some View {
+    let text = line.translated ?? line.sourceText
+    // Vertical CJK boxes are tall and narrow. Horizontal text needs more width, so
+    // let the chip widen past the source box (staying centred on it) before the
+    // font has to shrink — capped by the box height so it can't swallow the page.
+    let chipWidth = max(width, min(width * 2.2, height))
+    // Largest font that still fills the chip, capped so a short line can't balloon.
+    let fit = (chipWidth * height / CGFloat(max(text.count, 1))).squareRoot() * 1.3
+    let fontSize = max(8, min(fit, 96))
+    background(
+      for: line,
+      cornerRadius: 12,
+      label: Text(text)
+        .font(.system(size: fontSize, weight: .semibold))
+        .multilineTextAlignment(.center)
+        .minimumScaleFactor(0.35)
+        .padding(6)
+        .frame(width: chipWidth, alignment: .center)
     )
   }
 
@@ -99,7 +136,7 @@ struct TranslationOverlayLayer: View {
   }
 }
 
-// MARK: - Vertical text
+// MARK: - VerticalText
 
 /// Lays out a string as vertical CJK writing: each character upright, stacked
 /// top-to-bottom, columns advancing right-to-left.
@@ -119,6 +156,8 @@ private struct VerticalText: View {
   }
 }
 
+// MARK: - VerticalColumns
+
 /// Places each subview (one character) top-to-bottom; when a column fills
 /// `availableHeight` it wraps to a new column on the left. Reports the size it
 /// actually uses so the surrounding chip hugs the text.
@@ -126,7 +165,7 @@ private struct VerticalColumns: Layout {
   var charExtent: CGFloat
   var availableHeight: CGFloat
 
-  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+  func sizeThatFits(proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
     guard !subviews.isEmpty else { return .zero }
     let columnWidth = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? charExtent
     let perColumn = max(1, Int(availableHeight / charExtent))
@@ -135,7 +174,7 @@ private struct VerticalColumns: Layout {
     return CGSize(width: CGFloat(columns) * columnWidth, height: CGFloat(rows) * charExtent)
   }
 
-  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+  func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
     guard !subviews.isEmpty else { return }
     let columnWidth = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? charExtent
     let perColumn = max(1, Int(availableHeight / charExtent))
