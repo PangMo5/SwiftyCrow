@@ -338,6 +338,7 @@ struct CaptureFeature {
         overlayLine.box = line.boundingBoxNormalized
         overlayLine.rowCount = line.rowCount
         overlayLine.isVerticalBlock = line.isVerticalBlock
+        overlayLine.verticalLayout = line.isVerticalBlock && target.usesVerticalScript
         overlayLine.verticalCharScale = line.verticalCharScale
         if let cached {
           overlayLine.translated = cached
@@ -351,6 +352,7 @@ struct CaptureFeature {
           translated: cached,
           rowCount: line.rowCount,
           isVerticalBlock: line.isVerticalBlock,
+          verticalLayout: line.isVerticalBlock && target.usesVerticalScript,
           verticalCharScale: line.verticalCharScale
         )
       }

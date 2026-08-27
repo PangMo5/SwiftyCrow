@@ -106,6 +106,7 @@ struct RegionCaptureFeature {
             translated: sameLanguage ? line.text : nil,
             rowCount: line.rowCount,
             isVerticalBlock: line.isVerticalBlock,
+            verticalLayout: line.isVerticalBlock && target.usesVerticalScript,
             verticalCharScale: line.verticalCharScale
           )
           newLines.append(overlayLine)

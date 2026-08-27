@@ -29,6 +29,21 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   }
 }
 
+extension Locale.Language {
+  /// Whether text in this language is conventionally set in vertical columns.
+  /// Vertical CJK column layout only reads correctly when the text itself is
+  /// CJK — a Latin translation stacked one character per row is unreadable.
+  var usesVerticalScript: Bool {
+    switch languageCode?.identifier {
+    case "ja",
+         "zh",
+         "ko",
+         "yue": true
+    default: false
+    }
+  }
+}
+
 extension Language {
   /// Reserved code for the auto-detect source sentinel.
   static let autoCode = "auto"
