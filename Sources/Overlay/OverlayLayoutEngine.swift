@@ -358,6 +358,7 @@ enum OverlayLayoutEngine {
       guard case .horizontal(let rows) = line.source.layout else { return .center }
       let fallback = line.source.alignment
         ?? (direction == .rightToLeft ? .trailing : .leading)
+      let neighboring = neighboringBlockAlignment(for: line, among: lines)
 
       if let surface = line.source.surface, surface.confidence >= 0.35 {
         let surfaceFrame = self.sourceFrame(
@@ -372,21 +373,83 @@ enum OverlayLayoutEngine {
           // accidentally centered inside the much larger card. Preserve
           // Vision's paragraph alignment for those non-compact surfaces.
           guard rows == 1, isCompactSurface(surfaceFrame, around: sourceFrame) else {
-            return fallback
+            return neighboring ?? fallback
           }
           if let local = geometricAlignment(of: sourceFrame, inside: surfaceFrame) {
             return local
           }
         }
       }
-      return pageAlignment(
-        of: line,
+      return neighboring ?? pageAlignment(
         sourceFrame: sourceFrame,
-        canvas: canvas,
         safeBounds: safeBounds,
-        among: lines
+        canvasWidth: canvas.width
       ) ?? fallback
     }
+  }
+
+  private static func neighboringBlockAlignment(
+    for line: OverlayLine,
+    among lines: [OverlayLine]
+  ) -> OverlayTextAlignment? {
+    let source = line.source.box.standardized
+    let sourceRowScale = horizontalRowScale(of: line.source)
+    let evidence = lines.compactMap { candidate -> OverlayTextAlignment? in
+      guard
+        candidate.id != line.id,
+        case .horizontal = candidate.source.layout
+      else { return nil }
+      let other = candidate.source.box.standardized
+      guard source.width > 0, source.height > 0, other.width > 0, other.height > 0 else {
+        return nil
+      }
+
+      let intersection = source.intersection(other)
+      let verticalOverlap = intersection.isNull ? 0 : intersection.height
+      guard verticalOverlap / min(source.height, other.height) <= 0.25 else { return nil }
+
+      let verticalGap = max(
+        0,
+        max(source.minY, other.minY) - min(source.maxY, other.maxY)
+      )
+      let rowScale = max(sourceRowScale, horizontalRowScale(of: candidate.source))
+      let maximumGap = min(0.08, max(0.02, rowScale * 2.5))
+      guard verticalGap <= maximumGap else { return nil }
+
+      let horizontalOverlap = max(0, min(source.maxX, other.maxX) - max(source.minX, other.minX))
+      guard horizontalOverlap / min(source.width, other.width) >= 0.55 else { return nil }
+
+      let tolerance = max(0.003, min(0.018, rowScale * 0.55))
+      let scores: [(alignment: OverlayTextAlignment, distance: CGFloat)] = [
+        (.leading, abs(source.minX - other.minX)),
+        (.center, abs(source.midX - other.midX)),
+        (.trailing, abs(source.maxX - other.maxX)),
+      ].sorted { $0.distance < $1.distance }
+      guard
+        let best = scores.first,
+        best.distance <= tolerance,
+        scores.count < 2 || scores[1].distance - best.distance >= max(0.003, tolerance * 0.4)
+      else { return nil }
+      return best.alignment
+    }
+
+    guard !evidence.isEmpty else { return nil }
+    let ranked = [OverlayTextAlignment.leading, .center, .trailing]
+      .map { alignment in
+        (alignment: alignment, count: evidence.count { $0 == alignment })
+      }
+      .filter { $0.count > 0 }
+      .sorted { $0.count > $1.count }
+    guard
+      let best = ranked.first,
+      ranked.count < 2 || best.count > ranked[1].count
+    else { return nil }
+    return best.alignment
+  }
+
+  private static func horizontalRowScale(of source: OverlayLine.Source) -> CGFloat {
+    guard case .horizontal(let rows) = source.layout else { return 0 }
+    return max(source.horizontalGlyphScale, source.box.height / CGFloat(max(1, rows)))
   }
 
   private static func geometricAlignment(
@@ -424,41 +487,15 @@ enum OverlayLayoutEngine {
   }
 
   private static func pageAlignment(
-    of line: OverlayLine,
     sourceFrame: CGRect,
-    canvas: CGRect,
     safeBounds: CGRect,
-    among lines: [OverlayLine]
+    canvasWidth: CGFloat
   ) -> OverlayTextAlignment? {
-    let centeredAxis = abs(sourceFrame.midX - canvas.midX) <= max(
-      sourceFrame.height,
-      canvas.width * 0.035
-    )
-    let sourceBox = line.source.box.standardized
-    let hasNearbyWideCenteredSibling = lines.contains { candidate in
-      guard
-        candidate.id != line.id,
-        candidate.source.surface == nil,
-        case .horizontal = candidate.source.layout
-      else { return false }
-      let candidateBox = candidate.source.box.standardized
-      let verticalGap = max(
-        0,
-        max(sourceBox.minY, candidateBox.minY) - min(sourceBox.maxY, candidateBox.maxY)
-      )
-      return candidateBox.width >= 0.28
-        && abs(candidateBox.midX - 0.5) <= 0.035
-        && abs(candidateBox.midX - sourceBox.midX) <= 0.035
-        && verticalGap <= max(0.06, min(sourceBox.height * 3, 0.12))
-    }
-    if
-      centeredAxis,
-      sourceFrame.width >= canvas.width * 0.28 || hasNearbyWideCenteredSibling
-    {
-      return .center
-    }
-
-    let edgeTolerance = max(4, canvas.width * 0.025)
+    // A wide OCR box centered on the page is not evidence of centered text:
+    // full-width search results and article rows have the same geometry. Center
+    // alignment must come from Vision, a detected surface, or neighboring rows
+    // that share a clear midpoint. Page geometry is reliable only at its edges.
+    let edgeTolerance = max(4, canvasWidth * 0.025)
     if sourceFrame.minX <= safeBounds.minX + edgeTolerance {
       return .leading
     }
