@@ -4,10 +4,8 @@
 import AppKit
 import ComposableArchitecture
 import CoreGraphics
-import CoreImage
 import DependenciesMacros
 import Foundation
-import ImageIO
 import Sharing
 import SwiftUI
 
@@ -24,9 +22,6 @@ struct RegionCaptureFeature {
     var imageData: Data?
     var imageSize = CGSize.zero
     var overlayLines = [OverlayLine]()
-    /// Screenshot with each recognized box blurred (no text) — the backdrop the
-    /// glass translation chips are drawn over, so the original text is hidden.
-    var backgroundImageData: Data?
     var isTranslating = false
     /// The capture is taking long enough that it needs explaining — practically
     /// always Vision loading a cold document model, which takes tens of seconds.
@@ -48,9 +43,8 @@ struct RegionCaptureFeature {
     case task
     case captureIsTakingLong
     case captured(Result<CapturedRegion, any Error>)
-    case translated(id: UUID, text: String)
-    case translationUnavailable
-    case backgroundReady(Data?)
+    case translationResponse(id: UUID, translation: TranslatedText, target: Locale.Language)
+    case translationUnavailable(lineIDs: Set<UUID>, message: String?)
     case copyOriginalRequested
     case copyTranslationRequested
   }
@@ -92,101 +86,130 @@ struct RegionCaptureFeature {
         // Auto resolves a source per line (with a whole-capture fallback for
         // short lines). Lines already in the target language show their source.
         let lineSources = languageDetection.resolveSources(for: captured.lines.map(\.text), configured: configured)
+        let sourceLines = captured.lines.indices.map {
+          OverlayLine.Source(
+            recognized: captured.lines[$0],
+            language: lineSources[$0].localeLanguage
+          )
+        }
+        let preservesSource = sourceLines.indices.map {
+          OverlayTranslationPolicy.preservesSource(at: $0, in: sourceLines)
+        }
 
         var newLines = [OverlayLine]()
         // Lines to translate, grouped by source language (one session per group).
         var groups = [String: (source: Locale.Language, items: [TranslationLine])]()
         for (index, line) in captured.lines.enumerated() {
           let source = lineSources[index].localeLanguage
-          let sameLanguage = source.languageCode == target.languageCode
+          let sameLanguage = source.usesSameWritingSystem(as: target)
+          let sourceLine = sourceLines[index]
+          let needsTranslation = !sameLanguage && !preservesSource[index]
           let overlayLine = OverlayLine(
             id: uuid(),
-            box: line.boundingBoxNormalized,
-            sourceText: line.text,
-            translated: sameLanguage ? line.text : nil,
-            rowCount: line.rowCount,
-            isVerticalBlock: line.isVerticalBlock,
-            verticalLayout: line.isVerticalBlock && target.usesVerticalScript,
-            verticalCharScale: line.verticalCharScale
+            source: sourceLine,
+            initialContent: needsTranslation ? .pending : .source
           )
           newLines.append(overlayLine)
-          if !sameLanguage {
+          if needsTranslation {
             groups[source.maximalIdentifier, default: (source, [])].items
-              .append(TranslationLine(id: overlayLine.id, text: line.text))
+              .append(TranslationLine(
+                id: overlayLine.id,
+                text: line.text,
+                attributedText: overlayLine.source.attributedTextForTranslation()
+              ))
           }
         }
         state.overlayLines = newLines
 
-        guard !state.overlayLines.isEmpty, let data = captured.pngData else { return .none }
-        let lines = state.overlayLines
-        let size = state.imageSize
-        // Build the blurred backdrop (boxes blurred, no text) once up front; the
-        // glass chips are drawn over it live as translations arrive.
-        let background = Effect<Action>.run { send in
-          // Pure Core Graphics / Core Image — runs off the main actor.
-          let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
-          await send(.backgroundReady(bg))
-        }
-        // Every line already in the target language — just build the backdrop.
-        guard !groups.isEmpty else { return background }
+        guard !state.overlayLines.isEmpty, !groups.isEmpty else { return .none }
         state.isTranslating = true
         let batches = Array(groups.values)
-        let translate = Effect<Action>.run { send in
+        return Effect<Action>.run { send in
           await withTaskGroup(of: Void.self) { group in
             for batch in batches {
               group.addTask {
-                // Any line the batch doesn't return (or an error) falls back to
-                // its source text, so every chip resolves and the spinner clears.
                 var remaining = Set(batch.items.map(\.id))
                 do {
                   for try await result in translation.translateBatch(batch.items, batch.source, target, strategy) {
                     remaining.remove(result.id)
-                    await send(.translated(id: result.id, text: result.text))
+                    await send(.translationResponse(
+                      id: result.id,
+                      translation: TranslatedText(
+                        text: result.text,
+                        attributedText: result.attributedText
+                      ),
+                      target: target
+                    ))
                   }
                 } catch is CancellationError {
                   // Window closed mid-flight — nothing to report.
+                  return
                 } catch {
                   // The model for this language likely isn't installed; show the
                   // hint pointing the user to System Settings to download it.
-                  await send(.translationUnavailable)
+                  guard !remaining.isEmpty else { return }
+                  await send(.translationUnavailable(lineIDs: remaining, message: error.localizedDescription))
+                  return
                 }
-                for item in batch.items where remaining.contains(item.id) {
-                  await send(.translated(id: item.id, text: item.text))
+                if !remaining.isEmpty {
+                  await send(.translationUnavailable(lineIDs: remaining, message: nil))
                 }
               }
             }
           }
         }
-        return .merge(background, translate)
 
       case .captured(.failure(let error)):
         state.isTakingLong = false
         state.lastError = error.localizedDescription
         return .none
 
-      case .backgroundReady(let data):
-        state.backgroundImageData = data
-        return .none
-
-      case .translated(let id, let text):
-        if let index = state.overlayLines.firstIndex(where: { $0.id == id }) {
-          state.overlayLines[index].translated = text
+      case .translationResponse(let id, let translation, let target):
+        let text = translation.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else {
+          if let index = state.overlayLines.firstIndex(where: { $0.id == id }) {
+            state.overlayLines[index].showUnavailable()
+          }
+          state.isTranslating = state.overlayLines.contains(where: \.isPending)
+          state.lastError = "Translation returned empty text."
+          return .none
         }
-        state.isTranslating = state.overlayLines.contains { $0.translated == nil }
+        if
+          let index = state.overlayLines.firstIndex(where: { $0.id == id }),
+          state.overlayLines[index].isPending
+        {
+          state.overlayLines[index].showTranslation(
+            text,
+            attributedText: text == translation.text ? translation.attributedText : nil,
+            language: target
+          )
+        }
+        state.isTranslating = state.overlayLines.contains(where: \.isPending)
         return .none
 
-      case .translationUnavailable:
-        state.translationUnavailable = true
+      case .translationUnavailable(let lineIDs, let message):
+        for index in state.overlayLines.indices where lineIDs.contains(state.overlayLines[index].id) {
+          state.overlayLines[index].showUnavailable()
+        }
+        state.isTranslating = state.overlayLines.contains(where: \.isPending)
+        state.lastError = message ?? "Translation did not return every requested line."
+        if message != nil {
+          state.translationUnavailable = true
+        }
         return .none
 
       case .copyOriginalRequested:
-        let text = state.overlayLines.map(\.sourceText).joined(separator: "\n")
+        let text = state.overlayLines.map(\.source.text).joined(separator: "\n")
         guard !text.isEmpty else { return .none }
         state.finished = true
         return .run { _ in await pasteboard.copyString(text) }
 
       case .copyTranslationRequested:
-        let text = state.overlayLines.compactMap(\.translated).joined(separator: "\n")
+        guard !state.overlayLines.contains(where: \.isPending) else { return .none }
+        let text = state.overlayLines
+          .map(\.displayedText)
+          .filter { !$0.isEmpty }
+          .joined(separator: "\n")
         guard !text.isEmpty else { return .none }
         state.finished = true
         return .run { _ in await pasteboard.copyString(text) }
@@ -213,9 +236,8 @@ struct RegionCaptureFeature {
             case .region(let region):
               try await screenCapture.captureImage(
                 region,
-                [],
                 displayID(coveringMostOf: region),
-                Bundle.main.bundleIdentifier
+                ProcessInfo.processInfo.processIdentifier
               )
 
             case .window(let id, _):
@@ -257,77 +279,6 @@ extension CGImage {
   }
 }
 
-// MARK: - Blurred backdrop
-
-/// The screenshot with each recognized box gaussian blurred (rounded), so the
-/// original text behind the translation chips is obscured. The glass chips are
-/// drawn over this on screen.
-///
-/// Built entirely with thread-safe Core Graphics / Core Image (no AppKit
-/// `lockFocus`), so it runs off the main actor and doesn't stall the UI while
-/// the gaussian blur and per-box compositing happen.
-func blurredBackground(baseData: Data, lines: [OverlayLine], pixelSize: CGSize) -> Data? {
-  guard
-    pixelSize.width > 0, pixelSize.height > 0,
-    let source = CGImageSourceCreateWithData(baseData as CFData, nil),
-    let baseCG = CGImageSourceCreateImageAtIndex(source, 0, nil)
-  else { return nil }
-
-  let width = baseCG.width
-  let height = baseCG.height
-  let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-  guard
-    let context = CGContext(
-      data: nil,
-      width: width,
-      height: height,
-      bitsPerComponent: 8,
-      bytesPerRow: 0,
-      space: colorSpace,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-    )
-  else { return nil }
-
-  let w = CGFloat(width)
-  let h = CGFloat(height)
-  context.draw(baseCG, in: CGRect(x: 0, y: 0, width: w, height: h))
-
-  // Blur the whole image once, then crop each box region out of it.
-  let ciContext = CIContext()
-  let ciBase = CIImage(cgImage: baseCG)
-  let blurred = ciBase
-    .clampedToExtent()
-    .applyingGaussianBlur(sigma: max(6, h * 0.012))
-    .cropped(to: ciBase.extent)
-  let blurredCG = ciContext.createCGImage(blurred, from: ciBase.extent)
-
-  for line in lines where !(line.translated ?? line.sourceText).isEmpty {
-    // box is top-left normalized; convert to the context's bottom-left space.
-    let rect = CGRect(
-      x: line.box.minX * w,
-      y: (1 - line.box.maxY) * h,
-      width: line.box.width * w,
-      height: line.box.height * h
-    )
-    // CGImage cropping is top-left, matching the normalized box directly.
-    let cropRect = CGRect(
-      x: line.box.minX * w,
-      y: line.box.minY * h,
-      width: line.box.width * w,
-      height: line.box.height * h
-    )
-    guard let blurredCG, let cropped = blurredCG.cropping(to: cropRect) else { continue }
-    let corner = min(6, rect.height * 0.2)
-    context.saveGState()
-    context.addPath(CGPath(roundedRect: rect, cornerWidth: corner, cornerHeight: corner, transform: nil))
-    context.clip()
-    context.draw(cropped, in: rect)
-    context.restoreGState()
-  }
-
-  return context.makeImage()?.pngData
-}
-
 // MARK: - RegionResultClient
 
 @DependencyClient
@@ -344,8 +295,7 @@ extension RegionResultClient: DependencyKey {
   static let liveValue: RegionResultClient = {
     // The controller touches AppKit, so build it lazily on the main actor.
     nonisolated(unsafe) var controller: RegionResultWindowController?
-    @MainActor
-    func resolve() -> RegionResultWindowController {
+    let resolve: @MainActor @Sendable () -> RegionResultWindowController = {
       if let controller { return controller }
       let new = RegionResultWindowController()
       controller = new
@@ -473,7 +423,11 @@ private final class RegionResultWindowController {
     let f = imageContentFrame
     let windowRect = CGRect(x: f.minX, y: contentView.bounds.height - f.maxY, width: f.width, height: f.height)
     let screenRect = panel.convertToScreen(windowRect)
-    let image = try? await screenCapture.captureImage(screenRect, [], displayID(coveringMostOf: screenRect), nil)
+    let image = try? await screenCapture.captureImage(
+      screenRect,
+      displayID(coveringMostOf: screenRect),
+      nil
+    )
     let data = image?.pngData
 
     if didResize {

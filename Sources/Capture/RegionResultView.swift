@@ -23,6 +23,13 @@ struct RegionResultView: View {
       Divider().opacity(0.4)
       if store.translationUnavailable {
         TranslationModelHint()
+      } else if let error = store.lastError, store.imageData != nil {
+        Label(error, systemImage: "exclamationmark.triangle.fill")
+          .font(.caption)
+          .foregroundStyle(.red)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 14)
+          .padding(.vertical, 8)
       }
       content
     }
@@ -42,18 +49,16 @@ struct RegionResultView: View {
   @State private var hoveredHelp: String?
   @State private var keyMonitor: Any?
 
-  /// Blurred screenshot (original text hidden) when ready, else the raw capture
-  /// while the backdrop is being built; glass translation chips on top — the
-  /// same TranslationOverlayLayer the live overlay uses.
+  /// The original screenshot with source-replacement surfaces and translated
+  /// glyphs composited by the same overlay layer used in live mode.
   @ViewBuilder
   private var translatedImage: some View {
-    let backdrop = store.backgroundImageData.flatMap(NSImage.init(data:))
-      ?? store.imageData.flatMap(NSImage.init(data:))
+    let backdrop = store.imageData.flatMap(NSImage.init(data:))
     if let backdrop {
       ZStack {
         Image(nsImage: backdrop)
           .resizable()
-        TranslationOverlayLayer(lines: store.overlayLines, glass: true)
+        TranslationOverlayLayer(lines: store.overlayLines)
       }
       .aspectRatio(aspectRatio, contentMode: .fit)
       .background(
@@ -89,6 +94,7 @@ struct RegionResultView: View {
       toolbarButton("character.bubble", help: helpText("Copy translation", shortcuts.regionCopyTranslation)) {
         store.send(.copyTranslationRequested)
       }
+      .disabled(store.isTranslating || store.overlayLines.isEmpty)
       toolbarButton("xmark", help: "Close (Esc)", action: onClose)
     }
     .padding(.horizontal, 14)
@@ -159,25 +165,34 @@ struct RegionResultView: View {
   private func installMonitor() {
     guard keyMonitor == nil else { return }
     keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-      MainActor.assumeIsolated {
-        if event.keyCode == 53 { // Escape
+      let keyCode = Int(event.keyCode)
+      var carbonModifiers = 0
+      let flags = event.modifierFlags
+      if flags.contains(.command) { carbonModifiers |= 256 }
+      if flags.contains(.shift) { carbonModifiers |= 512 }
+      if flags.contains(.option) { carbonModifiers |= 2048 }
+      if flags.contains(.control) { carbonModifiers |= 4096 }
+      let consumed = MainActor.assumeIsolated {
+        if keyCode == 53 { // Escape
           onClose()
-          return nil
+          return true
         }
-        if matches(event, shortcuts.regionSave) { onSaveImage()
-          return nil
+        if matches(keyCode, carbonModifiers, shortcuts.regionSave) { onSaveImage()
+          return true
         }
-        if matches(event, shortcuts.regionCopyImage) { onCopyImage()
-          return nil
+        if matches(keyCode, carbonModifiers, shortcuts.regionCopyImage) { onCopyImage()
+          return true
         }
-        if matches(event, shortcuts.regionCopyOriginal) { store.send(.copyOriginalRequested)
-          return nil
+        if matches(keyCode, carbonModifiers, shortcuts.regionCopyOriginal) { store.send(.copyOriginalRequested)
+          return true
         }
-        if matches(event, shortcuts.regionCopyTranslation) { store.send(.copyTranslationRequested)
-          return nil
+        if matches(keyCode, carbonModifiers, shortcuts.regionCopyTranslation) {
+          store.send(.copyTranslationRequested)
+          return true
         }
-        return event
+        return false
       }
+      return consumed ? nil : event
     }
   }
 
@@ -188,14 +203,8 @@ struct RegionResultView: View {
     }
   }
 
-  private func matches(_ event: NSEvent, _ hotKey: HotKey?) -> Bool {
-    guard let hotKey, Int(event.keyCode) == hotKey.carbonKeyCode else { return false }
-    var carbon = 0
-    let flags = event.modifierFlags
-    if flags.contains(.command) { carbon |= 256 }
-    if flags.contains(.shift) { carbon |= 512 }
-    if flags.contains(.option) { carbon |= 2048 }
-    if flags.contains(.control) { carbon |= 4096 }
-    return carbon == hotKey.carbonModifiers
+  private func matches(_ keyCode: Int, _ carbonModifiers: Int, _ hotKey: HotKey?) -> Bool {
+    guard let hotKey, keyCode == hotKey.carbonKeyCode else { return false }
+    return carbonModifiers == hotKey.carbonModifiers
   }
 }

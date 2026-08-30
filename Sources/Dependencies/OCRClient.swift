@@ -23,6 +23,9 @@ struct OCRClient {
 extension OCRClient: DependencyKey {
   static let liveValue = OCRClient(
     recognizeText: { image, language in
+      // A capture that starts while the proactive probe is loading the model
+      // joins that work instead of issuing a second cold Vision request.
+      await VisionWarmUp.shared.waitForInFlight()
       var request = RecognizeDocumentsRequest()
       if language.isAuto {
         request.textRecognitionOptions.automaticallyDetectLanguage = true
@@ -41,37 +44,461 @@ extension OCRClient: DependencyKey {
         Log.ocr.debug("Recognition took \(elapsed.loggedSeconds, privacy: .public)s")
       }
 
-      // Each paragraph is already grouped in reading order by Vision's document
-      // layout analysis — it separates titles, ruby (furigana), and body, orders
-      // vertical CJK columns right-to-left, and reports the text direction — so we
-      // map each paragraph to one line/block at its own location.
-      let lines: [OCRResult.Line] = observations.flatMap(\.document.paragraphs).compactMap { paragraph in
-        let transcript = paragraph.transcript.trimmed
-        guard !transcript.isEmpty else { return nil }
-        let cg = paragraph.boundingRegion.boundingBox.cgRect
-        let box = CGRect(x: cg.minX, y: 1 - cg.maxY, width: cg.width, height: cg.height)
-
-        // A paragraph is vertical when most of its lines read top-to-bottom.
-        let verticalLineCount = paragraph.lines.filter { $0.textDirection == .topToBottom }.count
-        let isVertical = !paragraph.lines.isEmpty && verticalLineCount * 2 >= paragraph.lines.count
-
-        // For a vertical block each line is a column whose width tracks the
-        // character size — average it so the renderer keeps the font scale.
-        let charScale = isVertical
-          ? paragraph.lines.map { $0.boundingRegion.boundingBox.cgRect.width }.reduce(0, +) / CGFloat(max(paragraph.lines.count, 1))
-          : 0
-        return OCRResult.Line(
-          boundingBoxNormalized: box,
-          text: transcript,
-          rowCount: max(1, paragraph.lines.count),
-          isVerticalBlock: isVertical,
-          verticalCharScale: charScale
+      // Vision's paragraph grouping is semantic, not typographic. A large title
+      // and a smaller subtitle can therefore arrive as one paragraph even
+      // though they need different font scale, color, and translation frames.
+      // Start from Vision's line geometry and conservatively stitch only lines
+      // with matching scale/alignment below.
+      let postProcessingStarted = clock.now
+      let paragraphs = observations.flatMap(\.document.paragraphs)
+      var nextRecognitionGroupID = 0
+      var lines = paragraphs.flatMap { paragraph in
+        let alignment = paragraph.textAlignment?.overlayTextAlignment
+        let paragraphWords = paragraph.words?.compactMap { observation -> RecognizedWord? in
+          guard let text = observation.topCandidates(1).first?.string.trimmed, !text.isEmpty else {
+            return nil
+          }
+          return RecognizedWord(
+            text: text,
+            box: Self.topLeftBox(observation.boundingRegion.boundingBox.cgRect)
+          )
+        } ?? []
+        let recognizedLines = paragraph.lines.compactMap { observation -> (
+          observation: RecognizedTextObservation,
+          candidate: RecognizedText,
+          transcript: String
+        )? in
+          guard
+            let candidate = observation.topCandidates(1).first,
+            !candidate.string.trimmed.isEmpty
+          else {
+            return nil
+          }
+          return (
+            observation: observation,
+            candidate: candidate,
+            transcript: candidate.string.trimmed
+          )
+        }
+        let segmentIndices = OCRParagraphLineGrouping.segmentIndices(
+          paragraphTranscript: paragraph.transcript,
+          lineTranscripts: recognizedLines.map(\.transcript)
         )
+        let groupBase = nextRecognitionGroupID
+        nextRecognitionGroupID += max(1, (segmentIndices.max() ?? 0) + 1)
+        let mapped = recognizedLines.enumerated().map { lineIndex, recognizedLine -> OCRResult.Line in
+          let observation = recognizedLine.observation
+          let transcript = recognizedLine.transcript
+          let box = Self.topLeftBox(observation.boundingRegion.boundingBox.cgRect)
+          let isVertical = observation.textDirection == .topToBottom
+          let documentWords = paragraphWords.filter { word in
+            let intersection = box.intersection(word.box)
+            return !intersection.isNull
+              && intersection.width * intersection.height
+              / max(0.000_001, word.box.width * word.box.height) >= 0.72
+          }
+          // Document paragraphs do not always expose `words` (notably dense
+          // Japanese educational pages). The line candidate still provides
+          // Apple's exact range geometry, so use it to retain punctuation,
+          // mixed colors, and inline styles instead of flattening the line.
+          let geometricWords = Self.geometricWords(in: recognizedLine.candidate)
+          let words = geometricWords.isEmpty ? documentWords : geometricWords
+          let wordBoxes = words.map(\.box)
+          let patches = (wordBoxes.isEmpty ? [box] : wordBoxes).map {
+            OverlaySourcePatch(box: $0)
+          }
+          let horizontalGlyphScale = isVertical
+            ? 0
+            : Self.median(wordBoxes.map(\.height)) ?? box.height
+          return OCRResult.Line(
+            boundingBoxNormalized: box,
+            text: transcript,
+            isVerticalBlock: isVertical,
+            verticalCharScale: isVertical ? box.width : 0,
+            horizontalGlyphScale: horizontalGlyphScale,
+            recognitionGroupID: groupBase + segmentIndices[lineIndex],
+            replacementPatches: patches,
+            styleRuns: Self.styleRuns(in: transcript, words: words),
+            alignment: alignment
+          )
+        }
+        guard mapped.isEmpty else { return mapped }
+
+        let transcript = paragraph.transcript.trimmed
+        guard !transcript.isEmpty else { return [] }
+        let box = Self.topLeftBox(paragraph.boundingRegion.boundingBox.cgRect)
+        return [
+          OCRResult.Line(
+            boundingBoxNormalized: box,
+            text: transcript,
+            rowCount: 1,
+            recognitionGroupID: groupBase,
+            replacementPatches: [OverlaySourcePatch(box: box)],
+            alignment: alignment
+          )
+        ]
       }
-      return OCRResult(lines: lines)
+      if Self.shouldRunSupplementalRecognition(for: lines, language: language) {
+        do {
+          let supplementalStarted = clock.now
+          let supplemental = try await Self.supplementalLines(in: image, language: language)
+          let previousCount = lines.count
+          lines = OCRSupplementalMerger.addingUncovered(supplemental, to: lines)
+          Log.ocr.debug(
+            "Supplemental recognition added \(lines.count - previousCount, privacy: .public) lines in \((clock.now - supplementalStarted).loggedSeconds, privacy: .public)s"
+          )
+        } catch {
+          // Document recognition remains a complete result on its own. Surface
+          // the supplemental failure, but do not turn a successful capture into
+          // an error merely because the recall pass was unavailable.
+          Log.ocr.error(
+            "Supplemental recognition failed: \(error.localizedDescription, privacy: .public)"
+          )
+        }
+      }
+      let correctedLines: [OCRResult.Line]
+      let languageCode = language.localeLanguage.languageCode?.identifier
+      if language.isAuto || languageCode == "ja" {
+        do {
+          correctedLines = try await JapaneseRubyOCRCorrector.correcting(lines, in: image)
+        } catch {
+          Log.ocr.error(
+            "Base-glyph OCR failed: \(error.localizedDescription, privacy: .public)"
+          )
+          correctedLines = lines
+        }
+      } else {
+        correctedLines = lines
+      }
+      let result = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+        to: OCRResult(lines: correctedLines).removingNestedDuplicates(),
+        from: image
+      ).coalescingParagraphFragments()
+      let postProcessingElapsed = clock.now - postProcessingStarted
+      Log.ocr.debug(
+        "Post-processing produced \(result.lines.count, privacy: .public) lines in \(postProcessingElapsed.loggedSeconds, privacy: .public)s"
+      )
+      return result
     },
     warmUp: { await VisionWarmUp.shared.run() }
   )
+}
+
+// MARK: - OCRParagraphLineGrouping
+
+/// Preserves explicit semantic breaks that Vision exposes inside a document
+/// paragraph. Visual wraps share a group; lines separated by a transcript
+/// newline do not get stitched back into one translation unit.
+enum OCRParagraphLineGrouping {
+
+  // MARK: Internal
+
+  static func segmentIndices(
+    paragraphTranscript: String,
+    lineTranscripts: [String]
+  ) -> [Int] {
+    guard !lineTranscripts.isEmpty else { return [] }
+    let segments = paragraphTranscript
+      .split(whereSeparator: \.isNewline)
+      .map { normalized(String($0)) }
+      .filter { !$0.isEmpty }
+    guard segments.count > 1 else {
+      return Array(repeating: 0, count: lineTranscripts.count)
+    }
+
+    var segmentIndex = 0
+    var consumed = ""
+    return lineTranscripts.map { transcript in
+      let line = normalized(transcript)
+      while
+        segmentIndex < segments.count - 1,
+        !segments[segmentIndex].hasPrefix(consumed + line)
+      {
+        segmentIndex += 1
+        consumed = ""
+      }
+
+      let result = segmentIndex
+      consumed += line
+      if
+        segmentIndex < segments.count - 1,
+        consumed.count >= segments[segmentIndex].count
+        || !segments[segmentIndex].hasPrefix(consumed)
+      {
+        segmentIndex += 1
+        consumed = ""
+      }
+      return result
+    }
+  }
+
+  // MARK: Private
+
+  private static func normalized(_ value: String) -> String {
+    value.filter { !$0.isWhitespace && !$0.isNewline }
+  }
+}
+
+extension OCRClient {
+  fileprivate struct RecognizedWord {
+    var text: String
+    var box: CGRect
+  }
+
+  fileprivate static func topLeftBox(_ box: CGRect) -> CGRect {
+    CGRect(x: box.minX, y: 1 - box.maxY, width: box.width, height: box.height)
+  }
+
+  fileprivate static func median(_ values: [CGFloat]) -> CGFloat? {
+    guard !values.isEmpty else { return nil }
+    let sorted = values.sorted()
+    let middle = sorted.count / 2
+    if sorted.count.isMultiple(of: 2) {
+      return (sorted[middle - 1] + sorted[middle]) / 2
+    }
+    return sorted[middle]
+  }
+
+  fileprivate static func styleRuns(
+    in transcript: String,
+    words: [RecognizedWord]
+  ) -> [OverlaySourceStyleRun] {
+    guard !transcript.isEmpty, !words.isEmpty else { return [] }
+    let source = transcript as NSString
+    var cursor = 0
+    var runs = [OverlaySourceStyleRun]()
+    for word in words {
+      guard cursor < source.length else { break }
+      let searchRange = NSRange(location: cursor, length: source.length - cursor)
+      var range = source.range(of: word.text, options: [], range: searchRange)
+      if range.location == NSNotFound {
+        range = source.range(of: word.text, options: .caseInsensitive, range: searchRange)
+      }
+      guard range.location != NSNotFound else { continue }
+      runs.append(OverlaySourceStyleRun(range: range, box: word.box))
+      cursor = range.location + range.length
+    }
+    return runs
+  }
+
+  fileprivate static func geometricWords(in candidate: RecognizedText) -> [RecognizedWord] {
+    OCRTextTokenization.ranges(in: candidate.string).compactMap { range in
+      guard let observation = candidate.boundingBox(for: range) else { return nil }
+      return RecognizedWord(
+        text: String(candidate.string[range]),
+        box: topLeftBox(observation.boundingBox.cgRect)
+      )
+    }
+  }
+
+  fileprivate static func supplementalLines(
+    in image: CGImage,
+    language: Language
+  ) async throws -> [OCRResult.Line] {
+    var request = RecognizeTextRequest()
+    request.recognitionLevel = .accurate
+    request.usesLanguageCorrection = true
+    if language.isAuto {
+      request.automaticallyDetectsLanguage = true
+    } else {
+      request.recognitionLanguages = [language.localeLanguage]
+    }
+    return try await request.perform(on: image).compactMap { observation in
+      guard
+        let candidate = observation.topCandidates(1).first,
+        candidate.confidence >= 0.25,
+        !candidate.string.trimmed.isEmpty
+      else { return nil }
+      let text = candidate.string.trimmed
+      let box = topLeftBox(observation.boundingRegion.boundingBox.cgRect)
+      let words = geometricWords(in: candidate)
+      let wordBoxes = words.map(\.box)
+      return OCRResult.Line(
+        boundingBoxNormalized: box,
+        text: text,
+        horizontalGlyphScale: median(wordBoxes.map(\.height)) ?? box.height,
+        replacementPatches: (wordBoxes.isEmpty ? [box] : wordBoxes).map {
+          OverlaySourcePatch(box: $0)
+        },
+        styleRuns: styleRuns(in: text, words: words),
+        alignment: inferredSupplementalAlignment(for: box)
+      )
+    }
+  }
+
+  fileprivate static func shouldRunSupplementalRecognition(
+    for lines: [OCRResult.Line],
+    language: Language
+  ) -> Bool {
+    guard !lines.contains(where: \.isVerticalBlock) else { return false }
+    let languageCode = language.localeLanguage.languageCode?.identifier
+    if !language.isAuto, languageCode == "ja" { return false }
+    if language.isAuto, lines.map(\.text).joined().unicodeScalars.contains(where: isJapaneseScalar) {
+      return false
+    }
+    return true
+  }
+
+  fileprivate static func inferredSupplementalAlignment(for box: CGRect) -> OverlayTextAlignment {
+    box.width >= 0.35 && abs(box.midX - 0.5) <= 0.06 ? .center : .leading
+  }
+
+  fileprivate static func isJapaneseScalar(_ scalar: Unicode.Scalar) -> Bool {
+    switch scalar.value {
+    case 0x3040 ... 0x30FF,
+         0x31F0 ... 0x31FF:
+      true
+    default:
+      false
+    }
+  }
+}
+
+// MARK: - OCRSupplementalMerger
+
+enum OCRSupplementalMerger {
+
+  // MARK: Internal
+
+  /// Adds only text rows that document recognition omitted. RecognizeText is a
+  /// high-recall companion pass; overlapping document rows remain canonical so
+  /// paragraph membership, style, and alignment are not destabilized.
+  static func addingUncovered(
+    _ supplemental: [OCRResult.Line],
+    to primary: [OCRResult.Line]
+  ) -> [OCRResult.Line] {
+    let additions = supplemental.filter { candidate in
+      !primary.contains { covers(candidate, primary: $0) }
+    }
+    return (primary + additions).sorted { lhs, rhs in
+      let lhsBox = lhs.boundingBoxNormalized.standardized
+      let rhsBox = rhs.boundingBoxNormalized.standardized
+      if abs(lhsBox.minY - rhsBox.minY) <= min(lhsBox.height, rhsBox.height) * 0.35 {
+        return lhsBox.minX < rhsBox.minX
+      }
+      return lhsBox.minY < rhsBox.minY
+    }
+  }
+
+  // MARK: Private
+
+  private static func covers(_ candidate: OCRResult.Line, primary: OCRResult.Line) -> Bool {
+    let candidateBox = candidate.boundingBoxNormalized.standardized
+    let primaryBox = primary.boundingBoxNormalized.standardized
+    let intersection = candidateBox.intersection(primaryBox)
+    guard !intersection.isNull, !intersection.isEmpty else { return false }
+    let intersectionArea = intersection.width * intersection.height
+    let candidateCoverage = intersectionArea / max(0.000_001, candidateBox.width * candidateBox.height)
+    if candidateCoverage >= 0.58 { return true }
+
+    let candidateText = normalized(candidate.text)
+    let primaryText = normalized(primary.text)
+    guard
+      !candidateText.isEmpty,
+      candidateText == primaryText || candidateText.contains(primaryText) || primaryText.contains(candidateText)
+    else { return false }
+    return hypot(candidateBox.midX - primaryBox.midX, candidateBox.midY - primaryBox.midY)
+      <= max(candidateBox.height, primaryBox.height) * 1.5
+  }
+
+  private static func normalized(_ text: String) -> String {
+    text.lowercased().unicodeScalars
+      .filter { CharacterSet.alphanumerics.contains($0) }
+      .map(String.init)
+      .joined()
+  }
+}
+
+// MARK: - OCRTextTokenization
+
+/// Produces style-sized ranges while leaving their geometry to Vision. Words
+/// remain intact for Latin scripts; CJK text remains contiguous; punctuation is
+/// separate so brackets, links, and emphasized symbols can keep their own style.
+enum OCRTextTokenization {
+
+  // MARK: Internal
+
+  static func ranges(in text: String) -> [Range<String.Index>] {
+    var result = [Range<String.Index>]()
+    var start: String.Index?
+    var currentKind: Kind?
+
+    func finish(at end: String.Index) {
+      if let start, start < end {
+        result.append(start ..< end)
+      }
+      start = nil
+      currentKind = nil
+    }
+
+    var index = text.startIndex
+    while index < text.endIndex {
+      let next = text.index(after: index)
+      guard let kind = Kind(text[index]) else {
+        finish(at: index)
+        index = next
+        continue
+      }
+      if currentKind != kind {
+        finish(at: index)
+        start = index
+        currentKind = kind
+      }
+      index = next
+    }
+    finish(at: text.endIndex)
+    return result
+  }
+
+  // MARK: Private
+
+  private enum Kind: Equatable {
+    case cjk
+    case word
+    case punctuation
+
+    // MARK: Lifecycle
+
+    init?(_ character: Character) {
+      let scalars = character.unicodeScalars
+      guard !scalars.allSatisfy(\.properties.isWhitespace) else { return nil }
+      if scalars.contains(where: { Self.isCJK($0) }) {
+        self = .cjk
+      } else if scalars.allSatisfy({ CharacterSet.alphanumerics.contains($0) || $0 == "_" }) {
+        self = .word
+      } else {
+        self = .punctuation
+      }
+    }
+
+    // MARK: Private
+
+    private static func isCJK(_ scalar: Unicode.Scalar) -> Bool {
+      switch scalar.value {
+      case 0x3040 ... 0x30FF,
+           0x31F0 ... 0x31FF,
+           0x3400 ... 0x4DBF,
+           0x4E00 ... 0x9FFF,
+           0xAC00 ... 0xD7AF,
+           0xF900 ... 0xFAFF,
+           0x20000 ... 0x2FA1F:
+        true
+      default:
+        false
+      }
+    }
+  }
+}
+
+extension DocumentObservation.Container.Text.Alignment {
+  fileprivate var overlayTextAlignment: OverlayTextAlignment {
+    switch self {
+    case .center: .center
+    case .leading: .leading
+    case .trailing: .trailing
+    @unknown default: .center
+    }
+  }
 }
 
 extension DependencyValues {
@@ -126,6 +553,10 @@ private actor VisionWarmUp {
       request.textRecognitionOptions.automaticallyDetectLanguage = true
       do {
         _ = try await request.perform(on: probe)
+        var supplemental = RecognizeTextRequest()
+        supplemental.recognitionLevel = .accurate
+        supplemental.automaticallyDetectsLanguage = true
+        _ = try await supplemental.perform(on: probe)
         let elapsed = clock.now - started
         if elapsed > .seconds(2) {
           Log.ocr.log("Warm-up loaded a cold model in \(elapsed.loggedSeconds, privacy: .public)s")
@@ -139,6 +570,12 @@ private actor VisionWarmUp {
     inFlight = load
     await load.value
     inFlight = nil
+  }
+
+  func waitForInFlight() async {
+    if let inFlight {
+      await inFlight.value
+    }
   }
 
   // MARK: Private

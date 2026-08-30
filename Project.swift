@@ -7,10 +7,10 @@ let bundleIdPrefix = "dev.PangMo5"
 
 let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
-// Single source of truth for the marketing version. The release workflow
-// verifies the pushed tag matches this before building.
+/// Single source of truth for the marketing version. The release workflow
+/// verifies the pushed tag matches this before building.
 let appVersion = "2.9.1"
-// Build number is injected by CI (github.run_number); 1 for local builds.
+/// Build number is injected by CI (github.run_number); 1 for local builds.
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
 let baseSettings: SettingsDictionary = [
@@ -102,6 +102,18 @@ let project = Project(
           .release(name: "Release"),
         ]
       )
+    ),
+    .target(
+      name: "SwiftyCrowTests",
+      destinations: .macOS,
+      product: .unitTests,
+      bundleId: "\(bundleIdPrefix).SwiftyCrowTests",
+      deploymentTargets: .macOS("26.0"),
+      infoPlist: .default,
+      sources: ["Tests/**"],
+      dependencies: [
+        .target(name: "SwiftyCrow")
+      ]
     ),
   ]
 )

@@ -18,9 +18,8 @@ struct ScreenCaptureClient {
   /// Pass `nil` to capture the whole display.
   var captureImage: @Sendable (
     _ overlayFrame: CGRect?,
-    _ excludingWindowIDs: [CGWindowID],
     _ displayID: CGDirectDisplayID?,
-    _ excludingBundleIdentifier: String?
+    _ excludingProcessID: pid_t?
   ) async throws -> CGImage
 
   /// Captures a single window by id, independent of what's stacked on top of it
@@ -54,7 +53,7 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
 
 extension ScreenCaptureClient: DependencyKey {
   static let liveValue = ScreenCaptureClient(
-    captureImage: { overlayFrame, excludingWindowIDs, displayID, excludingBundleIdentifier in
+    captureImage: { overlayFrame, displayID, excludingProcessID in
       try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
       let content = try await SCShareableContent.excludingDesktopWindows(
         false,
@@ -76,17 +75,28 @@ extension ScreenCaptureClient: DependencyKey {
       }
       let scale = nsScreen?.backingScaleFactor ?? 1
 
+      // Resolve exclusions from the current ScreenCaptureKit snapshot on every
+      // capture. Passing a window id that was read before the overlay panel was
+      // created made the live loop capture its own previous frame forever. A
+      // process id is stable for this launch and excludes every SwiftyCrow
+      // surface, including panels created after Live starts.
+      let excludedApplications = excludingProcessID.map { processID in
+        content.applications.filter { $0.processID == processID }
+      } ?? []
+      let excludedWindows = excludingProcessID.map { processID in
+        content.windows.filter { $0.owningApplication?.processID == processID }
+      } ?? []
       let filter =
-        if
-          let excludingBundleIdentifier,
-          let excludedApp = content.applications.first(where: { $0.bundleIdentifier == excludingBundleIdentifier })
-        {
-          SCContentFilter(display: display, excludingApplications: [excludedApp], exceptingWindows: [])
-        } else {
+        if !excludedApplications.isEmpty {
           SCContentFilter(
             display: display,
-            excludingWindows: content.windows.filter { excludingWindowIDs.contains($0.windowID) }
+            excludingApplications: excludedApplications,
+            exceptingWindows: []
           )
+        } else {
+          // Some system states omit an application entry while still reporting
+          // its windows. Keep the same process-based contract in that case.
+          SCContentFilter(display: display, excludingWindows: excludedWindows)
         }
 
       let configuration = SCStreamConfiguration()

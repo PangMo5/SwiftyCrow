@@ -74,6 +74,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   // MARK: Internal
 
   func applicationDidFinishLaunching(_: Notification) {
+    guard !ProcessInfo.processInfo.isRunningUnitTests else { return }
+
     // Start Sparkle's background check schedule by reading the dependency.
     _ = updater
 
@@ -105,7 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   /// Receives the App-owned store once and wires up app-lifetime work.
   func bind(_ store: StoreOf<AppFeature>) {
-    guard self.store == nil else { return }
+    guard self.store == nil, !ProcessInfo.processInfo.isRunningUnitTests else { return }
     self.store = store
 
     // Run the keyboard-shortcut listener for the entire app lifetime.
@@ -165,7 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       isTranslating: store.capture.isTranslating || store.capture.isCapturing,
       isLive: store.capture.isLive,
       liveMode: store.settings.overlay.liveMode,
-      backgroundImageData: store.capture.backgroundImageData,
+      sourceImageData: store.capture.sourceImageData,
       imageSize: store.capture.imageSize,
       placementID: store.capture.overlayPlacementID,
       translationUnavailable: store.capture.translationUnavailable,
@@ -175,8 +177,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private func syncOverlay(_ state: OverlayRenderState) async {
     await overlay.render(state)
-    let excluded = await overlay.windowID().map { [$0] } ?? []
-    store?.send(.capture(.setExcludedWindowIDs(excluded)))
+  }
+}
+
+extension ProcessInfo {
+  fileprivate var isRunningUnitTests: Bool {
+    environment["XCTestConfigurationFilePath"] != nil
+      || environment["XCTestBundlePath"] != nil
   }
 }
 
@@ -186,8 +193,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// bridge that turns an `.openSettingsWindow` notification into a scene-level
 /// `openWindow` (see `Notification.Name.openSettingsWindow`).
 private struct MenuBarLabel: View {
-  @Environment(\.openWindow) private var openWindow
-
   var body: some View {
     Image(systemName: "character.bubble.fill")
       .accessibilityLabel("SwiftyCrow")
@@ -196,6 +201,9 @@ private struct MenuBarLabel: View {
         NSApp.activate(ignoringOtherApps: true)
       }
   }
+
+  @Environment(\.openWindow) private var openWindow
+
 }
 
 // MARK: - OpenSettingsCommandButton
@@ -203,8 +211,6 @@ private struct MenuBarLabel: View {
 /// Backs the ⌘, / "Settings…" app-menu item. A dedicated view so it can read
 /// the `openWindow` environment action from inside `.commands`.
 private struct OpenSettingsCommandButton: View {
-  @Environment(\.openWindow) private var openWindow
-
   var body: some View {
     Button("Settings…") {
       openWindow(id: settingsWindowID)
@@ -212,6 +218,9 @@ private struct OpenSettingsCommandButton: View {
     }
     .keyboardShortcut(",", modifiers: .command)
   }
+
+  @Environment(\.openWindow) private var openWindow
+
 }
 
 // MARK: - Regular-while-open
