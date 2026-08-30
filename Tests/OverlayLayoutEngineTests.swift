@@ -30,6 +30,18 @@ struct OverlayLayoutEngineTests {
     }
   }
 
+  struct NeighborAlignmentCase: Sendable, CustomTestStringConvertible {
+    let name: String
+    let subject: CGRect
+    let neighbor: CGRect
+    let fallback: OverlayTextAlignment
+    let expected: OverlayTextAlignment
+
+    var testDescription: String {
+      name
+    }
+  }
+
   @Test(arguments: [
     EdgeCase(name: "left", box: CGRect(x: 0.01, y: 0.2, width: 0.06, height: 0.3)),
     EdgeCase(name: "right", box: CGRect(x: 0.93, y: 0.2, width: 0.06, height: 0.3)),
@@ -210,11 +222,6 @@ struct OverlayLayoutEngineTests {
 
   @Test(arguments: [
     PageAlignmentCase(
-      name: "wide hero on the page center axis",
-      box: CGRect(x: 0.14, y: 0.13, width: 0.74, height: 0.08),
-      expected: .center
-    ),
-    PageAlignmentCase(
       name: "left edge label",
       box: CGRect(x: 0.01, y: 0.25, width: 0.12, height: 0.04),
       expected: .leading
@@ -236,6 +243,87 @@ struct OverlayLayoutEngineTests {
 
     let placement = try #require(
       OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 1_000, height: 600)).first
+    )
+
+    #expect(placement.alignment == testCase.expected)
+  }
+
+  @Test
+  func wideListRowsDoNotInventCenterAlignment() {
+    var title = translatedLine(
+      id: lineID(22),
+      box: CGRect(x: 0.06384, y: 0.58941, width: 0.89040, height: 0.06547),
+      sourceIsVertical: false,
+      text: "SwiftUI 목록을 자동으로 스크롤하는 방법",
+      target: "ko-KR"
+    )
+    var detail = translatedLine(
+      id: lineID(23),
+      box: CGRect(x: 0.06051, y: 0.65625, width: 0.89136, height: 0.06175),
+      sourceIsVertical: false,
+      sourceRows: 2,
+      text: "검색 결과의 상세 설명",
+      target: "ko-KR"
+    )
+    title.source.alignment = nil
+    detail.source.alignment = .leading
+
+    let placements = OverlayLayoutEngine.placements(
+      for: [title, detail],
+      in: CGSize(width: 1_438, height: 1_232)
+    )
+
+    #expect(placements.first { $0.line.id == title.id }?.alignment == .leading)
+    #expect(placements.first { $0.line.id == detail.id }?.alignment == .leading)
+  }
+
+  @Test(arguments: [
+    NeighborAlignmentCase(
+      name: "nearby rows share a center axis",
+      subject: CGRect(x: 0.19186, y: 0.77907, width: 0.15407, height: 0.02558),
+      neighbor: CGRect(x: 0.07558, y: 0.83721, width: 0.38227, height: 0.05832),
+      fallback: .leading,
+      expected: .center
+    ),
+    NeighborAlignmentCase(
+      name: "nearby rows share a trailing edge",
+      subject: CGRect(x: 0.78757, y: 0.42456, width: 0.14286, height: 0.03331),
+      neighbor: CGRect(x: 0.56686, y: 0.48333, width: 0.36483, height: 0.05853),
+      fallback: .leading,
+      expected: .trailing
+    ),
+    NeighborAlignmentCase(
+      name: "left aligned hero rows override a centered Vision result",
+      subject: CGRect(x: 0.22075, y: 0.10162, width: 0.51934, height: 0.05437),
+      neighbor: CGRect(x: 0.21799, y: 0.17438, width: 0.57130, height: 0.02946),
+      fallback: .center,
+      expected: .leading
+    ),
+  ])
+  func neighboringBlockGeometryOverridesIncorrectVisionAlignment(
+    _ testCase: NeighborAlignmentCase
+  ) throws {
+    var subject = translatedLine(
+      id: lineID(20),
+      box: testCase.subject,
+      sourceIsVertical: false,
+      text: "주요 번역",
+      target: "ko-KR"
+    )
+    let neighbor = translatedLine(
+      id: lineID(21),
+      box: testCase.neighbor,
+      sourceIsVertical: false,
+      sourceRows: 2,
+      text: "주변 번역 문단",
+      target: "ko-KR"
+    )
+    subject.source.alignment = testCase.fallback
+
+    let placement = try #require(
+      OverlayLayoutEngine
+        .placements(for: [subject, neighbor], in: CGSize(width: 1_600, height: 1_000))
+        .first { $0.line.id == subject.id }
     )
 
     #expect(placement.alignment == testCase.expected)
