@@ -1,199 +1,354 @@
 // SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import Accessibility
 import SwiftUI
 
 // MARK: - TranslationOverlayLayer
 
-/// Draws each translated line at its source bounding box, sized to that box's
-/// height. Shared by the live overlay (Liquid Glass chips) and the
-/// region-capture result. The result uses `glass: false` because ImageRenderer
-/// can't rasterize Liquid Glass, so a solid chip keeps the saved/copied image
-/// matching what's on screen.
+/// Draws locale-aware translated text over its OCR source region. Geometry is
+/// resolved as one scene so every translation stays inside its original visual
+/// container. Vision's word/line regions are restored before replacement text
+/// is drawn, preserving nearby borders and artwork.
 struct TranslationOverlayLayer: View {
+
+  // MARK: Lifecycle
+
+  init(
+    lines: [OverlayLine],
+    prefersHorizontalTextLayout preferenceOverride: Bool? = nil
+  ) {
+    self.lines = lines
+    followsSystemHorizontalTextPreference = preferenceOverride == nil
+    _prefersHorizontalTextLayout = State(
+      initialValue: preferenceOverride ?? AccessibilitySettings.prefersHorizontalTextLayout
+    )
+  }
 
   // MARK: Internal
 
   let lines: [OverlayLine]
-  var glass = true
 
   var body: some View {
     GeometryReader { proxy in
-      chips(in: proxy.size)
+      OverlayCanvas(
+        lines: lines,
+        size: proxy.size,
+        prefersHorizontalTextLayout: prefersHorizontalTextLayout
+      )
+    }
+    .onReceive(
+      NotificationCenter.default.publisher(
+        for: AccessibilitySettings.prefersHorizontalTextLayoutDidChangeNotification
+      )
+    ) { _ in
+      guard followsSystemHorizontalTextPreference else { return }
+      prefersHorizontalTextLayout = AccessibilitySettings.prefersHorizontalTextLayout
     }
   }
 
   // MARK: Private
 
-  private func chips(in size: CGSize) -> some View {
-    ForEach(lines) { line in
-      let box = line.box
-      let width = max(1, box.width * size.width)
-      let height = max(1, box.height * size.height)
+  @State private var prefersHorizontalTextLayout: Bool
 
-      Group {
-        if line.isVerticalBlock, line.verticalLayout {
-          // The chip hugs the vertical text (so the glass matches it) and is
-          // pinned to the box's top-right, where vertical CJK starts reading.
-          // A column's width is the source character size, so render near that
-          // scale to keep the page's font hierarchy.
-          verticalBlockChip(for: line, width: width, height: height, sourceFont: line.verticalCharScale * size.width)
-            .frame(width: width, height: height, alignment: .topTrailing)
-        } else if line.isVerticalBlock {
-          // Vertical CJK source but a horizontally-written target, so the
-          // translation is wrapped horizontally and centred on the source box
-          // instead of being stacked one character per row.
-          horizontalBlockChip(for: line, width: width, height: height)
-            .frame(width: width, height: height, alignment: .center)
-        } else {
-          let rows = max(1, line.rowCount)
-          let fontSize = max(8, min(96, height / CGFloat(rows) * 0.85))
-          lineChip(for: line, fontSize: fontSize, rows: rows)
-            .frame(width: width + 12, height: height + 4, alignment: .leading)
-        }
-      }
-      .position(
-        x: box.midX * size.width,
-        y: box.midY * size.height
-      )
-    }
-  }
+  private let followsSystemHorizontalTextPreference: Bool
 
-  private func lineChip(for line: OverlayLine, fontSize: CGFloat, rows: Int) -> some View {
-    background(
-      for: line,
-      cornerRadius: 8,
-      label: Text(line.translated ?? line.sourceText)
-        .font(.system(size: fontSize, weight: .semibold))
-        .multilineTextAlignment(.leading)
-        .lineLimit(rows)
-        .truncationMode(.tail)
-        .minimumScaleFactor(0.4)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-    )
-  }
-
-  /// A stitched block of vertical CJK columns rendered into a vertically-written
-  /// target: lay the translation out the same way the source reads — characters
-  /// top-to-bottom, columns right-to-left — so it sits over the original like an
-  /// in-place replacement. Sized so the text roughly fills the box.
-  @ViewBuilder
-  private func verticalBlockChip(for line: OverlayLine, width: CGFloat, height: CGFloat, sourceFont: CGFloat) -> some View {
-    let text = line.translated ?? line.sourceText
-    // Largest font that still fits the box, then prefer the source font scale so
-    // the hierarchy is kept — capped to the fit so a long translation can't spill.
-    let fit = (width * height / CGFloat(max(text.count, 1))).squareRoot() * 0.9
-    let fontSize = max(8, min(fit, sourceFont > 0 ? sourceFont : fit))
-    background(
-      for: line,
-      cornerRadius: 12,
-      // The chip sizes to the text (columns wrap at the box height), so the
-      // glass background matches the translation instead of the full box.
-      label: VerticalText(text: text, fontSize: fontSize, availableHeight: max(1, height - 12))
-        .padding(6)
-    )
-  }
-
-  /// A stitched block of vertical CJK columns rendered into a horizontally-written
-  /// target. The column layout can't be reused: a Latin translation forced through
-  /// it lands one character per row, which is unreadable. Wrap it horizontally over
-  /// the source box instead.
-  @ViewBuilder
-  private func horizontalBlockChip(for line: OverlayLine, width: CGFloat, height: CGFloat) -> some View {
-    let text = line.translated ?? line.sourceText
-    // Vertical CJK boxes are tall and narrow. Horizontal text needs more width, so
-    // let the chip widen past the source box (staying centred on it) before the
-    // font has to shrink — capped by the box height so it can't swallow the page.
-    let chipWidth = max(width, min(width * 2.2, height))
-    // Largest font that still fills the chip, capped so a short line can't balloon.
-    let fit = (chipWidth * height / CGFloat(max(text.count, 1))).squareRoot() * 1.3
-    let fontSize = max(8, min(fit, 96))
-    background(
-      for: line,
-      cornerRadius: 12,
-      label: Text(text)
-        .font(.system(size: fontSize, weight: .semibold))
-        .multilineTextAlignment(.center)
-        .minimumScaleFactor(0.35)
-        .padding(6)
-        .frame(width: chipWidth, alignment: .center)
-    )
-  }
-
-  @ViewBuilder
-  private func background(for line: OverlayLine, cornerRadius: CGFloat, label: some View) -> some View {
-    if glass {
-      label
-        .foregroundStyle(line.translated == nil ? .secondary : .primary)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-    } else {
-      label
-        .foregroundStyle(.white)
-        .background(.black.opacity(0.62), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-    }
-  }
 }
 
-// MARK: - VerticalText
+// MARK: - OverlayCanvas
 
-/// Lays out a string as vertical CJK writing: each character upright, stacked
-/// top-to-bottom, columns advancing right-to-left.
-private struct VerticalText: View {
-  let text: String
-  let fontSize: CGFloat
-  /// Height to wrap columns at — the chip then sizes itself to the content.
-  let availableHeight: CGFloat
+private struct OverlayCanvas: View {
+
+  // MARK: Internal
+
+  let lines: [OverlayLine]
+  let size: CGSize
+  let prefersHorizontalTextLayout: Bool
 
   var body: some View {
-    VerticalColumns(charExtent: fontSize * 1.18, availableHeight: availableHeight) {
-      ForEach(Array(text.enumerated()), id: \.offset) { _, character in
-        Text(String(character))
-          .font(.system(size: fontSize, weight: .semibold))
+    let placements = OverlayLayoutEngine.placements(
+      for: lines,
+      in: size,
+      prefersHorizontalTextLayout: prefersHorizontalTextLayout
+    )
+    ZStack(alignment: .topLeading) {
+      ForEach(placements) { placement in
+        ForEach(placement.line.source.replacementPatches.indices, id: \.self) { index in
+          let patch = placement.line.source.replacementPatches[index]
+          let frame = OverlayLayoutEngine.replacementFrame(
+            for: patch,
+            sourceLayout: placement.line.source.layout,
+            in: size,
+            displayScale: displayScale
+          )
+          let sourceSurface = placement.line.source.surface.flatMap { surface in
+            surface.confidence >= 0.35 ? surface : nil
+          }
+          SourceReplacementSurface(
+            appearance: patch.appearance,
+            patchFrame: frame,
+            clippingFrame: sourceSurface.map {
+              OverlayLayoutEngine.sourceSurfaceFrame(for: $0, in: size)
+            },
+            cornerRadiusFraction: sourceSurface?.cornerRadiusFraction ?? 0
+          )
+          .equatable()
+        }
       }
+      ForEach(placements) { placement in
+        ReplacementText(placement: placement)
+          .equatable()
+          .frame(width: placement.frame.width, height: placement.frame.height)
+          .clipped()
+          .position(x: placement.frame.midX, y: placement.frame.midY)
+      }
+    }
+    .frame(width: size.width, height: size.height, alignment: .topLeading)
+    .clipped()
+  }
+
+  // MARK: Private
+
+  @Environment(\.displayScale) private var displayScale
+
+}
+
+// MARK: - SourceReplacementSurface
+
+private struct SourceReplacementSurface: View, Equatable {
+
+  let appearance: OverlaySourceAppearance
+  let patchFrame: CGRect
+  let clippingFrame: CGRect?
+  let cornerRadiusFraction: CGFloat
+
+  var body: some View {
+    if let clippingFrame, !clippingFrame.isEmpty {
+      ZStack(alignment: .topLeading) {
+        Rectangle()
+          .fill(Color(appearance.background))
+          .frame(width: patchFrame.width, height: patchFrame.height)
+          .offset(
+            x: patchFrame.minX - clippingFrame.minX,
+            y: patchFrame.minY - clippingFrame.minY
+          )
+      }
+      .frame(
+        width: clippingFrame.width,
+        height: clippingFrame.height,
+        alignment: .topLeading
+      )
+      .clipShape(.rect(
+        cornerRadius: min(clippingFrame.width, clippingFrame.height) * cornerRadiusFraction,
+        style: .continuous
+      ))
+      .position(x: clippingFrame.midX, y: clippingFrame.midY)
+    } else {
+      Rectangle()
+        .fill(Color(appearance.background))
+        .frame(width: patchFrame.width, height: patchFrame.height)
+        .position(x: patchFrame.midX, y: patchFrame.midY)
     }
   }
 }
 
-// MARK: - VerticalColumns
+// MARK: - ReplacementText
 
-/// Places each subview (one character) top-to-bottom; when a column fills
-/// `availableHeight` it wraps to a new column on the left. Reports the size it
-/// actually uses so the surrounding chip hugs the text.
-private struct VerticalColumns: Layout {
-  var charExtent: CGFloat
-  var availableHeight: CGFloat
+private struct ReplacementText: View, Equatable {
 
-  func sizeThatFits(proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
-    guard !subviews.isEmpty else { return .zero }
-    let columnWidth = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? charExtent
-    let perColumn = max(1, Int(availableHeight / charExtent))
-    let columns = Int(ceil(Double(subviews.count) / Double(perColumn)))
-    let rows = min(subviews.count, perColumn)
-    return CGSize(width: CGFloat(columns) * columnWidth, height: CGFloat(rows) * charExtent)
+  let placement: OverlayPlacement
+
+  var body: some View {
+    switch placement.flow {
+    case .horizontal(let direction):
+      HorizontalOverlayText(
+        text: placement.line.displayedText,
+        language: placement.line.displayedLanguage,
+        fontSize: placement.fontSize,
+        appearance: placement.line.source.appearance,
+        styleRuns: placement.line.displayedStyleRuns,
+        lineLimit: placement.lineLimit,
+        direction: direction,
+        alignment: placement.alignment,
+        sourceLayout: placement.line.source.layout
+      )
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(Text(verbatim: placement.line.displayedText))
+
+    case .vertical(let progression):
+      VerticalOverlayText(
+        text: placement.line.displayedText,
+        language: placement.line.displayedLanguage,
+        fontSize: placement.fontSize,
+        fontWeight: placement.line.source.appearance.fontWeight,
+        fontDesign: placement.line.source.appearance.fontDesign,
+        progression: progression
+      )
+      .foregroundStyle(Color(placement.line.source.appearance.foreground))
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(Text(verbatim: placement.line.displayedText))
+    }
+  }
+}
+
+// MARK: - HorizontalOverlayText
+
+private struct HorizontalOverlayText: View, Equatable {
+
+  // MARK: Internal
+
+  let text: String
+  let language: Locale.Language
+  let fontSize: CGFloat
+  let appearance: OverlaySourceAppearance
+  let styleRuns: [OverlayTextStyleRun]
+  let lineLimit: Int?
+  let direction: OverlayInlineDirection
+  let alignment: OverlayTextAlignment
+  let sourceLayout: OverlaySourceLayout
+
+  var body: some View {
+    Text(styledText)
+      .font(.system(
+        size: fontSize,
+        weight: appearance.fontWeight.swiftUIWeight,
+        design: appearance.fontDesign.swiftUIFontDesign
+      ))
+      .foregroundStyle(Color(appearance.foreground))
+      .multilineTextAlignment(textAlignment)
+      .lineLimit(lineLimit)
+      .truncationMode(.tail)
+      .minimumScaleFactor(0.78)
+      .allowsTightening(true)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: frameAlignment)
+      .environment(\.locale, Locale(identifier: language.maximalIdentifier))
+      .environment(\.layoutDirection, direction == .rightToLeft ? .rightToLeft : .leftToRight)
   }
 
-  func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
-    guard !subviews.isEmpty else { return }
-    let columnWidth = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? charExtent
-    let perColumn = max(1, Int(availableHeight / charExtent))
-    var x = bounds.maxX - columnWidth
-    var y = bounds.minY
-    var placed = 0
-    for subview in subviews {
-      subview.place(
-        at: CGPoint(x: x, y: y),
-        anchor: .topLeading,
-        proposal: ProposedViewSize(width: columnWidth, height: charExtent)
+  // MARK: Private
+
+  private var styledText: AttributedString {
+    var attributed = AttributedString(text)
+    for run in styleRuns {
+      guard
+        let stringRange = Range(run.range, in: text),
+        let lowerBound = AttributedString.Index(stringRange.lowerBound, within: attributed),
+        let upperBound = AttributedString.Index(stringRange.upperBound, within: attributed)
+      else { continue }
+      let range = lowerBound ..< upperBound
+      attributed[range].font = .system(
+        size: fontSize,
+        weight: run.appearance.fontWeight.swiftUIWeight,
+        design: run.appearance.fontDesign.swiftUIFontDesign
       )
-      placed += 1
-      y += charExtent
-      if placed >= perColumn {
-        placed = 0
-        y = bounds.minY
-        x -= columnWidth
+      attributed[range].foregroundColor = Color(run.appearance.foreground)
+      if run.appearance.background.distance(to: appearance.background) >= 0.025 {
+        attributed[range].backgroundColor = Color(run.appearance.background)
+      }
+      if run.appearance.isUnderlined {
+        attributed[range].underlineStyle = .single
       }
     }
+    return attributed
+  }
+
+  private var textAlignment: TextAlignment {
+    switch alignment {
+    case .leading: .leading
+    case .center: .center
+    case .trailing: .trailing
+    }
+  }
+
+  private var frameAlignment: Alignment {
+    switch (sourceLayout, alignment) {
+    // Vision includes ascenders, furigana, and line-leading in its source box.
+    // Centering on that original box keeps a shorter translation on the same
+    // visual baseline instead of pinning it against the top border.
+    case (.horizontal, .leading): .leading
+    case (.horizontal, .center): .center
+    case (.horizontal, .trailing): .trailing
+    case (.vertical, .leading): .leading
+    case (.vertical, .center): .center
+    case (.vertical, .trailing): .trailing
+    }
+  }
+}
+
+// MARK: - VerticalOverlayText
+
+private struct VerticalOverlayText: View {
+
+  // MARK: Internal
+
+  let text: String
+  let language: Locale.Language
+  let fontSize: CGFloat
+  let fontWeight: OverlayFontWeight
+  let fontDesign: OverlayFontDesign
+  let progression: OverlayColumnProgression
+
+  var body: some View {
+    GeometryReader { proxy in
+      if
+        let image = CoreTextTypesetter.verticalGlyphImage(
+          text: text,
+          language: language,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          fontDesign: fontDesign,
+          size: proxy.size,
+          scale: displayScale,
+          progression: progression
+        )
+      {
+        Image(decorative: image, scale: displayScale)
+          .renderingMode(.template)
+          .resizable()
+          .frame(width: proxy.size.width, height: proxy.size.height)
+      }
+    }
+    .environment(\.locale, Locale(identifier: language.maximalIdentifier))
+  }
+
+  // MARK: Private
+
+  @Environment(\.displayScale) private var displayScale
+}
+
+extension Color {
+  fileprivate init(_ color: OverlayColor) {
+    self.init(
+      red: Double(color.red),
+      green: Double(color.green),
+      blue: Double(color.blue),
+      opacity: Double(color.alpha)
+    )
+  }
+}
+
+extension OverlayFontWeight {
+  fileprivate var swiftUIWeight: Font.Weight {
+    switch self {
+    case .regular: .regular
+    case .medium: .medium
+    case .semibold: .semibold
+    case .bold: .bold
+    }
+  }
+}
+
+extension OverlayFontDesign {
+  fileprivate var swiftUIFontDesign: Font.Design {
+    switch self {
+    case .standard: .default
+    case .monospaced: .monospaced
+    }
+  }
+}
+
+extension OverlayColor {
+  fileprivate func distance(to other: OverlayColor) -> CGFloat {
+    max(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
   }
 }

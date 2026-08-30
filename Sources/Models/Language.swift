@@ -30,17 +30,13 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
 }
 
 extension Locale.Language {
-  /// Whether text in this language is conventionally set in vertical columns.
-  /// Vertical CJK column layout only reads correctly when the text itself is
-  /// CJK — a Latin translation stacked one character per row is unreadable.
-  var usesVerticalScript: Bool {
-    switch languageCode?.identifier {
-    case "ja",
-         "zh",
-         "ko",
-         "yue": true
-    default: false
-    }
+  /// Region variants share the same written language, while script variants
+  /// such as Simplified and Traditional Chinese do not. Maximizing both tags
+  /// lets Foundation fill in omitted scripts before we compare them.
+  func usesSameWritingSystem(as other: Locale.Language) -> Bool {
+    let lhs = Locale.Language(identifier: maximalIdentifier)
+    let rhs = Locale.Language(identifier: other.maximalIdentifier)
+    return lhs.languageCode == rhs.languageCode && lhs.script == rhs.script
   }
 }
 
@@ -73,9 +69,7 @@ extension Language {
     var ids = Set(translationLangs.map(\.maximalIdentifier))
     if intersectedWithOCR {
       let request = RecognizeTextRequest()
-      if let ocr = try? request.supportedRecognitionLanguages {
-        ids.formIntersection(ocr.map(\.maximalIdentifier))
-      }
+      ids.formIntersection(request.supportedRecognitionLanguages.map(\.maximalIdentifier))
     }
     return ids
       .filter { !$0.isEmpty }

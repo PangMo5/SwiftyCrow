@@ -15,13 +15,12 @@ struct CaptureFeature {
   // MARK: Internal
 
   enum CancelID {
-    case background
     case live
     case translation
   }
 
-  /// One live capture: the screenshot (for the Window-mode blurred backdrop)
-  /// plus the recognized lines.
+  /// One live capture: the screenshot (for the detached Window mode) plus the
+  /// recognized lines and their sampled source appearance.
   struct LiveCapture: Sendable {
     var imageData: Data?
     var imageSize: CGSize
@@ -35,9 +34,13 @@ struct CaptureFeature {
     var text: String
   }
 
+  struct TranslationRequestContext: Equatable, Sendable {
+    var strategy: TranslationStrategy
+    var target: String
+  }
+
   @ObservableState
-  struct State {
-    var excludedWindowIDs = [CGWindowID]()
+  struct State: Equatable {
     var isCapturing = false
     var isLive = false
     var isTranslating = false
@@ -50,12 +53,9 @@ struct CaptureFeature {
     /// Drives the "open Settings" hint in the menu bar.
     var translationUnavailable = false
     var overlayLines = [OverlayLine]()
-    /// Window-mode backdrop: the screenshot with each box blurred. Nil in
-    /// In-place mode (the chips draw directly on the overlay).
-    var backgroundImageData: Data?
-    /// A backdrop blur is in flight. Live ticks skip queueing another while it
-    /// is set, so a blur slower than the capture interval still finishes.
-    var isBlurringBackground = false
+    /// Raw screenshot shown by the detached Window mode. In-place mode only
+    /// needs the sampled appearance carried by each OCR line.
+    var sourceImageData: Data?
     var imageSize = CGSize.zero
     /// Whether a live overlay is currently placed on screen. There's no overlay
     /// until the user selects a region/window; `dismissOverlay` clears it.
@@ -63,14 +63,18 @@ struct CaptureFeature {
     /// Bumped each time the overlay is (re)placed, so the window controller knows
     /// to snap to the new frame even when it's already on screen.
     var overlayPlacementID = 0
-    var translationCache = [TranslationCacheKey: String]()
+    /// Invalidates late responses from a cancelled live tick. Line IDs are
+    /// deliberately reused for visual stability, so identity alone cannot tell
+    /// an old translation from the current request.
+    var translationGeneration = 0
+    var translationCache = [TranslationCacheKey: TranslatedText]()
+    var translationRequestContext: TranslationRequestContext?
 
     @Shared(.overlayFrame) var overlayFrame
     @Shared(.settings) var settings
   }
 
   enum Action {
-    case backgroundReady(Data?)
     case captureIsTakingLong
     case captureResponse(Result<LiveCapture, any Error>)
     case copyTranslationRequested
@@ -78,13 +82,11 @@ struct CaptureFeature {
     case selectRegionRequested
     case liveSelectRequested
     case overlayPlaced(CGRect)
-    case setExcludedWindowIDs([CGWindowID])
     case setLive(Bool)
     case toggleLiveRequested
     case toggleLiveOverlayRequested
-    case translationCompleted
-    case translationFailed(String)
-    case translationResponse(lineID: UUID, key: TranslationCacheKey, translated: String)
+    case translationUnavailable(generation: Int, lineIDs: Set<UUID>, message: String?)
+    case translationResponse(generation: Int, lineID: UUID, key: TranslationCacheKey, translation: TranslatedText)
   }
 
   @Dependency(\.continuousClock) var clock
@@ -100,20 +102,20 @@ struct CaptureFeature {
     Reduce { state, action in
       switch action {
       case .dismissOverlay:
+        state.translationGeneration += 1
         state.overlayActive = false
         state.isLive = false
         state.isCapturing = false
         state.isTranslating = false
+        state.translationRequestContext = nil
         state.overlayLines = []
-        state.backgroundImageData = nil
-        state.isBlurringBackground = false
+        state.sourceImageData = nil
         state.isPreparingRecognition = false
         state.lastError = nil
         state.translationUnavailable = false
         return .merge(
           .cancel(id: CancelID.live),
-          .cancel(id: CancelID.translation),
-          .cancel(id: CancelID.background)
+          .cancel(id: CancelID.translation)
         )
 
       case .selectRegionRequested:
@@ -159,11 +161,6 @@ struct CaptureFeature {
         }
         return .none
 
-      case .backgroundReady(let data):
-        state.isBlurringBackground = false
-        state.backgroundImageData = data
-        return .none
-
       case .captureResponse(.success(let capture)):
         state.isCapturing = false
         state.isPreparingRecognition = false
@@ -173,17 +170,14 @@ struct CaptureFeature {
 
       case .copyTranslationRequested:
         let text = state.overlayLines
-          .compactMap { $0.translated ?? ($0.sourceText.isEmpty ? nil : $0.sourceText) }
+          .map(\.displayedText)
+          .filter { !$0.isEmpty }
           .joined(separator: "\n")
         guard !text.isEmpty else { return .none }
         return .run { _ in
           NSPasteboard.general.clearContents()
           NSPasteboard.general.setString(text, forType: .string)
         }
-
-      case .setExcludedWindowIDs(let ids):
-        state.excludedWindowIDs = ids
-        return .none
 
       case .setLive(let isLive):
         if isLive, !state.overlayActive {
@@ -196,13 +190,14 @@ struct CaptureFeature {
         // Toggling Live discards stale results so the overlay doesn't keep
         // showing the previous capture across the transition.
         state.overlayLines = []
+        state.translationGeneration += 1
         state.isTranslating = false
+        state.translationRequestContext = nil
         state.isPreparingRecognition = false
         state.translationUnavailable = false
         if isLive {
           return .merge(
             .cancel(id: CancelID.translation),
-            warmUpVision(),
             .run { [clock] send in
               // If the first capture hasn't landed by now, say why instead of
               // leaving an empty frame with a spinner on it.
@@ -210,10 +205,14 @@ struct CaptureFeature {
               await send(.captureIsTakingLong)
             },
             .run { [
+              ocr,
               settings = state.$settings,
-              overlayFrame = state.$overlayFrame,
-              excludedWindowIDs = state.excludedWindowIDs
+              overlayFrame = state.$overlayFrame
             ] send in
+              // Serialize the probe and first real recognition. Starting both
+              // against a cold Vision daemon made the first capture slower and
+              // could leave two expensive document requests competing.
+              await ocr.warmUp()
               while !Task.isCancelled {
                 let snapshot = settings.wrappedValue
                 let frame = overlayFrame.wrappedValue
@@ -224,8 +223,7 @@ struct CaptureFeature {
                 let result = await Result {
                   try await runCapture(
                     settings: snapshot,
-                    overlayFrame: frame,
-                    excludedWindowIDs: excludedWindowIDs
+                    overlayFrame: frame
                   )
                 }
                 if case .failure(let error) = result {
@@ -249,7 +247,7 @@ struct CaptureFeature {
         // Flip the live overlay on/off on the last-used region without
         // re-selecting. When it's up, tear it down via dismissOverlay — that
         // cancels the live-capture loop, the translation task group, and the
-        // background blur, so no capture/OCR/translation keeps running while
+        // source restoration, so no capture/OCR/translation keeps running while
         // it's off. Otherwise re-place it on the remembered frame (persisted in
         // overlay-frame.json) and go live.
         if state.overlayActive {
@@ -257,21 +255,58 @@ struct CaptureFeature {
         }
         return .send(.overlayPlaced(state.overlayFrame.rect))
 
-      case .translationCompleted:
-        state.isTranslating = false
+      case .translationUnavailable(let generation, let lineIDs, let message):
+        guard generation == state.translationGeneration else { return .none }
+        for index in state.overlayLines.indices where lineIDs.contains(state.overlayLines[index].id) {
+          state.overlayLines[index].showUnavailable()
+        }
+        state.isTranslating = state.overlayLines.contains(where: \.isPending)
+        if !state.isTranslating {
+          state.translationRequestContext = nil
+        }
+        state.lastError = message ?? "Translation did not return every requested line."
+        if message != nil {
+          state.translationUnavailable = true
+        }
         return .none
 
-      case .translationFailed(let message):
-        state.lastError = message
-        state.translationUnavailable = true
-        return .none
-
-      case .translationResponse(let lineID, let key, let translated):
-        state.translationCache[key] = translated
-        // A real translation arrived — the model is installed after all.
-        state.translationUnavailable = false
-        if let index = state.overlayLines.firstIndex(where: { $0.id == lineID }) {
-          state.overlayLines[index].translated = translated
+      case .translationResponse(let generation, let lineID, let key, let translation):
+        guard generation == state.translationGeneration else { return .none }
+        let text = translation.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else {
+          if let index = state.overlayLines.firstIndex(where: { $0.id == lineID }) {
+            state.overlayLines[index].showUnavailable()
+          }
+          state.isTranslating = state.overlayLines.contains(where: \.isPending)
+          if !state.isTranslating {
+            state.translationRequestContext = nil
+          }
+          state.lastError = "Translation returned empty text."
+          return .none
+        }
+        let translation = TranslatedText(
+          text: text,
+          attributedText: text == translation.text ? translation.attributedText : nil
+        )
+        state.translationCache[key] = translation
+        if
+          let index = state.overlayLines.firstIndex(where: { $0.id == lineID }),
+          state.overlayLines[index].isPending
+        {
+          state.overlayLines[index].showTranslation(
+            translation.text,
+            attributedText: translation.attributedText,
+            language: Locale.Language(identifier: key.target)
+          )
+        }
+        state.isTranslating = state.overlayLines.contains(where: \.isPending)
+        if !state.isTranslating {
+          state.translationRequestContext = nil
+        }
+        if !state.isTranslating, !state.overlayLines.contains(where: \.isUnavailable) {
+          // Every requested line resolved, so a previous missing-model warning
+          // is stale even if this live session started with a failed tick.
+          state.translationUnavailable = false
         }
         return .none
       }
@@ -279,6 +314,10 @@ struct CaptureFeature {
   }
 
   // MARK: Private
+
+  private static func normalizedCenterDistance(_ lhs: CGRect, _ rhs: CGRect) -> CGFloat {
+    hypot(lhs.midX - rhs.midX, lhs.midY - rhs.midY)
+  }
 
   /// Starts loading Vision's document model alongside whatever the user is about
   /// to do. Picking a region takes a second or two, and a cold model costs far
@@ -293,11 +332,12 @@ struct CaptureFeature {
     let windowMode = state.settings.overlay.liveMode == .window
 
     guard !result.lines.isEmpty else {
+      state.translationGeneration += 1
       state.overlayLines = []
       state.isTranslating = false
-      state.backgroundImageData = nil
-      state.isBlurringBackground = false
-      return .merge(.cancel(id: CancelID.translation), .cancel(id: CancelID.background))
+      state.translationRequestContext = nil
+      state.sourceImageData = nil
+      return .cancel(id: CancelID.translation)
     }
 
     let configured = state.settings.languages.source
@@ -309,13 +349,48 @@ struct CaptureFeature {
     // lines); an explicit source applies to every line. A line already in the
     // target language shows its source text instead of being translated.
     let lineSources = languageDetection.resolveSources(for: result.lines.map(\.text), configured: configured)
+    let previousMatches = matchedPreviousLines(
+      for: result.lines,
+      languages: lineSources,
+      in: state.overlayLines
+    )
+    let stableSources = result.lines.indices.map { index in
+      let source = OverlayLine.Source(
+        recognized: result.lines[index],
+        language: lineSources[index].localeLanguage
+      )
+      guard let previous = previousMatches[index] else { return source }
+      return source.stabilized(relativeTo: previous.source, imageSize: capture.imageSize)
+    }
+    let preservesSource = stableSources.indices.map {
+      OverlayTranslationPolicy.preservesSource(at: $0, in: stableSources)
+    }
+    let sourceSetIsUnchanged = result.lines.count == state.overlayLines.count
+      && previousMatches.allSatisfy { $0 != nil }
+    if
+      state.isTranslating,
+      sourceSetIsUnchanged,
+      state.translationRequestContext == TranslationRequestContext(
+        strategy: strategy,
+        target: targetLanguage.code
+      )
+    {
+      // Keep the in-flight batch alive. Replacing it every live tick meant a
+      // batch slower than the capture interval could be cancelled and restarted
+      // forever. Geometry/style may still change, so refresh only the source
+      // side while preserving each line's pending/translated content and id.
+      state.overlayLines = result.lines.indices.compactMap { index in
+        guard var previous = previousMatches[index] else { return nil }
+        previous.source = stableSources[index]
+        return previous
+      }
+      state.sourceImageData = windowMode ? capture.imageData : nil
+      return .none
+    }
 
-    // Reuse line identity when the source text matches the previous OCR
-    // pass, so SwiftUI's transitions stay stable across live captures.
-    let previousByText = Dictionary(grouping: state.overlayLines, by: \.sourceText)
-      .mapValues { Array($0.reversed()) }
+    state.translationGeneration += 1
+    let generation = state.translationGeneration
 
-    var reused = previousByText
     var newLines = [OverlayLine]()
     var keys = [UUID: TranslationCacheKey]()
     // Pending translations grouped by source language (one session per group).
@@ -323,115 +398,138 @@ struct CaptureFeature {
 
     for (index, line) in result.lines.enumerated() {
       let source = lineSources[index].localeLanguage
-      let sameLanguage = source.languageCode == target.languageCode
+      let sameLanguage = source.usesSameWritingSystem(as: target)
       let key = TranslationCacheKey(
         source: source.maximalIdentifier,
         strategy: strategy,
         target: targetLanguage.code,
         text: line.text
       )
-      let cached = sameLanguage ? line.text : cache[key]
+      let needsTranslation = !sameLanguage && !preservesSource[index]
+      let cached = needsTranslation ? cache[key] : nil
 
-      var overlayLine: OverlayLine
-      if var bucket = reused[line.text], let recycled = bucket.popLast() {
-        overlayLine = recycled
-        overlayLine.box = line.boundingBoxNormalized
-        overlayLine.rowCount = line.rowCount
-        overlayLine.isVerticalBlock = line.isVerticalBlock
-        overlayLine.verticalLayout = line.isVerticalBlock && target.usesVerticalScript
-        overlayLine.verticalCharScale = line.verticalCharScale
-        if let cached {
-          overlayLine.translated = cached
-        }
-        reused[line.text] = bucket
-      } else {
-        overlayLine = OverlayLine(
-          id: uuid(),
-          box: line.boundingBoxNormalized,
-          sourceText: line.text,
-          translated: cached,
-          rowCount: line.rowCount,
-          isVerticalBlock: line.isVerticalBlock,
-          verticalLayout: line.isVerticalBlock && target.usesVerticalScript,
-          verticalCharScale: line.verticalCharScale
+      var overlayLine = OverlayLine(
+        id: previousMatches[index]?.id ?? uuid(),
+        source: stableSources[index],
+        initialContent: needsTranslation ? .pending : .source
+      )
+      if let cached {
+        overlayLine.showTranslation(
+          cached.text,
+          attributedText: cached.attributedText,
+          language: target
         )
       }
 
       newLines.append(overlayLine)
-      if overlayLine.translated == nil {
+      if overlayLine.isPending {
         keys[overlayLine.id] = key
         groups[source.maximalIdentifier, default: (source, [])].items
-          .append(TranslationLine(id: overlayLine.id, text: overlayLine.sourceText))
+          .append(TranslationLine(
+            id: overlayLine.id,
+            text: overlayLine.source.text,
+            attributedText: overlayLine.source.attributedTextForTranslation()
+          ))
       }
     }
 
     state.overlayLines = newLines
-
-    // Window mode draws a blurred screenshot backdrop in the detached window;
-    // In-place mode draws chips directly on the overlay, so no backdrop.
-    let background: Effect<Action>
-    if windowMode, let data = capture.imageData {
-      if state.isBlurringBackground {
-        // Leave the running blur alone. Restarting it on every tick (what
-        // cancelInFlight did) meant a blur slower than the capture interval
-        // never finished at all — and the detached window shows a spinner until
-        // the first backdrop lands, so it spun forever. Skipping instead makes
-        // the backdrop trail the capture by at most one blur.
-        background = .none
-      } else {
-        state.isBlurringBackground = true
-        let lines = newLines
-        let size = capture.imageSize
-        background = .run { send in
-          // Pure Core Graphics / Core Image — runs off the main actor.
-          let bg = blurredBackground(baseData: data, lines: lines, pixelSize: size)
-          await send(.backgroundReady(bg))
-        }
-        .cancellable(id: CancelID.background)
-      }
-    } else {
-      state.backgroundImageData = nil
-      state.isBlurringBackground = false
-      background = .cancel(id: CancelID.background)
-    }
+    state.sourceImageData = windowMode ? capture.imageData : nil
 
     state.isTranslating = !groups.isEmpty
     if groups.isEmpty {
-      return .merge(background, .cancel(id: CancelID.translation))
+      state.translationRequestContext = nil
+      state.translationUnavailable = false
+      return .cancel(id: CancelID.translation)
     }
 
     let batches = Array(groups.values)
-    let translate = Effect<Action>.run { send in
-      // One session per source language; chips update as results stream back.
-      // translationCompleted clears the spinner once every batch finishes.
+    let translationKeys = keys
+    state.translationRequestContext = TranslationRequestContext(
+      strategy: strategy,
+      target: targetLanguage.code
+    )
+    return Effect<Action>.run { send in
+      // One session per source language; each response or explicit fallback
+      // resolves a replacement and the last pending line clears the spinner.
       await withTaskGroup(of: Void.self) { group in
         for batch in batches {
           group.addTask {
+            var remaining = Set(batch.items.map(\.id))
             do {
               for try await result in translation.translateBatch(batch.items, batch.source, target, strategy) {
-                if let key = keys[result.id] {
-                  await send(.translationResponse(lineID: result.id, key: key, translated: result.text))
+                remaining.remove(result.id)
+                if let key = translationKeys[result.id] {
+                  await send(
+                    .translationResponse(
+                      generation: generation,
+                      lineID: result.id,
+                      key: key,
+                      translation: TranslatedText(
+                        text: result.text,
+                        attributedText: result.attributedText
+                      )
+                    )
+                  )
                 }
               }
+            } catch is CancellationError {
+              return
             } catch {
-              await send(.translationFailed(error.localizedDescription))
+              guard !remaining.isEmpty else { return }
+              await send(
+                .translationUnavailable(
+                  generation: generation,
+                  lineIDs: remaining,
+                  message: error.localizedDescription
+                )
+              )
+              return
+            }
+            if !remaining.isEmpty {
+              await send(.translationUnavailable(generation: generation, lineIDs: remaining, message: nil))
             }
           }
         }
       }
-      await send(.translationCompleted)
     }
     .cancellable(id: CancelID.translation, cancelInFlight: true)
-    return .merge(background, translate)
+  }
+
+  /// Matches duplicate source strings by geometry rather than array position.
+  /// Vision is free to change observation order between frames; positional
+  /// matching swapped identities on repeated labels and made SwiftUI replace
+  /// otherwise stable text views.
+  private func matchedPreviousLines(
+    for lines: [OCRResult.Line],
+    languages: [Language],
+    in previousLines: [OverlayLine]
+  ) -> [OverlayLine?] {
+    var remaining = Array(previousLines.indices)
+    return lines.indices.map { index in
+      let language = languages[index].localeLanguage.maximalIdentifier
+      let candidates = remaining.filter { previousIndex in
+        let previous = previousLines[previousIndex]
+        return previous.source.text == lines[index].text
+          && previous.source.language.maximalIdentifier == language
+      }
+      guard
+        let match = candidates.min(by: { lhs, rhs in
+          Self.normalizedCenterDistance(lines[index].boundingBoxNormalized, previousLines[lhs].source.box)
+            < Self.normalizedCenterDistance(lines[index].boundingBoxNormalized, previousLines[rhs].source.box)
+        })
+      else { return nil }
+      remaining.removeAll { $0 == match }
+      return previousLines[match]
+    }
   }
 
   private func runCapture(
     settings: AppSettings,
-    overlayFrame: OverlayFrame,
-    excludedWindowIDs: [CGWindowID]
+    overlayFrame: OverlayFrame
   ) async throws -> LiveCapture {
-    // The live overlay is always placed over a region while running, so capture
-    // that region (excluding our own windows via the bundle id below).
+    // The live overlay is always placed over a region while running. Exclude
+    // this process so the transparent overlay never becomes the next OCR input.
     //
     // Both stages are bounded separately so the log names whichever one stalled:
     // ScreenCaptureKit and Vision each talk to a daemon that is cold on the first
@@ -443,15 +541,14 @@ struct CaptureFeature {
     ) { [screenCapture] in
       try await screenCapture.captureImage(
         overlayFrame.rect,
-        excludedWindowIDs,
         displayID(coveringMostOf: overlayFrame.rect),
-        Bundle.main.bundleIdentifier
+        ProcessInfo.processInfo.processIdentifier
       )
     }
     let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) { [ocr] in
       try await ocr.recognizeText(image, settings.languages.source)
     }
-    // Only carry the screenshot when Window mode needs it for the backdrop.
+    // Only carry the screenshot when Window mode displays a detached result.
     let needsImage = settings.overlay.liveMode == .window
     return LiveCapture(
       imageData: needsImage ? image.pngData : nil,

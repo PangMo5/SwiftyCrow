@@ -49,8 +49,7 @@ extension RegionSelectorClient: DependencyKey {
   static let liveValue: RegionSelectorClient = {
     // The controller touches AppKit, so build it lazily on the main actor.
     nonisolated(unsafe) var controller: RegionSelectorController?
-    @MainActor
-    func resolve() -> RegionSelectorController {
+    let resolve: @MainActor @Sendable () -> RegionSelectorController = {
       if let controller { return controller }
       let new = RegionSelectorController()
       controller = new
@@ -187,21 +186,23 @@ private final class RegionSelectorController {
     }
     // Space toggles mode; Escape cancels. Consume both so they don't beep.
     let key = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-      MainActor.assumeIsolated {
-        guard let self else { return event }
-        switch event.keyCode {
+      let keyCode = event.keyCode
+      let consumed = MainActor.assumeIsolated {
+        guard let self else { return false }
+        switch keyCode {
         case 49: // Space
           self.toggleMode()
-          return nil
+          return true
 
         case 53: // Escape
           self.finish(nil)
-          return nil
+          return true
 
         default:
-          return event
+          return false
         }
       }
+      return consumed ? nil : event
     }
     mouseMonitors = [mouse, global].compactMap { $0 }
     keyMonitor = key

@@ -12,11 +12,6 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
   // MARK: Internal
 
-  var windowID: CGWindowID? {
-    guard let window else { return nil }
-    return CGWindowID(window.windowNumber)
-  }
-
   /// Registers the sink for controls drawn on the overlay (live toggle, close).
   func setEventHandler(_ handler: @escaping @Sendable (OverlayUserAction) -> Void) {
     eventHandler = handler
@@ -58,7 +53,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// the pasteboard — driven by the overlay's hidden ⌘C affordance.
   func copyTranslation() {
     let text = model.lines
-      .compactMap { $0.translated ?? ($0.sourceText.isEmpty ? nil : $0.sourceText) }
+      .map(\.displayedText)
+      .filter { !$0.isEmpty }
       .joined(separator: "\n")
     guard !text.isEmpty else { return }
     NSPasteboard.general.clearContents()
@@ -115,8 +111,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     if model.isTranslating != state.isTranslating { model.isTranslating = state.isTranslating }
     if model.isLive != state.isLive { model.isLive = state.isLive }
     if model.liveMode != state.liveMode { model.liveMode = state.liveMode }
-    if model.backgroundImageData != state.backgroundImageData {
-      model.backgroundImageData = state.backgroundImageData
+    if model.sourceImageData != state.sourceImageData {
+      model.sourceImageData = state.sourceImageData
     }
     if model.imageSize != state.imageSize { model.imageSize = state.imageSize }
     if model.translationUnavailable != state.translationUnavailable {
@@ -189,6 +185,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     panel.isMovable = true
     panel.isOpaque = false
     panel.backgroundColor = .clear
+    panel.hasShadow = false
     panel.level = .floating
     panel.isFloatingPanel = true
     panel.becomesKeyOnlyIfNeeded = true
@@ -206,12 +203,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     let hosting = NSHostingView(rootView: rootView)
     hosting.frame = panel.contentLayoutRect
     hosting.autoresizingMask = [.width, .height]
-    // Match the SwiftUI glass shape so the borderless panel chrome stops
-    // showing a thin grey edge around the overlay.
+    // Keep the hosting surface genuinely transparent. Clipping this layer to a
+    // rounded rectangle exposed a compositing edge in in-place mode.
     hosting.wantsLayer = true
-    hosting.layer?.cornerRadius = 22
-    hosting.layer?.cornerCurve = .continuous
-    hosting.layer?.masksToBounds = true
+    hosting.layer?.backgroundColor = NSColor.clear.cgColor
+    hosting.layer?.masksToBounds = false
     panel.contentView = hosting
     window = panel
   }
@@ -381,7 +377,7 @@ final class OverlayWindowModel {
   var isLive = false
   var isTranslating = false
   var liveMode = OverlayLiveMode.inPlace
-  var backgroundImageData: Data?
+  var sourceImageData: Data?
   var imageSize = CGSize.zero
   var translationUnavailable = false
   var isPreparingRecognition = false
@@ -396,8 +392,6 @@ final class OverlayWindowModel {
 // MARK: - OverlayRootView
 
 private struct OverlayRootView: View {
-
-  // MARK: Internal
 
   let model: OverlayWindowModel
 
@@ -441,8 +435,9 @@ private struct OverlayRootView: View {
 
 // MARK: - LiveResultView
 
-/// The detached translation window shown in Window live mode: the blurred
-/// screenshot with glass translation chips, updating live.
+/// The detached translation window shown in Window live mode: the captured
+/// backdrop with in-place source restoration and replacement text,
+/// updating live.
 private struct LiveResultView: View {
 
   // MARK: Internal
@@ -470,11 +465,11 @@ private struct LiveResultView: View {
 
   @ViewBuilder
   private var content: some View {
-    if let data = model.backgroundImageData, let image = NSImage(data: data) {
+    if let data = model.sourceImageData, let image = NSImage(data: data) {
       ZStack {
         Image(nsImage: image)
           .resizable()
-        TranslationOverlayLayer(lines: model.lines, glass: true)
+        TranslationOverlayLayer(lines: model.lines)
       }
       .aspectRatio(aspectRatio, contentMode: .fit)
       .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

@@ -28,13 +28,15 @@ struct OverlayView: View {
   var body: some View {
     bodyContent
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-      .overlay(
+      .overlay {
+        // Keep the overlay boundary visible in both modes. Source-replacement
+        // patches inside the boundary remain borderless.
         RoundedRectangle(cornerRadius: 22, style: .continuous)
           .strokeBorder(
             frameOnly ? AnyShapeStyle(.tint) : AnyShapeStyle(.white.opacity(0.35)),
             lineWidth: frameOnly ? 2.5 : 1.5
           )
-      )
+      }
       .overlay(alignment: .topLeading) {
         // Drag handle: the only way to move the overlay. The window-background
         // drag is gated to this corner by the controller; the view itself takes
