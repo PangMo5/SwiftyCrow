@@ -230,6 +230,60 @@ struct OCRResultTests {
   }
 
   @Test
+  func keepsAdjacentBadgePairsAsIndependentControls() {
+    let gray = OverlaySourceAppearance(
+      background: OverlayColor(red: 0.35, green: 0.35, blue: 0.35, alpha: 1),
+      foreground: .white,
+      confidence: 0.7
+    )
+    let blue = OverlaySourceAppearance(
+      background: OverlayColor(red: 0.13, green: 0.51, blue: 0.76, alpha: 1),
+      foreground: .white,
+      confidence: 0.7
+    )
+    let green = OverlaySourceAppearance(
+      background: OverlayColor(red: 0.43, green: 0.67, blue: 0.15, alpha: 1),
+      foreground: .white,
+      confidence: 0.7
+    )
+    func badge(
+      _ text: String,
+      x: CGFloat,
+      width: CGFloat,
+      appearance: OverlaySourceAppearance,
+      detectsSurface: Bool = false
+    ) -> OCRResult.Line {
+      let box = CGRect(x: x, y: 0.345, width: width, height: 0.045)
+      return OCRResult.Line(
+        boundingBoxNormalized: box,
+        text: text,
+        recognitionGroupID: 1,
+        appearance: appearance,
+        surface: detectsSurface
+          ? OverlaySourceSurface(
+            box: box.insetBy(dx: -0.003, dy: -0.008),
+            confidence: 0.8
+          )
+          : nil
+      )
+    }
+    let badges = [
+      badge("release", x: 0.0275, width: 0.0465, appearance: gray, detectsSurface: true),
+      badge("v1.12.0", x: 0.0807, width: 0.0519, appearance: blue),
+      badge("downloads", x: 0.1488, width: 0.0692, appearance: gray),
+      badge("233", x: 0.2249, width: 0.0254, appearance: green),
+      badge("macOS", x: 0.2676, width: 0.0450, appearance: gray, detectsSurface: true),
+      badge("14+", x: 0.3218, width: 0.0277, appearance: blue),
+      badge("License", x: 0.3655, width: 0.0487, appearance: gray, detectsSurface: true),
+      badge("AGPL 3.0-only", x: 0.4164, width: 0.0969, appearance: blue),
+    ]
+
+    let result = OCRResult(lines: badges).coalescingParagraphFragments()
+
+    #expect(result.lines == badges)
+  }
+
+  @Test
   func keepsAdjacentMultilineCardBodiesSeparate() {
     let left = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.10, y: 0.40, width: 0.30, height: 0.15),

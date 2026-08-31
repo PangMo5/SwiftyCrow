@@ -115,7 +115,11 @@ struct RegionCaptureFeature {
               .append(TranslationLine(
                 id: overlayLine.id,
                 text: line.text,
-                attributedText: overlayLine.source.attributedTextForTranslation()
+                attributedText: overlayLine.source.attributedTextForTranslation(),
+                trailingContext: OverlayTranslationPolicy.trailingContext(
+                  at: index,
+                  in: sourceLines
+                )
               ))
           }
         }

@@ -399,17 +399,23 @@ struct CaptureFeature {
     for (index, line) in result.lines.enumerated() {
       let source = lineSources[index].localeLanguage
       let sameLanguage = source.usesSameWritingSystem(as: target)
+      let translationLine = TranslationLine(
+        id: previousMatches[index]?.id ?? uuid(),
+        text: line.text,
+        attributedText: stableSources[index].attributedTextForTranslation(),
+        trailingContext: OverlayTranslationPolicy.trailingContext(at: index, in: stableSources)
+      )
       let key = TranslationCacheKey(
         source: source.maximalIdentifier,
         strategy: strategy,
         target: targetLanguage.code,
-        text: line.text
+        text: translationLine.requestText
       )
       let needsTranslation = !sameLanguage && !preservesSource[index]
       let cached = needsTranslation ? cache[key] : nil
 
       var overlayLine = OverlayLine(
-        id: previousMatches[index]?.id ?? uuid(),
+        id: translationLine.id,
         source: stableSources[index],
         initialContent: needsTranslation ? .pending : .source
       )
@@ -425,11 +431,7 @@ struct CaptureFeature {
       if overlayLine.isPending {
         keys[overlayLine.id] = key
         groups[source.maximalIdentifier, default: (source, [])].items
-          .append(TranslationLine(
-            id: overlayLine.id,
-            text: overlayLine.source.text,
-            attributedText: overlayLine.source.attributedTextForTranslation()
-          ))
+          .append(translationLine)
       }
     }
 

@@ -73,6 +73,7 @@ struct OCRResult: Equatable, Sendable {
   func coalescingParagraphFragments() -> OCRResult {
     guard lines.count > 1 else { return self }
 
+    let compactPeerIndices = Self.compactPeerFragmentIndices(in: lines)
     var visited = Array(repeating: false, count: lines.count)
     var groups = [[Int]]()
     for start in lines.indices where !visited[start] {
@@ -81,7 +82,15 @@ struct OCRResult: Equatable, Sendable {
       var group = [start]
       while let index = queue.popLast() {
         for candidate in lines.indices where !visited[candidate] {
-          guard Self.areAdjacentFragments(lines[index], lines[candidate]) else { continue }
+          let suppressesInlineMerge = compactPeerIndices.contains(index)
+            && compactPeerIndices.contains(candidate)
+          guard
+            Self.areAdjacentFragments(
+              lines[index],
+              lines[candidate],
+              suppressesInlineMerge: suppressesInlineMerge
+            )
+          else { continue }
           visited[candidate] = true
           queue.append(candidate)
           group.append(candidate)
@@ -278,7 +287,11 @@ struct OCRResult: Equatable, Sendable {
     } ?? candidates.max(by: { $0.confidence < $1.confidence })
   }
 
-  private static func areAdjacentFragments(_ lhs: Line, _ rhs: Line) -> Bool {
+  private static func areAdjacentFragments(
+    _ lhs: Line,
+    _ rhs: Line,
+    suppressesInlineMerge: Bool
+  ) -> Bool {
     switch (lhs.isVerticalBlock, rhs.isVerticalBlock) {
     case (true, true):
       areNeighboringVerticalColumns(lhs, rhs)
@@ -287,8 +300,67 @@ struct OCRResult: Equatable, Sendable {
     case (false, true):
       isShortVerticalContinuation(lhs, of: rhs)
     case (false, false):
-      areNeighboringHorizontalRows(lhs, rhs) || areNeighboringInlineFragments(lhs, rhs)
+      areNeighboringHorizontalRows(lhs, rhs)
+        || (!suppressesInlineMerge && areNeighboringInlineFragments(lhs, rhs))
     }
+  }
+
+  /// A run of compact peers (badges, segmented labels, or key/value pills) is
+  /// visual structure, not one sentence. Vision can assign every peer to one
+  /// recognition group, while surface analysis only finds some of the rounded
+  /// halves. Detect the whole row before graph coalescing so an undetected half
+  /// cannot bridge otherwise independent controls transitively.
+  private static func compactPeerFragmentIndices(in lines: [Line]) -> Set<Int> {
+    var rows = [[Int]]()
+    for index in lines.indices {
+      let line = lines[index]
+      guard !line.isVerticalBlock, line.rowCount == 1 else { continue }
+      if
+        let rowIndex = rows.lastIndex(where: { row in
+          row.contains { isOnSameVisualRow(line, lines[$0]) }
+        })
+      {
+        rows[rowIndex].append(index)
+      } else {
+        rows.append([index])
+      }
+    }
+
+    return Set(rows.filter { isCompactPeerRow($0, in: lines) }.flatMap { $0 })
+  }
+
+  private static func isCompactPeerRow(_ indices: [Int], in lines: [Line]) -> Bool {
+    guard indices.count >= 4 else { return false }
+    let fragments = indices.map { lines[$0] }
+    let boxes = fragments.map(\.boundingBoxNormalized).map(\.standardized)
+    guard
+      zip(fragments, boxes).allSatisfy({ fragment, box in
+        let text = fragment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !text.isEmpty
+          && !text.contains("\n")
+          && text.count <= 24
+          && box.width > 0
+          && box.width <= 0.16
+          && box.height > 0
+      })
+    else { return false }
+
+    let ordered = indices.sorted {
+      lines[$0].boundingBoxNormalized.midX < lines[$1].boundingBoxNormalized.midX
+    }
+    let formsOneCompactRun = zip(ordered, ordered.dropFirst()).allSatisfy { lhs, rhs in
+      let a = lines[lhs].boundingBoxNormalized.standardized
+      let b = lines[rhs].boundingBoxNormalized.standardized
+      let gap = max(0, b.minX - a.maxX)
+      return gap <= max(a.height, b.height) * 0.8
+    }
+    guard formsOneCompactRun else { return false }
+
+    let compactSurfaceCount = fragments.count(where: hasCompactSurface)
+    let appearanceTransitions = zip(ordered, ordered.dropFirst()).count { lhs, rhs in
+      colorDistance(lines[lhs].appearance.background, lines[rhs].appearance.background) >= 0.12
+    }
+    return compactSurfaceCount >= 2 || appearanceTransitions >= 3
   }
 
   private static func mergedStyleRuns(

@@ -75,15 +75,16 @@ private struct OverlayCanvas: View {
       ForEach(placements) { placement in
         ForEach(placement.line.source.replacementPatches.indices, id: \.self) { index in
           let patch = placement.line.source.replacementPatches[index]
-          let frame = OverlayLayoutEngine.replacementFrame(
-            for: patch,
-            sourceLayout: placement.line.source.layout,
-            in: size,
-            displayScale: displayScale
-          )
           let sourceSurface = placement.line.source.surface.flatMap { surface in
             surface.confidence >= 0.35 ? surface : nil
           }
+          let frame = OverlayLayoutEngine.replacementFrame(
+            for: patch,
+            sourceLayout: placement.line.source.layout,
+            sourceSurface: sourceSurface,
+            in: size,
+            displayScale: displayScale
+          )
           SourceReplacementSurface(
             appearance: patch.appearance,
             patchFrame: frame,
