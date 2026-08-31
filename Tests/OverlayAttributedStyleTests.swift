@@ -198,6 +198,119 @@ struct OverlayAttributedStyleTests {
   }
 
   @Test
+  func leadingEmphasisUsesTheTrailingBodyAsItsBaseStyle() throws {
+    let text = "Apple Translation supplies the"
+    let regular = OverlaySourceAppearance(
+      background: .white,
+      foreground: .black,
+      confidence: 1,
+      foregroundConfidence: 1,
+      fontWeight: .regular
+    )
+    var medium = regular
+    medium.fontWeight = .medium
+    var semibold = regular
+    semibold.fontWeight = .semibold
+    let recognized = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.08),
+      text: text,
+      appearance: medium,
+      styleRuns: [
+        OverlaySourceStyleRun(
+          range: try range(of: "Apple", in: text),
+          box: CGRect(x: 0.1, y: 0.2, width: 0.12, height: 0.08),
+          appearance: semibold
+        ),
+        OverlaySourceStyleRun(
+          range: try range(of: "Translation", in: text),
+          box: CGRect(x: 0.23, y: 0.2, width: 0.24, height: 0.08),
+          appearance: medium
+        ),
+        OverlaySourceStyleRun(
+          range: try range(of: "supplies", in: text),
+          box: CGRect(x: 0.48, y: 0.2, width: 0.18, height: 0.08),
+          appearance: regular
+        ),
+        OverlaySourceStyleRun(
+          range: try range(of: "the", in: text),
+          box: CGRect(x: 0.67, y: 0.2, width: 0.08, height: 0.08),
+          appearance: regular
+        ),
+      ]
+    )
+    let source = OverlayLine.Source(
+      recognized: recognized,
+      language: Locale.Language(identifier: "en-US")
+    )
+
+    let attributed = try #require(source.attributedTextForTranslation())
+    let spans = attributed.runs.compactMap { run in
+      run.link.map { _ in String(attributed.characters[run.range]) }
+    }
+
+    #expect(source.appearance.fontWeight == .regular)
+    #expect(spans == ["Apple Translation"])
+  }
+
+  @Test
+  func linkWordsCoalesceAcrossUnderlineSamplingJitter() throws {
+    let text = "Open the translation report, compare"
+    let base = OverlaySourceAppearance(
+      background: .black,
+      foreground: .white,
+      confidence: 1,
+      foregroundConfidence: 1,
+      fontWeight: .medium
+    )
+    let blue = OverlayColor(red: 0.30, green: 0.57, blue: 1, alpha: 1)
+    var firstWord = base
+    firstWord.foreground = blue
+    firstWord.fontWeight = .bold
+    firstWord.isUnderlined = true
+    var secondWord = firstWord
+    secondWord.fontWeight = .semibold
+    secondWord.isUnderlined = false
+    let recognized = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.08),
+      text: text,
+      appearance: base,
+      styleRuns: [
+        OverlaySourceStyleRun(
+          range: try range(of: "translation", in: text),
+          box: CGRect(x: 0.28, y: 0.2, width: 0.24, height: 0.08),
+          appearance: firstWord
+        ),
+        OverlaySourceStyleRun(
+          range: try range(of: "report", in: text),
+          box: CGRect(x: 0.53, y: 0.2, width: 0.14, height: 0.08),
+          appearance: secondWord
+        ),
+      ]
+    )
+    let source = OverlayLine.Source(
+      recognized: recognized,
+      language: Locale.Language(identifier: "en-US")
+    )
+    let attributed = try #require(source.attributedTextForTranslation())
+    let linkedRuns = attributed.runs.filter { $0.link != nil }
+    let linked = try #require(linkedRuns.first)
+    let link = try #require(linked.link)
+
+    #expect(linkedRuns.count == 1)
+    #expect(String(attributed.characters[linked.range]) == "translation report")
+
+    let alignment = TranslationStyleMapper.align(
+      source: attributed,
+      target: "번역 보고서를 열고 비교합니다.",
+      alternatives: [link: "번역 보고서"]
+    )
+    let targetRuns = alignment.target.runs.filter { $0.link != nil }
+    let targetRun = try #require(targetRuns.first)
+    #expect(targetRuns.count == 1)
+    #expect(String(alignment.target.characters[targetRun.range]) == "번역 보고서")
+  }
+
+  @Test
   func styleMapperUsesShortTranslatedAlternativeWhenLiteralChanges() throws {
     var source = AttributedString("rameshsunkara opened this issue")
     let link = URL(string: "swiftycrow-style://run/0")!

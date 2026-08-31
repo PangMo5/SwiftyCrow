@@ -331,6 +331,36 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
+  func compactSurfaceIgnoresParentColorLeakingIntoOCRBox() throws {
+    let image = try makeLeakingBadgeImage()
+    let source = CGRect(x: 0.29, y: 0.38, width: 0.42, height: 0.32)
+    let line = OCRResult.Line(
+      boundingBoxNormalized: source,
+      text: "High-fidelity",
+      horizontalGlyphScale: source.height,
+      replacementPatches: [OverlaySourcePatch(box: source)],
+      styleRuns: [
+        OverlaySourceStyleRun(
+          range: NSRange(location: 0, length: ("High-fidelity" as NSString).length),
+          box: source
+        )
+      ]
+    )
+
+    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+      to: OCRResult(lines: [line]),
+      from: image
+    )
+    let analyzedLine = try #require(analyzed.lines.first)
+
+    #expect(analyzedLine.surface != nil)
+    #expect(analyzedLine.appearance.background.red > 0.85)
+    #expect(analyzedLine.appearance.foreground.red > 0.3)
+    #expect(analyzedLine.appearance.foreground.blue > 0.6)
+    #expect(analyzedLine.horizontalInkScale > 0.05)
+  }
+
+  @Test
   func clampsSamplingAtImageEdges() throws {
     let image = try makeImage(
       background: CGColor(red: 0.18, green: 0.65, blue: 0.42, alpha: 1),
@@ -647,6 +677,33 @@ struct OverlaySourceAppearanceAnalyzerTests {
     context.setFillColor(CGColor(gray: 0.12, alpha: 1))
     for x in stride(from: 68, through: 128, by: 8) {
       context.fill(CGRect(x: x, y: 41, width: 3, height: 18))
+    }
+    return try #require(context.makeImage())
+  }
+
+  private func makeLeakingBadgeImage() throws -> CGImage {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 240,
+      height: 120,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(red: 0.09, green: 0.095, blue: 0.11, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 240, height: 120))
+    context.setFillColor(CGColor(red: 0.93, green: 0.90, blue: 1, alpha: 1))
+    context.addPath(CGPath(
+      roundedRect: CGRect(x: 45, y: 42, width: 150, height: 36),
+      cornerWidth: 18,
+      cornerHeight: 18,
+      transform: nil
+    ))
+    context.fillPath()
+    context.setFillColor(CGColor(red: 0.45, green: 0.28, blue: 0.76, alpha: 1))
+    for x in stride(from: 76, through: 164, by: 8) {
+      context.fill(CGRect(x: x, y: 51, width: 4, height: 18))
     }
     return try #require(context.makeImage())
   }

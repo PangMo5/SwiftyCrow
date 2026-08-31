@@ -34,15 +34,20 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     // MARK: Lifecycle
 
     init(recognized line: OCRResult.Line, language: Locale.Language) {
+      let semanticAppearance = Self.semanticBaseAppearance(
+        for: line.text,
+        styleRuns: line.styleRuns,
+        fallback: line.appearance
+      )
       box = line.boundingBoxNormalized
       text = line.text
       self.language = language
-      appearance = line.appearance
+      appearance = semanticAppearance
       horizontalGlyphScale = line.horizontalGlyphScale
       horizontalInkScale = line.horizontalInkScale
       horizontalLineAdvanceScale = line.horizontalLineAdvanceScale
       replacementPatches = line.replacementPatches.isEmpty
-        ? [OverlaySourcePatch(box: line.boundingBoxNormalized, appearance: line.appearance)]
+        ? [OverlaySourcePatch(box: line.boundingBoxNormalized, appearance: semanticAppearance)]
         : line.replacementPatches
       styleRuns = line.styleRuns
       alignment = line.alignment
@@ -177,7 +182,6 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       var attributed = AttributedString(text)
       var spans = [AttributedStyleSpan]()
       for (index, run) in styleRuns.enumerated() {
-        guard Self.isMateriallyDifferent(run.appearance, from: appearance) else { continue }
         guard !Self.isBoundaryPunctuationBleed(run, in: text) else { continue }
         guard
           let stringRange = Range(run.range, in: text),
@@ -189,15 +193,29 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
           box: run.box,
           appearance: run.appearance
         )
+        let extendsPreviousStyle = spans.last.map {
+          Self.isMateriallyDifferent($0.appearance, from: appearance)
+            && Self.canCoalesce($0, with: next, in: text, base: appearance)
+        } ?? false
+        guard
+          Self.isMateriallyDifferent(run.appearance, from: appearance)
+          || extendsPreviousStyle
+        else { continue }
         if
           let previous = spans.last,
-          Self.canCoalesce(previous, with: next, in: text)
+          Self.canCoalesce(previous, with: next, in: text, base: appearance)
         {
           spans[spans.count - 1].range = NSUnionRange(previous.range, next.range)
           spans[spans.count - 1].box = previous.box.union(next.box)
           if
             previous.appearance.fontDesign != .monospaced,
             next.appearance.fontDesign == .monospaced
+          {
+            spans[spans.count - 1].index = index
+            spans[spans.count - 1].appearance = next.appearance
+          } else if
+            !previous.appearance.isUnderlined,
+            next.appearance.isUnderlined
           {
             spans[spans.count - 1].index = index
             spans[spans.count - 1].appearance = next.appearance
@@ -229,6 +247,93 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       var range: NSRange
       var box: CGRect
       var appearance: OverlaySourceAppearance
+    }
+
+    /// A wrapped row can begin with a long bold phrase that occupies more
+    /// characters than the regular prose after it. A character-weighted median
+    /// then mistakes the emphasis for the row's base style, making the entire
+    /// translation bold and leaving no distinct range to map. A stable trailing
+    /// run of two or more regular words is stronger structural evidence of the
+    /// body style than that median.
+    private static func semanticBaseAppearance(
+      for text: String,
+      styleRuns: [OverlaySourceStyleRun],
+      fallback: OverlaySourceAppearance
+    ) -> OverlaySourceAppearance {
+      guard fallback.fontWeight == .medium else { return fallback }
+      let source = text as NSString
+      let lexicalRuns = styleRuns.filter { run in
+        guard
+          run.range.location >= 0,
+          NSMaxRange(run.range) <= source.length
+        else { return false }
+        return source.substring(with: run.range).unicodeScalars.contains {
+          CharacterSet.alphanumerics.contains($0)
+        }
+      }.sorted { $0.range.location < $1.range.location }
+      guard lexicalRuns.count >= 4 else { return fallback }
+
+      var suffixStart = lexicalRuns.endIndex
+      while
+        suffixStart > lexicalRuns.startIndex,
+        lexicalRuns[lexicalRuns.index(before: suffixStart)].appearance.fontWeight == .regular
+      {
+        suffixStart = lexicalRuns.index(before: suffixStart)
+      }
+      let suffix = Array(lexicalRuns[suffixStart...])
+      let prefix = Array(lexicalRuns[..<suffixStart])
+      guard
+        suffix.count >= 2,
+        !prefix.isEmpty,
+        prefix.allSatisfy({ $0.appearance.fontWeight.rawValue >= OverlayFontWeight.medium.rawValue }),
+        prefix.contains(where: { $0.appearance.fontWeight.rawValue >= OverlayFontWeight.semibold.rawValue })
+      else { return fallback }
+
+      let sharesOneTextSurface = lexicalRuns.allSatisfy {
+        colorDistance($0.appearance.background, fallback.background) <= 0.06
+          && colorDistance($0.appearance.foreground, fallback.foreground) <= 0.15
+          && $0.appearance.fontDesign == fallback.fontDesign
+      }
+      guard sharesOneTextSurface, let firstSuffix = suffix.first else { return fallback }
+      let suffixText = source.substring(from: firstSuffix.range.location)
+      let totalVisibleLength = visibleTextLength(text)
+      let suffixVisibleLength = visibleTextLength(suffixText)
+      guard
+        suffixVisibleLength >= 6,
+        suffixVisibleLength * 4 >= totalVisibleLength
+      else { return fallback }
+
+      let totalWeight = suffix.reduce(CGFloat.zero) {
+        $0 + CGFloat(max(1, $1.range.length))
+      }
+      var result = fallback
+      result.foreground = suffix.reduce(
+        OverlayColor(red: 0, green: 0, blue: 0, alpha: 1)
+      ) { color, run in
+        let weight = CGFloat(max(1, run.range.length)) / max(1, totalWeight)
+        return OverlayColor(
+          red: color.red + run.appearance.foreground.red * weight,
+          green: color.green + run.appearance.foreground.green * weight,
+          blue: color.blue + run.appearance.foreground.blue * weight,
+          alpha: 1
+        )
+      }
+      result.foregroundConfidence = suffix.reduce(CGFloat.zero) {
+        $0 + $1.appearance.foregroundConfidence * CGFloat(max(1, $1.range.length)) / max(1, totalWeight)
+      }
+      result.inkCoverage = suffix.reduce(CGFloat.zero) {
+        $0 + $1.appearance.inkCoverage * CGFloat(max(1, $1.range.length)) / max(1, totalWeight)
+      }
+      result.inkHeightScale = suffix.reduce(CGFloat.zero) {
+        $0 + $1.appearance.inkHeightScale * CGFloat(max(1, $1.range.length)) / max(1, totalWeight)
+      }
+      result.fontWeight = .regular
+      result.isUnderlined = suffix.allSatisfy(\.appearance.isUnderlined)
+      return result
+    }
+
+    private static func visibleTextLength(_ text: String) -> Int {
+      text.unicodeScalars.count(where: { CharacterSet.alphanumerics.contains($0) })
     }
 
     private static func hasSameOrientation(_ lhs: OverlaySourceLayout, _ rhs: OverlaySourceLayout) -> Bool {
@@ -317,7 +422,8 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     private static func canCoalesce(
       _ lhs: AttributedStyleSpan,
       with rhs: AttributedStyleSpan,
-      in text: String
+      in text: String,
+      base: OverlaySourceAppearance
     ) -> Bool {
       guard NSMaxRange(lhs.range) <= rhs.range.location else { return false }
       let gap = NSRange(
@@ -341,10 +447,16 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         && !intersection.isEmpty
         && intersection.width * intersection.height / max(0.000_001, minimumArea) >= 0.8
       let foregroundTolerance: CGFloat = sharesVisionBox ? 0.25 : 0.08
+      let underlineMatches = lhs.appearance.isUnderlined == rhs.appearance.isUnderlined
+      let sharedDistinctForeground = colorDistance(
+        lhs.appearance.foreground,
+        base.foreground
+      ) >= 0.1
+        && colorDistance(rhs.appearance.foreground, base.foreground) >= 0.1
       return colorDistance(lhs.appearance.background, rhs.appearance.background) <= 0.04
         && colorDistance(lhs.appearance.foreground, rhs.appearance.foreground) <= foregroundTolerance
         && abs(lhs.appearance.fontWeight.rawValue - rhs.appearance.fontWeight.rawValue) <= 1
-        && lhs.appearance.isUnderlined == rhs.appearance.isUnderlined
+        && (underlineMatches || sharedDistinctForeground)
     }
 
     private static func isBoundaryPunctuationBleed(
