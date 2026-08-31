@@ -477,7 +477,8 @@ struct OverlayLayoutEngineTests {
       text: "Pull a workspace to the top, bottom, left, or right. The two blocks tile beside each other with separate BSP layouts, and windows stay on their own side.",
       rowCount: 5,
       horizontalGlyphScale: 0.0279,
-      horizontalInkScale: 0.0150
+      horizontalInkScale: 0.0150,
+      horizontalLineAdvanceScale: 0.036
     )
     var line = OverlayLine(
       id: UUID(),
@@ -496,12 +497,15 @@ struct OverlayLayoutEngineTests {
 
     #expect(placement.fontSize >= 31)
     #expect(placement.fontSize <= 33)
+    #expect(placement.lineHeightMultiple > 1)
+    #expect(placement.lineHeightMultiple <= 1.6)
     #expect(CoreTextTypesetter.fits(
       text: placement.line.displayedText,
       language: placement.line.displayedLanguage,
       flow: placement.flow,
       fontSize: placement.fontSize,
-      in: placement.frame.size
+      in: placement.frame.size,
+      lineHeightMultiple: placement.lineHeightMultiple
     ))
   }
 
