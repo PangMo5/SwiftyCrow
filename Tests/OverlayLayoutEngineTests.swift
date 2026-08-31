@@ -746,6 +746,36 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test
+  func compactSurfaceRestorationCoversTheFullSourceGlyphHeight() {
+    let canvas = CGSize(width: 1_000, height: 500)
+    let patch = OverlaySourcePatch(box: CGRect(x: 0.2, y: 0.4, width: 0.1, height: 0.04))
+    let surface = OverlaySourceSurface(
+      box: CGRect(x: 0.195, y: 0.38, width: 0.11, height: 0.08),
+      confidence: 0.35,
+      clippingBox: CGRect(x: 0.19, y: 0.37, width: 0.12, height: 0.10)
+    )
+
+    let ordinary = OverlayLayoutEngine.replacementFrame(
+      for: patch,
+      sourceLayout: .horizontal(rows: 1),
+      in: canvas,
+      displayScale: 1
+    )
+    let clippedControl = OverlayLayoutEngine.replacementFrame(
+      for: patch,
+      sourceLayout: .horizontal(rows: 1),
+      sourceSurface: surface,
+      in: canvas,
+      displayScale: 1
+    )
+
+    #expect(clippedControl.minY < ordinary.minY)
+    #expect(clippedControl.maxY > ordinary.maxY)
+    #expect(clippedControl.minY == 186)
+    #expect(clippedControl.maxY == 234)
+  }
+
+  @Test
   func horizontalTranslationKeepsTheSourceTopEdge() throws {
     let canvas = CGSize(width: 2_178, height: 1_228)
     let line = translatedLine(

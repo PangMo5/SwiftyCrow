@@ -100,6 +100,7 @@ enum OverlayLayoutEngine {
   static func replacementFrame(
     for patch: OverlaySourcePatch,
     sourceLayout: OverlaySourceLayout,
+    sourceSurface: OverlaySourceSurface? = nil,
     in canvasSize: CGSize,
     displayScale: CGFloat
   ) -> CGRect {
@@ -124,9 +125,24 @@ enum OverlayLayoutEngine {
       // a 1–3 px halo; single-line labels still need at most one pixel for
       // faint antialiasing. Detected controls are clipped to their original
       // rounded surface later, so this cannot repaint outside their border.
-      verticalBleed = rows > 1
-        ? max(1, min(3, source.height * 0.08))
-        : min(1, source.height * 0.04)
+      if rows == 1, let sourceSurface, sourceSurface.confidence >= 0.35 {
+        let normalizedSurface = (sourceSurface.clippingBox ?? sourceSurface.box).standardized
+        let surface = sourceFrame(for: normalizedSurface, canvas: canvas, safeBounds: canvas)
+        let isCompact = surface.contains(CGPoint(x: source.midX, y: source.midY))
+          && surface.width <= source.width * 2.2
+          && surface.height <= source.height * 3
+        if isCompact {
+          let topGap = max(0, source.minY - surface.minY)
+          let bottomGap = max(0, surface.maxY - source.maxY)
+          verticalBleed = min(14, max(1, max(topGap, bottomGap)))
+        } else {
+          verticalBleed = min(1, source.height * 0.04)
+        }
+      } else {
+        verticalBleed = rows > 1
+          ? max(1, min(3, source.height * 0.08))
+          : min(1, source.height * 0.04)
+      }
 
     case .vertical:
       // Vertical OCR boxes often sit against speech-bubble edges. Keep their

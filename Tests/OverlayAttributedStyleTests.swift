@@ -502,6 +502,54 @@ struct OverlayAttributedStyleTests {
     #expect(OverlayTranslationPolicy.preservesSource(at: 0, in: [value]) == expectedPreservation)
   }
 
+  @Test(arguments: [
+    ("AGPL 3.0-only", true),
+    ("macOS 14+", true),
+    ("Chapter 2", false),
+  ])
+  func versionedTechnicalMetadataKeepsItsExactSourceValue(
+    _ text: String,
+    expectedPreservation: Bool
+  ) {
+    let value = source(text: text, box: CGRect(x: 0.1, y: 0.2, width: 0.15, height: 0.04))
+
+    #expect(OverlayTranslationPolicy.preservesSource(at: 0, in: [value]) == expectedPreservation)
+  }
+
+  @Test
+  func compactBadgeLabelsUseTheirTrailingValuesAsTranslationContext() {
+    let sources = [
+      source(text: "release", box: CGRect(x: 0.0275, y: 0.345, width: 0.0465, height: 0.045)),
+      source(text: "v1.12.0", box: CGRect(x: 0.0807, y: 0.345, width: 0.0519, height: 0.045)),
+      source(text: "downloads", box: CGRect(x: 0.1488, y: 0.345, width: 0.0692, height: 0.045)),
+      source(text: "233", box: CGRect(x: 0.2249, y: 0.345, width: 0.0254, height: 0.045)),
+      source(text: "macOS", box: CGRect(x: 0.2676, y: 0.345, width: 0.0450, height: 0.045)),
+      source(text: "14+", box: CGRect(x: 0.3218, y: 0.345, width: 0.0277, height: 0.045)),
+      source(text: "License", box: CGRect(x: 0.3655, y: 0.345, width: 0.0487, height: 0.045)),
+      source(text: "AGPL 3.0-only", box: CGRect(x: 0.4164, y: 0.345, width: 0.0969, height: 0.045)),
+    ]
+
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: sources) == "v1.12.0")
+    #expect(OverlayTranslationPolicy.trailingContext(at: 2, in: sources) == "233")
+    #expect(OverlayTranslationPolicy.trailingContext(at: 4, in: sources) == "14+")
+    #expect(OverlayTranslationPolicy.trailingContext(at: 6, in: sources) == "AGPL 3.0-only")
+    #expect(OverlayTranslationPolicy.trailingContext(at: 1, in: sources) == nil)
+    #expect(OverlayTranslationPolicy.trailingContext(at: 7, in: sources) == nil)
+  }
+
+  @Test
+  func contextualTranslationKeepsOnlyTheTranslatedLabel() {
+    #expect(
+      TranslationTextStructure.label(fromContextualTranslation: "라이선스: AGPL 3.0 전용")
+        == "라이선스"
+    )
+    #expect(
+      TranslationTextStructure.label(fromContextualTranslation: "릴리즈：v1.12.0")
+        == "릴리즈"
+    )
+    #expect(TranslationTextStructure.label(fromContextualTranslation: "구분자 없음") == nil)
+  }
+
   @Test
   func unmatchedStyleDoesNotReplaceThePlainTranslation() throws {
     var source = AttributedString("狼煙")

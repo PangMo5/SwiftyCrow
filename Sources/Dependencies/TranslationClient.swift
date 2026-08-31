@@ -14,6 +14,14 @@ struct TranslationLine: Equatable, Sendable {
   var id: UUID
   var text: String
   var attributedText: AttributedString? = nil
+  /// Neighboring compact value used only to disambiguate this label. It is
+  /// never rendered as part of the label's translated output.
+  var trailingContext: String? = nil
+
+  var requestText: String {
+    guard let trailingContext else { return text }
+    return "\(text): \(trailingContext)"
+  }
 }
 
 // MARK: - TranslatedText
@@ -53,6 +61,18 @@ enum TranslationTextStructure {
       }
     }
     return result
+  }
+
+  /// Extracts the label from a contextual `label: value` translation. Apple
+  /// Translation retains either the ASCII or full-width colon for supported
+  /// language pairs; returning nil keeps a malformed response visible instead
+  /// of silently guessing where the label ends.
+  static func label(fromContextualTranslation target: String) -> String? {
+    guard let separator = target.firstIndex(where: { $0 == ":" || $0 == "：" }) else {
+      return nil
+    }
+    let label = target[..<separator].trimmingCharacters(in: .whitespacesAndNewlines)
+    return label.isEmpty ? nil : label
   }
 
   // MARK: Private
@@ -108,7 +128,7 @@ extension TranslationClient: DependencyKey {
           }
         let linesByID = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0) })
         let requests = lines.map {
-          TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id.uuidString)
+          TranslationSession.Request(sourceText: $0.requestText, clientIdentifier: $0.id.uuidString)
         }
         let task = Task {
           let clock = ContinuousClock()
@@ -128,8 +148,12 @@ extension TranslationClient: DependencyKey {
                 let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
                 let sourceLine = linesByID[id]
               else { continue }
+              let translatedLabel = sourceLine.trailingContext == nil
+                ? response.targetText
+                : TranslationTextStructure.label(fromContextualTranslation: response.targetText)
+                  ?? response.targetText
               let targetText = TranslationTextStructure.matchingSourceBreaks(
-                response.targetText,
+                translatedLabel,
                 source: sourceLine.text
               )
               if #available(macOS 26.4, *), sourceLine.attributedText != nil {

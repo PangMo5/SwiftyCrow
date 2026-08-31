@@ -150,7 +150,9 @@ enum OverlaySourceAppearanceAnalyzer {
         line.surface = inferredSurface(
           containing: line.boundingBoxNormalized,
           appearance: line.appearance,
-          raster: styleRaster
+          raster: styleRaster,
+          minimumConfidence: 0.30,
+          acceptedConfidenceFloor: 0.35
         )
       }
       if
@@ -569,7 +571,9 @@ enum OverlaySourceAppearanceAnalyzer {
     containing normalizedSource: CGRect,
     appearance: OverlaySourceAppearance,
     raster: PixelRaster,
-    limitingTo normalizedLimit: CGRect? = nil
+    limitingTo normalizedLimit: CGRect? = nil,
+    minimumConfidence: CGFloat = 0.35,
+    acceptedConfidenceFloor: CGFloat? = nil
   ) -> OverlaySourceSurface? {
     let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
     let normalizedSource = normalizedSource.standardized.intersection(unit)
@@ -709,7 +713,7 @@ enum OverlaySourceAppearanceAnalyzer {
         * min(1, fillRatio / 0.65)
         * min(1, 0.65 + (expansion - 1) * 0.2)
     )
-    guard confidence >= 0.35 else { return nil }
+    guard confidence >= minimumConfidence else { return nil }
     let cornerRadiusFraction = inferredCornerRadiusFraction(
       minimumY: minimumY,
       maximumY: maximumY,
@@ -723,7 +727,11 @@ enum OverlaySourceAppearanceAnalyzer {
         width: safe.width / CGFloat(raster.width),
         height: safe.height / CGFloat(raster.height)
       ),
-      confidence: confidence,
+      // A high-resolution retry is made only for a compact fill already known
+      // to contrast with its surroundings. Promote that accepted geometry to
+      // the renderer's ordinary confidence floor instead of detecting it and
+      // then discarding it one stage later.
+      confidence: max(confidence, acceptedConfidenceFloor ?? confidence),
       clippingBox: CGRect(
         x: component.minX / CGFloat(raster.width),
         y: component.minY / CGFloat(raster.height),
