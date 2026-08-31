@@ -132,15 +132,85 @@ enum OverlaySourceAppearanceAnalyzer {
           line.replacementPatches.append(rubyPatch)
         }
       }
-      if !line.isVerticalBlock, line.appearance.inkHeightScale > 0 {
-        line.horizontalInkScale = line.appearance.inkHeightScale
-      }
       line.surface = surfaceRaster.flatMap {
         inferredSurface(
           containing: line.boundingBoxNormalized,
           appearance: line.appearance,
           raster: $0
         )
+      }
+      let hasDistinctCompactFill = !line.isVerticalBlock
+        && line.rowCount == 1
+        && line.appearance.background.distance(to: surroundingBackground) >= 0.18
+      if line.surface == nil, hasDistinctCompactFill, let styleRaster {
+        // The low-resolution flood fill is normally enough for cards and
+        // balloons. Densely lettered pills can leave only a one-pixel corridor
+        // at that scale, though, so retry just those compact high-contrast
+        // candidates with the style raster already held in memory.
+        line.surface = inferredSurface(
+          containing: line.boundingBoxNormalized,
+          appearance: line.appearance,
+          raster: styleRaster
+        )
+      }
+      if
+        hasDistinctCompactFill,
+        let surface = line.surface,
+        isCompactTextSurface(surface, around: line.boundingBoxNormalized)
+      {
+        line.surface = applyingCompactTextInsets(to: surface)
+      }
+      if
+        hasDistinctCompactFill,
+        let surface = line.surface,
+        let styleRaster,
+        isCompactTextSurface(surface, around: line.boundingBoxNormalized),
+        let refined = compactSurfaceAppearance(
+          for: line.boundingBoxNormalized,
+          inside: surface,
+          original: line.appearance,
+          surroundingBackground: surroundingBackground,
+          raster: styleRaster
+        )
+      {
+        let original = line.appearance
+        line.appearance = refined
+        line.styleRuns = line.styleRuns.map { run in
+          var run = run
+          guard run.appearance.background.distance(to: original.background) <= 0.08 else {
+            return run
+          }
+          run.appearance.background = refined.background
+          if
+            run.appearance.foregroundConfidence < 0.08
+            || run.appearance.foreground.distance(to: original.foreground) <= 0.12
+          {
+            run.appearance.foreground = refined.foreground
+            run.appearance.foregroundConfidence = refined.foregroundConfidence
+            run.appearance.inkCoverage = refined.inkCoverage
+            run.appearance.inkHeightScale = refined.inkHeightScale
+            run.appearance.fontWeight = refined.fontWeight
+            run.appearance.isUnderlined = refined.isUnderlined
+          }
+          return run
+        }
+        line.replacementPatches = line.replacementPatches.map { patch in
+          var patch = patch
+          guard patch.appearance.background.distance(to: original.background) <= 0.08 else {
+            return patch
+          }
+          patch.appearance.background = refined.background
+          patch.appearance.foreground = refined.foreground
+          patch.appearance.foregroundConfidence = refined.foregroundConfidence
+          patch.appearance.inkCoverage = refined.inkCoverage
+          patch.appearance.inkHeightScale = refined.inkHeightScale
+          patch.appearance.fontWeight = refined.fontWeight
+          patch.appearance.isUnderlined = refined.isUnderlined
+          return patch
+        }
+      }
+      if !line.isVerticalBlock, line.appearance.inkHeightScale > 0 {
+        line.horizontalInkScale = line.appearance.inkHeightScale
       }
       return line
     })
@@ -186,12 +256,15 @@ enum OverlaySourceAppearanceAnalyzer {
             ? surface
             : nil
         }
-        line.surface = inferredSurface(
+        let updatedSurface = inferredSurface(
           containing: sourceBox,
           appearance: line.appearance,
           raster: surfaceRaster,
           limitingTo: previousSurface?.clippingBox
-        ) ?? previousSurface
+        )
+        line.surface = previousSurface.flatMap {
+          isCompactTextSurface($0, around: sourceBox) ? $0 : nil
+        } ?? updatedSurface ?? previousSurface
       }
       if let styleRaster {
         let sourceLength = (line.text as NSString).length
@@ -993,6 +1066,66 @@ enum OverlaySourceAppearanceAnalyzer {
       dy: -max(4, source.height)
     ).integral.intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
     return dominantSample(in: bounds, excluding: source, raster: raster)?.color
+  }
+
+  private static func compactSurfaceAppearance(
+    for source: CGRect,
+    inside surface: OverlaySourceSurface,
+    original: OverlaySourceAppearance,
+    surroundingBackground: OverlayColor,
+    raster: PixelRaster
+  ) -> OverlaySourceAppearance? {
+    let sampleBox = source.standardized.intersection(surface.box.standardized)
+    guard !sampleBox.isNull, !sampleBox.isEmpty else { return nil }
+    var refined = appearance(around: sampleBox, raster: raster)
+    guard refined.background.distance(to: original.background) <= 0.08 else { return nil }
+
+    // A tight OCR box can protrude by a pixel beyond a rounded chip. The
+    // parent's high-contrast color then wins the "farthest pixel" vote and is
+    // mistaken for both glyph ink and font height. Sampling within the detected
+    // interior removes that border contamination while retaining actual ink.
+    let originalMatchesParent = original.foreground.distance(to: surroundingBackground) <= 0.12
+    let hasBetterInkEvidence = refined.foregroundConfidence
+      >= max(0.04, original.foregroundConfidence * 1.2)
+    guard originalMatchesParent || hasBetterInkEvidence else { return nil }
+    refined.fontDesign = original.fontDesign
+    return refined
+  }
+
+  private static func isCompactTextSurface(
+    _ surface: OverlaySourceSurface,
+    around normalizedSource: CGRect
+  ) -> Bool {
+    let surface = (surface.clippingBox ?? surface.box).standardized
+    let source = normalizedSource.standardized
+    guard !surface.isEmpty, !source.isEmpty else { return false }
+    let intersection = surface.intersection(source)
+    guard !intersection.isNull, !intersection.isEmpty else { return false }
+    let sourceArea = max(0.000_001, source.width * source.height)
+    let surfaceArea = surface.width * surface.height
+    let coveredSource = intersection.width * intersection.height / sourceArea
+    return coveredSource >= 0.75
+      && surfaceArea / sourceArea <= 8
+      && surface.width <= source.width * 2.2
+      && surface.height <= source.height * 3
+  }
+
+  private static func applyingCompactTextInsets(
+    to surface: OverlaySourceSurface
+  ) -> OverlaySourceSurface {
+    guard let clippingBox = surface.clippingBox?.standardized else { return surface }
+    guard clippingBox.width / max(0.000_001, clippingBox.height) >= 2.2 else { return surface }
+    let verticalInset = clippingBox.height * 0.15
+    let insetBox = CGRect(
+      x: surface.box.minX,
+      y: clippingBox.minY + verticalInset,
+      width: surface.box.width,
+      height: clippingBox.height - verticalInset * 2
+    )
+    guard !insetBox.isEmpty else { return surface }
+    var surface = surface
+    surface.box = insetBox
+    return surface
   }
 
   private static func isCompactInlineSurface(_ surface: CGRect, around source: CGRect) -> Bool {

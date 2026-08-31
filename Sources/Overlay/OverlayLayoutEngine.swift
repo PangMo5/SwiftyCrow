@@ -395,7 +395,11 @@ enum OverlayLayoutEngine {
       guard case .horizontal(let rows) = line.source.layout else { return .center }
       let fallback = line.source.alignment
         ?? (direction == .rightToLeft ? .trailing : .leading)
-      let neighboring = neighboringBlockAlignment(for: line, among: lines)
+      let preservesLeadingAccessory = fallback == .leading
+        && hasLeadingAccessoryIndent(for: line, among: lines)
+      let neighboring = preservesLeadingAccessory
+        ? .leading
+        : neighboringBlockAlignment(for: line, among: lines)
 
       if let surface = line.source.surface, surface.confidence >= 0.35 {
         let surfaceFrame = self.sourceFrame(
@@ -482,6 +486,63 @@ enum OverlayLayoutEngine {
       ranked.count < 2 || best.count > ranked[1].count
     else { return nil }
     return best.alignment
+  }
+
+  private static func hasLeadingAccessoryIndent(
+    for line: OverlayLine,
+    among lines: [OverlayLine]
+  ) -> Bool {
+    guard
+      line.source.alignment == nil,
+      case .horizontal(let rows) = line.source.layout,
+      rows == 1
+    else { return false }
+    let source = line.source.box.standardized
+    guard source.width > 0, source.height > 0, source.width <= 0.25 else { return false }
+    let sourceRowScale = horizontalRowScale(of: line.source)
+    let nearby = lines.compactMap { candidate -> CGRect? in
+      guard
+        candidate.id != line.id,
+        case .horizontal = candidate.source.layout
+      else { return nil }
+      let other = candidate.source.box.standardized
+      guard other.width > 0, other.height > 0 else { return nil }
+
+      let intersection = source.intersection(other)
+      let verticalOverlap = intersection.isNull ? 0 : intersection.height
+      guard verticalOverlap / min(source.height, other.height) <= 0.25 else { return nil }
+      let verticalGap = max(
+        0,
+        max(source.minY, other.minY) - min(source.maxY, other.maxY)
+      )
+      let rowScale = max(sourceRowScale, horizontalRowScale(of: candidate.source))
+      let maximumGap = min(0.08, max(0.02, rowScale * 2.5))
+      guard verticalGap <= maximumGap else { return nil }
+
+      let horizontalOverlap = max(0, min(source.maxX, other.maxX) - max(source.minX, other.minX))
+      guard horizontalOverlap / min(source.width, other.width) >= 0.55 else { return nil }
+      return other
+    }
+    let above = nearby.filter { $0.midY < source.midY }
+    let below = nearby.filter { $0.midY > source.midY }
+
+    for upper in above {
+      for lower in below {
+        let rowScale = max(sourceRowScale, max(upper.height, lower.height))
+        let edgeTolerance = max(0.003, min(0.018, rowScale * 0.55))
+        guard abs(upper.minX - lower.minX) <= edgeTolerance else { continue }
+        let commonLeadingEdge = (upper.minX + lower.minX) / 2
+        let leadingIndent = source.minX - commonLeadingEdge
+        guard
+          leadingIndent >= max(0.006, sourceRowScale * 0.75),
+          leadingIndent <= min(0.08, sourceRowScale * 3),
+          source.width <= max(upper.width, lower.width) * 0.8,
+          max(upper.maxX, lower.maxX) - source.maxX >= max(0.01, sourceRowScale * 2)
+        else { continue }
+        return true
+      }
+    }
+    return false
   }
 
   private static func horizontalRowScale(of source: OverlayLine.Source) -> CGFloat {

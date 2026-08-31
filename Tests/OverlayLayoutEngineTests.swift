@@ -330,6 +330,46 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test
+  func inlineControlLabelPreservesItsLeadingAnchor() throws {
+    var heading = translatedLine(
+      id: lineID(30),
+      box: CGRect(x: 0.52735, y: 0.60399, width: 0.19822, height: 0.03265),
+      sourceIsVertical: false,
+      text: "본문 옆으로 전환",
+      target: "ko-KR"
+    )
+    var label = translatedLine(
+      id: lineID(31),
+      box: CGRect(x: 0.56977, y: 0.66250, width: 0.14680, height: 0.02396),
+      sourceIsVertical: false,
+      text: "자동 번역",
+      target: "ko-KR"
+    )
+    var body = translatedLine(
+      id: lineID(32),
+      box: CGRect(x: 0.52616, y: 0.71117, width: 0.36054, height: 0.05654),
+      sourceIsVertical: false,
+      sourceRows: 2,
+      text: "스위치 그래픽과 보조 문장은 별도로 유지되어야 합니다.",
+      target: "ko-KR"
+    )
+    heading.source.alignment = .leading
+    label.source.alignment = nil
+    body.source.alignment = .leading
+
+    let placement = try #require(
+      OverlayLayoutEngine
+        .placements(
+          for: [heading, label, body],
+          in: CGSize(width: 1_600, height: 1_000)
+        )
+        .first { $0.line.id == label.id }
+    )
+
+    #expect(placement.alignment == .leading)
+  }
+
+  @Test
   func pageCenteredHeroDoesNotCenterAVisuallySeparateCardColumn() {
     var eyebrow = translatedLine(
       id: lineID(0),
