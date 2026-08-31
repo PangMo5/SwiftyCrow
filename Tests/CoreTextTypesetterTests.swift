@@ -104,6 +104,40 @@ struct CoreTextTypesetterTests {
     ))
   }
 
+  @Test
+  func horizontalLineHeightMultipleParticipatesInFitting() {
+    let text = "첫 번째 줄과 두 번째 줄의 간격을 원본과 동일하게 유지합니다."
+    let language = Locale.Language(identifier: "ko-KR")
+    let size = CGSize(width: 180, height: 72)
+    let defaultSize = CoreTextTypesetter.fittedFontSize(
+      text: text,
+      language: language,
+      flow: .horizontal(.leftToRight),
+      constrainedTo: size,
+      preferred: 24,
+      minimum: 6
+    )
+    let spacedSize = CoreTextTypesetter.fittedFontSize(
+      text: text,
+      language: language,
+      flow: .horizontal(.leftToRight),
+      constrainedTo: size,
+      preferred: 24,
+      minimum: 6,
+      lineHeightMultiple: 1.35
+    )
+
+    #expect(spacedSize <= defaultSize)
+    #expect(CoreTextTypesetter.fits(
+      text: text,
+      language: language,
+      flow: .horizontal(.leftToRight),
+      fontSize: spacedSize,
+      in: size,
+      lineHeightMultiple: 1.35
+    ))
+  }
+
   // MARK: Private
 
   private func substrings(_ ranges: [NSRange], in text: String) throws -> [String] {

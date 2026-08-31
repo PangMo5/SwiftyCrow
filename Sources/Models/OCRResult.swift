@@ -30,6 +30,10 @@ struct OCRResult: Equatable, Sendable {
     /// Pixel-measured foreground ink height, normalized to the captured image.
     /// Preferred over Vision box height when available.
     var horizontalInkScale: CGFloat = 0
+    /// Median center-to-center advance between source rows, normalized to the
+    /// captured image. This preserves the source's visual line-height rather
+    /// than inheriting the target font's usually tighter default leading.
+    var horizontalLineAdvanceScale: CGFloat = 0
     /// Paragraph membership supplied by Vision for this recognition pass.
     /// Used only while rebuilding wrapped rows; it is not a persistent id.
     var recognitionGroupID: Int? = nil
@@ -133,6 +137,9 @@ struct OCRResult: Equatable, Sendable {
       let weightedHorizontalInkScale = horizontalInkFragments.reduce(0) {
         $0 + $1.horizontalInkScale * CGFloat(max(1, $1.rowCount))
       } / CGFloat(max(1, horizontalInkRows))
+      let horizontalLineAdvanceScale = Self.horizontalLineAdvanceScale(
+        in: fragments.filter { !$0.isVerticalBlock }
+      )
       let appearance = Self.representativeAppearance(in: fragments)
       let groupIDs = Set(fragments.compactMap(\.recognitionGroupID))
       return (
@@ -145,6 +152,7 @@ struct OCRResult: Equatable, Sendable {
           verticalCharScale: weightedScale,
           horizontalGlyphScale: weightedHorizontalScale,
           horizontalInkScale: weightedHorizontalInkScale,
+          horizontalLineAdvanceScale: horizontalLineAdvanceScale,
           // Keep a stable representative after crossing a Vision paragraph
           // boundary. Dropping the id made a second coalescing pass treat the
           // merged block as ungrouped and absorb an adjacent title/body row.
@@ -405,6 +413,40 @@ struct OCRResult: Equatable, Sendable {
   }
 
   private static func horizontalVisualRowCount(_ lines: [Line]) -> Int {
+    horizontalVisualRows(lines).reduce(0) { total, row in
+      total + (row.map(\.rowCount).max() ?? 1)
+    }
+  }
+
+  private static func horizontalLineAdvanceScale(in lines: [Line]) -> CGFloat {
+    var advances = lines.flatMap { line -> [CGFloat] in
+      guard line.horizontalLineAdvanceScale > 0 else { return [] }
+      return Array(
+        repeating: line.horizontalLineAdvanceScale,
+        count: max(1, line.rowCount - 1)
+      )
+    }
+    let atomicRows = horizontalVisualRows(lines.filter { $0.rowCount == 1 })
+      .map { row in
+        row.dropFirst().reduce(row[0].boundingBoxNormalized.standardized) {
+          $0.union($1.boundingBoxNormalized.standardized)
+        }
+      }
+      .sorted { $0.midY < $1.midY }
+    advances.append(contentsOf: zip(atomicRows, atomicRows.dropFirst()).compactMap { previous, next in
+      let advance = next.midY - previous.midY
+      return advance > 0 ? advance : nil
+    })
+
+    guard !advances.isEmpty else { return 0 }
+    let sorted = advances.sorted()
+    let middle = sorted.count / 2
+    return sorted.count.isMultiple(of: 2)
+      ? (sorted[middle - 1] + sorted[middle]) / 2
+      : sorted[middle]
+  }
+
+  private static func horizontalVisualRows(_ lines: [Line]) -> [[Line]] {
     var rows = [[Line]]()
     for line in lines.sorted(by: { $0.boundingBoxNormalized.minY < $1.boundingBoxNormalized.minY }) {
       if
@@ -417,9 +459,7 @@ struct OCRResult: Equatable, Sendable {
         rows.append([line])
       }
     }
-    return rows.reduce(0) { total, row in
-      total + (row.map(\.rowCount).max() ?? 1)
-    }
+    return rows
   }
 
   private static func representativeAppearance(in lines: [Line]) -> OverlaySourceAppearance {
@@ -596,6 +636,14 @@ struct OCRResult: Equatable, Sendable {
     let a = lhs.boundingBoxNormalized.standardized
     let b = rhs.boundingBoxNormalized.standardized
     guard a.width > 0, a.height > 0, b.width > 0, b.height > 0 else { return false }
+    let lowerLine = a.minY <= b.minY ? rhs : lhs
+    // A list marker is a semantic paragraph boundary even when the neighboring
+    // item is multiline, shares the same appearance, and sits at ordinary CSS
+    // line spacing. Without this boundary, connected-component coalescing can
+    // link `item -> continuation -> next item` and translate an entire list as
+    // one oversized paragraph. The unmarked continuation is still free to join
+    // the item above it.
+    guard !beginsListItem(lowerLine.text) else { return false }
     let crossesVisionParagraphBoundary = lhs.recognitionGroupID != nil
       && rhs.recognitionGroupID != nil
       && lhs.recognitionGroupID != rhs.recognitionGroupID
@@ -677,6 +725,31 @@ struct OCRResult: Equatable, Sendable {
         || abs(a.maxX - b.maxX) <= alignmentTolerance
         || abs(a.midX - b.midX) <= alignmentTolerance
     }
+  }
+
+  private static func beginsListItem(_ text: String) -> Bool {
+    let trimmed = text.drop(while: \Character.isWhitespace)
+    guard let first = trimmed.first else { return false }
+
+    if "•◦▪▫‣⁃·".contains(first) {
+      return true
+    }
+
+    let tokens = trimmed.split(maxSplits: 1, whereSeparator: \Character.isWhitespace)
+    guard tokens.count == 2 else { return false }
+    let marker = tokens[0]
+    if ["-", "–", "—", "*", "+"].contains(String(marker)) {
+      return true
+    }
+
+    if marker.first == "(", marker.last == ")" {
+      let number = marker.dropFirst().dropLast()
+      return !number.isEmpty && number.count <= 4 && number.allSatisfy(\.isNumber)
+    }
+
+    guard marker.last == "." || marker.last == ")" else { return false }
+    let number = marker.dropLast()
+    return !number.isEmpty && number.count <= 4 && number.allSatisfy(\.isNumber)
   }
 
   private static func mergedAlignment(

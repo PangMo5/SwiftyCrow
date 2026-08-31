@@ -64,7 +64,8 @@ enum CoreTextTypesetter {
     fontDesign: OverlayFontDesign = .standard,
     constrainedTo size: CGSize,
     preferred: CGFloat,
-    minimum: CGFloat
+    minimum: CGFloat,
+    lineHeightMultiple: CGFloat = 1
   ) -> CGFloat {
     guard !text.isEmpty, size.width > 0, size.height > 0 else { return minimum }
     let lowerBound = max(1, min(minimum, preferred))
@@ -77,7 +78,8 @@ enum CoreTextTypesetter {
         fontSize: upperBound,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
-        in: size
+        in: size,
+        lineHeightMultiple: lineHeightMultiple
       )
     {
       return upperBound
@@ -90,7 +92,8 @@ enum CoreTextTypesetter {
         fontSize: lowerBound,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
-        in: size
+        in: size,
+        lineHeightMultiple: lineHeightMultiple
       )
     else {
       return lowerBound
@@ -108,7 +111,8 @@ enum CoreTextTypesetter {
           fontSize: candidate,
           fontWeight: fontWeight,
           fontDesign: fontDesign,
-          in: size
+          in: size,
+          lineHeightMultiple: lineHeightMultiple
         )
       {
         low = candidate
@@ -126,7 +130,8 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
-    in size: CGSize
+    in size: CGSize,
+    lineHeightMultiple: CGFloat = 1
   ) -> Bool {
     guard !text.isEmpty else { return true }
     guard size.width > 0, size.height > 0, fontSize > 0 else { return false }
@@ -158,7 +163,8 @@ enum CoreTextTypesetter {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
-      vertical: vertical
+      vertical: vertical,
+      lineHeightMultiple: lineHeightMultiple
     )
     let frame = makeFrame(attributed: attributed, size: size, progression: vertical ? progression : nil)
     let visible = CTFrameGetVisibleStringRange(frame)
@@ -180,13 +186,30 @@ enum CoreTextTypesetter {
     return ceil(CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font))
   }
 
+  static func lineSpacing(
+    fontSize: CGFloat,
+    language: Locale.Language,
+    fontWeight: OverlayFontWeight = .semibold,
+    fontDesign: OverlayFontDesign = .standard,
+    lineHeightMultiple: CGFloat
+  ) -> CGFloat {
+    let natural = lineHeight(
+      fontSize: fontSize,
+      language: language,
+      fontWeight: fontWeight,
+      fontDesign: fontDesign
+    )
+    return max(0, natural * (max(1, lineHeightMultiple) - 1))
+  }
+
   static func horizontalLineCount(
     text: String,
     language: Locale.Language,
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
-    in size: CGSize
+    in size: CGSize,
+    lineHeightMultiple: CGFloat = 1
   ) -> Int {
     guard !text.isEmpty, size.width > 0, size.height > 0 else { return 0 }
     let attributed = attributedString(
@@ -195,7 +218,8 @@ enum CoreTextTypesetter {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
-      vertical: false
+      vertical: false,
+      lineHeightMultiple: lineHeightMultiple
     )
     let frame = makeFrame(attributed: attributed, size: size, progression: nil)
     return CFArrayGetCount(CTFrameGetLines(frame))
@@ -394,7 +418,8 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight,
     fontDesign: OverlayFontDesign,
-    vertical: Bool
+    vertical: Bool,
+    lineHeightMultiple: CGFloat = 1
   ) -> NSMutableAttributedString {
     let attributes: [NSAttributedString.Key: Any] = [
       NSAttributedString.Key(kCTFontAttributeName as String): localizedSystemFont(
@@ -412,9 +437,25 @@ enum CoreTextTypesetter {
       NSAttributedString.Key(kCTLanguageAttributeName as String): language.maximalIdentifier,
     ]
     let attributed = NSMutableAttributedString(string: text, attributes: attributes)
+    let wholeRange = NSRange(location: 0, length: attributed.length)
+    if !vertical, lineHeightMultiple > 1 {
+      attributed.addAttribute(
+        NSAttributedString.Key(kCTParagraphStyleAttributeName as String),
+        value: wordWrappingParagraphStyle(
+          lineSpacingAdjustment: lineSpacing(
+            fontSize: fontSize,
+            language: language,
+            fontWeight: fontWeight,
+            fontDesign: fontDesign,
+            lineHeightMultiple: lineHeightMultiple
+          )
+        ),
+        range: wholeRange
+      )
+      return attributed
+    }
     guard vertical else { return attributed }
 
-    let wholeRange = NSRange(location: 0, length: attributed.length)
     attributed.addAttribute(
       NSAttributedString.Key(kCTVerticalFormsAttributeName as String),
       value: true,
@@ -478,15 +519,29 @@ enum CoreTextTypesetter {
     )
   }
 
-  private static func wordWrappingParagraphStyle() -> CTParagraphStyle {
+  private static func wordWrappingParagraphStyle(
+    lineSpacingAdjustment: CGFloat = 0
+  ) -> CTParagraphStyle {
     var lineBreakMode = CTLineBreakMode.byWordWrapping
+    var lineSpacingAdjustment = max(0, lineSpacingAdjustment)
     return withUnsafePointer(to: &lineBreakMode) { pointer in
-      var setting = CTParagraphStyleSetting(
-        spec: .lineBreakMode,
-        valueSize: MemoryLayout<CTLineBreakMode>.size,
-        value: UnsafeRawPointer(pointer)
-      )
-      return CTParagraphStyleCreate(&setting, 1)
+      withUnsafePointer(to: &lineSpacingAdjustment) { spacingPointer in
+        let settings = [
+          CTParagraphStyleSetting(
+            spec: .lineBreakMode,
+            valueSize: MemoryLayout<CTLineBreakMode>.size,
+            value: UnsafeRawPointer(pointer)
+          ),
+          CTParagraphStyleSetting(
+            spec: .lineSpacingAdjustment,
+            valueSize: MemoryLayout<CGFloat>.size,
+            value: UnsafeRawPointer(spacingPointer)
+          ),
+        ]
+        return settings.withUnsafeBufferPointer {
+          CTParagraphStyleCreate($0.baseAddress!, $0.count)
+        }
+      }
     }
   }
 

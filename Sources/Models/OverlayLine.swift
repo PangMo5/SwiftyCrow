@@ -40,6 +40,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       appearance = line.appearance
       horizontalGlyphScale = line.horizontalGlyphScale
       horizontalInkScale = line.horizontalInkScale
+      horizontalLineAdvanceScale = line.horizontalLineAdvanceScale
       replacementPatches = line.replacementPatches.isEmpty
         ? [OverlaySourcePatch(box: line.boundingBoxNormalized, appearance: line.appearance)]
         : line.replacementPatches
@@ -66,6 +67,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     var appearance: OverlaySourceAppearance
     var horizontalGlyphScale: CGFloat
     var horizontalInkScale: CGFloat
+    var horizontalLineAdvanceScale: CGFloat
     var replacementPatches: [OverlaySourcePatch]
     var styleRuns: [OverlaySourceStyleRun]
     var alignment: OverlayTextAlignment?
@@ -125,6 +127,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       result.layout = previous.layout
       result.horizontalGlyphScale = previous.horizontalGlyphScale
       result.horizontalInkScale = previous.horizontalInkScale
+      result.horizontalLineAdvanceScale = previous.horizontalLineAdvanceScale
       result.alignment = previous.alignment ?? alignment
       result.replacementPatches = Self.stabilizedPatches(
         replacementPatches,

@@ -365,6 +365,7 @@ struct OCRResultTests {
 
     #expect(result.lines.count == 1)
     #expect(merged.rowCount == 3)
+    #expect(abs(merged.horizontalLineAdvanceScale - 0.0377) < 0.001)
     #expect(merged.text == "Open the popover or fire any action from a global shortcut, even with no window open.")
   }
 
@@ -493,6 +494,53 @@ struct OCRResultTests {
     let result = OCRResult(lines: [first, second]).coalescingParagraphFragments()
 
     #expect(result.lines == [first, second])
+  }
+
+  @Test
+  func listItemsStaySeparateWhileIndentedContinuationRemainsAttached() throws {
+    let appearance = OverlaySourceAppearance(
+      background: OverlayColor(red: 0.04, green: 0.06, blue: 0.08, alpha: 1),
+      foreground: OverlayColor(red: 0.91, green: 0.94, blue: 0.98, alpha: 1),
+      confidence: 0.8,
+      foregroundConfidence: 0.8,
+      fontWeight: .regular
+    )
+    let item = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.04215, y: 0.71852, width: 0.92006, height: 0.03252),
+      text: "• Per-display workspaces: Pin a workspace to a display.",
+      horizontalGlyphScale: 0.03229,
+      recognitionGroupID: 8,
+      appearance: appearance,
+      alignment: .leading
+    )
+    let continuation = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.06250, y: 0.76771, width: 0.88663, height: 0.07708),
+      text: "Each display keeps its own active and recent workspace across relaunches.",
+      rowCount: 2,
+      horizontalGlyphScale: 0.03490,
+      recognitionGroupID: 9,
+      appearance: appearance,
+      alignment: .leading
+    )
+    let nextItem = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.04167, y: 0.86525, width: 0.86667, height: 0.04255),
+      text: "• Cross-display control: Jump focus between displays.",
+      horizontalGlyphScale: 0.04167,
+      recognitionGroupID: 10,
+      appearance: appearance,
+      alignment: .leading
+    )
+
+    let result = OCRResult(lines: [item, continuation, nextItem])
+      .coalescingParagraphFragments()
+
+    #expect(result.lines.count == 2)
+    let mergedItem = try #require(result.lines.first)
+    #expect(mergedItem
+      .text ==
+      "• Per-display workspaces: Pin a workspace to a display. Each display keeps its own active and recent workspace across relaunches.")
+    #expect(mergedItem.rowCount == 3)
+    #expect(result.lines.last == nextItem)
   }
 
   @Test

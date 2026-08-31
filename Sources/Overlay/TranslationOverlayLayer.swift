@@ -165,6 +165,7 @@ private struct ReplacementText: View, Equatable {
         text: placement.line.displayedText,
         language: placement.line.displayedLanguage,
         fontSize: placement.fontSize,
+        lineHeightMultiple: placement.lineHeightMultiple,
         appearance: placement.line.source.appearance,
         styleRuns: placement.line.displayedStyleRuns,
         lineLimit: placement.lineLimit,
@@ -200,6 +201,7 @@ private struct HorizontalOverlayText: View, Equatable {
   let text: String
   let language: Locale.Language
   let fontSize: CGFloat
+  let lineHeightMultiple: CGFloat
   let appearance: OverlaySourceAppearance
   let styleRuns: [OverlayTextStyleRun]
   let lineLimit: Int?
@@ -216,6 +218,13 @@ private struct HorizontalOverlayText: View, Equatable {
       ))
       .foregroundStyle(Color(appearance.foreground))
       .multilineTextAlignment(textAlignment)
+      .lineSpacing(CoreTextTypesetter.lineSpacing(
+        fontSize: fontSize,
+        language: language,
+        fontWeight: appearance.fontWeight,
+        fontDesign: appearance.fontDesign,
+        lineHeightMultiple: lineHeightMultiple
+      ))
       .lineLimit(lineLimit)
       .truncationMode(.tail)
       .minimumScaleFactor(0.78)

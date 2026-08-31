@@ -24,6 +24,7 @@ struct OverlayPlacement: Equatable, Identifiable, Sendable {
   /// Hard boundary that replacement text must never cross.
   let placementBounds: CGRect
   let fontSize: CGFloat
+  let lineHeightMultiple: CGFloat
   let lineLimit: Int?
   let alignment: OverlayTextAlignment
 
@@ -90,7 +91,8 @@ enum OverlayLayoutEngine {
           for: line,
           sourceFrame: sourceFrame,
           canvasSize: canvasSize
-        )
+        ),
+        canvasHeight: canvasSize.height
       )
     }
   }
@@ -218,8 +220,15 @@ enum OverlayLayoutEngine {
     sourceFrame: CGRect,
     frame: CGRect,
     alignment: OverlayTextAlignment,
-    preferredFontSize: CGFloat
+    preferredFontSize: CGFloat,
+    canvasHeight: CGFloat
   ) -> OverlayPlacement {
+    let lineHeightMultiple = horizontalLineHeightMultiple(
+      for: line,
+      flow: flow,
+      preferredFontSize: preferredFontSize,
+      canvasHeight: canvasHeight
+    )
     let fittedPreferred: CGFloat =
       switch flow {
       case .horizontal:
@@ -244,7 +253,8 @@ enum OverlayLayoutEngine {
       fontDesign: line.source.appearance.fontDesign,
       constrainedTo: frame.size,
       preferred: fittedPreferred,
-      minimum: minimumFontSize
+      minimum: minimumFontSize,
+      lineHeightMultiple: lineHeightMultiple
     )
 
     let lineLimit: Int? =
@@ -261,7 +271,8 @@ enum OverlayLayoutEngine {
             fontSize: fontSize,
             fontWeight: line.source.appearance.fontWeight,
             fontDesign: line.source.appearance.fontDesign,
-            in: frame.size
+            in: frame.size,
+            lineHeightMultiple: lineHeightMultiple
           )
         )
       }
@@ -272,9 +283,35 @@ enum OverlayLayoutEngine {
       frame: frame,
       placementBounds: frame,
       fontSize: fontSize,
+      lineHeightMultiple: lineHeightMultiple,
       lineLimit: lineLimit,
       alignment: alignment
     )
+  }
+
+  private static func horizontalLineHeightMultiple(
+    for line: OverlayLine,
+    flow: OverlayTextFlow,
+    preferredFontSize: CGFloat,
+    canvasHeight: CGFloat
+  ) -> CGFloat {
+    guard
+      case .horizontal = flow,
+      case .horizontal(let rows) = line.source.layout,
+      rows > 1,
+      line.source.horizontalLineAdvanceScale > 0,
+      canvasHeight > 0
+    else { return 1 }
+
+    let naturalLineHeight = CoreTextTypesetter.lineHeight(
+      fontSize: preferredFontSize,
+      language: line.displayedLanguage,
+      fontWeight: line.source.appearance.fontWeight,
+      fontDesign: line.source.appearance.fontDesign
+    )
+    guard naturalLineHeight > 0 else { return 1 }
+    let sourceLineAdvance = line.source.horizontalLineAdvanceScale * canvasHeight
+    return min(1.6, max(1, sourceLineAdvance / naturalLineHeight))
   }
 
   private static func preferredFontSize(
