@@ -10,10 +10,10 @@ enum OverlaySourceAppearanceAnalyzer {
 
   // MARK: Internal
 
-  static func applyingAppearances(to result: OCRResult, from image: CGImage) -> OCRResult {
+  static func applyingAppearances(to result: OCRResult, from image: CGImage) async -> OCRResult {
     let styleRaster = PixelRaster(image: image, longestSide: 1_024)
     let surfaceRaster = PixelRaster(image: image, longestSide: 384)
-    let styled = OCRResult(lines: result.lines.map { line in
+    let styled = OCRResult(lines: await concurrentMap(result.lines) { line in
       var line = line
       let lineAppearance = styleRaster.map {
         appearance(around: line.boundingBoxNormalized, raster: $0)
@@ -217,7 +217,7 @@ enum OverlaySourceAppearanceAnalyzer {
       return line
     })
     let coalesced = styled.absorbingRubyAnnotations().coalescingParagraphFragments()
-    return OCRResult(lines: coalesced.lines.map { line in
+    return OCRResult(lines: await concurrentMap(coalesced.lines) { line in
       var line = line
       if line.wasCoalesced, !line.isVerticalBlock, let styleRaster {
         let sampledUnion = appearance(around: line.boundingBoxNormalized, raster: styleRaster)
@@ -258,12 +258,20 @@ enum OverlaySourceAppearanceAnalyzer {
             ? surface
             : nil
         }
-        let updatedSurface = inferredSurface(
-          containing: sourceBox,
-          appearance: line.appearance,
-          raster: surfaceRaster,
-          limitingTo: previousSurface?.clippingBox
-        )
+        // Initial analysis already found or rejected a surface for every
+        // unmerged line. Re-run the flood fill only when coalescing changed the
+        // source bounds, or when that change invalidated a previously found
+        // surface. The old unconditional pass doubled this cost on dense pages.
+        let needsSurfaceRefresh = line.wasCoalesced
+          || (line.surface != nil && previousSurface == nil)
+        let updatedSurface = needsSurfaceRefresh
+          ? inferredSurface(
+            containing: sourceBox,
+            appearance: line.appearance,
+            raster: surfaceRaster,
+            limitingTo: previousSurface?.clippingBox
+          )
+          : nil
         line.surface = previousSurface.flatMap {
           isCompactTextSurface($0, around: sourceBox) ? $0 : nil
         } ?? updatedSurface ?? previousSurface
@@ -347,7 +355,7 @@ enum OverlaySourceAppearanceAnalyzer {
     var weight: CGFloat = 1
   }
 
-  private struct PixelRaster {
+  private struct PixelRaster: Sendable {
 
     // MARK: Lifecycle
 
@@ -407,6 +415,26 @@ enum OverlaySourceAppearanceAnalyzer {
     ) -> Bool {
       guard let sample = self.color(at: index) else { return false }
       return sample.distance(to: color) <= tolerance
+    }
+  }
+
+  /// Appearance sampling is independent per OCR line. Structured child tasks
+  /// let the executor use available cores while the indexed merge keeps Vision's
+  /// stable source order intact for paragraph reconstruction.
+  private static func concurrentMap<Element: Sendable, Output: Sendable>(
+    _ elements: [Element],
+    transform: @escaping @Sendable (Element) -> Output
+  ) async -> [Output] {
+    guard elements.count > 1 else { return elements.map(transform) }
+    return await withTaskGroup(of: (Int, Output).self) { group in
+      for (index, element) in elements.enumerated() {
+        group.addTask { (index, transform(element)) }
+      }
+      var ordered = [Output?](repeating: nil, count: elements.count)
+      for await (index, output) in group {
+        ordered[index] = output
+      }
+      return ordered.compactMap { $0 }
     }
   }
 
@@ -646,6 +674,12 @@ enum OverlaySourceAppearanceAnalyzer {
       cursor += 1
       let x = index % raster.width
       let y = index / raster.width
+      // Components that reach the capture edge represent the page/background,
+      // not a local text surface. Return as soon as that outcome is known
+      // instead of traversing the full page.
+      if x == 0 || y == 0 || x == raster.width - 1 || y == raster.height - 1 {
+        return nil
+      }
       minimumX = min(minimumX, x)
       minimumY = min(minimumY, y)
       maximumX = max(maximumX, x)
@@ -681,11 +715,6 @@ enum OverlaySourceAppearanceAnalyzer {
       }
     }
 
-    let touchesImageEdge = minimumX == 0
-      || minimumY == 0
-      || maximumX == raster.width - 1
-      || maximumY == raster.height - 1
-    guard !touchesImageEdge else { return nil }
     let component = CGRect(
       x: minimumX,
       y: minimumY,
@@ -979,7 +1008,11 @@ enum OverlaySourceAppearanceAnalyzer {
     excluding excluded: CGRect?,
     raster: PixelRaster
   ) -> DominantSample? {
-    var buckets = [Int: Bucket]()
+    // Samples are quantized to four bits per RGB channel below, so every key
+    // is in a fixed 16³ space. Direct indexing avoids allocating and hashing a
+    // fresh Dictionary for every line, word, and restoration patch.
+    var buckets = [Bucket](repeating: Bucket(), count: 4_096)
+    var occupiedKeys = [Int]()
     var total = 0
     for y in Int(bounds.minY) ..< Int(bounds.maxY) {
       for x in Int(bounds.minX) ..< Int(bounds.maxX) {
@@ -990,18 +1023,23 @@ enum OverlaySourceAppearanceAnalyzer {
         let green = Int((color.green * 255).rounded())
         let blue = Int((color.blue * 255).rounded())
         let key = (red >> 4) << 8 | (green >> 4) << 4 | (blue >> 4)
-        var bucket = buckets[key, default: Bucket()]
-        bucket.count += 1
-        bucket.red += red
-        bucket.green += green
-        bucket.blue += blue
-        buckets[key] = bucket
+        if buckets[key].count == 0 {
+          occupiedKeys.append(key)
+        }
+        buckets[key].count += 1
+        buckets[key].red += red
+        buckets[key].green += green
+        buckets[key].blue += blue
         total += 1
       }
     }
-    guard total > 0, let dominant = buckets.values.max(by: { $0.count < $1.count }) else {
+    guard
+      total > 0,
+      let dominantKey = occupiedKeys.max(by: { buckets[$0].count < buckets[$1].count })
+    else {
       return nil
     }
+    let dominant = buckets[dominantKey]
     let divisor = CGFloat(dominant.count * 255)
     return DominantSample(
       color: OverlayColor(

@@ -19,10 +19,10 @@ struct CaptureFeature {
     case translation
   }
 
-  /// One live capture: the screenshot (for the detached Window mode) plus the
+  /// One live capture: the backdrop (for the detached Window mode) plus the
   /// recognized lines and their sampled source appearance.
   struct LiveCapture: Sendable {
-    var imageData: Data?
+    var backdrop: OverlayBackdrop?
     var imageSize: CGSize
     var result: OCRResult
   }
@@ -53,9 +53,9 @@ struct CaptureFeature {
     /// Drives the "open Settings" hint in the menu bar.
     var translationUnavailable = false
     var overlayLines = [OverlayLine]()
-    /// Raw screenshot shown by the detached Window mode. In-place mode only
+    /// Captured pixels shown by the detached Window mode. In-place mode only
     /// needs the sampled appearance carried by each OCR line.
-    var sourceImageData: Data?
+    var backdrop: OverlayBackdrop?
     var imageSize = CGSize.zero
     /// Whether a live overlay is currently placed on screen. There's no overlay
     /// until the user selects a region/window; `dismissOverlay` clears it.
@@ -109,7 +109,7 @@ struct CaptureFeature {
         state.isTranslating = false
         state.translationRequestContext = nil
         state.overlayLines = []
-        state.sourceImageData = nil
+        state.backdrop = nil
         state.isPreparingRecognition = false
         state.lastError = nil
         state.translationUnavailable = false
@@ -213,7 +213,9 @@ struct CaptureFeature {
               // against a cold Vision daemon made the first capture slower and
               // could leave two expensive document requests competing.
               await ocr.warmUp()
+              let cadenceClock = ContinuousClock()
               while !Task.isCancelled {
+                let tickStarted = cadenceClock.now
                 let snapshot = settings.wrappedValue
                 let frame = overlayFrame.wrappedValue
                 // Every stage inside runCapture is deadline-bounded, so a tick
@@ -230,7 +232,15 @@ struct CaptureFeature {
                   Log.capture.error("Live tick failed: \(error.localizedDescription, privacy: .public)")
                 }
                 await send(.captureResponse(result))
-                try await clock.sleep(for: .seconds(snapshot.capture.interval))
+                let elapsed = tickStarted.duration(to: cadenceClock.now)
+                if
+                  let delay = LiveCaptureCadence.remainingDelay(
+                    interval: .seconds(snapshot.capture.interval),
+                    elapsed: elapsed
+                  )
+                {
+                  try await clock.sleep(for: delay)
+                }
               }
             }
             .cancellable(id: CancelID.live, cancelInFlight: true)
@@ -336,7 +346,7 @@ struct CaptureFeature {
       state.overlayLines = []
       state.isTranslating = false
       state.translationRequestContext = nil
-      state.sourceImageData = nil
+      state.backdrop = nil
       return .cancel(id: CancelID.translation)
     }
 
@@ -384,7 +394,7 @@ struct CaptureFeature {
         previous.source = stableSources[index]
         return previous
       }
-      state.sourceImageData = windowMode ? capture.imageData : nil
+      state.backdrop = windowMode ? capture.backdrop : nil
       return .none
     }
 
@@ -436,7 +446,7 @@ struct CaptureFeature {
     }
 
     state.overlayLines = newLines
-    state.sourceImageData = windowMode ? capture.imageData : nil
+    state.backdrop = windowMode ? capture.backdrop : nil
 
     state.isTranslating = !groups.isEmpty
     if groups.isEmpty {
@@ -550,12 +560,25 @@ struct CaptureFeature {
     let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) { [ocr] in
       try await ocr.recognizeText(image, settings.languages.source)
     }
-    // Only carry the screenshot when Window mode displays a detached result.
-    let needsImage = settings.overlay.liveMode == .window
+    // Window mode retains the immutable capture directly. Encoding every tick
+    // to PNG and decoding it again in SwiftUI added work and allocation churn
+    // precisely while the live overlay was trying to refresh.
+    let needsBackdrop = settings.overlay.liveMode == .window
     return LiveCapture(
-      imageData: needsImage ? image.pngData : nil,
+      backdrop: needsBackdrop ? OverlayBackdrop(image: image) : nil,
       imageSize: CGSize(width: image.width, height: image.height),
       result: result
     )
+  }
+}
+
+// MARK: - LiveCaptureCadence
+
+enum LiveCaptureCadence {
+  /// Keeps the configured interval start-to-start. Processing time already
+  /// consumes part of the interval and must not be added to it again.
+  static func remainingDelay(interval: Duration, elapsed: Duration) -> Duration? {
+    guard elapsed < interval else { return nil }
+    return interval - elapsed
   }
 }

@@ -6,6 +6,21 @@ import CoreGraphics
 import DependenciesMacros
 import Foundation
 
+// MARK: - OverlayBackdrop
+
+/// An immutable capture shared with the detached live-result window.
+///
+/// `CGImage` owns immutable pixel storage and can safely be retained across the
+/// capture and main actors. Identity equality is intentional: every successful
+/// capture produces a new image, while unrelated state updates keep the same one.
+struct OverlayBackdrop: @unchecked Sendable, Equatable {
+  let image: CGImage
+
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.image === rhs.image
+  }
+}
+
 // MARK: - OverlayRenderState
 
 struct OverlayRenderState: Equatable, Sendable {
@@ -17,8 +32,8 @@ struct OverlayRenderState: Equatable, Sendable {
   /// In-place draws source-restored text on the overlay; window draws a thin region frame and
   /// shows the translation in a detached result window.
   var liveMode: OverlayLiveMode
-  /// Raw screenshot shown in the detached window (window mode only).
-  var sourceImageData: Data?
+  /// Captured pixels shown in the detached window (window mode only).
+  var backdrop: OverlayBackdrop?
   var imageSize: CGSize
   /// Bumped whenever the overlay is (re)placed onto a new selection, so the
   /// controller snaps the window to the stored frame even if it's already shown.

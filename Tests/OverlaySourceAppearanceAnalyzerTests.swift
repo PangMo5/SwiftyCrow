@@ -12,12 +12,12 @@ struct OverlaySourceAppearanceAnalyzerTests {
   // MARK: Internal
 
   @Test
-  func findsLightBackgroundAndDarkForegroundAroundGlyphs() throws {
+  func findsLightBackgroundAndDarkForegroundAroundGlyphs() async throws {
     let image = try makeImage(
       background: CGColor(gray: 0.94, alpha: 1),
       glyph: CGColor(gray: 0.04, alpha: 1)
     )
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: sourceResult(),
       from: image
     )
@@ -31,12 +31,12 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func findsDarkBackgroundAndLightForegroundAroundGlyphs() throws {
+  func findsDarkBackgroundAndLightForegroundAroundGlyphs() async throws {
     let image = try makeImage(
       background: CGColor(gray: 0.06, alpha: 1),
       glyph: CGColor(gray: 0.96, alpha: 1)
     )
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: sourceResult(),
       from: image
     )
@@ -48,12 +48,12 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func preservesColoredSourceGlyphs() throws {
+  func preservesColoredSourceGlyphs() async throws {
     let image = try makeImage(
       background: CGColor(gray: 0, alpha: 1),
       glyph: CGColor(red: 0.05, green: 0.52, blue: 1, alpha: 1)
     )
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: sourceResult(),
       from: image
     )
@@ -64,7 +64,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func shortColoredBulletDoesNotBecomeTheLineForeground() throws {
+  func shortColoredBulletDoesNotBecomeTheLineForeground() async throws {
     let image = try makeRepositoryMetadataImage()
     let text = "• Swift"
     let bulletBox = CGRect(x: 0.10, y: 0.30, width: 0.08, height: 0.40)
@@ -82,7 +82,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -94,7 +94,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func thickerGlyphCoverageProducesHeavierWeight() throws {
+  func thickerGlyphCoverageProducesHeavierWeight() async throws {
     let thin = try makeImage(
       background: CGColor(gray: 0, alpha: 1),
       glyph: CGColor(gray: 1, alpha: 1),
@@ -105,11 +105,11 @@ struct OverlaySourceAppearanceAnalyzerTests {
       glyph: CGColor(gray: 1, alpha: 1),
       glyphWidth: 20
     )
-    let thinAppearance = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let thinAppearance = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: sourceResult(),
       from: thin
     ).lines[0].appearance
-    let thickAppearance = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let thickAppearance = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: sourceResult(),
       from: thick
     ).lines[0].appearance
@@ -119,7 +119,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func consolidatesWordPatchesOnOneFlatBackground() throws {
+  func consolidatesWordPatchesOnOneFlatBackground() async throws {
     let image = try makeImage(background: CGColor(gray: 0.1, alpha: 1), glyph: nil)
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.3, width: 0.6, height: 0.4),
@@ -130,7 +130,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -140,7 +140,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func keepsWordPatchesWhenAControlCrossesDifferentBackgrounds() throws {
+  func keepsWordPatchesWhenAControlCrossesDifferentBackgrounds() async throws {
     let image = try makeSplitBackgroundImage()
     let patches = [
       OverlaySourcePatch(box: CGRect(x: 0.12, y: 0.35, width: 0.22, height: 0.3)),
@@ -152,7 +152,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       replacementPatches: patches
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -161,7 +161,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func samplesInlineCodeSurfaceInsideLongWordBox() throws {
+  func samplesInlineCodeSurfaceInsideLongWordBox() async throws {
     let image = try makeInlineCodeImage()
     let text = ".github/instructions/*.instructions.md"
     let source = CGRect(x: 0.25, y: 0.39, width: 0.5, height: 0.22)
@@ -177,7 +177,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -192,7 +192,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func highContrastCompactFillIsBackgroundRatherThanUnderlineInk() throws {
+  func highContrastCompactFillIsBackgroundRatherThanUnderlineInk() async throws {
     let image = try makeHighContrastInlineCodeImage()
     let text = "build 2.10.0"
     let source = CGRect(x: 0.2, y: 0.34, width: 0.6, height: 0.32)
@@ -208,7 +208,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -220,7 +220,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func embeddedInlineCodeErasesItsOldSurfaceToTheParentBackground() throws {
+  func embeddedInlineCodeErasesItsOldSurfaceToTheParentBackground() async throws {
     let image = try makeInlineCodeImage()
     let code = ".github/instructions/*.instructions.md"
     let text = "Run \(code) now"
@@ -238,7 +238,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -256,7 +256,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func separatelyRecognizedInlineCodeIsReclassifiedAfterRowCoalescing() throws {
+  func separatelyRecognizedInlineCodeIsReclassifiedAfterRowCoalescing() async throws {
     let image = try makeInlineCodeImage()
     let code = ".github/instructions/*.instructions.md"
     let leftBox = CGRect(x: 0.05, y: 0.39, width: 0.15, height: 0.22)
@@ -288,7 +288,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ),
     ]
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: lines),
       from: image
     )
@@ -301,7 +301,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func hyphenatedStandaloneBadgeKeepsItsOwnSurface() throws {
+  func hyphenatedStandaloneBadgeKeepsItsOwnSurface() async throws {
     let image = try makeStandaloneBadgeImage()
     let text = "On-device"
     let lineBox = CGRect(x: 0.31, y: 0.39, width: 0.38, height: 0.22)
@@ -320,7 +320,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -331,7 +331,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func compactSurfaceIgnoresParentColorLeakingIntoOCRBox() throws {
+  func compactSurfaceIgnoresParentColorLeakingIntoOCRBox() async throws {
     let image = try makeLeakingBadgeImage()
     let source = CGRect(x: 0.29, y: 0.38, width: 0.42, height: 0.32)
     let line = OCRResult.Line(
@@ -347,7 +347,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       ]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -361,7 +361,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func clampsSamplingAtImageEdges() throws {
+  func clampsSamplingAtImageEdges() async throws {
     let image = try makeImage(
       background: CGColor(red: 0.18, green: 0.65, blue: 0.42, alpha: 1),
       glyph: nil
@@ -371,7 +371,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       text: "edge",
       replacementPatches: [OverlaySourcePatch(box: CGRect(x: 0.96, y: 0.96, width: 0.08, height: 0.08))]
     )
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -382,7 +382,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func findsClosedFlatSurfaceAroundSourceText() throws {
+  func findsClosedFlatSurfaceAroundSourceText() async throws {
     let image = try makeBubbleImage()
     let source = CGRect(x: 0.4, y: 0.25, width: 0.2, height: 0.5)
     let line = OCRResult.Line(
@@ -390,7 +390,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       text: "Text",
       replacementPatches: [OverlaySourcePatch(box: source)]
     )
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -407,7 +407,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func framedDocumentIsNotTreatedAsOneTextSurface() throws {
+  func framedDocumentIsNotTreatedAsOneTextSurface() async throws {
     let image = try makeFramedDocumentImage()
     let source = CGRect(x: 0.3, y: 0.04, width: 0.4, height: 0.08)
     let line = OCRResult.Line(
@@ -416,7 +416,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       replacementPatches: [OverlaySourcePatch(box: source)]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -425,7 +425,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func extendsVerticalRestorationOnlyToNearbyMissedInk() throws {
+  func extendsVerticalRestorationOnlyToNearbyMissedInk() async throws {
     let image = try makeVerticalMissedGlyphImage()
     let source = CGRect(x: 0.44, y: 0.35, width: 0.12, height: 0.25)
     let line = OCRResult.Line(
@@ -436,7 +436,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       replacementPatches: [OverlaySourcePatch(box: source)]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
@@ -449,7 +449,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
   }
 
   @Test
-  func restoresChromaticRubyWithoutCrossingTheBorderAboveIt() throws {
+  func restoresChromaticRubyWithoutCrossingTheBorderAboveIt() async throws {
     let image = try makeChromaticRubyImage()
     let source = CGRect(x: 0.25, y: 0.55, width: 0.5, height: 0.22)
     let line = OCRResult.Line(
@@ -459,7 +459,7 @@ struct OverlaySourceAppearanceAnalyzerTests {
       replacementPatches: [OverlaySourcePatch(box: source)]
     )
 
-    let analyzed = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [line]),
       from: image
     )
