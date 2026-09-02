@@ -89,7 +89,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private let resizeMargin: CGFloat = 14
   /// Top-left grab handle — the only region that moves the window. Its hit zone
   /// stays live even while the handle is faded out (so you can always grab it).
-  private let moveHandleSize = CGSize(width: 56, height: 40)
+  private let moveHandleSize = OverlayChromeMetrics.moveHandleSize
   /// Top-right cluster (LIVE toggle + close) — clickable, but never moves the
   /// window.
   private let controlsZoneSize = CGSize(width: 170, height: 52)
@@ -103,7 +103,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var eventHandler: (@Sendable (OverlayUserAction) -> Void)?
 
   /// Writes only what changed. `@Observable` notifies on every assignment, equal
-  /// value or not, so blindly re-assigning `lines` or the backdrop `Data` on each
+  /// value or not, so blindly re-assigning `lines` or the backdrop on each
   /// render invalidated the whole overlay view tree at the live capture rate.
   private func assign(_ state: OverlayRenderState) {
     if model.lines != state.lines { model.lines = state.lines }
@@ -111,8 +111,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     if model.isTranslating != state.isTranslating { model.isTranslating = state.isTranslating }
     if model.isLive != state.isLive { model.isLive = state.isLive }
     if model.liveMode != state.liveMode { model.liveMode = state.liveMode }
-    if model.sourceImageData != state.sourceImageData {
-      model.sourceImageData = state.sourceImageData
+    if model.backdrop != state.backdrop {
+      model.backdrop = state.backdrop
     }
     if model.imageSize != state.imageSize { model.imageSize = state.imageSize }
     if model.translationUnavailable != state.translationUnavailable {
@@ -179,7 +179,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       backing: .buffered,
       defer: false
     )
-    // Movement is gated to the move-handle zone in updatePassThroughForCursor;
+    // Movement belongs to the SwiftUI WindowDragGesture on the move handle;
     // never move on a plain background drag.
     panel.isMovableByWindowBackground = false
     panel.isMovable = true
@@ -213,8 +213,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   /// The overlay always lets mouse interaction reach the apps below — except in
-  /// a thin margin around the edges (resize) and the top-right handle cluster
-  /// (live toggle / close / drag-to-move). We can't express that with a static
+  /// a thin margin around the edges, the top-left move handle, and the top-right
+  /// control cluster. We can't express that with a static
   /// `ignoresMouseEvents` (it's all-or-nothing per window), so we track the
   /// cursor and flip the window's mouse handling based on where it sits.
   private func applyPassThrough() {
@@ -264,13 +264,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     )
     if moveZone.contains(mouse) {
       window.alphaValue = 1
-      window.isMovableByWindowBackground = true
       window.ignoresMouseEvents = false
       return
     }
-
-    // Everywhere else, a background drag must not move the window.
-    window.isMovableByWindowBackground = false
 
     // Top-right controls (LIVE toggle, close): clickable, but don't move.
     let controlsZone = CGRect(
@@ -377,7 +373,7 @@ final class OverlayWindowModel {
   var isLive = false
   var isTranslating = false
   var liveMode = OverlayLiveMode.inPlace
-  var sourceImageData: Data?
+  var backdrop: OverlayBackdrop?
   var imageSize = CGSize.zero
   var translationUnavailable = false
   var isPreparingRecognition = false
@@ -465,10 +461,10 @@ private struct LiveResultView: View {
 
   @ViewBuilder
   private var content: some View {
-    if let data = model.sourceImageData, let image = NSImage(data: data) {
+    if let backdrop = model.backdrop {
       ZStack {
-        Image(nsImage: image)
-          .resizable()
+        LiveBackdropImage(backdrop: backdrop)
+          .equatable()
         TranslationOverlayLayer(lines: model.lines)
       }
       .aspectRatio(aspectRatio, contentMode: .fit)
@@ -481,5 +477,18 @@ private struct LiveResultView: View {
   private var aspectRatio: CGFloat {
     guard model.imageSize.height > 0 else { return 1 }
     return model.imageSize.width / model.imageSize.height
+  }
+}
+
+// MARK: - LiveBackdropImage
+
+/// Keeps line-by-line translation responses from rebuilding the unchanged
+/// capture layer. Only a genuinely new capture invalidates this subtree.
+private struct LiveBackdropImage: Equatable, View {
+  let backdrop: OverlayBackdrop
+
+  var body: some View {
+    Image(decorative: backdrop.image, scale: 1)
+      .resizable()
   }
 }

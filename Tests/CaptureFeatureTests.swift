@@ -117,7 +117,7 @@ struct CaptureFeatureTests {
       appearance: appearance
     )
     let capture = CaptureFeature.LiveCapture(
-      imageData: nil,
+      backdrop: nil,
       imageSize: CGSize(width: 900, height: 600),
       result: OCRResult(lines: [refreshed])
     )
@@ -160,6 +160,28 @@ struct CaptureFeatureTests {
     )
 
     #expect(stabilized.box == moved.boundingBoxNormalized)
+  }
+
+  @Test
+  func liveCadenceSubtractsWorkAlreadySpentInTheTick() {
+    #expect(
+      LiveCaptureCadence.remainingDelay(
+        interval: .milliseconds(800),
+        elapsed: .milliseconds(275)
+      ) == .milliseconds(525)
+    )
+    #expect(
+      LiveCaptureCadence.remainingDelay(
+        interval: .milliseconds(800),
+        elapsed: .milliseconds(800)
+      ) == nil
+    )
+    #expect(
+      LiveCaptureCadence.remainingDelay(
+        interval: .milliseconds(800),
+        elapsed: .seconds(2)
+      ) == nil
+    )
   }
 
   // MARK: Private

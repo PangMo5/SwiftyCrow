@@ -170,7 +170,7 @@ extension OCRClient: DependencyKey {
       } else {
         correctedLines = lines
       }
-      let result = OverlaySourceAppearanceAnalyzer.applyingAppearances(
+      let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
         to: OCRResult(lines: correctedLines).removingNestedDuplicates(),
         from: image
       ).coalescingParagraphFragments()

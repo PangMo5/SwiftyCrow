@@ -167,7 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       isTranslating: store.capture.isTranslating || store.capture.isCapturing,
       isLive: store.capture.isLive,
       liveMode: store.settings.overlay.liveMode,
-      sourceImageData: store.capture.sourceImageData,
+      backdrop: store.capture.backdrop,
       imageSize: store.capture.imageSize,
       placementID: store.capture.overlayPlacementID,
       translationUnavailable: store.capture.translationUnavailable,

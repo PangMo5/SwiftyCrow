@@ -3,6 +3,12 @@
 
 import SwiftUI
 
+// MARK: - OverlayChromeMetrics
+
+enum OverlayChromeMetrics {
+  static let moveHandleSize = CGSize(width: 56, height: 40)
+}
+
 // MARK: - OverlayView
 
 struct OverlayView: View {
@@ -38,14 +44,19 @@ struct OverlayView: View {
           )
       }
       .overlay(alignment: .topLeading) {
-        // Drag handle: the only way to move the overlay. The window-background
-        // drag is gated to this corner by the controller; the view itself takes
-        // no hits, so the drag falls through to the window.
+        // Drag handle: the only way to move the overlay. Use SwiftUI's native
+        // window gesture so dragging remains reliable inside NSHostingView.
         MoveHandle()
           .opacity(showMoveHandle ? 1 : 0)
           .animation(.easeOut(duration: 0.15), value: showMoveHandle)
           .padding(8)
-          .allowsHitTesting(false)
+          .frame(
+            width: OverlayChromeMetrics.moveHandleSize.width,
+            height: OverlayChromeMetrics.moveHandleSize.height,
+            alignment: .topLeading
+          )
+          .contentShape(.rect)
+          .gesture(WindowDragGesture())
       }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
@@ -149,9 +160,7 @@ private struct LiveHandle: View {
 
 // MARK: - MoveHandle
 
-/// Purely visual grab affordance shown at the top-left while the cursor is over
-/// the overlay. The actual move is the window-background drag the controller
-/// enables in this corner, so the handle takes no hits itself.
+/// Grab affordance shown at the top-left while the cursor is over the overlay.
 private struct MoveHandle: View {
   var body: some View {
     Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
@@ -159,6 +168,9 @@ private struct MoveHandle: View {
       .foregroundStyle(.secondary)
       .frame(width: 24, height: 18)
       .glassEffect(.regular, in: Capsule())
+      .help("Drag to move overlay")
+      .accessibilityLabel("Move overlay")
+      .accessibilityHint("Drag to reposition the translation overlay")
   }
 }
 
