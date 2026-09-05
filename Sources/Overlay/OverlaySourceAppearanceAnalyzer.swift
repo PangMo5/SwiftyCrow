@@ -132,7 +132,7 @@ enum OverlaySourceAppearanceAnalyzer {
           line.replacementPatches.append(rubyPatch)
         }
       }
-      line.surface = surfaceRaster.flatMap {
+      line.surface = (line.isReconstructedTextRegion ? line.surface : nil) ?? surfaceRaster.flatMap {
         inferredSurface(
           containing: line.boundingBoxNormalized,
           appearance: line.appearance,

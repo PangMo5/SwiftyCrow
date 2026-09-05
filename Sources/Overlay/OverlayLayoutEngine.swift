@@ -206,6 +206,7 @@ enum OverlayLayoutEngine {
       canvas: canvas,
       safeBounds: safeBounds
     )
+    if line.source.isReconstructedTextRegion { return surfaceFrame }
     guard surfaceFrame.contains(CGPoint(x: sourceFrame.midX, y: sourceFrame.midY)) else {
       return sourceFrame
     }
@@ -403,6 +404,7 @@ enum OverlayLayoutEngine {
     safeBounds: CGRect,
     among lines: [OverlayLine]
   ) -> OverlayTextAlignment {
+    if line.source.isReconstructedTextRegion { return .center }
     switch flow {
     case .vertical:
       return .center
@@ -629,7 +631,7 @@ enum OverlayLayoutEngine {
       ? line.source.horizontalGlyphScale
       : sourceFrame.height / CGFloat(max(1, rows)) / canvasSize.height
     // Weight changes stroke thickness, not point size.
-    let boxBasedSize = boxScale * canvasSize.height * 0.94
+    let boxBasedSize = boxScale * canvasSize.height * (line.source.isReconstructedTextRegion ? 1.2 : 0.94)
     // Vision line boxes can include icons, controls, or Japanese ruby. Whenever
     // pixel ink shows that inflation clearly, cap the estimate for every source
     // scale rather than only large controls.

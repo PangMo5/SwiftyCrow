@@ -41,6 +41,8 @@ struct OCRResult: Equatable, Sendable {
     /// visual text region. Appearance analysis uses the union only in this
     /// case, so an inline chip cannot become the paragraph's base style.
     var wasCoalesced = false
+    /// A complete image-bounded paragraph; neighboring balloons must stay separate.
+    var isReconstructedTextRegion = false
     /// Dominant local background and readable foreground sampled from the
     /// original pixels, used to redraw the translation as an in-place replacement.
     var appearance = OverlaySourceAppearance.fallback
@@ -292,7 +294,8 @@ struct OCRResult: Equatable, Sendable {
     _ rhs: Line,
     suppressesInlineMerge: Bool
   ) -> Bool {
-    switch (lhs.isVerticalBlock, rhs.isVerticalBlock) {
+    guard !lhs.isReconstructedTextRegion, !rhs.isReconstructedTextRegion else { return false }
+    return switch (lhs.isVerticalBlock, rhs.isVerticalBlock) {
     case (true, true):
       areNeighboringVerticalColumns(lhs, rhs)
     case (true, false):
