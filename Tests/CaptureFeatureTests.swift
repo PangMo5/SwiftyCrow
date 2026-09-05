@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import ComposableArchitecture
+import CustomDump
 import Foundation
 import Testing
 @testable import SwiftyCrow
@@ -43,6 +44,7 @@ struct CaptureFeatureTests {
       )
     ) {
       $0.translationCache[cacheKey] = TranslatedText(text: "Current translation")
+      $0.translationCacheOrder = [cacheKey]
       $0.overlayLines[0].showTranslation(
         "Current translation",
         language: Locale.Language(identifier: "en-US")
@@ -99,8 +101,12 @@ struct CaptureFeatureTests {
     }
     state.translationRequestContext = CaptureFeature.TranslationRequestContext(
       strategy: .lowLatency,
-      target: "en-US"
+      target: "en-US",
+      imageSize: CGSize(width: 900, height: 600),
+      sources: [pendingLine.id: pendingLine.source]
     )
+    state.isLive = true
+    state.recognitionSettings = LiveFrame.Settings(state.settings)
     let appearance = OverlaySourceAppearance(
       background: OverlayColor(red: 0.1, green: 0.2, blue: 0.3, alpha: 1),
       foreground: OverlayColor(red: 0.8, green: 0.7, blue: 0.6, alpha: 1),
@@ -132,15 +138,14 @@ struct CaptureFeatureTests {
       detect: { _, _ in nil }
     )
 
-    await store.send(.captureResponse(.success(capture))) {
+    await store.send(.liveCaptureResponse(generation: 0, frame: state.overlayFrame, result: .success(capture))) {
       $0.imageSize = capture.imageSize
       $0.overlayLines[0].source = expectedSource
     }
 
     #expect(store.state.translationGeneration == 2)
     #expect(store.state.overlayLines[0].isPending)
-    #expect(store.state.overlayLines[0].source.box != refreshed.boundingBoxNormalized)
-    #expect(abs(store.state.overlayLines[0].source.box.minX - 0.4035) < 0.000_001)
+    expectNoDifference(store.state.overlayLines[0].source.box, refreshed.boundingBoxNormalized)
   }
 
   @Test
@@ -182,6 +187,61 @@ struct CaptureFeatureTests {
         elapsed: .seconds(2)
       ) == nil
     )
+  }
+
+  @Test
+  func cacheEvictsOldestEntryAtCapacity() async {
+    var state = makeState()
+    for index in 0..<512 {
+      var key = cacheKey
+      key.text = "Source \(index)"
+      state.translationCache[key] = TranslatedText(text: "Translation \(index)")
+      state.translationCacheOrder.append(key)
+    }
+    let oldest = state.translationCacheOrder[0]
+    let store = TestStore(initialState: state) { CaptureFeature() }
+    store.exhaustivity = .off
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: TranslatedText(text: "Current translation")
+    ))
+    expectNoDifference(store.state.translationCache.count, 512)
+    expectNoDifference(store.state.translationCacheOrder.count, 512)
+    #expect(store.state.translationCache[oldest] == nil)
+    expectNoDifference(store.state.translationCache[cacheKey]?.text, "Current translation")
+  }
+
+  @Test
+  func optionalStyleResponseRemainsAcceptedAfterPlainTextAppears() async {
+    var state = makeState()
+    state.overlayLines[0].source.styleRuns = [OverlaySourceStyleRun(
+      range: NSRange(location: 0, length: 2),
+      box: pendingLine.source.box,
+      appearance: OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .bold)
+    )]
+    let store = TestStore(initialState: state) { CaptureFeature() }
+    store.exhaustivity = .off
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: TranslatedText(text: "Hello")
+    ))
+    #expect(!store.state.isTranslating)
+    var styled = AttributedString("Hello")
+    styled.link = URL(string: "swiftycrow-style://run/0")
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: TranslatedText(text: "Hello", attributedText: styled)
+    ))
+    expectNoDifference(store.state.overlayLines[0].translatedText, "Hello")
+    expectNoDifference(store.state.overlayLines[0].displayedStyleRuns.count, 1)
+    expectNoDifference(store.state.overlayLines[0].displayedStyleRuns[0].appearance.fontWeight, .bold)
+    #expect(!store.state.isTranslating)
   }
 
   // MARK: Private

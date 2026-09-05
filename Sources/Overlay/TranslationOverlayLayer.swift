@@ -36,6 +36,7 @@ struct TranslationOverlayLayer: View {
         size: proxy.size,
         prefersHorizontalTextLayout: prefersHorizontalTextLayout
       )
+      .equatable()
     }
     .onReceive(
       NotificationCenter.default.publisher(
@@ -57,7 +58,7 @@ struct TranslationOverlayLayer: View {
 
 // MARK: - OverlayCanvas
 
-private struct OverlayCanvas: View {
+private struct OverlayCanvas: View, Equatable {
 
   // MARK: Internal
 
@@ -106,6 +107,11 @@ private struct OverlayCanvas: View {
     }
     .frame(width: size.width, height: size.height, alignment: .topLeading)
     .clipped()
+  }
+
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.lines == rhs.lines && lhs.size == rhs.size
+      && lhs.prefersHorizontalTextLayout == rhs.prefersHorizontalTextLayout
   }
 
   // MARK: Private

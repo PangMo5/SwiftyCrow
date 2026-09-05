@@ -71,7 +71,7 @@ For more details, see [docs/LANGUAGE_MODELS.md](docs/LANGUAGE_MODELS.md).
 ## Configuration
 
 Settings live in `~/.config/SwiftyCrow/config.toml`, grouped into tables that
-mirror the in-app Settings tabs: `[capture]`, `[languages]`, `[overlay]`,
+mirror the in-app Settings tabs: `[languages]`, `[overlay]`,
 `[shortcuts]`, `[translation]`, and `[updates]`. Edits made in the app or by
 hand are kept in sync.
 

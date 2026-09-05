@@ -30,7 +30,6 @@ struct SettingsView: View {
         switch pane ?? .general {
         case .general: GeneralSection(store: store)
         case .languages: LanguagesSection(store: store)
-        case .capture: LiveCaptureSection()
         case .translation: TranslationSection()
         case .overlay: OverlaySection()
         case .shortcuts: ShortcutsSection()
@@ -50,7 +49,6 @@ struct SettingsView: View {
   private enum Pane: String, CaseIterable, Identifiable {
     case general
     case languages
-    case capture
     case translation
     case overlay
     case shortcuts
@@ -67,7 +65,6 @@ struct SettingsView: View {
       switch self {
       case .general: "General"
       case .languages: "Languages"
-      case .capture: "Capture"
       case .translation: "Translation"
       case .overlay: "Overlay"
       case .shortcuts: "Shortcuts"
@@ -80,7 +77,6 @@ struct SettingsView: View {
       switch self {
       case .general: "gearshape"
       case .languages: "globe"
-      case .capture: "viewfinder"
       case .translation: "character.bubble"
       case .overlay: "rectangle.dashed"
       case .shortcuts: "command"
@@ -137,39 +133,6 @@ private struct LanguagesSection: View {
       Text("Languages")
     } footer: {
       Text("List is loaded from Apple Translation \u{00B7} Vision on this device.")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-    }
-  }
-
-  // MARK: Private
-
-  @Shared(.settings) private var settings
-
-}
-
-// MARK: - LiveCaptureSection
-
-private struct LiveCaptureSection: View {
-
-  // MARK: Internal
-
-  var body: some View {
-    Section {
-      LabeledContent("Capture interval") {
-        VStack(alignment: .trailing, spacing: 2) {
-          Slider(value: Binding($settings.capture.interval), in: 0.3...3.0, step: 0.1)
-            .frame(width: 220)
-          Text(String(format: "%.1f s", settings.capture.interval))
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-        }
-      }
-    } header: {
-      Text("Live Capture")
-    } footer: {
-      Text("How often Live Mode re-captures the overlay region.")
         .font(.caption)
         .foregroundStyle(.secondary)
     }

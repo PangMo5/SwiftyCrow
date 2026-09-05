@@ -137,6 +137,7 @@ extension TranslationClient: DependencyKey {
           do {
             var styledTargets = [UUID: String]()
             for try await response in session.translate(batch: requests) {
+              try Task.checkCancellation()
               if !receivedFirstResponse {
                 receivedFirstResponse = true
                 let elapsed = clock.now - started
@@ -156,13 +157,18 @@ extension TranslationClient: DependencyKey {
                 translatedLabel,
                 source: sourceLine.text
               )
-              if #available(macOS 26.4, *), sourceLine.attributedText != nil {
-                styledTargets[id] = targetText
-                continue
+              var attributedTarget: AttributedString?
+              if #available(macOS 26.4, *), let attributedSource = sourceLine.attributedText {
+                let alignment = TranslationStyleMapper.align(source: attributedSource, target: targetText)
+                attributedTarget = alignment.target
+                if !alignment.unmatched.isEmpty { styledTargets[id] = targetText }
               }
+              // Text is usable now. Optional style-snippet translation must
+              // never hold an entire paragraph behind the rest of the batch.
               continuation.yield(TranslationLine(
                 id: id,
-                text: targetText
+                text: targetText,
+                attributedText: attributedTarget
               ))
             }
             if #available(macOS 26.4, *), !styledTargets.isEmpty {
@@ -237,6 +243,7 @@ extension TranslationClient: DependencyKey {
 
     if !snippetRequests.isEmpty {
       for try await response in session.translate(batch: snippetRequests) {
+        try Task.checkCancellation()
         guard
           let requestID = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
           let owner = snippetOwners[requestID]

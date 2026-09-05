@@ -33,7 +33,10 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
   case emptyRegion
   case noDisplay
   case permissionRequired
+  case unreadableImage
   case windowUnavailable
+
+  // MARK: Internal
 
   var errorDescription: String? {
     switch self {
@@ -45,6 +48,8 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
       "Screen Recording permission is required. Allow it in System Settings and restart the app."
     case .windowUnavailable:
       "That window is no longer available to capture."
+    case .unreadableImage:
+      "The captured image has no readable pixel data."
     }
   }
 }
