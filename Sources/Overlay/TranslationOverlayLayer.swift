@@ -92,7 +92,15 @@ private struct OverlayCanvas: View, Equatable {
             clippingFrame: sourceSurface.map {
               OverlayLayoutEngine.sourceSurfaceFrame(for: $0, in: size)
             },
-            cornerRadiusFraction: sourceSurface?.cornerRadiusFraction ?? 0
+            cornerRadiusFraction: sourceSurface?.cornerRadiusFraction ?? 0,
+            clippingRows: sourceSurface?.clippingRows.map {
+              CGRect(
+                x: $0.minX * size.width,
+                y: $0.minY * size.height,
+                width: $0.width * size.width,
+                height: $0.height * size.height
+              )
+            } ?? []
           )
           .equatable()
         }
@@ -128,6 +136,7 @@ private struct SourceReplacementSurface: View, Equatable {
   let patchFrame: CGRect
   let clippingFrame: CGRect?
   let cornerRadiusFraction: CGFloat
+  let clippingRows: [CGRect]
 
   var body: some View {
     if let clippingFrame, !clippingFrame.isEmpty {
@@ -145,9 +154,9 @@ private struct SourceReplacementSurface: View, Equatable {
         height: clippingFrame.height,
         alignment: .topLeading
       )
-      .clipShape(.rect(
-        cornerRadius: min(clippingFrame.width, clippingFrame.height) * cornerRadiusFraction,
-        style: .continuous
+      .clipShape(SourceSurfaceClip(
+        rows: clippingRows.map { $0.offsetBy(dx: -clippingFrame.minX, dy: -clippingFrame.minY) },
+        cornerRadius: min(clippingFrame.width, clippingFrame.height) * cornerRadiusFraction
       ))
       .position(x: clippingFrame.midX, y: clippingFrame.midY)
     } else {
@@ -156,6 +165,22 @@ private struct SourceReplacementSurface: View, Equatable {
         .frame(width: patchFrame.width, height: patchFrame.height)
         .position(x: patchFrame.midX, y: patchFrame.midY)
     }
+  }
+}
+
+// MARK: - SourceSurfaceClip
+
+private struct SourceSurfaceClip: Shape {
+  let rows: [CGRect]
+  let cornerRadius: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    guard !rows.isEmpty else {
+      return RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).path(in: rect)
+    }
+    var path = Path()
+    path.addRects(rows)
+    return path
   }
 }
 

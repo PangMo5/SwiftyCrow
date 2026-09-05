@@ -39,6 +39,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         styleRuns: line.styleRuns,
         fallback: line.appearance
       )
+      isReconstructedTextRegion = line.isReconstructedTextRegion
       box = line.boundingBoxNormalized
       text = line.text
       self.language = language
@@ -64,6 +65,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
     // MARK: Internal
 
+    var isReconstructedTextRegion = false
     /// Top-left origin, 0–1 normalized to the captured frame.
     var box: CGRect
     var text: String

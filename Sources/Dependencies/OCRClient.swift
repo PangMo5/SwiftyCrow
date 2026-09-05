@@ -161,6 +161,7 @@ extension OCRClient: DependencyKey {
         }
       }
       try Task.checkCancellation()
+      lines = try await OCRBalloonRefiner.refine(lines, in: image, language: language)
       let correctedLines: [OCRResult.Line]
       let languageCode = language.localeLanguage.languageCode?.identifier
       if language.isAuto || languageCode == "ja" {

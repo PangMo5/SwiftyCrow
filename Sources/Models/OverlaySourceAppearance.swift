@@ -108,4 +108,6 @@ struct OverlaySourceSurface: Equatable, Hashable, Sendable {
   /// Corner radius relative to the surface's shorter side. Pixel flood-fill
   /// distinguishes balloons and pills from rectangular UI surfaces.
   var cornerRadiusFraction: CGFloat = 0
+  /// Image-bounded interiors for irregular printed text regions.
+  var clippingRows = [CGRect]()
 }
