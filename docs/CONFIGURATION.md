@@ -14,7 +14,6 @@ in your editor.
 
 Settings are grouped into tables that mirror the in-app Settings panes:
 
-- **`[capture]`:** Live Mode capture cadence
 - **`[languages]`:** Source and target language pair
 - **`[overlay]`:** Live translation overlay
 - **`[shortcuts]`:** Global hotkeys and capture-window keys
@@ -41,11 +40,10 @@ Modifiers: `cmd`, `ctrl`, `alt` (option), `shift`. Keys are letters, digits,
 `tab`, `return`, `space`, arrow keys (`left`/`right`/`up`/`down`), punctuation,
 etc. Omit a key to leave that action unbound.
 
-## `[capture]`
-
-| Key | Type | Default | Description |
-| --- | --- | --- | --- |
-| `interval` | double | `0.8` | Seconds between re-captures while Live Mode is on. |
+Live capture adapts automatically: it checks frequently while content changes
+and slows down when the screen is still. OCR runs only for changed pixels or
+language settings. Scrolling refreshes as soon as the gesture settles.
+The former `[capture].interval` setting is ignored and omitted on the next save.
 
 ## `[languages]`
 

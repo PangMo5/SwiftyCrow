@@ -14,7 +14,6 @@ struct AppSettings: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     let d = AppSettings()
-    capture = try c.decodeIfPresent(CaptureSettings.self, forKey: .capture) ?? d.capture
     languages = try c.decodeIfPresent(LanguageSettings.self, forKey: .languages) ?? d.languages
     overlay = try c.decodeIfPresent(OverlaySettings.self, forKey: .overlay) ?? d.overlay
     shortcuts = try c.decodeIfPresent(ShortcutSettings.self, forKey: .shortcuts) ?? d.shortcuts
@@ -24,27 +23,12 @@ struct AppSettings: Codable, Equatable, Sendable {
 
   // MARK: Internal
 
-  var capture = CaptureSettings()
   var languages = LanguageSettings()
   var overlay = OverlaySettings()
   var shortcuts = ShortcutSettings()
   var translation = TranslationSettings()
   var updates = UpdateSettings()
 
-}
-
-// MARK: - CaptureSettings
-
-struct CaptureSettings: Codable, Equatable, Sendable {
-  init() { }
-
-  init(from decoder: any Decoder) throws {
-    let c = try decoder.container(keyedBy: CodingKeys.self)
-    let d = CaptureSettings()
-    interval = try c.decodeIfPresent(Double.self, forKey: .interval) ?? d.interval
-  }
-
-  var interval = 0.8
 }
 
 // MARK: - LanguageSettings
@@ -202,7 +186,6 @@ enum UpdateCheckInterval: String, Codable, Equatable, Sendable, CaseIterable, Id
     }
   }
 }
-
 
 // MARK: - TranslationStrategy
 

@@ -53,6 +53,8 @@ struct OverlayRenderState: Equatable, Sendable {
 enum OverlayUserAction: Sendable {
   case toggleLive
   case close
+  case sourceInteractionBegan
+  case sourceInteractionEnded
 }
 
 // MARK: - OverlayClient

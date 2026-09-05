@@ -78,6 +78,10 @@ struct AppFeature {
                 await send(.capture(.toggleLiveRequested))
               case .close:
                 await send(.capture(.dismissOverlay))
+              case .sourceInteractionBegan:
+                await send(.capture(.sourceInteractionBegan))
+              case .sourceInteractionEnded:
+                await send(.capture(.sourceInteractionEnded))
               }
             }
           },

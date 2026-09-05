@@ -32,7 +32,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
         // arrives (the user picked a new region/window). Otherwise the user's
         // own drag/resize is the source of truth and we leave the frame alone.
         if isNewWindow || state.placementID != lastPlacementID {
+          isPlacingWindow = true
           window.setFrame(overlayFrame.rect, display: true)
+          isPlacingWindow = false
           window.makeKeyAndOrderFront(nil)
         }
       }
@@ -62,23 +64,24 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   func windowDidMove(_: Notification) {
+    guard !isPlacingWindow else { return }
     scheduleFrameSave()
     markInteracting()
   }
 
   func windowDidResize(_: Notification) {
+    guard !isPlacingWindow else { return }
     scheduleFrameSave()
   }
 
   func windowWillStartLiveResize(_: Notification) {
     pendingInteractionReset?.cancel()
-    model.isInteracting = true
+    beginInteraction()
   }
 
   func windowDidEndLiveResize(_: Notification) {
     pendingInteractionReset?.cancel()
-    model.isInteracting = false
-    flushFrameSave()
+    endInteraction()
   }
 
   // MARK: Private
@@ -96,6 +99,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var resizeEdgeMonitors = [Any]()
   private var pendingFrameSaveTask: Task<Void, Never>?
   private var pendingInteractionReset: Task<Void, Never>?
+  private var isPlacingWindow = false
   private var window: OverlayPanel?
   private var resultWindow: NSPanel?
   private var lastPlacementID = 0
@@ -131,6 +135,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// model carries stale state into the next use. Both windows are cheap to
   /// rebuild on the next show, which also re-snaps them to the stored frame.
   private func teardownWindows() {
+    pendingInteractionReset?.cancel()
+    pendingInteractionReset = nil
+    model.isInteracting = false
     if window != nil { flushFrameSave() }
     window?.delegate = nil
     window?.orderOut(nil)
@@ -144,12 +151,29 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// but long enough that the lines don't pop in/out mid-drag.
   private func markInteracting() {
     pendingInteractionReset?.cancel()
-    model.isInteracting = true
+    beginInteraction()
     pendingInteractionReset = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .milliseconds(150))
       guard !Task.isCancelled, let self else { return }
-      model.isInteracting = false
+      endInteraction()
     }
+  }
+
+  private func beginInteraction() {
+    guard model.isLive, !model.isInteracting else { return }
+    // Hide synchronously with the event, before the reducer round trip.
+    model.isInteracting = true
+    eventHandler?(.sourceInteractionBegan)
+  }
+
+  private func endInteraction() {
+    guard model.isInteracting else { return }
+    flushFrameSave()
+    // Never reveal the pre-gesture snapshot while waiting for a fresh capture.
+    model.lines = []
+    model.backdrop = nil
+    model.isInteracting = false
+    eventHandler?(.sourceInteractionEnded)
   }
 
   private func scheduleFrameSave() {
@@ -228,14 +252,31 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     // Global fires while events pass through to apps below (interior); local
     // fires while the window is interactive near an edge / on the handle.
     // Together they keep the cursor state current as it moves in and out.
-    let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
-      MainActor.assumeIsolated { self?.updatePassThroughForCursor() }
+    let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .scrollWheel]) { [weak self] event in
+      MainActor.assumeIsolated {
+        self?.updatePassThroughForCursor()
+        self?.sourceContentInteracted(event)
+      }
     }
-    let local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
-      MainActor.assumeIsolated { self?.updatePassThroughForCursor() }
+    let local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .scrollWheel]) { [weak self] event in
+      MainActor.assumeIsolated {
+        self?.updatePassThroughForCursor()
+        if event.type == .scrollWheel { self?.sourceContentInteracted(event) }
+      }
       return event
     }
     resizeEdgeMonitors = [global, local].compactMap { $0 }
+  }
+
+  private func sourceContentInteracted(_ event: NSEvent) {
+    guard
+      model.isLive,
+      event.type == .scrollWheel || event.type == .leftMouseDragged,
+      window?.frame.contains(NSEvent.mouseLocation) == true
+    else { return }
+    // Includes trackpad momentum and scrollbar dragging. Coalesce the gesture
+    // into one cancellation and one immediate capture after it settles.
+    markInteracting()
   }
 
   private func stopResizeEdgeTracking() {
@@ -461,7 +502,7 @@ private struct LiveResultView: View {
 
   @ViewBuilder
   private var content: some View {
-    if let backdrop = model.backdrop {
+    if !model.isInteracting, let backdrop = model.backdrop {
       ZStack {
         LiveBackdropImage(backdrop: backdrop)
           .equatable()

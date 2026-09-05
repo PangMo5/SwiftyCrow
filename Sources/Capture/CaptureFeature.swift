@@ -16,6 +16,8 @@ struct CaptureFeature {
 
   enum CancelID {
     case live
+    case preparation
+    case recognition
     case translation
   }
 
@@ -32,11 +34,22 @@ struct CaptureFeature {
     var strategy: TranslationStrategy
     var target: String
     var text: String
+    var attributedText: AttributedString? = nil
   }
 
   struct TranslationRequestContext: Equatable, Sendable {
     var strategy: TranslationStrategy
     var target: String
+    var imageSize: CGSize
+    var sources: [UUID: OverlayLine.Source]
+
+    func matches(_ sources: [OverlayLine.Source], previous: [OverlayLine?], imageSize: CGSize) -> Bool {
+      guard self.imageSize == imageSize, self.sources.count == sources.count else { return false }
+      return sources.indices.allSatisfy { index in
+        guard let id = previous[index]?.id, let requested = self.sources[id] else { return false }
+        return sources[index].canReuseTranslation(relativeTo: requested, imageSize: imageSize)
+      }
+    }
   }
 
   @ObservableState
@@ -67,6 +80,12 @@ struct CaptureFeature {
     /// deliberately reused for visual stability, so identity alone cannot tell
     /// an old translation from the current request.
     var translationGeneration = 0
+    var captureGeneration = 0
+    var recognitionGeneration = 0
+    var lastFrameSignature: LiveFrame.Signature?
+    var recognitionSettings: LiveFrame.Settings?
+    var isSourceInteracting = false
+    var translationCacheOrder = [TranslationCacheKey]()
     var translationCache = [TranslationCacheKey: TranslatedText]()
     var translationRequestContext: TranslationRequestContext?
 
@@ -76,7 +95,11 @@ struct CaptureFeature {
 
   enum Action {
     case captureIsTakingLong
-    case captureResponse(Result<LiveCapture, any Error>)
+    case liveFrameResponse(generation: Int, frame: OverlayFrame, result: Result<LiveFrame, any Error>)
+    case liveCaptureResponse(generation: Int, frame: OverlayFrame, result: Result<LiveCapture, any Error>)
+    case sourceInteractionBegan
+    case sourceInteractionEnded
+    case translationFinished(generation: Int)
     case copyTranslationRequested
     case dismissOverlay
     case selectRegionRequested
@@ -102,6 +125,11 @@ struct CaptureFeature {
     Reduce { state, action in
       switch action {
       case .dismissOverlay:
+        state.captureGeneration += 1
+        state.recognitionGeneration += 1
+        state.lastFrameSignature = nil
+        state.recognitionSettings = nil
+        state.isSourceInteracting = false
         state.translationGeneration += 1
         state.overlayActive = false
         state.isLive = false
@@ -115,6 +143,8 @@ struct CaptureFeature {
         state.translationUnavailable = false
         return .merge(
           .cancel(id: CancelID.live),
+          .cancel(id: CancelID.recognition),
+          .cancel(id: CancelID.preparation),
           .cancel(id: CancelID.translation)
         )
 
@@ -144,29 +174,103 @@ struct CaptureFeature {
         state.overlayPlacementID += 1
         return .send(.setLive(true))
 
+      case .sourceInteractionBegan:
+        guard state.isLive, !state.isSourceInteracting else { return .none }
+        state.isSourceInteracting = true
+        state.captureGeneration += 1
+        state.recognitionGeneration += 1
+        state.lastFrameSignature = nil
+        state.recognitionSettings = nil
+        state.translationGeneration += 1
+        state.overlayLines = []
+        state.backdrop = nil
+        state.isCapturing = false
+        state.isTranslating = false
+        state.isPreparingRecognition = false
+        state.translationRequestContext = nil
+        return .merge(
+          .cancel(id: CancelID.live),
+          .cancel(id: CancelID.recognition),
+          .cancel(id: CancelID.preparation),
+          .cancel(id: CancelID.translation)
+        )
+
+      case .sourceInteractionEnded:
+        guard state.isSourceInteracting else { return .none }
+        state.isSourceInteracting = false
+        guard state.isLive, state.overlayActive else { return .none }
+        return .send(.setLive(true))
+
+      case .liveFrameResponse(let generation, let frame, let result):
+        guard
+          state.isLive, !state.isSourceInteracting,
+          generation == state.captureGeneration, frame == state.overlayFrame
+        else { return .none }
+        switch result {
+        case .failure(let error):
+          return captureFailed(error, into: &state)
+        case .success(let snapshot):
+          let settings = LiveFrame.Settings(state.settings)
+          // The capture loop never waits for OCR. Unchanged pixels retain the
+          // current recognition/translation, including an in-flight request.
+          guard snapshot.signature != state.lastFrameSignature || settings != state.recognitionSettings else {
+            return .none
+          }
+          state.lastFrameSignature = snapshot.signature
+          state.recognitionSettings = settings
+          state.recognitionGeneration += 1
+          state.translationGeneration += 1
+          state.translationRequestContext = nil
+          state.overlayLines = []
+          state.backdrop = nil
+          state.isTranslating = false
+          state.isCapturing = true
+          state.lastError = nil
+          let recognitionGeneration = state.recognitionGeneration
+          return .merge(
+            .cancel(id: CancelID.translation),
+            .run { [ocr, clock] send in
+              let result = await Result {
+                let recognized = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) {
+                  try Task.checkCancellation()
+                  return try await ocr.recognizeText(snapshot.backdrop.image, settings.source)
+                }
+                try Task.checkCancellation()
+                return LiveCapture(
+                  backdrop: settings.mode == .window ? snapshot.backdrop : nil,
+                  imageSize: snapshot.imageSize,
+                  result: recognized
+                )
+              }
+              try Task.checkCancellation()
+              await send(.liveCaptureResponse(generation: recognitionGeneration, frame: frame, result: result))
+            }
+            .cancellable(id: CancelID.recognition, cancelInFlight: true)
+          )
+        }
+
+      case .liveCaptureResponse(let generation, let frame, let result):
+        guard
+          state.isLive, !state.isSourceInteracting,
+          generation == state.recognitionGeneration,
+          frame == state.overlayFrame,
+          state.recognitionSettings == LiveFrame.Settings(state.settings)
+        else { return .none }
+        // Validate and apply in the same reducer action. Forwarding an untagged
+        // response allowed a queued scroll/dismissal to invalidate it in between.
+        switch result {
+        case .success(let capture):
+          return captureSucceeded(capture, into: &state)
+        case .failure(let error):
+          return captureFailed(error, into: &state)
+        }
+
       case .captureIsTakingLong:
         // Only while this live session's very first capture is still outstanding;
         // isCapturing is cleared by the first response either way.
         guard state.isLive, state.isCapturing else { return .none }
         state.isPreparingRecognition = true
         return .none
-
-      case .captureResponse(.failure(let error)):
-        state.isCapturing = false
-        state.isPreparingRecognition = false
-        state.lastError = error.localizedDescription
-        if let screenError = error as? ScreenCaptureError, screenError == .permissionRequired {
-          state.isLive = false
-          return .cancel(id: CancelID.live)
-        }
-        return .none
-
-      case .captureResponse(.success(let capture)):
-        state.isCapturing = false
-        state.isPreparingRecognition = false
-        state.lastError = nil
-        state.imageSize = capture.imageSize
-        return applyOCRResult(capture, into: &state)
 
       case .copyTranslationRequested:
         let text = state.overlayLines
@@ -179,63 +283,59 @@ struct CaptureFeature {
           NSPasteboard.general.setString(text, forType: .string)
         }
 
-      case .setLive(let isLive):
-        if isLive, !state.overlayActive {
-          state.isLive = false
-          state.isCapturing = false
-          return .cancel(id: CancelID.live)
-        }
+      case .setLive(let requested):
+        let isLive = requested && state.overlayActive
+        state.captureGeneration += 1
+        state.recognitionGeneration += 1
+        state.lastFrameSignature = nil
+        state.recognitionSettings = nil
+        state.isSourceInteracting = false
         state.isLive = isLive
         state.isCapturing = isLive
+        state.lastError = nil
         // Toggling Live discards stale results so the overlay doesn't keep
         // showing the previous capture across the transition.
         state.overlayLines = []
+        state.backdrop = nil
         state.translationGeneration += 1
         state.isTranslating = false
         state.translationRequestContext = nil
         state.isPreparingRecognition = false
         state.translationUnavailable = false
         if isLive {
+          let generation = state.captureGeneration
           return .merge(
+            .cancel(id: CancelID.recognition),
             .cancel(id: CancelID.translation),
             .run { [clock] send in
               // If the first capture hasn't landed by now, say why instead of
               // leaving an empty frame with a spinner on it.
               try await clock.sleep(for: .seconds(2))
               await send(.captureIsTakingLong)
-            },
-            .run { [
-              ocr,
-              settings = state.$settings,
-              overlayFrame = state.$overlayFrame
-            ] send in
-              // Serialize the probe and first real recognition. Starting both
-              // against a cold Vision daemon made the first capture slower and
-              // could leave two expensive document requests competing.
-              await ocr.warmUp()
+            }
+            .cancellable(id: CancelID.preparation, cancelInFlight: true),
+            .run { [overlayFrame = state.$overlayFrame] send in
+              // OCR joins an existing warm-up itself. Don't run an additional
+              // probe on the critical path of every scroll/restart.
               let cadenceClock = ContinuousClock()
+              var cadence = LiveCaptureCadence()
               while !Task.isCancelled {
                 let tickStarted = cadenceClock.now
-                let snapshot = settings.wrappedValue
                 let frame = overlayFrame.wrappedValue
-                // Every stage inside runCapture is deadline-bounded, so a tick
-                // that stalls fails and the loop moves on to the next one. An
-                // unbounded tick used to park this loop for good: no retry, no
-                // error, and isCapturing left true — the overlay just spun.
+                // Capture has its own deadline. OCR runs in another effect,
+                // so even a cold Vision model cannot stop change detection.
                 let result = await Result {
-                  try await runCapture(
-                    settings: snapshot,
-                    overlayFrame: frame
-                  )
+                  try await captureFrame(overlayFrame: frame)
                 }
+                try Task.checkCancellation()
                 if case .failure(let error) = result {
                   Log.capture.error("Live tick failed: \(error.localizedDescription, privacy: .public)")
                 }
-                await send(.captureResponse(result))
+                await send(.liveFrameResponse(generation: generation, frame: frame, result: result))
                 let elapsed = tickStarted.duration(to: cadenceClock.now)
                 if
                   let delay = LiveCaptureCadence.remainingDelay(
-                    interval: .seconds(snapshot.capture.interval),
+                    interval: cadence.interval(after: try? result.get().signature),
                     elapsed: elapsed
                   )
                 {
@@ -246,7 +346,12 @@ struct CaptureFeature {
             .cancellable(id: CancelID.live, cancelInFlight: true)
           )
         } else {
-          return .merge(.cancel(id: CancelID.live), .cancel(id: CancelID.translation))
+          return .merge(
+            .cancel(id: CancelID.live),
+            .cancel(id: CancelID.recognition),
+            .cancel(id: CancelID.preparation),
+            .cancel(id: CancelID.translation)
+          )
         }
 
       case .toggleLiveRequested:
@@ -264,6 +369,11 @@ struct CaptureFeature {
           return .send(.dismissOverlay)
         }
         return .send(.overlayPlaced(state.overlayFrame.rect))
+
+      case .translationFinished(let generation):
+        guard generation == state.translationGeneration else { return .none }
+        state.translationRequestContext = nil
+        return .none
 
       case .translationUnavailable(let generation, let lineIDs, let message):
         guard generation == state.translationGeneration else { return .none }
@@ -298,10 +408,15 @@ struct CaptureFeature {
           text: text,
           attributedText: text == translation.text ? translation.attributedText : nil
         )
+        state.translationCacheOrder.removeAll { $0 == key }
+        state.translationCacheOrder.append(key)
         state.translationCache[key] = translation
+        if state.translationCacheOrder.count > 512 {
+          state.translationCache.removeValue(forKey: state.translationCacheOrder.removeFirst())
+        }
         if
           let index = state.overlayLines.firstIndex(where: { $0.id == lineID }),
-          state.overlayLines[index].isPending
+          state.overlayLines[index].isPending || state.overlayLines[index].translatedText == translation.text
         {
           state.overlayLines[index].showTranslation(
             translation.text,
@@ -310,9 +425,6 @@ struct CaptureFeature {
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
-        if !state.isTranslating {
-          state.translationRequestContext = nil
-        }
         if !state.isTranslating, !state.overlayLines.contains(where: \.isUnavailable) {
           // Every requested line resolved, so a previous missing-model warning
           // is stale even if this live session started with a failed tick.
@@ -364,13 +476,15 @@ struct CaptureFeature {
       languages: lineSources,
       in: state.overlayLines
     )
-    let stableSources = result.lines.indices.map { index in
-      let source = OverlayLine.Source(
+    let rawSources = result.lines.indices.map { index in
+      OverlayLine.Source(
         recognized: result.lines[index],
         language: lineSources[index].localeLanguage
       )
-      guard let previous = previousMatches[index] else { return source }
-      return source.stabilized(relativeTo: previous.source, imageSize: capture.imageSize)
+    }
+    let stableSources = rawSources.indices.map { index in
+      guard let previous = previousMatches[index] else { return rawSources[index] }
+      return rawSources[index].stabilized(relativeTo: previous.source, imageSize: capture.imageSize)
     }
     let preservesSource = stableSources.indices.map {
       OverlayTranslationPolicy.preservesSource(at: $0, in: stableSources)
@@ -378,12 +492,11 @@ struct CaptureFeature {
     let sourceSetIsUnchanged = result.lines.count == state.overlayLines.count
       && previousMatches.allSatisfy { $0 != nil }
     if
-      state.isTranslating,
+      let context = state.translationRequestContext,
       sourceSetIsUnchanged,
-      state.translationRequestContext == TranslationRequestContext(
-        strategy: strategy,
-        target: targetLanguage.code
-      )
+      context.strategy == strategy,
+      context.target == targetLanguage.code,
+      context.matches(rawSources, previous: previousMatches, imageSize: capture.imageSize)
     {
       // Keep the in-flight batch alive. Replacing it every live tick meant a
       // batch slower than the capture interval could be cancelled and restarted
@@ -419,7 +532,8 @@ struct CaptureFeature {
         source: source.maximalIdentifier,
         strategy: strategy,
         target: targetLanguage.code,
-        text: translationLine.requestText
+        text: translationLine.requestText,
+        attributedText: translationLine.attributedText
       )
       let needsTranslation = !sameLanguage && !preservesSource[index]
       let cached = needsTranslation ? cache[key] : nil
@@ -459,7 +573,9 @@ struct CaptureFeature {
     let translationKeys = keys
     state.translationRequestContext = TranslationRequestContext(
       strategy: strategy,
-      target: targetLanguage.code
+      target: targetLanguage.code,
+      imageSize: capture.imageSize,
+      sources: Dictionary(uniqueKeysWithValues: zip(newLines, rawSources).map { ($0.id, $1) })
     )
     return Effect<Action>.run { send in
       // One session per source language; each response or explicit fallback
@@ -470,6 +586,7 @@ struct CaptureFeature {
             var remaining = Set(batch.items.map(\.id))
             do {
               for try await result in translation.translateBatch(batch.items, batch.source, target, strategy) {
+                try Task.checkCancellation()
                 remaining.remove(result.id)
                 if let key = translationKeys[result.id] {
                   await send(
@@ -488,7 +605,7 @@ struct CaptureFeature {
             } catch is CancellationError {
               return
             } catch {
-              guard !remaining.isEmpty else { return }
+              guard !Task.isCancelled, !remaining.isEmpty else { return }
               await send(
                 .translationUnavailable(
                   generation: generation,
@@ -498,12 +615,14 @@ struct CaptureFeature {
               )
               return
             }
-            if !remaining.isEmpty {
+            if !Task.isCancelled, !remaining.isEmpty {
               await send(.translationUnavailable(generation: generation, lineIDs: remaining, message: nil))
             }
           }
         }
       }
+      guard !Task.isCancelled else { return }
+      await send(.translationFinished(generation: generation))
     }
     .cancellable(id: CancelID.translation, cancelInFlight: true)
   }
@@ -536,16 +655,37 @@ struct CaptureFeature {
     }
   }
 
-  private func runCapture(
-    settings: AppSettings,
-    overlayFrame: OverlayFrame
-  ) async throws -> LiveCapture {
-    // The live overlay is always placed over a region while running. Exclude
-    // this process so the transparent overlay never becomes the next OCR input.
-    //
-    // Both stages are bounded separately so the log names whichever one stalled:
-    // ScreenCaptureKit and Vision each talk to a daemon that is cold on the first
-    // use after an idle period and can stop answering entirely.
+  private func captureSucceeded(_ capture: LiveCapture, into state: inout State) -> Effect<Action> {
+    state.isCapturing = false
+    state.isPreparingRecognition = false
+    state.lastError = nil
+    state.imageSize = capture.imageSize
+    return .merge(.cancel(id: CancelID.preparation), applyOCRResult(capture, into: &state))
+  }
+
+  private func captureFailed(_ error: any Error, into state: inout State) -> Effect<Action> {
+    state.recognitionGeneration += 1
+    state.lastFrameSignature = nil // Retry even when the next pixels are identical.
+    state.isCapturing = false
+    state.isPreparingRecognition = false
+    state.lastError = error.localizedDescription
+    state.translationGeneration += 1
+    state.translationRequestContext = nil
+    state.overlayLines = []
+    state.backdrop = nil
+    state.isTranslating = false
+    if error as? ScreenCaptureError == .permissionRequired {
+      state.isLive = false
+    }
+    return .merge(
+      .cancel(id: CancelID.preparation),
+      .cancel(id: CancelID.recognition),
+      .cancel(id: CancelID.translation),
+      state.isLive ? .none : .cancel(id: CancelID.live)
+    )
+  }
+
+  private func captureFrame(overlayFrame: OverlayFrame) async throws -> LiveFrame {
     let image = try await withDeadline(
       CaptureDeadline.screenCapture,
       stage: .screenCapture,
@@ -557,28 +697,43 @@ struct CaptureFeature {
         ProcessInfo.processInfo.processIdentifier
       )
     }
-    let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) { [ocr] in
-      try await ocr.recognizeText(image, settings.languages.source)
-    }
-    // Window mode retains the immutable capture directly. Encoding every tick
-    // to PNG and decoding it again in SwiftUI added work and allocation churn
-    // precisely while the live overlay was trying to refresh.
-    let needsBackdrop = settings.overlay.liveMode == .window
-    return LiveCapture(
-      backdrop: needsBackdrop ? OverlayBackdrop(image: image) : nil,
-      imageSize: CGSize(width: image.width, height: image.height),
-      result: result
-    )
+    try Task.checkCancellation()
+    return try LiveFrame(image: image)
   }
 }
 
 // MARK: - LiveCaptureCadence
 
-enum LiveCaptureCadence {
-  /// Keeps the configured interval start-to-start. Processing time already
+struct LiveCaptureCadence {
+
+  // MARK: Internal
+
+  /// Keeps the adaptive interval start-to-start. Processing time already
   /// consumes part of the interval and must not be added to it again.
   static func remainingDelay(interval: Duration, elapsed: Duration) -> Duration? {
     guard elapsed < interval else { return nil }
     return interval - elapsed
   }
+
+  /// Rapidly follow an active screen, then avoid repeatedly waking the capture
+  /// daemon at that rate for a static page. Gestures bypass this delay by
+  /// restarting the loop. Errors back off without parking it permanently.
+  mutating func interval(after signature: LiveFrame.Signature?) -> Duration {
+    guard let signature else {
+      failures = min(3, failures + 1)
+      unchangedSamples = 0
+      return .milliseconds(500 * (1 << (failures - 1)))
+    }
+    failures = 0
+    unchangedSamples = signature == previousSignature ? min(3, unchangedSamples + 1) : 0
+    previousSignature = signature
+    return unchangedSamples >= 3 ? .milliseconds(500) : .milliseconds(150)
+  }
+
+  // MARK: Private
+
+  private var previousSignature: LiveFrame.Signature?
+  private var unchangedSamples = 0
+  private var failures = 0
+
 }

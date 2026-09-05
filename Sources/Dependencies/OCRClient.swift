@@ -26,6 +26,7 @@ extension OCRClient: DependencyKey {
       // A capture that starts while the proactive probe is loading the model
       // joins that work instead of issuing a second cold Vision request.
       await VisionWarmUp.shared.waitForInFlight()
+      try Task.checkCancellation()
       var request = RecognizeDocumentsRequest()
       if language.isAuto {
         request.textRecognitionOptions.automaticallyDetectLanguage = true
@@ -35,6 +36,7 @@ extension OCRClient: DependencyKey {
       let clock = ContinuousClock()
       let started = clock.now
       let observations = try await request.perform(on: image)
+      try Task.checkCancellation()
       // Always timed: a cold model load and a genuine stall look identical from
       // the UI, and the duration is the only thing that separates them.
       let elapsed = clock.now - started
@@ -147,6 +149,8 @@ extension OCRClient: DependencyKey {
           Log.ocr.debug(
             "Supplemental recognition added \(lines.count - previousCount, privacy: .public) lines in \((clock.now - supplementalStarted).loggedSeconds, privacy: .public)s"
           )
+        } catch is CancellationError {
+          throw CancellationError()
         } catch {
           // Document recognition remains a complete result on its own. Surface
           // the supplemental failure, but do not turn a successful capture into
@@ -156,11 +160,14 @@ extension OCRClient: DependencyKey {
           )
         }
       }
+      try Task.checkCancellation()
       let correctedLines: [OCRResult.Line]
       let languageCode = language.localeLanguage.languageCode?.identifier
       if language.isAuto || languageCode == "ja" {
         do {
           correctedLines = try await JapaneseRubyOCRCorrector.correcting(lines, in: image)
+        } catch is CancellationError {
+          throw CancellationError()
         } catch {
           Log.ocr.error(
             "Base-glyph OCR failed: \(error.localizedDescription, privacy: .public)"
@@ -170,10 +177,12 @@ extension OCRClient: DependencyKey {
       } else {
         correctedLines = lines
       }
+      try Task.checkCancellation()
       let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
         to: OCRResult(lines: correctedLines).removingNestedDuplicates(),
         from: image
       ).coalescingParagraphFragments()
+      try Task.checkCancellation()
       let postProcessingElapsed = clock.now - postProcessingStarted
       Log.ocr.debug(
         "Post-processing produced \(result.lines.count, privacy: .public) lines in \(postProcessingElapsed.loggedSeconds, privacy: .public)s"

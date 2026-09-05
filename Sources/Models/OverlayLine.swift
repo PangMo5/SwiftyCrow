@@ -115,8 +115,16 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     /// Removes sub-pixel Vision noise without pinning text that genuinely moved.
     /// A live capture is normally the same static pixels every tick, but Vision's
     /// boxes can wander by a few capture pixels and make the replacement visibly
-    /// breathe. Small changes use a dead band, moderate changes are damped, and
-    /// a real layout/scroll jump is accepted immediately.
+    /// breathe. Keep typography stable for tiny recognition noise, but always
+    /// use current geometry: damped masks reveal the original glyphs on scroll.
+    func canReuseTranslation(relativeTo previous: Self, imageSize: CGSize) -> Bool {
+      text == previous.text
+        && language == previous.language
+        && Self.hasSameOrientation(layout, previous.layout)
+        && Self.centerDistance(box, previous.box, imageSize: imageSize) <= 12
+        && Self.maximumEdgeDelta(box, previous.box, imageSize: imageSize) <= 24
+    }
+
     func stabilized(relativeTo previous: Self, imageSize: CGSize) -> Self {
       guard
         text == previous.text,
@@ -124,25 +132,18 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         Self.hasSameOrientation(layout, previous.layout),
         imageSize.width > 0,
         imageSize.height > 0,
-        Self.maximumEdgeDelta(box, previous.box, imageSize: imageSize) <= 24
+        Self.maximumEdgeDelta(box, previous.box, imageSize: imageSize) <= 4
       else { return self }
 
       var result = self
-      result.box = Self.stabilizedRect(box, previous.box, imageSize: imageSize)
       result.layout = previous.layout
       result.horizontalGlyphScale = previous.horizontalGlyphScale
       result.horizontalInkScale = previous.horizontalInkScale
       result.horizontalLineAdvanceScale = previous.horizontalLineAdvanceScale
       result.alignment = previous.alignment ?? alignment
-      result.replacementPatches = Self.stabilizedPatches(
-        replacementPatches,
-        previous.replacementPatches,
-        imageSize: imageSize
-      )
       result.styleRuns = Self.stabilizedStyleRuns(
         styleRuns,
-        previous.styleRuns,
-        imageSize: imageSize
+        previous.styleRuns
       )
 
       // Ink coverage sits close to the weight thresholds on anti-aliased UI
@@ -160,16 +161,8 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         appearance.background,
         previous.appearance.background
       ) <= 0.04
-      switch (surface, previous.surface) {
-      case (.some(var current), .some(let previousSurface)):
-        current.box = Self.stabilizedRect(current.box, previousSurface.box, imageSize: imageSize)
-        result.surface = current
-
-      case (.none, .some(let previousSurface)) where backgroundMatchesPrevious:
+      if surface == nil, let previousSurface = previous.surface, backgroundMatchesPrevious {
         result.surface = previousSurface
-
-      default:
-        break
       }
       return result
     }
@@ -344,36 +337,13 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       }
     }
 
-    private static func stabilizedPatches(
-      _ current: [OverlaySourcePatch],
-      _ previous: [OverlaySourcePatch],
-      imageSize: CGSize
-    ) -> [OverlaySourcePatch] {
-      guard current.count == previous.count else { return current }
-      var remaining = Array(previous.indices)
-      return current.map { patch in
-        guard
-          let match = remaining.min(by: {
-            centerDistance(patch.box, previous[$0].box, imageSize: imageSize)
-              < centerDistance(patch.box, previous[$1].box, imageSize: imageSize)
-          })
-        else { return patch }
-        remaining.removeAll { $0 == match }
-        var patch = patch
-        patch.box = stabilizedRect(patch.box, previous[match].box, imageSize: imageSize)
-        return patch
-      }
-    }
-
     private static func stabilizedStyleRuns(
       _ current: [OverlaySourceStyleRun],
-      _ previous: [OverlaySourceStyleRun],
-      imageSize: CGSize
+      _ previous: [OverlaySourceStyleRun]
     ) -> [OverlaySourceStyleRun] {
       current.map { run in
         guard let previous = previous.first(where: { $0.range == run.range }) else { return run }
         var result = run
-        result.box = stabilizedRect(run.box, previous.box, imageSize: imageSize)
         if
           colorDistance(run.appearance.background, previous.appearance.background) <= 0.04,
           colorDistance(run.appearance.foreground, previous.appearance.foreground) <= 0.08
@@ -384,19 +354,6 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         }
         return result
       }
-    }
-
-    private static func stabilizedRect(_ current: CGRect, _ previous: CGRect, imageSize: CGSize) -> CGRect {
-      let delta = maximumEdgeDelta(current, previous, imageSize: imageSize)
-      guard delta <= 24 else { return current }
-      guard delta > 4 else { return previous }
-      let currentWeight: CGFloat = 0.35
-      return CGRect(
-        x: previous.minX + (current.minX - previous.minX) * currentWeight,
-        y: previous.minY + (current.minY - previous.minY) * currentWeight,
-        width: previous.width + (current.width - previous.width) * currentWeight,
-        height: previous.height + (current.height - previous.height) * currentWeight
-      )
     }
 
     private static func maximumEdgeDelta(_ lhs: CGRect, _ rhs: CGRect, imageSize: CGSize) -> CGFloat {
