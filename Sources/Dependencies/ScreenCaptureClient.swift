@@ -108,20 +108,45 @@ extension ScreenCaptureClient: DependencyKey {
       configuration.pixelFormat = kCVPixelFormatType_32BGRA
       configuration.showsCursor = false
 
-      if
-        let overlayFrame,
-        let nsScreen,
-        let sourceRect = displayLocalRect(overlayFrame: overlayFrame, screen: nsScreen)
-      {
-        configuration.sourceRect = sourceRect
-        configuration.width = max(1, Int(sourceRect.width * scale))
-        configuration.height = max(1, Int(sourceRect.height * scale))
+      var capturedFrame: CGRect?
+      if let overlayFrame {
+        guard let nsScreen else { throw ScreenCaptureError.noDisplay }
+        let geometry = try ScreenCaptureRegionGeometry(requested: overlayFrame, display: nsScreen.frame)
+        capturedFrame = geometry.intersection
+        configuration.sourceRect = geometry.sourceRect
+        configuration.width = max(1, Int((geometry.intersection.width * scale).rounded(.up)))
+        configuration.height = max(1, Int((geometry.intersection.height * scale).rounded(.up)))
       } else {
         configuration.width = Int(Double(display.width) * scale)
         configuration.height = Int(Double(display.height) * scale)
       }
 
-      return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
+      let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
+      guard let overlayFrame, let capturedFrame, overlayFrame != capturedFrame else { return image }
+      // A partially off-screen panel still renders over its full frame. Keep
+      // that canvas extent instead of stretching a clipped screenshot across it.
+      let width = max(1, Int((overlayFrame.width * scale).rounded(.up)))
+      let height = max(1, Int((overlayFrame.height * scale).rounded(.up)))
+      guard
+        let context = CGContext(
+          data: nil,
+          width: width,
+          height: height,
+          bitsPerComponent: 8,
+          bytesPerRow: 0,
+          space: CGColorSpace(name: CGColorSpace.sRGB)!,
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )
+      else { throw ScreenCaptureError.unreadableImage }
+      context.clear(CGRect(x: 0, y: 0, width: width, height: height))
+      context.draw(image, in: CGRect(
+        x: (capturedFrame.minX - overlayFrame.minX) * scale,
+        y: (capturedFrame.minY - overlayFrame.minY) * scale,
+        width: capturedFrame.width * scale,
+        height: capturedFrame.height * scale
+      ))
+      guard let composed = context.makeImage() else { throw ScreenCaptureError.unreadableImage }
+      return composed
     },
     captureWindow: { windowID in
       try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
@@ -161,18 +186,24 @@ extension DependencyValues {
   }
 }
 
-/// Converts an AppKit-global rectangle (points, bottom-left origin) into
-/// a display-local rectangle in ScreenCaptureKit's top-left coordinate space.
-private func displayLocalRect(overlayFrame: CGRect, screen: NSScreen) -> CGRect? {
-  let screenFrame = screen.frame
-  let intersection = overlayFrame.intersection(screenFrame)
-  guard !intersection.isNull, !intersection.isEmpty else { return nil }
-  return CGRect(
-    x: intersection.minX - screenFrame.minX,
-    y: screenFrame.maxY - intersection.maxY,
-    width: intersection.width,
-    height: intersection.height
-  )
+// MARK: - ScreenCaptureRegionGeometry
+
+/// The requested canvas and captured intersection are distinct coordinate
+/// spaces. A crop outside a display must never become a full-display capture.
+struct ScreenCaptureRegionGeometry: Equatable {
+  init(requested: CGRect, display: CGRect) throws {
+    intersection = requested.intersection(display)
+    guard !intersection.isNull, !intersection.isEmpty else { throw ScreenCaptureError.emptyRegion }
+    sourceRect = CGRect(
+      x: intersection.minX - display.minX,
+      y: display.maxY - intersection.maxY,
+      width: intersection.width,
+      height: intersection.height
+    )
+  }
+
+  let intersection: CGRect
+  let sourceRect: CGRect
 }
 
 // MARK: - ScreenRecordingPermissionTracker

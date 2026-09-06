@@ -105,11 +105,15 @@ To confirm a language model is installed:
 
 ### Slow translation, or Low Latency vs. High Fidelity
 
-SwiftyCrow has a **Strategy** setting in Settings → Translation:
+SwiftyCrow has a **Preferred strategy** setting in Settings → Translation:
 - **Low Latency (default):** Faster and lighter, making it a good fit for casual reading.
-- **High Fidelity:** More accurate and uses Apple Intelligence on supported devices running macOS 26.4 or later.
+- **High Fidelity:** Uses Apple Intelligence on supported devices running macOS 26.4 or later. It can improve fluency, but does not guarantee better wording for every passage.
 
 > **The Strategy setting only takes effect on macOS 26.4+.** On macOS 26.0–26.3 SwiftyCrow uses the Translation framework's own default and the choice has no effect, so switching modes there won't change speed or accuracy.
+
+Model availability is checked for the selected strategy and language pair. If the preferred model is missing but another local strategy is installed, SwiftyCrow uses the installed model before submitting the request. The capture status (or the live overlay's information icon) explains the choice. This does not change your preference or download models automatically.
+
+If neither strategy has an installed model, the error names the language pair. An installed Apple Intelligence model does not imply that the corresponding Low Latency model is installed.
 
 If translation feels slow:
 1. On macOS 26.4+, try **Low Latency** mode (Settings → Translation)
@@ -122,3 +126,11 @@ If you encounter issues installing language models or translation still fails:
 1. Check the [SwiftyCrow Issues](https://github.com/PangMo5/SwiftyCrow/issues) on GitHub
 2. Include your macOS version, language pair, and the exact error message from SwiftyCrow
 3. Note whether the language model was fully downloaded before attempting translation
+
+## Reading difficult sources
+
+Recognized code and technical literals retain their original pixels rather than being retyped as translated prose. Copied original text still comes from OCR and should be checked when exact identifiers or code syntax matter.
+
+A review indicator appears when recognized prose contains many questionable words or a mixed-script segment required an uncertain repair. It is a cue to compare with the source, not an automatic spelling correction. Small, blurred, or compressed text and ambiguous terminology can still produce incorrect translations.
+
+Printed dialogue uses image boundaries to keep neighboring balloons separate. Vertical and rotated text retain their reading direction. On textured backgrounds, glyph removal uses local background samples; it cannot recover artwork that was hidden behind the original lettering exactly.

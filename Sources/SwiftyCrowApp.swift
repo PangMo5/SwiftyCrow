@@ -171,7 +171,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       imageSize: store.capture.imageSize,
       placementID: store.capture.overlayPlacementID,
       translationUnavailable: store.capture.translationUnavailable,
-      isPreparingRecognition: store.capture.isPreparingRecognition
+      isPreparingRecognition: store.capture.isPreparingRecognition,
+      lastError: store.capture.lastError
     )
   }
 

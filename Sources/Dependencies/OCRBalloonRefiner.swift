@@ -95,7 +95,7 @@ enum OCRBalloonRefiner {
   }
 
   static func qualifies(_ lines: [OCRResult.Line]) -> Bool {
-    guard lines.count >= 12, !lines.contains(where: \.isVerticalBlock) else { return false }
+    guard lines.count >= 6, !lines.contains(where: \.isVerticalBlock) else { return false }
     let letters = lines.map(\.text).joined().unicodeScalars.filter { CharacterSet.letters.contains($0) }
     guard letters.count >= 80 else { return false }
     return letters.count(where: { CharacterSet.uppercaseLetters.contains($0) }) * 10 >= letters.count * 9
@@ -174,6 +174,7 @@ struct BalloonRaster {
     else { return nil }
     context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
     guard let data = context.data else { return nil }
+    defer { withExtendedLifetime(context) { } }
     let bytes = data.bindMemory(to: UInt8.self, capacity: width * height * 4)
     paper = (0..<width * height).map { index in
       let offset = index * 4
@@ -189,7 +190,8 @@ struct BalloonRaster {
 
   func textRegions(around lines: [OCRResult.Line]) -> [BalloonRegion] {
     let components = Self.components(paper, width: width, height: height)
-    let radius = max(2, height / 128)
+    let glyphHeights = lines.map { $0.boundingBoxNormalized.height * CGFloat(height) / CGFloat(max(1, $0.rowCount)) }.sorted()
+    let radius = max(2, min(min(width, height) / 24, Int(glyphHeights[glyphHeights.count / 2] * 0.65)))
     var result = [BalloonRegion]()
     for component in components where component.count >= 600 {
       if Task.isCancelled { break }
@@ -267,7 +269,7 @@ struct BalloonRaster {
         let contained = lines.filter { region.contains($0.boundingBoxNormalized.center) }
         guard contained.count >= 3 else { continue }
         let textBounds = contained.dropFirst().reduce(contained[0].boundingBoxNormalized) { $0.union($1.boundingBoxNormalized) }
-        guard bounds.width * bounds.height < textBounds.width * textBounds.height * 4 else { continue }
+        guard bounds.width * bounds.height < textBounds.width * textBounds.height * 6 else { continue }
         result.append(region)
       }
     }

@@ -23,6 +23,7 @@ enum OverlayTranslationPolicy {
     return sources.indices.contains { candidate in
       candidate != index
         && sources[candidate].isProtectedLiteral
+        && !OCRTextSemantics.isIdentifier(sources[candidate].text)
         && sharesVisualRow(source.box, sources[candidate].box)
     }
   }
@@ -45,7 +46,8 @@ enum OverlayTranslationPolicy {
     }
     // One nearby number can be ordinary prose. Repeated compact values on the
     // same row are the structural signal for a badge/segmented-control run.
-    guard rowValues.count >= 2 else { return nil }
+    let explicitLabel = source.text.hasSuffix(":") || source.text.split(whereSeparator: \.isWhitespace).count == 1
+    guard rowValues.count >= 2 || explicitLabel else { return nil }
 
     return rowValues.compactMap { candidate -> (gap: CGFloat, text: String)? in
       let value = sources[candidate]
@@ -54,7 +56,7 @@ enum OverlayTranslationPolicy {
       let gap = valueBox.minX - labelBox.maxX
       guard
         gap >= -max(labelBox.height, valueBox.height) * 0.1,
-        gap <= max(labelBox.height, valueBox.height) * 0.35
+        gap <= max(labelBox.height, valueBox.height) * 2
       else { return nil }
       return (gap, value.text.trimmingCharacters(in: .whitespacesAndNewlines))
     }
@@ -89,17 +91,23 @@ enum OverlayTranslationPolicy {
       text.unicodeScalars.contains(where: CharacterSet.decimalDigits.contains)
     else { return false }
 
-    return text.split(whereSeparator: \.isWhitespace).contains { token in
-      let letters = token.unicodeScalars.filter(CharacterSet.letters.contains)
-      guard letters.count >= 2 else { return false }
-      let uppercase = letters.count(where: CharacterSet.uppercaseLetters.contains)
-      let lowercase = letters.count(where: CharacterSet.lowercaseLetters.contains)
-      return uppercase == letters.count || (uppercase >= 2 && lowercase >= 1)
-    }
+    let words = text.split(whereSeparator: \.isWhitespace)
+    guard
+      let first = words.first,
+      words.dropFirst().allSatisfy({ $0.range(of: #"^v?\d\S*$"#, options: .regularExpression) != nil })
+    else { return false }
+    let letters = first.unicodeScalars.filter(CharacterSet.letters.contains)
+    guard
+      letters.count >= 2,
+      letters.allSatisfy({ (0x41...0x5A).contains($0.value) || (0x61...0x7A).contains($0.value) })
+    else { return false }
+    let upper = letters.count { (0x41...0x5A).contains($0.value) }
+    return upper == letters.count || upper >= 2
   }
 
   private static func isContextValue(_ source: OverlayLine.Source) -> Bool {
-    source.isProtectedLiteral
+    guard source.text.unicodeScalars.contains(where: { CharacterSet.alphanumerics.contains($0) }) else { return false }
+    return source.isProtectedLiteral
       || source.isProtectedVisualMetadata
       || isNonlinguisticMetadata(source.text)
       || isVersionedTechnicalMetadata(source.text)

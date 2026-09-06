@@ -149,7 +149,7 @@ private struct LanguagesSection: View {
 private struct TranslationSection: View {
   var body: some View {
     Section {
-      Picker("Strategy", selection: Binding($settings.translation.strategy)) {
+      Picker("Preferred strategy", selection: Binding($settings.translation.strategy)) {
         ForEach(TranslationStrategy.allCases) { strategy in
           Text(strategy.displayName).tag(strategy)
         }
@@ -157,9 +157,11 @@ private struct TranslationSection: View {
     } header: {
       Text("Translation")
     } footer: {
-      Text("High fidelity uses Apple Intelligence on devices that support it (macOS 26.4+).")
-        .font(.caption)
-        .foregroundStyle(.secondary)
+      Text(
+        "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices."
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
     }
   }
 

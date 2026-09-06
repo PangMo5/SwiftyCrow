@@ -60,7 +60,7 @@ enum OverlayLayoutEngine {
       // stay as untouched source pixels.
       guard line.translatedText != nil else { return nil }
       let sourceFrame = sourceFrame(
-        for: line.source.box,
+        for: line.source.orientedBox ?? line.source.box,
         canvas: canvas,
         safeBounds: safeBounds
       )
@@ -97,6 +97,22 @@ enum OverlayLayoutEngine {
     }
   }
 
+  /// An eraser belonging to a translated neighbor must not touch source that
+  /// is pending, unavailable, or deliberately preserved (including separators).
+  static func protectedSourceFrames(for lines: [OverlayLine], in size: CGSize, displayScale: CGFloat) -> [CGRect] {
+    let halo = 1 / max(1, displayScale)
+    return lines.filter { $0.translatedText == nil }.flatMap { line in
+      line.source.replacementPatches.map { patch in
+        CGRect(
+          x: patch.box.minX * size.width,
+          y: patch.box.minY * size.height,
+          width: patch.box.width * size.width,
+          height: patch.box.height * size.height
+        ).insetBy(dx: -halo, dy: -halo)
+      }
+    }
+  }
+
   static func replacementFrame(
     for patch: OverlaySourcePatch,
     sourceLayout: OverlaySourceLayout,
@@ -113,6 +129,7 @@ enum OverlayLayoutEngine {
       width: max(1, box.width * canvasSize.width),
       height: max(1, box.height * canvasSize.height)
     )
+    if patch.restorationPNG != nil { return source }
     // Vision boxes hug the strongest part of antialiased glyphs and can omit a
     // few faint edge pixels, especially around large Japanese headings. Scale
     // the restoration bleed with glyph height while keeping it tightly bounded.
@@ -197,6 +214,7 @@ enum OverlayLayoutEngine {
     canvas: CGRect,
     safeBounds: CGRect
   ) -> CGRect {
+    if abs(line.source.rotationRadians) > 0.025 { return sourceFrame }
     guard let surface = line.source.surface, surface.confidence >= 0.35 else {
       return sourceFrame
     }

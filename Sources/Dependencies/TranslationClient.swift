@@ -14,6 +14,7 @@ struct TranslationLine: Equatable, Sendable {
   var id: UUID
   var text: String
   var attributedText: AttributedString? = nil
+  var modelNotice: String? = nil
   /// Neighboring compact value used only to disambiguate this label. It is
   /// never rendered as part of the label's translated output.
   var trailingContext: String? = nil
@@ -29,6 +30,7 @@ struct TranslationLine: Equatable, Sendable {
 struct TranslatedText: Equatable, Sendable {
   var text: String
   var attributedText: AttributedString? = nil
+  var modelNotice: String? = nil
 }
 
 // MARK: - TranslationTextStructure
@@ -120,12 +122,6 @@ extension TranslationClient: DependencyKey {
     translateBatch: { lines, source, target, strategy in
       AsyncThrowingStream { continuation in
         let pair = "\(source.maximalIdentifier)->\(target.maximalIdentifier)"
-        let session =
-          if #available(macOS 26.4, *) {
-            TranslationSession(installedSource: source, target: target, preferredStrategy: strategy.sessionStrategy)
-          } else {
-            TranslationSession(installedSource: source, target: target)
-          }
         let linesByID = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0) })
         let requests = lines.map {
           TranslationSession.Request(sourceText: $0.requestText, clientIdentifier: $0.id.uuidString)
@@ -135,55 +131,67 @@ extension TranslationClient: DependencyKey {
           let started = clock.now
           var receivedFirstResponse = false
           do {
-            var styledTargets = [UUID: String]()
-            for try await response in session.translate(batch: requests) {
-              try Task.checkCancellation()
-              if !receivedFirstResponse {
-                receivedFirstResponse = true
-                let elapsed = clock.now - started
-                Log.translation.debug(
-                  "First response for \(pair, privacy: .public) arrived in \(elapsed.loggedSeconds, privacy: .public)s"
+            let selection = try await TranslationModelResolver.resolve(source: source, target: target, preferred: strategy)
+            try Task.checkCancellation()
+            let session =
+              if #available(macOS 26.4, *) {
+                TranslationSession(installedSource: source, target: target, preferredStrategy: selection.strategy.sessionStrategy)
+              } else {
+                TranslationSession(installedSource: source, target: target)
+              }
+            try await withTaskCancellationHandler {
+              var styledTargets = [UUID: String]()
+              for try await response in session.translate(batch: requests) {
+                try Task.checkCancellation()
+                if !receivedFirstResponse {
+                  receivedFirstResponse = true
+                  let elapsed = clock.now - started
+                  Log.translation.debug(
+                    "First response for \(pair, privacy: .public) arrived in \(elapsed.loggedSeconds, privacy: .public)s"
+                  )
+                }
+                guard
+                  let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
+                  let sourceLine = linesByID[id]
+                else { continue }
+                let translatedLabel = sourceLine.trailingContext == nil
+                  ? response.targetText
+                  : TranslationTextStructure.label(fromContextualTranslation: response.targetText)
+                    ?? response.targetText
+                let targetText = TranslationTextStructure.matchingSourceBreaks(
+                  translatedLabel,
+                  source: sourceLine.text
+                )
+                var attributedTarget: AttributedString?
+                if #available(macOS 26.4, *), let attributedSource = sourceLine.attributedText {
+                  let alignment = TranslationStyleMapper.align(source: attributedSource, target: targetText)
+                  attributedTarget = alignment.target
+                  if !alignment.unmatched.isEmpty { styledTargets[id] = targetText }
+                }
+                // Text is usable now. Optional style-snippet translation must
+                // never hold an entire paragraph behind the rest of the batch.
+                continuation.yield(TranslationLine(
+                  id: id,
+                  text: targetText,
+                  attributedText: attributedTarget,
+                  modelNotice: selection.notice
+                ))
+              }
+              if #available(macOS 26.4, *), !styledTargets.isEmpty {
+                try await Self.yieldStyledTranslations(
+                  styledTargets,
+                  linesByID: linesByID,
+                  session: session,
+                  continuation: continuation,
+                  modelNotice: selection.notice
                 )
               }
-              guard
-                let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
-                let sourceLine = linesByID[id]
-              else { continue }
-              let translatedLabel = sourceLine.trailingContext == nil
-                ? response.targetText
-                : TranslationTextStructure.label(fromContextualTranslation: response.targetText)
-                  ?? response.targetText
-              let targetText = TranslationTextStructure.matchingSourceBreaks(
-                translatedLabel,
-                source: sourceLine.text
+              let elapsed = clock.now - started
+              Log.translation.debug(
+                "Batch of \(lines.count, privacy: .public) lines (\(pair, privacy: .public)) finished in \(elapsed.loggedSeconds, privacy: .public)s"
               )
-              var attributedTarget: AttributedString?
-              if #available(macOS 26.4, *), let attributedSource = sourceLine.attributedText {
-                let alignment = TranslationStyleMapper.align(source: attributedSource, target: targetText)
-                attributedTarget = alignment.target
-                if !alignment.unmatched.isEmpty { styledTargets[id] = targetText }
-              }
-              // Text is usable now. Optional style-snippet translation must
-              // never hold an entire paragraph behind the rest of the batch.
-              continuation.yield(TranslationLine(
-                id: id,
-                text: targetText,
-                attributedText: attributedTarget
-              ))
-            }
-            if #available(macOS 26.4, *), !styledTargets.isEmpty {
-              try await Self.yieldStyledTranslations(
-                styledTargets,
-                linesByID: linesByID,
-                session: session,
-                continuation: continuation
-              )
-            }
-            let elapsed = clock.now - started
-            Log.translation.debug(
-              "Batch of \(lines.count, privacy: .public) lines (\(pair, privacy: .public)) finished in \(elapsed.loggedSeconds, privacy: .public)s"
-            )
-            continuation.finish()
+              continuation.finish()
+            } onCancel: { session.cancel() }
           } catch {
             continuation.finish(throwing: error)
           }
@@ -203,12 +211,6 @@ extension TranslationClient: DependencyKey {
         }
         continuation.onTermination = { _ in
           watchdog.cancel()
-          // `task.cancel()` alone doesn't stop work already handed to the
-          // translation daemon — `cancel()` is the documented way to stop a
-          // session's ongoing work. Without it, every live tick whose batch
-          // outruns the capture interval abandons a session that keeps working
-          // daemon-side, and they accumulate for the life of the process.
-          session.cancel()
           task.cancel()
         }
       }
@@ -222,7 +224,8 @@ extension TranslationClient: DependencyKey {
     _ targets: [UUID: String],
     linesByID: [UUID: TranslationLine],
     session: TranslationSession,
-    continuation: AsyncThrowingStream<TranslationLine, any Error>.Continuation
+    continuation: AsyncThrowingStream<TranslationLine, any Error>.Continuation,
+    modelNotice: String?
   ) async throws {
     var alternatives = [UUID: [URL: String]]()
     var snippetOwners = [UUID: (lineID: UUID, link: URL)]()
@@ -270,7 +273,8 @@ extension TranslationClient: DependencyKey {
       continuation.yield(TranslationLine(
         id: lineID,
         text: targetText,
-        attributedText: alignment.target
+        attributedText: alignment.target,
+        modelNotice: modelNotice
       ))
     }
   }

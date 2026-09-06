@@ -406,7 +406,8 @@ struct CaptureFeature {
         }
         let translation = TranslatedText(
           text: text,
-          attributedText: text == translation.text ? translation.attributedText : nil
+          attributedText: text == translation.text ? translation.attributedText : nil,
+          modelNotice: translation.modelNotice
         )
         state.translationCacheOrder.removeAll { $0 == key }
         state.translationCacheOrder.append(key)
@@ -421,7 +422,8 @@ struct CaptureFeature {
           state.overlayLines[index].showTranslation(
             translation.text,
             attributedText: translation.attributedText,
-            language: Locale.Language(identifier: key.target)
+            language: Locale.Language(identifier: key.target),
+            modelNotice: translation.modelNotice
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
@@ -547,7 +549,8 @@ struct CaptureFeature {
         overlayLine.showTranslation(
           cached.text,
           attributedText: cached.attributedText,
-          language: target
+          language: target,
+          modelNotice: cached.modelNotice
         )
       }
 
@@ -596,7 +599,8 @@ struct CaptureFeature {
                       key: key,
                       translation: TranslatedText(
                         text: result.text,
-                        attributedText: result.attributedText
+                        attributedText: result.attributedText,
+                        modelNotice: result.modelNotice
                       )
                     )
                   )

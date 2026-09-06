@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import Accessibility
+import AppKit
 import SwiftUI
 
 // MARK: - TranslationOverlayLayer
@@ -88,6 +89,7 @@ private struct OverlayCanvas: View, Equatable {
           )
           SourceReplacementSurface(
             appearance: patch.appearance,
+            restorationPNG: patch.restorationPNG,
             patchFrame: frame,
             clippingFrame: sourceSurface.map {
               OverlayLayoutEngine.sourceSurfaceFrame(for: $0, in: size)
@@ -108,13 +110,26 @@ private struct OverlayCanvas: View, Equatable {
       ForEach(placements) { placement in
         ReplacementText(placement: placement)
           .equatable()
+          .help(Text(verbatim: placement.line.source.text))
           .frame(width: placement.frame.width, height: placement.frame.height)
           .clipped()
+          .rotationEffect(.radians(placement.line.source.rotationRadians))
           .position(x: placement.frame.midX, y: placement.frame.midY)
       }
     }
     .frame(width: size.width, height: size.height, alignment: .topLeading)
     .clipped()
+    .mask {
+      Canvas { context, _ in
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+        var protected = Path()
+        for frame in OverlayLayoutEngine.protectedSourceFrames(for: lines, in: size, displayScale: displayScale) {
+          protected.addRect(frame)
+        }
+        context.blendMode = .destinationOut
+        context.fill(protected, with: .color(.white))
+      }
+    }
   }
 
   static func ==(lhs: Self, rhs: Self) -> Bool {
@@ -132,7 +147,10 @@ private struct OverlayCanvas: View, Equatable {
 
 private struct SourceReplacementSurface: View, Equatable {
 
+  // MARK: Internal
+
   let appearance: OverlaySourceAppearance
+  let restorationPNG: Data?
   let patchFrame: CGRect
   let clippingFrame: CGRect?
   let cornerRadiusFraction: CGFloat
@@ -141,8 +159,7 @@ private struct SourceReplacementSurface: View, Equatable {
   var body: some View {
     if let clippingFrame, !clippingFrame.isEmpty {
       ZStack(alignment: .topLeading) {
-        Rectangle()
-          .fill(Color(appearance.background))
+        restoredSurface
           .frame(width: patchFrame.width, height: patchFrame.height)
           .offset(
             x: patchFrame.minX - clippingFrame.minX,
@@ -160,12 +177,23 @@ private struct SourceReplacementSurface: View, Equatable {
       ))
       .position(x: clippingFrame.midX, y: clippingFrame.midY)
     } else {
-      Rectangle()
-        .fill(Color(appearance.background))
+      restoredSurface
         .frame(width: patchFrame.width, height: patchFrame.height)
         .position(x: patchFrame.midX, y: patchFrame.midY)
     }
   }
+
+  // MARK: Private
+
+  @ViewBuilder
+  private var restoredSurface: some View {
+    if let restorationPNG, let image = NSImage(data: restorationPNG) {
+      Image(nsImage: image).resizable()
+    } else {
+      Rectangle().fill(Color(appearance.background))
+    }
+  }
+
 }
 
 // MARK: - SourceSurfaceClip

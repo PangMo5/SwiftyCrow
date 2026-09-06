@@ -92,7 +92,33 @@ extension OCRClient: DependencyKey {
           let observation = recognizedLine.observation
           let transcript = recognizedLine.transcript
           let box = Self.topLeftBox(observation.boundingRegion.boundingBox.cgRect)
-          let isVertical = observation.textDirection == .topToBottom
+          let imageSize = CGSize(width: image.width, height: image.height)
+          let topLeft = observation.topLeft.cgPoint
+          let topRight = observation.topRight.cgPoint
+          let bottomLeft = observation.bottomLeft.cgPoint
+          let isVertical = OCRGeometry.isVertical(
+            text: transcript,
+            topLeft: topLeft,
+            topRight: topRight,
+            imageSize: imageSize,
+            declaredVertical: observation.textDirection == .topToBottom
+          )
+          let dx = (topRight.x - topLeft.x) * imageSize.width
+          let dy = -(topRight.y - topLeft.y) * imageSize.height
+          let angle = isVertical ? 0 : atan2(dy, dx)
+          let rotation = abs(angle) > 0.025 ? angle : 0
+          let orientedHeight = hypot(
+            (bottomLeft.x - topLeft.x) * imageSize.width,
+            (bottomLeft.y - topLeft.y) * imageSize.height
+          ) /
+            imageSize.height
+          let orientedWidth = hypot(dx, dy) / imageSize.width
+          let orientedBox = CGRect(
+            x: box.midX - orientedWidth / 2,
+            y: box.midY - orientedHeight / 2,
+            width: orientedWidth,
+            height: orientedHeight
+          )
           let documentWords = paragraphWords.filter { word in
             let intersection = box.intersection(word.box)
             return !intersection.isNull
@@ -115,9 +141,12 @@ extension OCRClient: DependencyKey {
           return OCRResult.Line(
             boundingBoxNormalized: box,
             text: transcript,
+            rotationRadians: rotation,
+            orientedBox: rotation == 0 ? nil : orientedBox,
+            imageAspectRatio: imageSize.width / imageSize.height,
             isVerticalBlock: isVertical,
             verticalCharScale: isVertical ? box.width : 0,
-            horizontalGlyphScale: horizontalGlyphScale,
+            horizontalGlyphScale: rotation == 0 ? horizontalGlyphScale : orientedHeight,
             recognitionGroupID: groupBase + segmentIndices[lineIndex],
             replacementPatches: patches,
             styleRuns: Self.styleRuns(in: transcript, words: words),
@@ -161,6 +190,7 @@ extension OCRClient: DependencyKey {
         }
       }
       try Task.checkCancellation()
+      lines = try await OCRLineRefiner.refine(lines, in: image, language: language)
       lines = try await OCRBalloonRefiner.refine(lines, in: image, language: language)
       let correctedLines: [OCRResult.Line]
       let languageCode = language.localeLanguage.languageCode?.identifier
@@ -188,7 +218,9 @@ extension OCRClient: DependencyKey {
       Log.ocr.debug(
         "Post-processing produced \(result.lines.count, privacy: .public) lines in \(postProcessingElapsed.loggedSeconds, privacy: .public)s"
       )
-      return result
+      let restored = SourceRestorationBuilder.applying(to: result, image: image)
+      try Task.checkCancellation()
+      return await OCRQualityAssessment.markingUncertainText(in: restored)
     },
     warmUp: { await VisionWarmUp.shared.run() }
   )

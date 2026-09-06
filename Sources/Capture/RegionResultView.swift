@@ -22,7 +22,7 @@ struct RegionResultView: View {
       toolbar
       Divider().opacity(0.4)
       if store.translationUnavailable {
-        TranslationModelHint()
+        TranslationModelHint(message: store.lastError)
       } else if let error = store.lastError, store.imageData != nil {
         Label(error, systemImage: "exclamationmark.triangle.fill")
           .font(.caption)
@@ -31,6 +31,7 @@ struct RegionResultView: View {
           .padding(.horizontal, 14)
           .padding(.vertical, 8)
       }
+      CaptureStatusNote(lines: store.overlayLines)
       content
     }
     .frame(minWidth: 360, minHeight: 280)

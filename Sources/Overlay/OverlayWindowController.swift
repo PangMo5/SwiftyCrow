@@ -110,6 +110,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// value or not, so blindly re-assigning `lines` or the backdrop on each
   /// render invalidated the whole overlay view tree at the live capture rate.
   private func assign(_ state: OverlayRenderState) {
+    if model.lastError != state.lastError { model.lastError = state.lastError }
     if model.lines != state.lines { model.lines = state.lines }
     if model.hideOnHover != state.hideOnHover { model.hideOnHover = state.hideOnHover }
     if model.isTranslating != state.isTranslating { model.isTranslating = state.isTranslating }
@@ -252,7 +253,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     // Global fires while events pass through to apps below (interior); local
     // fires while the window is interactive near an edge / on the handle.
     // Together they keep the cursor state current as it moves in and out.
-    let global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .scrollWheel]) { [weak self] event in
+    let global = NSEvent.addGlobalMonitorForEvents(matching: [
+      .mouseMoved,
+      .leftMouseDragged,
+      .scrollWheel,
+    ]) { [weak self] event in
       MainActor.assumeIsolated {
         self?.updatePassThroughForCursor()
         self?.sourceContentInteracted(event)
@@ -418,6 +423,7 @@ final class OverlayWindowModel {
   var imageSize = CGSize.zero
   var translationUnavailable = false
   var isPreparingRecognition = false
+  var lastError: String?
 
   /// In Window mode while live, the overlay is just a thin region frame and the
   /// translation lives in a detached window.
@@ -442,6 +448,7 @@ private struct OverlayRootView: View {
       isTranslating: model.isTranslating,
       isLive: model.isLive,
       translationUnavailable: model.translationUnavailable,
+      lastError: model.lastError,
       isPreparingRecognition: model.isPreparingRecognition,
       frameOnly: model.isWindowFrame,
       showMoveHandle: model.cursorInside,
@@ -484,12 +491,14 @@ private struct LiveResultView: View {
   var body: some View {
     content
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .overlay(alignment: .bottom) {
+      .safeAreaInset(edge: .bottom, spacing: 0) {
         if model.translationUnavailable {
-          TranslationModelHint()
+          TranslationModelHint(message: model.lastError)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .padding(8)
             .transition(.opacity)
+        } else {
+          CaptureStatusNote(lines: model.lines).padding(8)
         }
       }
       .animation(.easeOut(duration: 0.15), value: model.translationUnavailable)
