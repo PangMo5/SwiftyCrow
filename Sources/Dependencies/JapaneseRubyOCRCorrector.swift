@@ -145,6 +145,35 @@ enum JapaneseRubyOCRCorrector {
     }
   }
 
+  /// A separate small upper ink band and an intervening blank band are
+  /// evidence of ruby. Merely being a large Japanese row is not evidence.
+  static func baseBandStart(rowInk: [Int]) -> CGFloat? {
+    let height = rowInk.count
+    guard height >= 24, let peak = rowInk.max(), peak > 0 else { return nil }
+    let threshold = max(1, peak / 20)
+    let occupied = rowInk.map { $0 > threshold }
+    let minimumGap = max(2, height / 16)
+    var start = height / 6
+    while start < height / 2 {
+      guard !occupied[start] else { start += 1
+        continue
+      }
+      var end = start
+      while end < height, !occupied[end] { end += 1 }
+      let upper = occupied[..<start].count(where: { $0 })
+      let lower = occupied[end...].count(where: { $0 })
+      if
+        end - start >= minimumGap,
+        upper >= max(5, height / 8), lower >= height / 3,
+        upper * 4 <= lower * 3, end < height / 2
+      {
+        return CGFloat(max(0, end - 1)) / CGFloat(height)
+      }
+      start = end + 1
+    }
+    return nil
+  }
+
   // MARK: Private
 
   private struct Input {
@@ -184,11 +213,12 @@ enum JapaneseRubyOCRCorrector {
       return nil
     }
 
+    guard let fraction = baseBandStart(for: box, in: image) else { return nil }
     let baseBox = CGRect(
       x: max(0, box.minX - box.height * 0.08),
-      y: box.minY + box.height * 0.28,
+      y: box.minY + box.height * fraction,
       width: min(1 - box.minX, box.width + box.height * 0.16),
-      height: box.height * 0.72
+      height: box.height * (1 - fraction)
     )
     let imageBounds = CGRect(
       x: 0,
@@ -206,6 +236,39 @@ enum JapaneseRubyOCRCorrector {
       return nil
     }
     return Input(lineIndex: index, original: line.text, crop: crop)
+  }
+
+  private static func baseBandStart(for box: CGRect, in image: CGImage) -> CGFloat? {
+    let rect = CGRect(
+      x: box.minX * CGFloat(image.width),
+      y: box.minY * CGFloat(image.height),
+      width: box.width * CGFloat(image.width),
+      height: box.height * CGFloat(image.height)
+    ).integral
+    guard
+      let crop = image.cropping(to: rect),
+      let context = CGContext(
+        data: nil,
+        width: crop.width,
+        height: crop.height,
+        bitsPerComponent: 8,
+        bytesPerRow: crop.width * 4,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      )
+    else { return nil }
+    context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
+    guard let data = context.data else { return nil }
+    defer { withExtendedLifetime(context) { } }
+    let pixels = data.bindMemory(to: UInt8.self, capacity: crop.width * crop.height * 4)
+    // Median border brightness is robust to a few glyphs touching the crop.
+    let border = (0..<crop.width).flatMap { x in [Int(pixels[x * 4]), Int(pixels[((crop.height - 1) * crop.width + x) * 4])] }
+      .sorted()
+    let background = border[border.count / 2]
+    let rows = (0..<crop.height).map { y in
+      (0..<crop.width).count { x in abs(Int(pixels[(y * crop.width + x) * 4]) - background) >= 40 }
+    }
+    return baseBandStart(rowInk: rows)
   }
 
   private static func corrections(in inputs: [Input]) async throws -> [Int: Candidate] {

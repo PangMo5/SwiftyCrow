@@ -21,6 +21,7 @@ struct OverlayView: View {
   /// Translation failed (usually a missing model) — shows the "open Settings"
   /// hint banner along the bottom.
   var translationUnavailable = false
+  var lastError: String? = nil
   /// Vision is still loading its document model (tens of seconds when cold).
   var isPreparingRecognition = false
   /// Window live mode: the overlay is a thin region frame; the translation
@@ -60,6 +61,17 @@ struct OverlayView: View {
       }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
+          if lines.contains(where: { $0.source.needsReview }) {
+            Image(systemName: "exclamationmark.triangle")
+              .foregroundStyle(.orange)
+              .help("Some text may be misread. Compare with the original.")
+          }
+          if showMoveHandle {
+            let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
+            if !notices.isEmpty {
+              Image(systemName: "info.circle").help(notices.joined(separator: "\n"))
+            }
+          }
           // A small spinner while the overlay is busy (capturing / OCR or
           // translating); nothing otherwise.
           if isTranslating {
@@ -83,7 +95,7 @@ struct OverlayView: View {
       }
       .overlay(alignment: .bottom) {
         if translationUnavailable, !frameOnly {
-          TranslationModelHint()
+          TranslationModelHint(message: lastError)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .padding(8)
             .transition(.opacity)

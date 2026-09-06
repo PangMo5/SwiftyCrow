@@ -44,6 +44,7 @@ struct OverlayRenderState: Equatable, Sendable {
   /// Vision is still loading its document model, which takes tens of seconds
   /// when cold — shows a "preparing" note so the empty overlay isn't a mystery.
   var isPreparingRecognition: Bool
+  var lastError: String? = nil
 }
 
 // MARK: - OverlayUserAction

@@ -140,7 +140,8 @@ struct RegionCaptureFeature {
                       id: result.id,
                       translation: TranslatedText(
                         text: result.text,
-                        attributedText: result.attributedText
+                        attributedText: result.attributedText,
+                        modelNotice: result.modelNotice
                       ),
                       target: target
                     ))
@@ -180,12 +181,13 @@ struct RegionCaptureFeature {
         }
         if
           let index = state.overlayLines.firstIndex(where: { $0.id == id }),
-          (state.overlayLines[index].isPending || state.overlayLines[index].translatedText == text)
+          state.overlayLines[index].isPending || state.overlayLines[index].translatedText == text
         {
           state.overlayLines[index].showTranslation(
             text,
             attributedText: text == translation.text ? translation.attributedText : nil,
-            language: target
+            language: target,
+            modelNotice: translation.modelNotice
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)

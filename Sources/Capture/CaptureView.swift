@@ -6,8 +6,6 @@ import SwiftUI
 
 struct CaptureView: View {
 
-  // MARK: Internal
-
   let store: StoreOf<CaptureFeature>
 
   var body: some View {
@@ -27,7 +25,7 @@ struct CaptureView: View {
       .keyboardShortcut(.defaultAction)
 
       if store.translationUnavailable {
-        TranslationModelHint()
+        TranslationModelHint(message: store.lastError)
           .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
           .transition(.opacity)
       } else if let error = store.lastError {
@@ -37,6 +35,7 @@ struct CaptureView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .transition(.opacity)
       }
+      CaptureStatusNote(lines: store.overlayLines)
     }
     .animation(.easeOut(duration: 0.15), value: store.lastError)
     .animation(.easeOut(duration: 0.15), value: store.translationUnavailable)

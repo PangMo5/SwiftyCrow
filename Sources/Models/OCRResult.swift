@@ -12,9 +12,14 @@ struct OCRResult: Equatable, Sendable {
     /// Top-left origin, 0–1 normalized to the captured frame.
     var boundingBoxNormalized: CGRect
     var text: String
+    var rotationRadians: CGFloat = 0
+    var orientedBox: CGRect?
+    var imageAspectRatio: CGFloat = 1
     /// How many source rows this line spans. >1 after wrapped lines are
     /// stitched into one sentence, so the renderer can size the font to a
     /// single row and wrap the text instead of stretching it.
+    var preventsJoining = false
+    var needsReview = false
     var rowCount = 1
     /// True when this is a block of vertical (top-to-bottom) CJK columns stitched
     /// together. The renderer lays the translation out vertically over the box.
@@ -153,11 +158,17 @@ struct OCRResult: Equatable, Sendable {
       )
       let appearance = Self.representativeAppearance(in: fragments)
       let groupIDs = Set(fragments.compactMap(\.recognitionGroupID))
+      let rotation = fragments.max { $0.boundingBoxNormalized.width < $1.boundingBoxNormalized.width }?.rotationRadians ?? 0
       return (
         indices[0],
         Line(
           boundingBoxNormalized: box,
           text: text,
+          rotationRadians: rotation,
+          orientedBox: fragments.contains(where: { $0.orientedBox != nil })
+            ? OCRGeometry.combinedFrame(fragments, angle: rotation)
+            : nil,
+          imageAspectRatio: fragments[0].imageAspectRatio,
           rowCount: totalRows,
           isVerticalBlock: isVertical,
           verticalCharScale: weightedScale,
@@ -242,6 +253,11 @@ struct OCRResult: Equatable, Sendable {
 
       var base = result[baseIndex]
       let baseBox = base.boundingBoxNormalized.standardized
+      base.orientedBox = base.orientedBox ?? baseBox
+      if base.replacementPatches.isEmpty { base.replacementPatches = [OverlaySourcePatch(
+        box: baseBox,
+        appearance: base.appearance
+      )] }
       base.boundingBoxNormalized = baseBox.union(rubyBox)
       base.replacementPatches.append(contentsOf: ruby.replacementPatches.isEmpty
         ? [OverlaySourcePatch(box: rubyBox, appearance: ruby.appearance)]
@@ -294,7 +310,12 @@ struct OCRResult: Equatable, Sendable {
     _ rhs: Line,
     suppressesInlineMerge: Bool
   ) -> Bool {
-    guard !lhs.isReconstructedTextRegion, !rhs.isReconstructedTextRegion else { return false }
+    guard
+      !lhs.isReconstructedTextRegion, !rhs.isReconstructedTextRegion, !lhs.preventsJoining,
+      !rhs.preventsJoining
+    else { return false }
+    guard !OCRTextSemantics.isCode(lhs.text), !OCRTextSemantics.isCode(rhs.text) else { return false }
+    guard abs(lhs.rotationRadians - rhs.rotationRadians) <= 0.04 else { return false }
     return switch (lhs.isVerticalBlock, rhs.isVerticalBlock) {
     case (true, true):
       areNeighboringVerticalColumns(lhs, rhs)
@@ -649,8 +670,8 @@ struct OCRResult: Equatable, Sendable {
   }
 
   private static func isOnSameVisualRow(_ lhs: Line, _ rhs: Line) -> Bool {
-    let a = lhs.boundingBoxNormalized.standardized
-    let b = rhs.boundingBoxNormalized.standardized
+    let a = lhs.alignedBox.standardized
+    let b = rhs.alignedBox.standardized
     guard a.height > 0, b.height > 0 else { return false }
     let verticalOverlap = max(0, min(a.maxY, b.maxY) - max(a.minY, b.minY))
     return verticalOverlap / min(a.height, b.height) >= 0.55
@@ -708,10 +729,18 @@ struct OCRResult: Equatable, Sendable {
   }
 
   private static func areNeighboringHorizontalRows(_ lhs: Line, _ rhs: Line) -> Bool {
-    let a = lhs.boundingBoxNormalized.standardized
-    let b = rhs.boundingBoxNormalized.standardized
+    let a = lhs.alignedBox.standardized
+    let b = rhs.alignedBox.standardized
     guard a.width > 0, a.height > 0, b.width > 0, b.height > 0 else { return false }
     let lowerLine = a.minY <= b.minY ? rhs : lhs
+    let upperLine = a.minY <= b.minY ? lhs : rhs
+    let upperText = upperLine.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    let continuesSentence = lowerLine.text.first?.isLowercase == true
+      && upperText.split(whereSeparator: \.isWhitespace).count >= 6
+      && (upperText.contains(". ") || upperLine.rowCount > 1
+        || (lhs.recognitionGroupID != nil && lhs.recognitionGroupID == rhs.recognitionGroupID))
+      && upperText.last.map { !".!?。！？".contains($0) } == true
+      && hasCompatibleAppearance(lhs, rhs)
     // A list marker is a semantic paragraph boundary even when the neighboring
     // item is multiline, shares the same appearance, and sits at ordinary CSS
     // line spacing. Without this boundary, connected-component coalescing can
@@ -722,12 +751,12 @@ struct OCRResult: Equatable, Sendable {
     let crossesVisionParagraphBoundary = lhs.recognitionGroupID != nil
       && rhs.recognitionGroupID != nil
       && lhs.recognitionGroupID != rhs.recognitionGroupID
-    if hasMaterialTypographyBreak(lhs, rhs), !isLowContrastBodyWeightNoise(lhs, rhs) {
+    if hasMaterialTypographyBreak(lhs, rhs), !isLowContrastBodyWeightNoise(lhs, rhs), !continuesSentence {
       return false
     }
     let hasContinuousBodyAppearance = hasCompatibleBodyAppearance(lhs, rhs)
     let continuesAcrossParagraphBoundary = crossesVisionParagraphBoundary
-      && sharesSourceSurface(lhs, rhs)
+      && (sharesSourceSurface(lhs, rhs) || continuesSentence)
       && (hasCompatibleAppearance(lhs, rhs) || hasContinuousBodyAppearance)
 
     let horizontalOverlap = max(0, min(a.maxX, b.maxX) - max(a.minX, b.minX))
@@ -945,7 +974,7 @@ struct OCRResult: Equatable, Sendable {
     let overlap = max(0, min(rubyBox.maxX, base.maxX) - max(rubyBox.minX, base.minX))
     guard overlap / max(0.000_001, rubyBox.width) >= 0.7 else { return false }
     let verticalGap = max(0, base.minY - rubyBox.maxY)
-    return verticalGap <= max(rubyBox.height, base.height * 0.25)
+    return verticalGap <= max(min(rubyBox.height * 1.5, base.height * 0.7), base.height * 0.25)
   }
 
   private static func rubyBaseDistance(_ base: CGRect, _ ruby: CGRect) -> CGFloat {

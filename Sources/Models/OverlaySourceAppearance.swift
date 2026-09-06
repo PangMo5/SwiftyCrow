@@ -90,6 +90,7 @@ struct OverlaySourcePatch: Equatable, Hashable, Sendable {
   /// larger sentence, such as the old position of an inline-code pill. These
   /// patches must survive flat-row consolidation.
   var erasesDistinctSurface = false
+  var restorationPNG: Data? = nil
 }
 
 // MARK: - OverlaySourceSurface

@@ -39,8 +39,11 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         styleRuns: line.styleRuns,
         fallback: line.appearance
       )
+      needsReview = line.needsReview
       isReconstructedTextRegion = line.isReconstructedTextRegion
       box = line.boundingBoxNormalized
+      orientedBox = line.orientedBox
+      rotationRadians = line.rotationRadians
       text = line.text
       self.language = language
       appearance = semanticAppearance
@@ -65,9 +68,12 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
     // MARK: Internal
 
+    var needsReview = false
     var isReconstructedTextRegion = false
     /// Top-left origin, 0–1 normalized to the captured frame.
     var box: CGRect
+    var orientedBox: CGRect?
+    var rotationRadians: CGFloat = 0
     var text: String
     var language: Locale.Language
     var layout: OverlaySourceLayout
@@ -85,6 +91,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     /// monospace metrics, and native rounded backgrounds while also avoiding a
     /// needless translation request.
     var isProtectedLiteral: Bool {
+      if OCRTextSemantics.isIdentifier(text) || OCRTextSemantics.isCode(text) { return true }
       guard case .horizontal = layout, appearance.fontDesign == .monospaced else { return false }
       let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
       let words = text.split(whereSeparator: \.isWhitespace)
@@ -518,6 +525,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
   let id: UUID
   var source: Source
+  private(set) var modelNotice: String?
   private(set) var content: Content
 
   var displayedText: String {
@@ -566,8 +574,10 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
   mutating func showTranslation(
     _ text: String,
     attributedText: AttributedString? = nil,
-    language: Locale.Language
+    language: Locale.Language,
+    modelNotice: String? = nil
   ) {
+    self.modelNotice = modelNotice
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else {
       content = .unavailable

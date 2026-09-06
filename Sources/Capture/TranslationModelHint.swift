@@ -58,6 +58,8 @@ struct TranslationModelHint: View {
 
   // MARK: Internal
 
+  var message: String? = nil
+
   var body: some View {
     if !dismissed {
       content
@@ -74,10 +76,11 @@ struct TranslationModelHint: View {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(.orange)
         VStack(alignment: .leading, spacing: 1) {
-          Text("Translation model not installed")
+          Text("Translation unavailable")
             .font(.caption)
             .fontWeight(.semibold)
-          Text("Add the language under System Settings → General → Language & Region → Translation Languages, then capture again.")
+          Text(message ??
+            "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again.")
             .font(.caption2)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -99,5 +102,33 @@ struct TranslationModelHint: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(.orange.opacity(0.18))
     .background(.regularMaterial)
+  }
+}
+
+// MARK: - CaptureStatusNote
+
+struct CaptureStatusNote: View {
+  let lines: [OverlayLine]
+
+  var body: some View {
+    if lines.contains(where: { $0.source.needsReview }) {
+      Label("Some text may be misread. Compare the translation with the original.", systemImage: "text.magnifyingglass")
+        .font(.caption2).foregroundStyle(.orange)
+        .padding(8).frame(maxWidth: .infinity, alignment: .leading).background(.regularMaterial)
+    }
+    let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
+    if let first = notices.first {
+      Label(
+        notices.count == 1 ? first : "Using installed models for \(notices.count) language pairs.",
+        systemImage: "info.circle"
+      )
+      .font(.caption2)
+      .foregroundStyle(.secondary)
+      .fixedSize(horizontal: false, vertical: true)
+      .help(notices.joined(separator: "\n"))
+      .padding(8)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(.regularMaterial)
+    }
   }
 }
