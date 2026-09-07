@@ -1,162 +1,152 @@
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import AppKit
 import SwiftUI
-import XCTest
-
+import Testing
 @testable import SwiftyCrow
 
-final class ZoomableCaptureCanvasTests: XCTestCase {
+@Suite("Native capture viewport")
+@MainActor
+struct ZoomableCaptureCanvasTests {
 
-  @MainActor
-  func testCoordinatorFitsDocumentAndRespondsToZoomCommands() {
-    let model = CaptureZoomModel()
-    let coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
-    let scrollView = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
-    scrollView.allowsMagnification = true
-    scrollView.minMagnification = 0.01
-    scrollView.maxMagnification = CaptureZoomGeometry.magnificationRange.upperBound
+  // MARK: Internal
 
-    let hostingView = NSHostingView(rootView: Color.clear)
-    hostingView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-    scrollView.documentView = hostingView
-    coordinator.hostingView = hostingView
-    coordinator.imageSize = CGSize(width: 800, height: 400)
-    coordinator.connect(to: scrollView)
-
-    coordinator.layoutDocument(in: scrollView)
-
-    XCTAssertEqual(hostingView.frame.width, 800, accuracy: 0.01)
-    XCTAssertEqual(hostingView.frame.height, 400, accuracy: 0.01)
-    XCTAssertEqual(scrollView.magnification, 0.75, accuracy: 0.001)
-
-    model.zoomIn()
-    XCTAssertEqual(scrollView.magnification, 0.9375, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 125)
-
-    model.zoomOut()
-    XCTAssertEqual(scrollView.magnification, 0.75, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 100)
+  @Test
+  func fitTracksWindowSizeUntilUserZooms() {
+    let fixture = Fixture()
+    #expect(abs(fixture.model.scale - 0.375) < 0.001)
+    fixture.scroll.setFrameSize(CGSize(width: 300, height: 300))
+    fixture.layout()
+    #expect(abs(fixture.model.scale - 0.1875) < 0.001)
+    #expect(fixture.model.isFitting)
+    fixture.model.zoomIn()
+    #expect(abs(fixture.model.scale - 0.234375) < 0.001)
+    #expect(!fixture.model.isFitting)
   }
 
+  @Test
+  func resizingPreservesManualScaleAndViewportCenter() {
+    let fixture = Fixture()
+    fixture.pinch(to: 1.5)
+    fixture.scroll.contentView.scroll(to: CGPoint(x: 400, y: 220))
+    fixture.scroll.reflectScrolledClipView(fixture.scroll.contentView)
+    let before = fixture.center
+    fixture.scroll.setFrameSize(CGSize(width: 800, height: 500))
+    fixture.layout()
+    #expect(abs(fixture.model.scale - 1.5) < 0.001)
+    #expect(abs(fixture.center.x - before.x) < 0.001)
+    #expect(abs(fixture.center.y - before.y) < 0.001)
+  }
+
+  @Test
+  func movingAcrossDisplayScalesPreservesNativeZoom() {
+    let fixture = Fixture(backingScale: 2)
+    #expect(abs(fixture.model.scale - 0.75) < 0.001)
+    fixture.pinch(to: 0.75)
+    #expect(abs(fixture.model.scale - 1.5) < 0.001)
+    let before = fixture.center
+    fixture.coordinator.backingScale = 1
+    fixture.layout()
+    #expect(abs(fixture.scroll.magnification - 1.5) < 0.001)
+    #expect(abs(fixture.model.scale - 1.5) < 0.001)
+    #expect(abs(fixture.center.x - before.x) < 0.001)
+    #expect(abs(fixture.center.y - before.y) < 0.001)
+  }
+
+  @Test
+  func fitRecentersPannedImageAndTranslationUpdatesPreserveZoom() {
+    let fixture = Fixture()
+    fixture.pinch(to: 2)
+    fixture.scroll.contentView.scroll(to: CGPoint(x: 500, y: 250))
+    let before = fixture.center
+    fixture.coordinator.hostingView?.rootView = .red
+    fixture.layout()
+    #expect(fixture.model.scale == 2)
+    #expect(fixture.center == before)
+    fixture.model.resetToFit()
+    #expect(abs(fixture.model.scale - 0.375) < 0.001)
+    #expect(abs(fixture.center.x - 0.5) < 0.001)
+    #expect(abs(fixture.center.y - 0.5) < 0.001)
+  }
+
+  @Test
+  func mousePanCannotMoveTheImagePastItsEdges() {
+    let fixture = Fixture()
+    fixture.pinch(to: 2)
+    fixture.scroll.scrollContent(to: CGPoint(x: -1000, y: -1000))
+    #expect(abs(fixture.scroll.contentView.bounds.minX) < 0.001)
+    #expect(abs(fixture.scroll.contentView.bounds.minY) < 0.001)
+    fixture.scroll.scrollContent(to: CGPoint(x: 10000, y: 10000))
+    #expect(abs(fixture.scroll.contentView.bounds.maxX - 1600) < 0.001)
+    #expect(abs(fixture.scroll.contentView.bounds.maxY - 800) < 0.001)
+    fixture.model.resetToFit()
+    fixture.scroll.scrollContent(to: CGPoint(x: 10000, y: 10000))
+    #expect(abs(fixture.center.x - 0.5) < 0.001)
+    #expect(abs(fixture.center.y - 0.5) < 0.001)
+  }
+
+  @Test
+  func toolbarZoomStopsAtBoundsAndNewImagesRefit() {
+    let fixture = Fixture()
+    for _ in 0..<50 { fixture.model.zoomIn() }
+    #expect(fixture.model.scale == 8)
+    #expect(!fixture.model.canZoomIn)
+    for _ in 0..<50 { fixture.model.zoomOut() }
+    #expect(fixture.model.scale == 0.1)
+    #expect(!fixture.model.canZoomOut)
+    fixture.coordinator.imageSize = CGSize(width: 40, height: 30)
+    fixture.layout()
+    #expect(fixture.model.scale == 1)
+    fixture.coordinator.imageSize = CGSize(width: 2400, height: 1600)
+    fixture.layout()
+    #expect(abs(fixture.model.scale - 0.25) < 0.001)
+    #expect(fixture.model.isFitting)
+  }
+
+  // MARK: Private
+
   @MainActor
-  func testCoordinatorClampsToolbarZoomAndRefitsAfterResize() {
-    let model = CaptureZoomModel()
-    let coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
-    let scrollView = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
-    scrollView.allowsMagnification = true
-    scrollView.minMagnification = 0.01
-    scrollView.maxMagnification = CaptureZoomGeometry.magnificationRange.upperBound
+  private struct Fixture {
 
-    let hostingView = NSHostingView(rootView: Color.clear)
-    hostingView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-    scrollView.documentView = hostingView
-    coordinator.hostingView = hostingView
-    coordinator.imageSize = CGSize(width: 800, height: 400)
-    coordinator.connect(to: scrollView)
-    coordinator.layoutDocument(in: scrollView)
+    // MARK: Lifecycle
 
-    for _ in 0..<20 {
-      model.zoomIn()
+    init(backingScale: CGFloat = 1) {
+      model = CaptureZoomModel()
+      coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
+      scroll = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
+      scroll.allowsMagnification = true
+      scroll.minMagnification = 0.001
+      scroll.maxMagnification = 8
+      scroll.contentView = CenteringCaptureClipView()
+      let hosting = NSHostingView(rootView: Color.clear)
+      hosting.sizingOptions = []
+      hosting.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
+      scroll.documentView = hosting
+      coordinator.hostingView = hosting
+      coordinator.imageSize = CGSize(width: 1600, height: 800)
+      coordinator.backingScale = backingScale
+      coordinator.connect(to: scroll)
+      layout()
     }
-    XCTAssertEqual(scrollView.magnification, 4.5, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 600)
 
-    model.resetToFit()
-    scrollView.frame = CGRect(x: 0, y: 0, width: 300, height: 500)
-    coordinator.layoutDocument(in: scrollView)
+    // MARK: Internal
 
-    XCTAssertEqual(scrollView.magnification, 0.375, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 100)
-    XCTAssertEqual(hostingView.frame.width, 800, accuracy: 0.01)
-    XCTAssertEqual(hostingView.frame.height, 400, accuracy: 0.01)
-  }
+    let model: CaptureZoomModel
+    let coordinator: ZoomableCaptureCanvas<Color>.Coordinator
+    let scroll: CaptureScrollView
 
-  @MainActor
-  func testCoordinatorPreservesZoomedViewportCenterAfterResize() {
-    let model = CaptureZoomModel()
-    let coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
-    let scrollView = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
-    scrollView.allowsMagnification = true
-    scrollView.minMagnification = 0.01
-    scrollView.maxMagnification = CaptureZoomGeometry.magnificationRange.upperBound
+    var center: CGPoint {
+      CaptureZoomGeometry.normalizedCenter(of: scroll.documentVisibleRect, in: coordinator.imageSize)
+    }
 
-    let hostingView = NSHostingView(rootView: Color.clear)
-    hostingView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-    scrollView.documentView = hostingView
-    coordinator.hostingView = hostingView
-    coordinator.imageSize = CGSize(width: 800, height: 400)
-    coordinator.connect(to: scrollView)
-    coordinator.layoutDocument(in: scrollView)
+    func layout() {
+      coordinator.layoutDocument(in: scroll)
+    }
 
-    scrollView.setMagnification(1.5, centeredAt: CGPoint(x: 400, y: 200))
-    scrollView.contentView.scroll(to: CGPoint(x: 240, y: 50))
-    scrollView.reflectScrolledClipView(scrollView.contentView)
-    let before = CaptureZoomGeometry.normalizedCenter(
-      of: scrollView.documentVisibleRect,
-      in: hostingView.frame.size
-    )
-
-    scrollView.setFrameSize(CGSize(width: 800, height: 500))
-    coordinator.layoutDocument(in: scrollView)
-    let after = CaptureZoomGeometry.normalizedCenter(
-      of: scrollView.documentVisibleRect,
-      in: hostingView.frame.size
-    )
-
-    XCTAssertEqual(after.x, before.x, accuracy: 0.01)
-    XCTAssertEqual(after.y, before.y, accuracy: 0.01)
-    XCTAssertEqual(scrollView.magnification, 2, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 200)
-  }
-
-  @MainActor
-  func testCoordinatorSafelyFitsCaptureAbovePreviousMaximum() {
-    let model = CaptureZoomModel()
-    let coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
-    let scrollView = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
-    scrollView.allowsMagnification = true
-    scrollView.minMagnification = 0.01
-    scrollView.maxMagnification = CaptureZoomGeometry.magnificationRange.upperBound
-
-    let hostingView = NSHostingView(rootView: Color.clear)
-    hostingView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-    scrollView.documentView = hostingView
-    coordinator.hostingView = hostingView
-    coordinator.imageSize = CGSize(width: 40, height: 30)
-    coordinator.connect(to: scrollView)
-
-    coordinator.layoutDocument(in: scrollView)
-
-    let expectedFit = CaptureZoomGeometry.fitMagnification(
-      hostingView.frame.size,
-      in: scrollView.contentSize
-    )
-    XCTAssertGreaterThan(expectedFit, CaptureZoomGeometry.magnificationRange.upperBound)
-    XCTAssertEqual(scrollView.minMagnification, expectedFit, accuracy: 0.001)
-    XCTAssertEqual(
-      scrollView.maxMagnification,
-      expectedFit * CaptureZoomGeometry.magnificationRange.upperBound,
-      accuracy: 0.001
-    )
-    XCTAssertEqual(scrollView.magnification, expectedFit, accuracy: 0.001)
-    XCTAssertEqual(model.percentage, 100)
-
-    coordinator.imageSize = CGSize(width: 2400, height: 1600)
-    coordinator.layoutDocument(in: scrollView)
-
-    let expectedRefit = CaptureZoomGeometry.fitMagnification(
-      hostingView.frame.size,
-      in: scrollView.contentSize
-    )
-    XCTAssertLessThan(
-      expectedRefit * CaptureZoomGeometry.magnificationRange.upperBound,
-      expectedFit
-    )
-    XCTAssertEqual(scrollView.minMagnification, expectedRefit, accuracy: 0.001)
-    XCTAssertEqual(
-      scrollView.maxMagnification,
-      expectedRefit * CaptureZoomGeometry.magnificationRange.upperBound,
-      accuracy: 0.001
-    )
-    XCTAssertEqual(scrollView.magnification, expectedRefit, accuracy: 0.001)
+    func pinch(to magnification: CGFloat) {
+      scroll.setMagnification(magnification, centeredAt: CGPoint(x: 800, y: 400))
+      coordinator.magnificationChanged(in: scroll)
+    }
   }
 }

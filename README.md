@@ -17,7 +17,7 @@ On-screen translator for macOS, fully on-device. Captures any region of the scre
 ## Features
 
 - **Lives in the menu bar:** There is no Dock icon. Open the popover from the menu bar item, or press `⌘,` for Settings.
-- **Region capture:** Drag to select any part of the screen, or press **Space** to highlight and click a whole window like the macOS screenshot tool. The result appears in a floating preview with each line **blurred** behind its translation. Save the image, copy it, or copy the original or translated text.
+- **Region capture:** Drag to select any part of the screen, or press **Space** to highlight and click a whole window like the macOS screenshot tool. The result appears in a floating preview with translations drawn in place. Pinch to zoom, pan with two-finger scrolling or mouse dragging, and click the zoom percentage to fit the complete image. Save the image, copy it, or copy the original or translated text.
 - **Live overlay:** Pick a target the same way and an overlay snaps onto it, translating as the content changes. Clicks and scrolling pass through to the app underneath. The built-in **LIVE** handle pauses or resumes translation, and **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame.
 - **Predefine an area, translate on demand:** The overlay remembers its region, so **Show / hide overlay** flips translation on and off over the same spot without another selection. This works well for a game panel or fixed HUD. Hiding it stops all capture and translation until you bring it back.
 - **Reads the layout:** Recognition follows document structure. Vertical Japanese or Chinese and multi-column text are read in reading order, and vertical text stays vertical over the original.
@@ -45,7 +45,7 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 ## Usage
 
 1. Pick the **Source** and **Target** languages in Settings (`⌘,`).
-2. **Capture a region:** Trigger **Capture Region** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. The preview supports `⌘S` to save, `⌘C` to copy the image, `⌘O` to copy the original, `⌘T` to copy the translation, and `Esc` to close.
+2. **Capture a region:** Trigger **Capture Region** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. Drag the preview’s title area to move the window. Use `⌘+` / `⌘−` to zoom and click the percentage or press `⌘0` to fit; 100% maps each image pixel to one display pixel. The preview supports `⌘S` to save, `⌘C` to copy the image, `⌘O` to copy the original, `⌘T` to copy the translation, and `Esc` to close. Save and copy always include the complete image at the original capture resolution, regardless of zoom or pan.
 3. **Use the live overlay:** Trigger **Live overlay…** from the menu bar or your hotkey, then drag a region or press **Space** to click a window. Use the **LIVE** handle to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
 4. **Reuse a fixed area:** Once the overlay is placed, **Show / hide overlay** toggles it over the same region without another drag. Hiding it stops all capture and translation.
 

@@ -32,6 +32,8 @@ struct OverlayView: View {
   let onToggleLive: () -> Void
   let onClose: () -> Void
 
+  @Binding var isShowingInformation: Bool
+
   var body: some View {
     bodyContent
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -48,8 +50,8 @@ struct OverlayView: View {
         // Drag handle: the only way to move the overlay. Use SwiftUI's native
         // window gesture so dragging remains reliable inside NSHostingView.
         MoveHandle()
-          .opacity(showMoveHandle ? 1 : 0)
-          .animation(.easeOut(duration: 0.15), value: showMoveHandle)
+          .opacity(showsControls ? 1 : 0)
+          .animation(.easeOut(duration: 0.15), value: showsControls)
           .padding(8)
           .frame(
             width: OverlayChromeMetrics.moveHandleSize.width,
@@ -66,10 +68,38 @@ struct OverlayView: View {
               .foregroundStyle(.orange)
               .help("Some text may be misread. Compare with the original.")
           }
-          if showMoveHandle {
+          if showsControls {
             let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
-            if !notices.isEmpty {
-              Image(systemName: "info.circle").help(notices.joined(separator: "\n"))
+            if !notices.isEmpty || isShowingInformation {
+              Button {
+                if isShowingInformation {
+                  isShowingInformation = false
+                } else {
+                  informationMessages = notices
+                  isShowingInformation = true
+                }
+              } label: {
+                Image(systemName: "info.circle")
+                  .frame(width: 26, height: 26)
+                  .contentShape(Rectangle())
+              }
+              .buttonStyle(.plain)
+              .accessibilityLabel("Translation information")
+              .help("Show translation information")
+              .popover(isPresented: $isShowingInformation, arrowEdge: .bottom) {
+                VStack(alignment: .leading, spacing: 12) {
+                  Text("Translation information")
+                    .font(.headline)
+                  ForEach(informationMessages, id: \.self) { message in
+                    Text(verbatim: message)
+                      .font(.callout)
+                      .fixedSize(horizontal: false, vertical: true)
+                  }
+                }
+                .textSelection(.enabled)
+                .padding(16)
+                .frame(width: 320, alignment: .leading)
+              }
             }
           }
           // A small spinner while the overlay is busy (capturing / OCR or
@@ -82,7 +112,7 @@ struct OverlayView: View {
           // appear while the cursor is over the overlay. Removed from layout
           // (not just hidden) when away, so the spinner sits flush in the
           // top-right corner on its own instead of leaving a gap for them.
-          if showMoveHandle {
+          if showsControls {
             HStack(spacing: 6) {
               LiveHandle(isLive: isLive, action: onToggleLive)
               CloseHandle(action: onClose)
@@ -90,7 +120,7 @@ struct OverlayView: View {
             .transition(.move(edge: .trailing).combined(with: .opacity))
           }
         }
-        .animation(.easeOut(duration: 0.18), value: showMoveHandle)
+        .animation(.easeOut(duration: 0.18), value: showsControls)
         .padding(10)
       }
       .overlay(alignment: .bottom) {
@@ -111,9 +141,17 @@ struct OverlayView: View {
       .animation(.easeOut(duration: 0.15), value: frameOnly)
       .animation(.easeOut(duration: 0.15), value: translationUnavailable)
       .animation(.easeOut(duration: 0.15), value: isPreparingRecognition)
+      .onDisappear { isShowingInformation = false }
   }
 
   // MARK: Private
+
+  /// Keep the opened explanation stable while live OCR/translation updates.
+  @State private var informationMessages = [String]()
+
+  private var showsControls: Bool {
+    showMoveHandle || isShowingInformation
+  }
 
   @ViewBuilder
   private var bodyContent: some View {
