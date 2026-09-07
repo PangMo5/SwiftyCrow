@@ -136,6 +136,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// model carries stale state into the next use. Both windows are cheap to
   /// rebuild on the next show, which also re-snaps them to the stored frame.
   private func teardownWindows() {
+    model.isPresentingInformation = false
     pendingInteractionReset?.cancel()
     pendingInteractionReset = nil
     model.isInteracting = false
@@ -223,7 +224,12 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       model: model,
       onToggleLive: { [weak self] in self?.eventHandler?(.toggleLive) },
       onClose: { [weak self] in self?.eventHandler?(.close) },
-      onCopy: { [weak self] in self?.copyTranslation() }
+      onCopy: { [weak self] in self?.copyTranslation() },
+      onInformationPresentedChange: { [weak self] presented in
+        guard let self, model.isPresentingInformation != presented else { return }
+        model.isPresentingInformation = presented
+        updatePassThroughForCursor()
+      }
     )
     let hosting = NSHostingView(rootView: rootView)
     hosting.frame = panel.contentLayoutRect
@@ -276,6 +282,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private func sourceContentInteracted(_ event: NSEvent) {
     guard
       model.isLive,
+      !model.isPresentingInformation,
       event.type == .scrollWheel || event.type == .leftMouseDragged,
       window?.frame.contains(NSEvent.mouseLocation) == true
     else { return }
@@ -299,6 +306,14 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     // (interior pass-through means SwiftUI's .onHover never fires here).
     let inside = frame.contains(mouse)
     if model.cursorInside != inside { model.cursorInside = inside }
+
+    // A presented popover owns interaction until dismissal. Do not fade its
+    // anchor or send clicks/scrolling through to the captured app behind it.
+    if model.isPresentingInformation {
+      window.alphaValue = 1
+      window.ignoresMouseEvents = false
+      return
+    }
 
     // Top-left move handle: the ONLY region that drags the window. Its hit zone
     // is always live, even while the handle itself is faded out.
@@ -416,6 +431,7 @@ final class OverlayWindowModel {
   /// Whether the cursor is over the overlay — drives the move handle's
   /// hover-visibility (set from the controller's global cursor tracking).
   var cursorInside = false
+  var isPresentingInformation = false
   var isLive = false
   var isTranslating = false
   var liveMode = OverlayLiveMode.inPlace
@@ -441,6 +457,7 @@ private struct OverlayRootView: View {
   let onToggleLive: () -> Void
   let onClose: () -> Void
   let onCopy: () -> Void
+  let onInformationPresentedChange: (Bool) -> Void
 
   var body: some View {
     OverlayView(
@@ -453,7 +470,11 @@ private struct OverlayRootView: View {
       frameOnly: model.isWindowFrame,
       showMoveHandle: model.cursorInside,
       onToggleLive: onToggleLive,
-      onClose: onClose
+      onClose: onClose,
+      isShowingInformation: Binding(
+        get: { model.isPresentingInformation },
+        set: onInformationPresentedChange
+      )
     )
     .background {
       // Hidden affordances: ⌘, opens Settings, ⌘C copies the translated text.
