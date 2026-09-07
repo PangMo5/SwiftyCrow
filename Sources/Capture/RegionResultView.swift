@@ -79,14 +79,20 @@ struct RegionResultView: View {
 
   private var toolbar: some View {
     HStack(spacing: 10) {
-      Text(hoveredHelp ?? "Capture")
-        .font(.headline)
-        .foregroundStyle(hoveredHelp == nil ? .primary : .secondary)
-        .animation(.easeOut(duration: 0.12), value: hoveredHelp)
-      if store.isTranslating {
-        ProgressView().controlSize(.small)
+      HStack(spacing: 10) {
+        Text(hoveredHelp ?? "Capture")
+          .font(.headline)
+          .foregroundStyle(hoveredHelp == nil ? .primary : .secondary)
+          .animation(.easeOut(duration: 0.12), value: hoveredHelp)
+        if store.isTranslating {
+          ProgressView().controlSize(.small)
+        }
+        Spacer(minLength: 0)
       }
-      Spacer()
+      .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
+      .contentShape(Rectangle())
+      .gesture(WindowDragGesture())
+      .allowsWindowActivationEvents()
       toolbarButton("square.and.arrow.down", help: helpText("Save image", shortcuts.regionSave), action: onSaveImage)
       toolbarButton("doc.on.doc", help: helpText("Copy image", shortcuts.regionCopyImage), action: onCopyImage)
       toolbarButton("text.quote", help: helpText("Copy original text", shortcuts.regionCopyOriginal)) {
