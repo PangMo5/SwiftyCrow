@@ -57,7 +57,7 @@ let project = Project(
         "NSHumanReadableCopyright":
           "© 2021–2026 PangMo5. Released under AGPL-3.0-only.",
         "NSScreenCaptureDescription": "SwiftyCrow captures the region under its overlay window to read text.",
-        "SUFeedURL": "https://pangmo5.dev/SwiftyCrow/appcast.xml",
+        "SUFeedURL": "https://swiftycrow.pangmo5.dev/appcast.xml",
         "SUEnableAutomaticChecks": true,
         "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
       ]),

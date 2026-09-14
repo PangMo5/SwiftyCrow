@@ -80,3 +80,7 @@ buildServer.json
 *.cer
 *.pem
 *.certSigningRequest
+
+# Cloudflare local output
+/dist/
+/.wrangler/
