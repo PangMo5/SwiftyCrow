@@ -1,0 +1,20 @@
+// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "swiftycrow-site",
+  "compatibility_date": "2026-09-14",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    {
+      "pattern": "swiftycrow.pangmo5.dev",
+      "custom_domain": true
+    }
+  ]
+}

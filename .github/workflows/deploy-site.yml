@@ -1,9 +1,7 @@
 name: Deploy site
 
-# Publishes the marketing/docs site to GitHub Pages independently of releases.
-# The release workflow owns appcast.xml (it signs + regenerates it); this
-# workflow re-publishes the currently live appcast alongside the site so a site
-# deploy never wipes the Sparkle feed.
+# Publishes the website and the latest signed appcast to Workers Static Assets.
+# Release workflows also deploy their signed appcast with the matching site.
 
 on:
   push:
@@ -13,15 +11,14 @@ on:
       - "Resources/Marketing/app-icon.png"
       - "Resources/Marketing/demo.gif"
       - ".github/workflows/deploy-site.yml"
+      - "wrangler.jsonc"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: build-site
   cancel-in-progress: false
 
 jobs:
@@ -43,7 +40,7 @@ jobs:
           RELEASE_VERSION="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)"
           if [ -z "$RELEASE_VERSION" ] || [ "$APP_VERSION" != "$RELEASE_VERSION" ]; then
             echo "should-deploy=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping Pages: app version ${APP_VERSION:-<unknown>} is ahead of latest release ${RELEASE_VERSION:-<none>}"
+            echo "Skipping site: app version ${APP_VERSION:-<unknown>} is ahead of latest release ${RELEASE_VERSION:-<none>}"
             exit 0
           fi
           echo "should-deploy=true" >> "$GITHUB_OUTPUT"
@@ -54,7 +51,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          OWNER: ${{ github.repository_owner }}
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
@@ -75,32 +71,44 @@ jobs:
           BUST="${GITHUB_SHA:0:8}"
           sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$SITE"/*.html
 
-          # Preserve the Sparkle feed. The latest release asset is canonical,
-          # while the live site is only a fallback for older releases that did
-          # not publish appcast.xml. This also prevents a release-preparation
-          # commit from winning same-SHA Pages deduplication with a stale feed.
-          if gh release download --repo "$REPO" --pattern appcast.xml --dir "$SITE" 2>/dev/null; then
-            echo "Bundled appcast.xml from the latest release asset"
-          else
-            OWNER_LC="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
-            NAME="${REPO##*/}"
-            curl -fsSL "https://${OWNER_LC}.github.io/${NAME}/appcast.xml" -o "$SITE/appcast.xml"
-            echo "Bundled appcast.xml from the live site (no release asset)"
-          fi
+          # Every deployment must include the latest signed release feed.
+          # Fail if it is unavailable instead of publishing a stale or missing feed.
+          gh release download "v${VERSION}" --repo "$REPO" \
+            --pattern appcast.xml --dir "$SITE"
           echo "appcast.xml: $(wc -c < "$SITE/appcast.xml") bytes"
 
-      - uses: actions/upload-pages-artifact@v5
+      - name: Add static asset headers
+        if: steps.release.outputs.should-deploy == 'true'
+        run: cp web/_headers "$RUNNER_TEMP/site/_headers"
+
+      - uses: actions/upload-artifact@v4
         if: steps.release.outputs.should-deploy == 'true'
         with:
+          name: site
           path: ${{ runner.temp }}/site
+          include-hidden-files: true
+          retention-days: 1
 
   deploy:
     needs: build
     if: needs.build.outputs.should-deploy == 'true'
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-site
+      cancel-in-progress: false
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: cloudflare
+      url: https://swiftycrow.pangmo5.dev
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: dist
+      - name: Deploy static assets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.131.2"
+          command: deploy
