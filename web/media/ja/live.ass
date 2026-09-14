@@ -1,0 +1,22 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Hiragino Sans,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Hiragino Sans,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:26.67,Chapter,,0,0,0,,{\fad(100,100)}再生中の動画
+Dialogue: 0,0:00:00.00,0:00:02.94,Caption,,0,0,0,,{\fad(100,100)}動画を見ながら、字幕を読む。
+Dialogue: 0,0:00:02.94,0:00:06.01,Caption,,0,0,0,,{\fad(100,100)}字幕の範囲だけを選択。\N{\fs25\b0\1c&H8B8686&}上の映像はそのまま見られます。
+Dialogue: 0,0:00:06.01,0:00:15.60,Caption,,0,0,0,,{\fad(100,100)}ライブ翻訳をつけて再生。\N{\fs25\b0\1c&H8B8686&}場面ごとにキャプチャする必要はありません。
+Dialogue: 0,0:00:15.60,0:00:23.54,Caption,,0,0,0,,{\fad(100,100)}次の字幕へ、翻訳も更新。\N{\fs25\b0\1c&H8B8686&}前の文から新しい内容に切り替わります。
+Dialogue: 0,0:00:23.54,0:00:26.67,Caption,,0,0,0,,{\fad(100,100)}次の説明も、そのまま見る。\N{\fs25\b0\1c&H8B8686&}同じ範囲で翻訳が続きます。
+Dialogue: 1,0:00:02.94,0:00:04.94,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

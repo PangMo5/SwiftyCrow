@@ -1,0 +1,184 @@
+{
+  "cameraOriginal" : "DerivedData/QA/tart-share/diverse-final-20260911/zh-Hans/layout-native-host-05/capture-demo.mov",
+  "cameraSHA256" : "53f0b8b99b48cd7bdcf9127bc5621fb2bbacdef81a792917ad92834ccb10d3a5",
+  "encoderVersion" : "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo" : {
+    "avg_frame_rate" : "30/1",
+    "codec_name" : "h264",
+    "duration" : "24.233008",
+    "height" : 1200,
+    "nb_read_frames" : "727",
+    "pix_fmt" : "yuv420p",
+    "width" : 1920
+  },
+  "film" : "layout",
+  "hostClockEvidence" : {
+    "clock" : {
+      "after" : [
+        {
+          "guestAfter" : 11207004480708,
+          "guestBefore" : 11207003251750,
+          "host" : 29139702931833
+        },
+        {
+          "guestAfter" : 11207005228958,
+          "guestBefore" : 11207004480875,
+          "host" : 29139703758333
+        },
+        {
+          "guestAfter" : 11207005935000,
+          "guestBefore" : 11207005229166,
+          "host" : 29139704462208
+        },
+        {
+          "guestAfter" : 11207006687666,
+          "guestBefore" : 11207005935125,
+          "host" : 29139705203583
+        },
+        {
+          "guestAfter" : 11207007463333,
+          "guestBefore" : 11207006687833,
+          "host" : 29139706005458
+        },
+        {
+          "guestAfter" : 11207008139916,
+          "guestBefore" : 11207007463416,
+          "host" : 29139706677250
+        },
+        {
+          "guestAfter" : 11207008814208,
+          "guestBefore" : 11207008140125,
+          "host" : 29139707359750
+        },
+        {
+          "guestAfter" : 11207009480125,
+          "guestBefore" : 11207008814375,
+          "host" : 29139708027000
+        },
+        {
+          "guestAfter" : 11207010258333,
+          "guestBefore" : 11207009480250,
+          "host" : 29139708750791
+        }
+      ],
+      "before" : [
+        {
+          "guestAfter" : 11182156159833,
+          "guestBefore" : 11182152491750,
+          "host" : 29114854619625
+        },
+        {
+          "guestAfter" : 11182156829625,
+          "guestBefore" : 11182156160083,
+          "host" : 29114855394375
+        },
+        {
+          "guestAfter" : 11182157411250,
+          "guestBefore" : 11182156829750,
+          "host" : 29114855953750
+        },
+        {
+          "guestAfter" : 11182157990791,
+          "guestBefore" : 11182157411416,
+          "host" : 29114856551833
+        },
+        {
+          "guestAfter" : 11182158538750,
+          "guestBefore" : 11182157990875,
+          "host" : 29114857086333
+        },
+        {
+          "guestAfter" : 11182159290125,
+          "guestBefore" : 11182158538916,
+          "host" : 29114857774875
+        },
+        {
+          "guestAfter" : 11182160005958,
+          "guestBefore" : 11182159290416,
+          "host" : 29114858545666
+        },
+        {
+          "guestAfter" : 11182160597291,
+          "guestBefore" : 11182160006166,
+          "host" : 29114859148750
+        },
+        {
+          "guestAfter" : 11182161307916,
+          "guestBefore" : 11182160597458,
+          "host" : 29114859863416
+        }
+      ],
+      "limitNanoseconds" : 33333333.333333332,
+      "mappedFirstFrameUptimeNanoseconds" : 11182299400813,
+      "maximumAlignmentErrorNanoseconds" : 665042
+    },
+    "clockSHA256" : "bbe4eb159f6ecb54c8eba9e941102816d790e9d93e673953885446f04f4ecd93",
+    "hostReady" : {
+      "clockDomain" : "host DispatchTime",
+      "firstFrameUptimeNanoseconds" : 29114998222333,
+      "fps" : 30,
+      "height" : 1200,
+      "hostRecorderSHA256" : "f219ccd67a0a5636586b99822a593bb0fbf99b983fec0f0f650c4e0ce54a3c36",
+      "showsHostCursor" : true,
+      "viewport" : {
+        "displayID" : 1,
+        "height" : 600,
+        "ownerPID" : 47632,
+        "scale" : 2,
+        "title" : "swiftycrow-demo",
+        "width" : 960,
+        "windowID" : 3501,
+        "x" : 80,
+        "y" : 108
+      },
+      "width" : 1920
+    },
+    "hostReadySHA256" : "2ddb621e9c3e67a0e2d1051092973cf4cfafff9b4a37295b6bc88b581497a00b"
+  },
+  "movie" : "web/media/zh-Hans/layout.mp4",
+  "movieSHA256" : "153d481e5a9ce44c2c1e4134ed3833a63fa08a94967987967232b20bcb6e44f9",
+  "narrationCatalogSHA256" : "ed09ed6828ff9a1579bd4fa878b9f2e9c86a89a75f654f16cd4abe631d3a4023",
+  "originalVideo" : {
+    "avg_frame_rate" : "30/1",
+    "codec_name" : "hevc",
+    "duration" : "24.233333",
+    "height" : 1200,
+    "nb_read_frames" : "727",
+    "pix_fmt" : "yuv420p",
+    "width" : 1920
+  },
+  "poster" : "web/media/zh-Hans/layout.jpg",
+  "posterSHA256" : "aa2f73af570192362d150ceff52b265fdfe05e6ce74d8ce76fc0690997446f54",
+  "posterSeconds" : 14,
+  "presentation" : "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline" : "DerivedData/QA/tart-share/diverse-final-20260911/zh-Hans/layout-native-host-05/presentation.json",
+  "presentationTimelineSHA256" : "304af2eb4d26d7f34425f5e5b7686b0ffd92f4a3393bf7af1945bf47bbf169e2",
+  "recorder" : {
+    "captured" : 712,
+    "clockAlignmentMaximumErrorNanoseconds" : 665042,
+    "code" : 0,
+    "dropped" : 0,
+    "durationSeconds" : 24.233333333,
+    "error" : null,
+    "frames" : 727,
+    "geometryUnchanged" : true,
+    "height" : 1200,
+    "hostOutputs" : [
+      "/Users/pangmo5/gitRepo/SwiftyCrow/DerivedData/QA/tart-share/host-capture-control/takes/F3402C71-83A9-46C1-AA34-D3C618552582/capture-demo.mov"
+    ],
+    "hostRecorderSHA256" : "f219ccd67a0a5636586b99822a593bb0fbf99b983fec0f0f650c4e0ce54a3c36",
+    "hostTakeID" : "F3402C71-83A9-46C1-AA34-D3C618552582",
+    "outputs" : [
+      "/Users/admin/SwiftyCrowQA/diverse-final-20260911/zh-Hans/layout-native-host-05/capture-demo.mov"
+    ],
+    "status" : "ok",
+    "stopReason" : "guest story completed",
+    "width" : 1920
+  },
+  "sourceLanguage" : "ja-JP",
+  "subtitles" : "web/media/zh-Hans/layout.ass",
+  "subtitlesSHA256" : "21f27c7622b0e6e4254e127803770ef770ac7c22f5f28b7ff1af9a5bfe669e10",
+  "translationLanguage" : "ko-KR",
+  "uiLanguage" : "zh-Hans",
+  "visualReviewEvidence" : "DerivedData/QA/diverse-demos-2026-09-11/APP09-RENDERING-REVIEW.md"
+}

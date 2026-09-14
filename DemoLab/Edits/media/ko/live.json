@@ -1,0 +1,19 @@
+{
+  "film": "live",
+  "locale": "ko",
+  "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/live-app09-pilot-03/capture-demo.mov",
+  "cameraSHA256": "011661ccda993f54a267ad08960f9db36c9b3ca5f112dbaa2ce0bd5a149875f7",
+  "originalFrames": 812,
+  "sourceFrameRange": [
+    0,
+    600
+  ],
+  "editing": "Uninterrupted original prefix at original speed; only localized editorial overlays added. No replacement application pixels or removed processing waits.",
+  "frames": 600,
+  "duration": 20.0,
+  "posterSeconds": 18,
+  "timelineSHA256": "ed57590978c9d463fb5bd64b88008a1dfa2cc0e45e3c487c43535f94fd410697",
+  "movieSHA256": "6944b57d6e3511a9e79ff1e22bca4b64f2fb3d8a82d4a350595b679fd6be1a37",
+  "posterSHA256": "9fa390247b81a61f719d6ad70fb9f3afde4c17f1bc05470e6a6114471692608f",
+  "subtitlesSHA256": "f8ffda50f6d75d746c5e375a8aa9c0fb563309794769112d905e6b140bf961e2"
+}

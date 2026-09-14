@@ -1,3 +1,7 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](README.md) · [한국어](docs/ko/README.md) · [日本語](docs/ja/README.md) · [简体中文](docs/zh-Hans/README.md) · [繁體中文](docs/zh-Hant/README.md)
+<!-- LANGUAGE-LINKS:END -->
+
 <!--
 SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
@@ -10,23 +14,77 @@ SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](LICENSE)
 
-On-screen translator for macOS, fully on-device. Captures any region of the screen with [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), recognizes text with [Vision](https://developer.apple.com/documentation/vision), and translates with the [Apple Translation](https://developer.apple.com/documentation/translation) framework. No cloud APIs, no keys, no quotas.
+A fully on-device screen translator for macOS.
 
-![SwiftyCrow demo](Resources/Marketing/demo.gif)
+SwiftyCrow recognizes and translates text in a selected screen region or window. Capture a still image to read and reuse its translation, or keep a live region translating as its contents change. Recognition and translation use the language models on your Mac; no cloud API or account is required.
+
+## See SwiftyCrow in action
+
+[![Watch the complete reading workflow](web/media/en/tour.jpg)](https://swiftycrow.pangmo5.dev/#demo-tour)
+
+The overview demonstrates region capture, translation, and copying the translated text into a note. Feature demos below cover image copying, changing subtitles, a separate translation window, and vertical text recognition.
+
+## Why SwiftyCrow?
+
+Image-based instructions, video subtitles, and game dialogue often cannot be selected and copied as text. SwiftyCrow reads them from the screen so you can understand the content while keeping the source application in view.
+
+- **Translate from the screen:** Select the relevant area without first saving a file or moving its text into another app.
+- **Choose the right mode:** Use capture for a still image and live translation for content that continues to change.
+- **Reuse the result:** Save or copy a translated image, or copy only the original or translated text.
 
 ## Features
 
-- **Lives in the menu bar:** There is no Dock icon. Open the popover from the menu bar item, or press `⌘,` for Settings.
-- **Region capture:** Drag to select any part of the screen, or press **Space** to highlight and click a whole window like the macOS screenshot tool. The result appears in a floating preview with translations drawn in place. Pinch to zoom, pan with two-finger scrolling or mouse dragging, and click the zoom percentage to fit the complete image. Save the image, copy it, or copy the original or translated text.
-- **Live overlay:** Pick a target the same way and an overlay snaps onto it, translating as the content changes. Clicks and scrolling pass through to the app underneath. The built-in **LIVE** handle pauses or resumes translation, and **×** closes it. Show the translation **in place** over the source, or in a separate **window** while the overlay stays a thin region frame.
-- **Predefine an area, translate on demand:** The overlay remembers its region, so **Show / hide overlay** flips translation on and off over the same spot without another selection. This works well for a game panel or fixed HUD. Hiding it stops all capture and translation until you bring it back.
-- **Reads the layout:** Recognition follows document structure. Vertical Japanese or Chinese and multi-column text are read in reading order, and vertical text stays vertical over the original.
-- **Instant re-captures:** Translating the same screen again uses cached results.
-- **Languages from your Mac:** Source and target lists come from the languages installed on your system. Pick a pair, or set the source to **Auto** for per-line detection on mixed-language screens.
+### Capture and reuse
+
+<a href="https://swiftycrow.pangmo5.dev/#demo-capture"><img align="right" src="web/media/en/capture.jpg" width="160" alt="" /></a>
+
+- **Region or window:** Drag a screen region, or press **Space** to highlight and select a whole window.
+- **Captured-image translation:** Read translated text in a separate capture result window with the image and its layout retained.
+- **Zoom and fit:** Magnify the image or fit it to the result window. At 100%, one captured pixel maps to one display pixel.
+- **Save and copy:** Save a PNG, copy the translated image, or copy the recognized original or translation as text. Image output keeps the full capture resolution regardless of zoom or pan.
+
+<br clear="right" />
+
+### Follow changing content
+
+<a href="https://swiftycrow.pangmo5.dev/#demo-live"><img align="right" src="web/media/en/live.jpg" width="160" alt="" /></a>
+
+- **Continuous translation:** Select a region or window once. New text in that area is recognized and translated as it changes.
+- **Source interaction:** Clicks and scrolling in the content area pass through to the application below.
+- **Pause and resume:** Use the **LIVE** handle to pause or resume, and **×** to close the overlay.
+- **Remembered region:** Show or hide translation over the last region without selecting it again. Hiding stops capture and translation; previous translations can be reused when revisiting text.
+
+<br clear="right" />
+
+#### Keep the original in view
+
+<a href="https://swiftycrow.pangmo5.dev/#demo-compare"><img align="right" src="web/media/en/compare.jpg" width="160" alt="" /></a>
+
+- **Display modes:** Place translation over the source or in a separate window beside it.
+- **Separate window:** Keep game artwork or other source content visible while reading the translated text elsewhere. New dialogue updates in the same translation window.
+
+<br clear="right" />
+
+### Read images and documents
+
+<a href="https://swiftycrow.pangmo5.dev/#demo-layout"><img align="right" src="web/media/en/layout.jpg" width="160" alt="" /></a>
+
+- **Reading order:** Recognize vertical Japanese or Chinese and multi-column text in reading order.
+- **Document structure:** Recognize headings, body text, captions, and inset text within the captured page.
+- **Original text:** Copy the recognized text for notes or further use without transcribing it by hand.
+
+<br clear="right" />
+
+### Languages and translation
+
+- **Languages from your Mac:** Source and target lists come from the languages supported by macOS. Download the models you need before translating. Pick a pair, or set the source to **Auto** for per-line detection on mixed-language screens.
 - **Two translation modes:** Choose **Low latency** for speed or **High fidelity** for Apple Intelligence where supported on macOS 26.4 and later.
-- **Customizable shortcuts:** Configure capture, live overlay, show or hide on the last region, pause or resume Live, display mode, and save or copy keys in Settings → Shortcuts.
-- **Launch at login:** Start SwiftyCrow automatically when you log in.
-- **Editable config file:** Hand-edit a plain-text file that stays synchronized with the in-app Settings.
+
+### Interface and settings
+
+- **Menu bar controls:** Start capture or live translation from the menu bar and configure their shortcuts in Settings.
+- **Launch and updates:** Enable launch at login and configure automatic update checks.
+- **Configuration file:** In-app settings and the TOML configuration file stay synchronized.
 
 ## Install
 
@@ -49,7 +107,7 @@ On first launch, grant **Screen Recording** permission in System Settings → Pr
 3. **Use the live overlay:** Trigger **Live overlay…** from the menu bar or your hotkey, then drag a region or press **Space** to click a window. Use the **LIVE** handle to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
 4. **Reuse a fixed area:** Once the overlay is placed, **Show / hide overlay** toggles it over the same region without another drag. Hiding it stops all capture and translation.
 
-All hotkeys are customizable in Settings → Shortcuts.
+Capture, overlay, and save/copy shortcuts are customizable in Settings → Shortcuts.
 
 ## Troubleshooting
 
@@ -61,7 +119,7 @@ SwiftyCrow translates with Apple's on-device Translation framework, which needs 
 
 1. Open **System Settings** → **General** → **Language & Region**
 2. Scroll down to **Translation Languages…**
-3. Click **Download** next to your source *and* target language (1–3 GB each). With **Auto** source, install every language that might appear in your captures
+3. Click **Download** next to your source *and* target language. With **Auto** source, install every language that might appear in your captures
 4. Relaunch SwiftyCrow and try again
 
 The in-app hint has an **Open Settings** button that jumps straight there, plus **Don't show again** once you no longer need the reminder. Models are managed by macOS and stored locally. Remove unused models from the same panel to free disk space.
@@ -82,24 +140,25 @@ every key, its default, and the shortcut syntax.
 
 ### Requirements
 
-- macOS 26+
-- Xcode 26+ / Swift 6.3+
-- [mise](https://mise.jdx.dev) (manages Tuist + SwiftFormat versions via `.mise.toml`)
+- Xcode 26.4+ with Swift 6.3 and the macOS 26.4 SDK or newer
+- [mise](https://mise.jdx.dev) (manages Tuist via `.mise.toml`)
+- SwiftFormat, installed separately, for source formatting
 
 ### Building from source
 
 ```sh
-export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID   # your Apple Developer Team ID
-mise install               # installs Tuist + SwiftFormat
+export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
+export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
+mise install               # installs Tuist
 tuist install              # resolves SPM dependencies
 tuist generate             # generates the Xcode workspace
 open SwiftyCrow.xcworkspace
 ```
 
-`TUIST_DEVELOPMENT_TEAM` makes the Debug build sign with the same Apple
-Development certificate every time. Skip it and macOS will treat each build
-as a new binary and re-prompt for Screen Recording permission on every
-launch. Persist it in your shell profile or in `~/.mise.local.toml`:
+The project uses Apple Development signing for Debug builds. Set
+`TUIST_DEVELOPMENT_TEAM` to the team associated with your development certificate.
+Consistent signing lets macOS retain the app's Screen Recording grant across
+rebuilds. Persist the values in your shell profile or a local `.mise.local.toml`:
 
 ```toml
 [env]
@@ -107,8 +166,21 @@ TUIST_DEVELOPMENT_TEAM     = "YOUR_TEAM_ID"
 TUIST_SPARKLE_PUBLIC_ED_KEY = "YOUR_SPARKLE_PUBLIC_KEY"
 ```
 
-`SPARKLE_PUBLIC_ED_KEY` is baked into `Info.plist` at generate time so the
-app can verify update signatures. For local debug builds it can be empty.
+`TUIST_SPARKLE_PUBLIC_ED_KEY` supplies the public verification key embedded in
+`Info.plist` when the project is generated. It must be valid and match the update
+feed's signing key. For the official feed, use `SUPublicEDKey` from the released
+app's `Contents/Info.plist`. A fork needs its own feed and matching public key.
+
+### Localization and site previews
+
+Follow [docs/LOCALIZATION.md](docs/LOCALIZATION.md) for terminology and writing style. App catalogs, documentation, and websites share five locales. Generated language files are checked against their catalogs before every app build.
+
+```sh
+swift run --package-path Tools swiftycrow-tools check
+swift run --package-path Tools swiftycrow-tools docs
+swift run --package-path Tools swiftycrow-tools site --output DerivedData/Site
+swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site --port 8085
+```
 
 ### Tech stack
 

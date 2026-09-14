@@ -12,6 +12,22 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
   // MARK: Internal
 
+  /// Keep a remembered window reachable if its display was removed or resized.
+  static func restoredResultFrame(_ frame: CGRect, screens: [CGRect], defaultScreen: CGRect) -> CGRect {
+    let screen = screens.max { left, right in
+      let a = left.intersection(frame)
+      let b = right.intersection(frame)
+      return (a.isNull ? 0 : a.width * a.height) < (b.isNull ? 0 : b.width * b.height)
+    }.flatMap { $0.intersects(frame) ? $0 : nil } ?? defaultScreen
+    let size = CGSize(width: min(frame.width, screen.width), height: min(frame.height, screen.height))
+    return CGRect(
+      x: max(screen.minX, min(frame.minX, screen.maxX - size.width)),
+      y: max(screen.minY, min(frame.minY, screen.maxY - size.height)),
+      width: size.width,
+      height: size.height
+    )
+  }
+
   /// Registers the sink for controls drawn on the overlay (live toggle, close).
   func setEventHandler(_ handler: @escaping @Sendable (OverlayUserAction) -> Void) {
     eventHandler = handler
@@ -102,6 +118,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var isPlacingWindow = false
   private var window: OverlayPanel?
   private var resultWindow: NSPanel?
+  /// Keep geometry independently of the hosting window so hiding still releases
+  /// SwiftUI animations without discarding the user's detached reading layout.
+  private var savedResultWindowFrame: CGRect?
   private var lastPlacementID = 0
   private var lastState: OverlayRenderState?
   private var eventHandler: (@Sendable (OverlayUserAction) -> Void)?
@@ -144,6 +163,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     window?.delegate = nil
     window?.orderOut(nil)
     window = nil
+    if let resultWindow { savedResultWindowFrame = resultWindow.frame }
     resultWindow?.orderOut(nil)
     resultWindow = nil
   }
@@ -395,6 +415,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     panel.becomesKeyOnlyIfNeeded = true
     panel.hidesOnDeactivate = false
     panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+    panel.setAccessibilityIdentifier("live-translation-result")
     let hosting = NSHostingView(rootView: LiveResultView(model: model))
     panel.contentView = hosting
     resultWindow = panel
@@ -402,12 +423,16 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     panel.orderFront(nil)
   }
 
-  /// Size the detached window to the captured region's aspect and park it in the
-  /// bottom-right of the screen. Only done once, on creation — after that the
-  /// user owns its position/size.
+  /// Restore the user's layout across hide/show. Only the first detached window
+  /// is sized from the captured region and placed at the screen's bottom-right.
   private func sizeResultWindow(_ panel: NSPanel) {
     let screen = window?.screen ?? NSScreen.main
     let visible = screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    if let savedResultWindowFrame {
+      let screens = NSScreen.screens.map(\.visibleFrame)
+      panel.setFrame(Self.restoredResultFrame(savedResultWindowFrame, screens: screens, defaultScreen: visible), display: true)
+      return
+    }
     let scale = screen?.backingScaleFactor ?? 2
     guard model.imageSize.width > 0, model.imageSize.height > 0 else { return }
 
@@ -419,6 +444,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     panel.setContentSize(CGSize(width: max(220, w), height: max(140, h)))
     panel.setFrameOrigin(CGPoint(x: visible.maxX - panel.frame.width - 24, y: visible.minY + 24))
   }
+
 }
 
 // MARK: - OverlayWindowModel

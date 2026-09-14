@@ -75,7 +75,7 @@ enum OverlayLiveMode: String, Codable, Equatable, Sendable, CaseIterable, Identi
     rawValue
   }
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
     case .inPlace: "In-place"
     case .window: "Window"
@@ -178,7 +178,7 @@ enum UpdateCheckInterval: String, Codable, Equatable, Sendable, CaseIterable, Id
     }
   }
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
     case .hourly: "Every hour"
     case .daily: "Every day"
@@ -197,7 +197,7 @@ enum TranslationStrategy: String, Codable, Equatable, Sendable, CaseIterable, Id
     rawValue
   }
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
     case .lowLatency: "Low latency"
     case .highFidelity: "High fidelity (Apple Intelligence)"

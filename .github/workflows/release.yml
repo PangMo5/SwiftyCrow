@@ -106,7 +106,7 @@ jobs:
       - name: Create DMG
         run: |
           set -euo pipefail
-          brew install create-dmg
+          brew install create-dmg ffmpeg
           create-dmg \
             --volname "SwiftyCrow" \
             --app-drop-link 420 180 \
@@ -129,8 +129,8 @@ jobs:
             --issuer "$AC_API_ISSUER_ID" \
             --output-format json --wait)"
           echo "$SUBMIT_JSON"
-          SUB_ID="$(echo "$SUBMIT_JSON" | python3 -c 'import sys, json; print(json.load(sys.stdin)["id"])')"
-          SUB_STATUS="$(echo "$SUBMIT_JSON" | python3 -c 'import sys, json; print(json.load(sys.stdin)["status"])')"
+          SUB_ID="$(echo "$SUBMIT_JSON" | plutil -extract id raw -o - -)"
+          SUB_STATUS="$(echo "$SUBMIT_JSON" | plutil -extract status raw -o - -)"
           if [ "$SUB_STATUS" != "Accepted" ]; then
             echo "Notarization failed with status: $SUB_STATUS. Fetching log:"
             xcrun notarytool log "$SUB_ID" \
@@ -169,73 +169,7 @@ jobs:
           # the previous minor (those users already had it). The website /
           # GitHub release show only this version's own section — CHANGELOG.md
           # stays one-section-per-version, no hand-carried notes.
-          APPCAST="$APPCAST" VERSION="$VERSION" python3 - <<'PY'
-          import os, re, html as H
-
-          version = os.environ["VERSION"]
-          minor = ".".join(version.split(".")[:2])  # 2.6.1 -> 2.6
-
-          # Split CHANGELOG into (heading, body-lines) version sections.
-          sections, cur = [], None
-          for line in open("CHANGELOG.md", encoding="utf-8").read().splitlines():
-              if line.startswith("## "):
-                  cur = {"head": line[3:].strip(), "lines": []}
-                  sections.append(cur)
-              elif cur is not None:
-                  cur["lines"].append(line)
-
-          def secver(head):
-              m = re.match(r"v?(\d+\.\d+\.\d+)", head)
-              return m.group(1) if m else None
-
-          collected, started = [], False
-          for s in sections:
-              v = secver(s["head"])
-              if v == version:
-                  started = True
-              if not started:
-                  continue
-              if v is None or ".".join(v.split(".")[:2]) != minor:
-                  break
-              collected.append(s)
-
-          def inline(s):
-              s = H.escape(s)
-              s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
-              s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
-              s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
-              s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", s)
-              return s
-
-          out, in_ul = [], False
-          for s in collected:
-              if in_ul: out.append("</ul>"); in_ul = False
-              out.append("<h2>" + inline(s["head"]) + "</h2>")
-              for line in s["lines"]:
-                  if line.startswith("### "):
-                      if in_ul: out.append("</ul>"); in_ul = False
-                      out.append("<h3>" + inline(line[4:].strip()) + "</h3>")
-                  elif line.startswith("- "):
-                      if not in_ul: out.append("<ul>"); in_ul = True
-                      out.append("<li>" + inline(line[2:].strip()) + "</li>")
-                  elif line.strip() == "":
-                      if in_ul: out.append("</ul>"); in_ul = False
-                  else:
-                      if in_ul: out.append("</ul>"); in_ul = False
-                      out.append("<p>" + inline(line.strip()) + "</p>")
-          if in_ul: out.append("</ul>")
-
-          html = "\n".join(out).strip()
-          appcast = os.environ["APPCAST"]
-          xml = open(appcast, encoding="utf-8").read()
-          if html and "<description>" not in xml:
-              desc = "<description><![CDATA[\n" + html + "\n]]></description>\n    "
-              xml = xml.replace("</item>", desc + "</item>", 1)
-              open(appcast, "w", encoding="utf-8").write(xml)
-              print("appcast: embedded release notes (%d section(s))" % len(collected))
-          else:
-              print("appcast: skipped (no notes or description already present)")
-          PY
+          swift run --package-path Tools swiftycrow-tools appcast-notes --output "$APPCAST" --version "$VERSION"
 
       - name: Build release notes from CHANGELOG
         env:
@@ -316,18 +250,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/site"
-          # Static pages (configuration.html / releases.html render their source
-          # of truth at runtime; index.html gets the release version injected).
-          cp web/*.html web/*.css "$RUNNER_TEMP/site/"
-          sed "s/__VERSION__/${VERSION}/g" web/index.html > "$RUNNER_TEMP/site/index.html"
-          cp Resources/Marketing/app-icon.png "$RUNNER_TEMP/site/icon.png"
-          cp Resources/Marketing/demo.gif "$RUNNER_TEMP/site/demo.gif"
-          # Cache-bust the stylesheet so a CSS change is never masked by a
-          # stale browser cache. (macOS sed needs an explicit -i suffix; drop
-          # the .bak copies so they don't get deployed.)
-          BUST="${GITHUB_SHA:0:8}"
-          sed -i.bak "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$RUNNER_TEMP/site"/*.html
-          rm -f "$RUNNER_TEMP/site"/*.html.bak
+          swift run --package-path Tools swiftycrow-tools check
+          swift run --package-path Tools swiftycrow-tools site --output "$RUNNER_TEMP/site" --version "$VERSION"
           # Sparkle feed.
           cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 

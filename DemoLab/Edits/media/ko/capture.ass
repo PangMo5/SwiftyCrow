@@ -1,0 +1,35 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Apple SD Gothic Neo,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Apple SD Gothic Neo,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:14.05,Chapter,,0,0,0,,{\fad(100,100)}캡처한 이미지 번역
+Dialogue: 0,0:00:17.28,0:00:20.57,Chapter,,0,0,0,,{\fad(100,100)}캡처한 이미지 번역
+Dialogue: 0,0:00:00.00,0:00:02.80,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:02.80,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}외국어 설명서를 한국어로 읽고 싶을 때.
+Dialogue: 0,0:00:02.80,0:00:08.63,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:02.80,0:00:08.63,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}번역할 설명서를 한 장 캡처해요.
+Dialogue: 0,0:00:08.63,0:00:11.94,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:08.63,0:00:11.94,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}캡처한 이미지에서 번역을 읽어요.
+Dialogue: 1,0:00:08.63,0:00:11.94,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}그림 옆 설명과 사용 순서를 함께 확인해요.
+Dialogue: 0,0:00:11.94,0:00:17.28,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:11.94,0:00:17.28,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}번역된 이미지를 복사해요.
+Dialogue: 0,0:00:17.28,0:00:20.57,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:17.28,0:00:20.57,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}한국어 설명서로 보관하거나 공유하세요.
+Dialogue: 1,0:00:17.28,0:00:20.57,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}다른 앱에서도 그림과 번역을 함께 볼 수 있어요.
+Dialogue: 1,0:00:02.80,0:00:04.80,Keys,,0,0,0,,{\fad(100,100)}⇧⌘1
+Dialogue: 1,0:00:08.10,0:00:10.10,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:11.94,0:00:13.94,Keys,,0,0,0,,{\fad(100,100)}⌘C
+Dialogue: 1,0:00:14.05,0:00:16.05,Keys,,0,0,0,,{\fad(100,100)}⌘N

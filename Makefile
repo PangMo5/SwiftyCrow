@@ -1,6 +1,6 @@
-.PHONY: generate build run clean
+.PHONY: generate build run clean localization site
 
-generate:
+generate: localization
 	tuist install && tuist generate --no-open
 
 # Build the Debug app — a separate app ("SwiftyCrow Dev", bundle id
@@ -20,3 +20,10 @@ run: build
 clean:
 	tuist clean
 	rm -rf Derived DerivedData
+
+# English sources and all locale outputs must agree before packaging.
+localization:
+	swift run --package-path Tools swiftycrow-tools check
+
+site: localization
+	swift run --package-path Tools swiftycrow-tools site --output DerivedData/Site

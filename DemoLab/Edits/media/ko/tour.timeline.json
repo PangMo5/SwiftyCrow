@@ -1,0 +1,72 @@
+{
+  "captureEpochUptimeNanoseconds": 10452336112563,
+  "durationSeconds": 15.5,
+  "events": [
+    {
+      "end": 15.5,
+      "id": "tour.chapter",
+      "start": 0,
+      "track": "chapter"
+    },
+    {
+      "end": 3.033315227999992,
+      "id": "tour.intro",
+      "start": 0,
+      "track": "caption"
+    },
+    {
+      "end": 9.542403395000292,
+      "id": "tour.capture",
+      "start": 3.033315227999992,
+      "track": "caption"
+    },
+    {
+      "end": 11.949539187000482,
+      "id": "tour.copy",
+      "start": 9.542403395000292,
+      "track": "caption"
+    },
+    {
+      "end": 15.5,
+      "id": "tour.paste",
+      "start": 11.949539187000482,
+      "track": "caption"
+    },
+    {
+      "chord": "shift + cmd - 1",
+      "end": 5.0333752280002955,
+      "start": 3.0333752280002955,
+      "track": "keys"
+    },
+    {
+      "chord": "cmd - 0",
+      "end": 8.692696227999477,
+      "start": 6.692696227999477,
+      "track": "keys"
+    },
+    {
+      "chord": "cmd - t",
+      "end": 11.542805645000044,
+      "start": 9.542805645000044,
+      "track": "keys"
+    },
+    {
+      "chord": "cmd - v",
+      "end": 14.440105019999464,
+      "start": 12.440105019999464,
+      "track": "keys"
+    }
+  ],
+  "film": "tour",
+  "scenariosSHA256": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f",
+  "schemaVersion": 1,
+  "uiLanguage": "ko",
+  "reviewEdit": {
+    "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/tour-native-host-05/capture-demo.mov",
+    "sourceFrameRange": [
+      0,
+      465
+    ],
+    "originalFrames": 957
+  }
+}

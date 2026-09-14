@@ -169,7 +169,7 @@ final class RecorderField: NSView {
       color = .systemOrange
       bold = true
     } else if isRecording {
-      text = "Press shortcut\u{2026}"
+      text = String(localized: "Press shortcut…")
       color = .secondaryLabelColor
       bold = false
     } else if let hotKey {
@@ -177,7 +177,7 @@ final class RecorderField: NSView {
       color = .labelColor
       bold = true
     } else {
-      text = "Set shortcut"
+      text = String(localized: "Set shortcut")
       color = .secondaryLabelColor
       bold = false
     }
@@ -246,7 +246,10 @@ final class RecorderField: NSView {
   }
 
   private func showConflict(_ owner: String) {
-    conflictText = "In use: \(owner)"
+    conflictText = String(
+      localized: "In use: \(owner)",
+      comment: "Shortcut conflict: the variable is the already-localized name of the other action."
+    )
     conflictResetTask?.cancel()
     conflictResetTask = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .seconds(1.8))

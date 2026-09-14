@@ -1,0 +1,566 @@
+{
+  "021396e24b11af74": {
+    "en": "Previous video",
+    "ko": "이전 영상"
+  },
+  "02e6d6c6a946969c": {
+    "en": "Translate video subtitles",
+    "ko": "영상 자막 번역하기"
+  },
+  "0a181fdc48a85e0c": {
+    "en": "Every version of SwiftyCrow, newest first.",
+    "ja": "SwiftyCrowの全バージョンを新しい順に確認できます。",
+    "ko": "SwiftyCrow의 모든 버전을 최신순으로 확인해 보세요.",
+    "zh-Hans": "按从新到旧的顺序查看 SwiftyCrow 的所有版本。",
+    "zh-Hant": "依由新到舊的順序查看 SwiftyCrow 的所有版本。"
+  },
+  "0a917a482d35dae7": {
+    "en": "Your Mac's languages",
+    "ja": "Macが対応する言語",
+    "ko": "Mac에서 지원하는 언어",
+    "zh-Hans": "Mac 支持的语言",
+    "zh-Hant": "Mac 支援的語言"
+  },
+  "0b32db8cd5d55f36": {
+    "en": "Configuration: SwiftyCrow",
+    "ja": "設定ガイド：SwiftyCrow",
+    "ko": "설정 안내: SwiftyCrow",
+    "zh-Hans": "配置指南：SwiftyCrow",
+    "zh-Hant": "設定指南：SwiftyCrow"
+  },
+  "0d59cda0f99ec3b5": {
+    "en": "Drag to select any area, or press Space to highlight and click a whole window, like the macOS screenshot tool.",
+    "ja": "任意の範囲をドラッグするか、Spaceを押してウインドウ全体を選べます。macOSのスクリーンショットツールと同じ操作です。",
+    "ko": "원하는 영역을 드래그하거나 Space를 눌러 창 전체를 고를 수 있어요. macOS 스크린샷 도구와 같은 방식이에요.",
+    "zh-Hans": "拖动选择任意区域，或按 Space 选中整个窗口，操作方式与 macOS 截图工具相同。",
+    "zh-Hant": "拖移選取任意區域，或按 Space 選取整個視窗，操作方式與 macOS 螢幕截圖工具相同。"
+  },
+  "0d8247fb147bfff1": {
+    "en": "This page includes the configuration reference from the source version used to build the site. Not affiliated with Apple Inc.",
+    "ja": "サイトの作成に使ったソースバージョンの設定ガイドを同梱しています。Apple Inc.とは提携していません。",
+    "ko": "사이트를 만든 소스 버전의 설정 안내를 함께 제공해요. Apple Inc.와 제휴한 앱은 아니에요.",
+    "zh-Hans": "本页附带构建网站时所用源码版本的配置参考，与 Apple Inc. 无关联。",
+    "zh-Hant": "本頁附有建置網站時所用原始碼版本的設定參考，與 Apple Inc. 無關聯。"
+  },
+  "1254829bd9996472": {
+    "en": "Release notes",
+    "ja": "リリースノート",
+    "ko": "릴리스 노트",
+    "zh-Hans": "发布说明",
+    "zh-Hant": "發布說明"
+  },
+  "135e912e89054ffa": {
+    "en": "What's new",
+    "ja": "新着情報",
+    "ko": "새로운 소식",
+    "zh-Hans": "更新内容",
+    "zh-Hant": "更新內容"
+  },
+  "151a1672693c528c": {
+    "en": "It reads the way you do.",
+    "ja": "読む順序と方向を理解します。",
+    "ko": "복잡한 지면도 읽는 순서대로 번역해요.",
+    "zh-Hans": "理解文字的阅读顺序。",
+    "zh-Hant": "理解文字的閱讀順序。"
+  },
+  "1571b1cce09c861f": {
+    "en": "Vertical, in place",
+    "ja": "縦書きも原文の位置で",
+    "ko": "세로 글도 원문 위치에서",
+    "zh-Hans": "竖排文字，原位翻译",
+    "zh-Hant": "直排文字，原位翻譯"
+  },
+  "177f1e17c291f345": {
+    "en": "Fully on-device",
+    "ja": "デバイス内で処理",
+    "ko": "기기 안에서 처리",
+    "zh-Hans": "完全在设备端处理",
+    "zh-Hant": "完全在裝置端處理"
+  },
+  "1900b478a5860384": {
+    "en": "Capture",
+    "ja": "キャプチャ",
+    "ko": "캡처",
+    "zh-Hans": "截图",
+    "zh-Hant": "擷取"
+  },
+  "1a6f7cae06cc1fc9": {
+    "en": "Releases",
+    "ja": "リリース",
+    "ko": "릴리스",
+    "zh-Hans": "版本发布",
+    "zh-Hant": "版本發布"
+  },
+  "1b24bbc734869d66": {
+    "en": "Free, open source, and lives in your menu bar.",
+    "ja": "メニューバーから使える、無料のオープンソースアプリです。",
+    "ko": "메뉴 막대에서 쓰는 무료 오픈 소스 앱이에요.",
+    "zh-Hans": "免费开源，常驻菜单栏。",
+    "zh-Hant": "免費開放原始碼，常駐選單列。"
+  },
+  "1bdc61793d8c5f8a": {
+    "en": "Read the translation in a floating preview over the captured text.",
+    "ja": "独立したプレビューウインドウで、原文に重なった訳文を読めます。",
+    "ko": "캡처한 이미지에 번역을 표시해요. 그림과 설명을 함께 보면서 읽을 수 있어요.",
+    "zh-Hans": "在浮动预览窗口中，直接阅读原文位置的译文。",
+    "zh-Hant": "在浮動預覽視窗中，直接閱讀原文位置的譯文。"
+  },
+  "1f6b5ac00e473ca0": {
+    "en": "Translate anything on your screen.{0}Entirely on your Mac.",
+    "ja": "画面のどんな文章も翻訳。{0}すべての処理をMacの中で。",
+    "ko": "화면의 어떤 글이든 번역해요.{0}모든 처리는 Mac 안에서.",
+    "zh-Hans": "翻译屏幕上的任何文字。{0}所有处理都在 Mac 上完成。",
+    "zh-Hant": "翻譯螢幕上的任何文字。{0}所有處理都在 Mac 上完成。"
+  },
+  "2214c7806a5e3fb5": {
+    "en": "On-device screen translator for macOS.",
+    "ja": "Mac上で処理する画面翻訳アプリです。",
+    "ko": "Mac에서 처리하는 화면 번역 앱이에요.",
+    "zh-Hans": "Mac 设备端屏幕翻译应用。",
+    "zh-Hant": "在 Mac 上處理的螢幕翻譯 App。"
+  },
+  "22466b5a68ad045f": {
+    "en": "Recognition",
+    "ja": "文字認識",
+    "ko": "글자 인식",
+    "zh-Hans": "文字识别",
+    "zh-Hant": "文字辨識"
+  },
+  "23c5fde63a7a797e": {
+    "en": "In place or in a window",
+    "ja": "原文の上でも別ウインドウでも",
+    "ko": "원문 위 또는 별도 창",
+    "zh-Hans": "原文上或独立窗口",
+    "zh-Hant": "原文上或獨立視窗"
+  },
+  "23f8002b77eb7130": {
+    "en": "Get SwiftyCrow.",
+    "ja": "SwiftyCrowを始めましょう。",
+    "ko": "SwiftyCrow를 시작해 보세요.",
+    "zh-Hans": "开始使用 SwiftyCrow。",
+    "zh-Hant": "開始使用 SwiftyCrow。"
+  },
+  "26ceae0deed7525b": {
+    "en": "See it in action",
+    "ko": "실제 사용 살펴보기"
+  },
+  "2745ce08a9ae3315": {
+    "en": "Reads in order",
+    "ja": "順序どおりに読む",
+    "ko": "순서대로 읽기",
+    "zh-Hans": "按顺序阅读",
+    "zh-Hant": "依順序閱讀"
+  },
+  "2b40b54b81d3c48e": {
+    "en": "SwiftyCrow: On-device screen translator for macOS",
+    "ja": "SwiftyCrow：Mac上で処理する画面翻訳",
+    "ko": "SwiftyCrow: Mac에서 처리하는 화면 번역",
+    "zh-Hans": "SwiftyCrow：Mac 设备端屏幕翻译",
+    "zh-Hant": "SwiftyCrow：在 Mac 上處理的螢幕翻譯"
+  },
+  "2da54f5f372dd9cd": {
+    "en": "Save a PNG, copy the image, or copy just the original or translated text.",
+    "ja": "PNGで保存したり、画像をコピーできます。原文や訳文だけのコピーもできます。",
+    "ko": "PNG로 저장하거나 이미지를 복사할 수 있어요. 원문이나 번역문만 복사해도 돼요.",
+    "zh-Hans": "保存为 PNG、复制图片，或只复制原文与译文。",
+    "zh-Hant": "儲存為 PNG、複製影像，或只複製原文與譯文。"
+  },
+  "308dff1190112904": {
+    "en": "Place an overlay on a region or window and it keeps translating as the content changes.",
+    "ja": "範囲やウインドウを選ぶと、内容の変化に合わせて翻訳を続けます。",
+    "ko": "영상 자막이나 게임 대사처럼 계속 바뀌는 글은 실시간 번역으로 읽으세요. 한 번 지정한 영역에서 새 내용을 이어서 번역해요.",
+    "zh-Hans": "选择区域或窗口后，会随内容变化持续翻译。",
+    "zh-Hant": "選取區域或視窗後，會隨內容變更持續翻譯。"
+  },
+  "3acb5759dbb6b394": {
+    "en": "Could not load this page.",
+    "ja": "ページを読み込めませんでした。",
+    "ko": "페이지를 불러오지 못했어요.",
+    "zh-Hans": "无法加载此页面。",
+    "zh-Hant": "無法載入此頁面。"
+  },
+  "3b3efa44208acc4d": {
+    "en": "Read on GitHub",
+    "ja": "GitHubで読む",
+    "ko": "GitHub에서 읽기",
+    "zh-Hans": "在 GitHub 上阅读",
+    "zh-Hant": "在 GitHub 上閱讀"
+  },
+  "3b8c94fdc381d392": {
+    "en": "All releases",
+    "ja": "すべてのリリース",
+    "ko": "전체 릴리스",
+    "zh-Hans": "所有版本",
+    "zh-Hant": "所有版本"
+  },
+  "43526f4f4f5ea73f": {
+    "en": "Clicks and scrolling pass straight through to the app below. Move it by the top-left handle and resize from the edges. The LIVE badge pauses and resumes, and × closes it.",
+    "ja": "本文範囲のクリックやスクロールは背後のアプリに届きます。左上のハンドルで移動し、端でサイズを変えられます。ライブボタンで一時停止・再開し、×で閉じます。",
+    "ko": "본문 영역의 클릭과 스크롤은 뒤쪽 앱으로 전달돼요. 왼쪽 위 핸들로 영역을 옮기고 가장자리로 크기를 바꿀 수 있어요. 실시간 버튼으로 멈추거나 다시 시작하고 ×로 닫아요.",
+    "zh-Hans": "正文区域的点击和滚动会传递给下方应用。用左上角手柄移动区域，拖动边缘调整大小。实时按钮可暂停或继续，×可关闭。",
+    "zh-Hant": "本文區域的點按與捲動會傳遞給下方 App。用左上角把手移動區域，拖移邊緣調整大小。即時按鈕可暫停或繼續，×可關閉。"
+  },
+  "43c98c625da69887": {
+    "en": "Translation that keeps up.",
+    "ja": "画面の変化に翻訳がついてくる。",
+    "ko": "화면이 바뀌어도 번역은 계속돼요.",
+    "zh-Hans": "画面变化，翻译随之更新。",
+    "zh-Hant": "畫面變更，翻譯隨之更新。"
+  },
+  "4549be7200c37900": {
+    "en": "Translated preview",
+    "ja": "訳文をプレビュー",
+    "ko": "캡처 이미지 번역",
+    "zh-Hans": "译文预览",
+    "zh-Hant": "譯文預覽"
+  },
+  "485ca594ccc9003b": {
+    "en": "Private by design",
+    "ja": "プライバシーを守る設計",
+    "ko": "개인정보를 지키는 설계",
+    "zh-Hans": "隐私保护融入设计",
+    "zh-Hant": "隱私保護融入設計"
+  },
+  "4f3a65d0c98270fc": {
+    "en": "Recognition follows the page's structure, so even busy and vertical layouts come out right.",
+    "ja": "文書構造に沿って読み取るので、複雑な画面や縦書きも適切に認識します。",
+    "ko": "세로쓰기 본문과 가로 제목, 사진 설명이 섞인 문서도 읽을 수 있어요. 번역으로 뜻을 이해하고, 필요한 원문은 복사해서 활용하세요.",
+    "zh-Hans": "遵循文档结构，识别复杂页面和竖排文字。",
+    "zh-Hant": "遵循文件結構，辨識複雜頁面與直排文字。"
+  },
+  "5255c85f0f92c650": {
+    "en": "Choose a live translation video",
+    "ko": "실시간 번역 영상 선택"
+  },
+  "5259ae65614671c4": {
+    "en": "In development",
+    "ja": "開発中",
+    "ko": "개발 중",
+    "zh-Hans": "开发中",
+    "zh-Hant": "開發中"
+  },
+  "54a57c3147c49f33": {
+    "en": "Privacy",
+    "ja": "プライバシー",
+    "ko": "개인정보 보호",
+    "zh-Hans": "隐私",
+    "zh-Hant": "隱私權"
+  },
+  "5668bb2f2acc019f": {
+    "en": "Pick a region or a window and the overlay lands right on it, translating live from the first frame. It remembers that spot, so a shortcut can bring it back later without re-selecting.",
+    "ja": "範囲やウインドウを選ぶと、その位置でライブ翻訳を始めます。前回の位置を覚えているので、次はショートカットですぐ再表示できます。",
+    "ko": "영역이나 창을 고르면 그 위치에서 실시간 번역을 시작해요. 마지막 위치를 기억하므로 다음에는 단축키로 바로 다시 표시할 수 있어요.",
+    "zh-Hans": "选择区域或窗口后，立即在该位置开始实时翻译。应用会记住位置，下次可用快捷键直接恢复，无需重新选择。",
+    "zh-Hant": "選取區域或視窗後，即可在該位置開始即時翻譯。App 會記住位置，下次能用快速鍵直接還原，不必重新選取。"
+  },
+  "56ae37c4667d212b": {
+    "en": "Could not copy. Select the command and copy it manually.",
+    "ja": "コピーできませんでした。コマンドを選択して手動でコピーしてください。",
+    "ko": "복사하지 못했어요. 명령을 선택해 직접 복사해 주세요.",
+    "zh-Hans": "无法复制，请选中命令后手动复制。",
+    "zh-Hant": "無法複製，請選取指令後手動複製。"
+  },
+  "5910c059eabab457": {
+    "en": "Download for macOS",
+    "ja": "macOS版をダウンロード",
+    "ko": "macOS용 다운로드",
+    "zh-Hans": "下载 macOS 版",
+    "zh-Hant": "下載 macOS 版"
+  },
+  "5e961456c9783ebe": {
+    "en": "Groups text into reading-order paragraphs, so comics and multi-column pages don't get scrambled.",
+    "ja": "読む順序に合わせて段落をまとめ、漫画や段組みのページの順序が混ざらないようにします。",
+    "ko": "읽는 순서에 맞춰 문단을 묶어 만화나 여러 단으로 된 페이지가 뒤섞이지 않도록 해요.",
+    "zh-Hans": "按阅读顺序组织段落，避免漫画或多栏页面的文字顺序混乱。",
+    "zh-Hant": "依閱讀順序組織段落，避免漫畫或多欄頁面的文字順序混亂。"
+  },
+  "609990c2bb30813d": {
+    "en": "Snaps into place",
+    "ja": "選んだ場所ですぐに開始",
+    "ko": "고른 위치에서 바로 시작",
+    "zh-Hans": "选定位置即可开始",
+    "zh-Hant": "選定位置即可開始"
+  },
+  "6837b22879b7a1e1": {
+    "en": "Live translation videos",
+    "ko": "실시간 번역 영상 모음"
+  },
+  "6a7e0e816ae69273": {
+    "en": "Read game dialogue beside the game",
+    "ko": "게임 옆에서 대사 읽기"
+  },
+  "71bf90935fc231d2": {
+    "en": "Reference",
+    "ja": "リファレンス",
+    "ko": "참조",
+    "zh-Hans": "参考",
+    "zh-Hant": "參考"
+  },
+  "74181ed04b2f702a": {
+    "en": "Release notes and unreleased changes come from the changelog bundled with this site. Not affiliated with Apple Inc.",
+    "ja": "同梱の変更履歴からリリースノートと未リリースの変更を確認できます。Apple Inc.とは提携していません。",
+    "ko": "사이트에 포함된 변경 기록에서 릴리스 노트와 출시 예정 변경을 확인할 수 있어요. Apple Inc.와 제휴한 앱은 아니에요.",
+    "zh-Hans": "发布说明和未发布更改来自网站附带的更新日志，与 Apple Inc. 无关联。",
+    "zh-Hant": "發布說明與未發布變更來自網站附帶的更新紀錄，與 Apple Inc. 無關聯。"
+  },
+  "780bea67085d2d91": {
+    "en": "Next video",
+    "ko": "다음 영상"
+  },
+  "782a2322c714f3bb": {
+    "en": "Draw the translation over the source, or send it to a separate window while the overlay stays a thin frame.",
+    "ja": "原文に訳文を重ねるか、範囲の枠だけを残して別ウインドウで読めます。",
+    "ko": "원문 위에 번역을 표시하거나, 영역 테두리만 남기고 별도 창에서 읽을 수 있어요.",
+    "zh-Hans": "将译文显示在原文上，或只保留区域边框，在独立窗口中阅读。",
+    "zh-Hant": "將譯文顯示在原文上，或只保留區域邊框，在獨立視窗中閱讀。"
+  },
+  "79f80b6bd01a58ab": {
+    "en": "Separates ruby (furigana) from the body text it annotates and handles dense layouts without jumbling lines.",
+    "ja": "ルビを本文から分け、文字が詰まった文書も行が混ざらないように処理します。",
+    "ko": "후리가나를 본문에서 분리하고 촘촘한 문서도 줄이 뒤섞이지 않도록 처리해요.",
+    "zh-Hans": "将注音与正文分离，处理密集布局时不打乱行序。",
+    "zh-Hant": "將注音與本文分離，處理密集配置時不打亂行序。"
+  },
+  "7ebae4c927a096cd": {
+    "en": "SwiftyCrow release notes and version history.",
+    "ja": "SwiftyCrowのリリースノートとバージョンごとの変更履歴です。",
+    "ko": "SwiftyCrow 릴리스 노트와 버전별 변경 기록이에요.",
+    "zh-Hans": "SwiftyCrow 发布说明与版本历史。",
+    "zh-Hant": "SwiftyCrow 發布說明與版本歷程。"
+  },
+  "7fb07236a7380d1a": {
+    "en": "Press play to watch",
+    "ko": "재생 버튼을 눌러주세요"
+  },
+  "847e62fa1710e5d1": {
+    "en": "Region or window",
+    "ja": "範囲またはウインドウを選択",
+    "ko": "영역 또는 창 선택",
+    "zh-Hans": "选择区域或窗口",
+    "zh-Hant": "選取區域或視窗"
+  },
+  "8d30d704956ddc8b": {
+    "en": "No cloud. No keys. No quotas.",
+    "ja": "クラウドもAPIキーも、利用回数の制限もありません。",
+    "ko": "클라우드도, 키도, 사용량 제한도 없어요.",
+    "zh-Hans": "无需云端、密钥或配额。",
+    "zh-Hant": "不需要雲端、金鑰或使用額度。"
+  },
+  "8d525e5f158b9afe": {
+    "en": "Copied",
+    "ja": "コピーしました",
+    "ko": "복사했어요",
+    "zh-Hans": "已复制",
+    "zh-Hant": "已複製"
+  },
+  "8faca9da8a383b0c": {
+    "en": "Drag a region or pick a whole window. The translation appears in place over the captured image.",
+    "ja": "範囲をドラッグするか、ウインドウ全体を選んでください。キャプチャ画像の原文の位置に訳文を表示します。",
+    "ko": "설명서나 이미지에서 읽고 싶은 부분만 캡처하세요. 캡처한 한 장을 번역하고, 이미지나 글자로 복사해 다른 앱에서 활용할 수 있어요.",
+    "zh-Hans": "拖选区域或选择整个窗口，译文会显示在截图的原文位置。",
+    "zh-Hant": "拖選區域或選取整個視窗，譯文就會顯示在擷取影像的原文位置。"
+  },
+  "8fadbc8de2733658": {
+    "en": "Third-party notices",
+    "ja": "サードパーティのライセンス",
+    "ko": "서드파티 고지",
+    "zh-Hans": "第三方声明",
+    "zh-Hant": "第三方聲明"
+  },
+  "908bcf850f90b6ba": {
+    "en": "View on GitHub ›",
+    "ja": "GitHubで見る ›",
+    "ko": "GitHub에서 보기 ›",
+    "zh-Hans": "在 GitHub 上查看 ›",
+    "zh-Hant": "在 GitHub 上查看 ›"
+  },
+  "99af6606ff9d6cd5": {
+    "en": "Menu",
+    "ja": "メニュー",
+    "ko": "메뉴",
+    "zh-Hans": "菜单",
+    "zh-Hant": "選單"
+  },
+  "9cb1c2f19456fa1e": {
+    "en": "Source (main)",
+    "ja": "ソース（main）",
+    "ko": "소스 (main)",
+    "zh-Hans": "源码（main）",
+    "zh-Hant": "原始碼（main）"
+  },
+  "a24576ecf7473d60": {
+    "en": "Choose from the languages supported by macOS and download the models you need. Set the source to Auto to detect it per line.",
+    "ja": "macOSが対応する言語を選び、必要なモデルをダウンロードしてください。原文を自動検出にすると行ごとに言語を判別します。",
+    "ko": "macOS가 지원하는 언어를 고르고 필요한 모델을 다운로드해 주세요. 원문을 자동 감지로 두면 줄마다 언어를 알아내요.",
+    "zh-Hans": "选择 macOS 支持的语言并下载所需模型，将源语言设为自动检测即可逐行识别。",
+    "zh-Hant": "選擇 macOS 支援的語言並下載所需模型，將原文語言設為自動偵測即可逐行辨識。"
+  },
+  "a4fe65264ef7dbb3": {
+    "en": "Language",
+    "ja": "言語",
+    "ko": "언어",
+    "zh-Hans": "语言",
+    "zh-Hant": "語言"
+  },
+  "af0cdfffdc037c83": {
+    "en": "Recognition and translation run on-device with Apple's Vision and Translation frameworks. Nothing leaves your Mac.",
+    "ja": "AppleのVisionと翻訳機能で認識と翻訳をデバイス内で処理します。キャプチャした内容をMacの外へ送りません。",
+    "ko": "Apple의 Vision과 번역 기능으로 인식과 번역을 기기 안에서 처리해요. 캡처한 내용은 Mac 밖으로 보내지 않아요.",
+    "zh-Hans": "通过 Apple Vision 和翻译框架在设备上识别和翻译，截图内容不会离开 Mac。",
+    "zh-Hant": "透過 Apple Vision 與翻譯框架在裝置上辨識和翻譯，擷取內容不會離開 Mac。"
+  },
+  "b181cbc2d0cfbe4f": {
+    "en": "Grab any text on screen.",
+    "ja": "画面の読みたい文章をキャプチャ。",
+    "ko": "화면의 글을 캡처해서 번역해요.",
+    "zh-Hans": "截取屏幕上想读的文字。",
+    "zh-Hant": "擷取螢幕上想讀的文字。"
+  },
+  "b332c3492d5eb10a": {
+    "en": "Configuration",
+    "ja": "設定ガイド",
+    "ko": "설정 안내",
+    "zh-Hans": "配置指南",
+    "zh-Hant": "設定指南"
+  },
+  "b64ac05f17e64d03": {
+    "en": "Live",
+    "ja": "ライブ翻訳",
+    "ko": "실시간 번역",
+    "zh-Hans": "实时翻译",
+    "zh-Hant": "即時翻譯"
+  },
+  "bc8fd86dcffdd94e": {
+    "en": "Loading configuration…",
+    "ja": "設定ガイドを読み込み中…",
+    "ko": "설정 안내를 불러오는 중…",
+    "zh-Hans": "正在加载配置指南…",
+    "zh-Hant": "正在載入設定指南…"
+  },
+  "bcd96ee792813746": {
+    "en": "Release notes ›",
+    "ja": "リリースノート ›",
+    "ko": "릴리스 노트 ›",
+    "zh-Hans": "发布说明 ›",
+    "zh-Hant": "發布說明 ›"
+  },
+  "c002116abeef378c": {
+    "en": "Release Notes: SwiftyCrow",
+    "ja": "リリースノート：SwiftyCrow",
+    "ko": "릴리스 노트: SwiftyCrow",
+    "zh-Hans": "发布说明：SwiftyCrow",
+    "zh-Hant": "發布說明：SwiftyCrow"
+  },
+  "c011d6097bfbc8e9": {
+    "en": "License",
+    "ja": "ライセンス",
+    "ko": "라이선스",
+    "zh-Hans": "许可证",
+    "zh-Hant": "授權條款"
+  },
+  "c01ae0045a7c6c26": {
+    "en": "SwiftyCrow translates any text on your Mac's screen fully on-device with Apple's Vision and Translation frameworks. No cloud, no keys, no quotas.",
+    "ja": "SwiftyCrowはAppleのVisionと翻訳機能を使い、Macの画面上の文字をデバイス内で翻訳します。クラウド、APIキー、利用回数の制限はありません。",
+    "ko": "SwiftyCrow는 Apple의 Vision과 번역 기능으로 Mac 화면의 글자를 기기 안에서 번역해요. 클라우드 API, 키, 사용량 제한 없이 사용할 수 있어요.",
+    "zh-Hans": "SwiftyCrow 通过 Apple Vision 和翻译框架，完全在 Mac 上翻译屏幕文字，无需云端、密钥或配额。",
+    "zh-Hant": "SwiftyCrow 透過 Apple Vision 與翻譯框架，完全在 Mac 上翻譯螢幕文字，不需要雲端、金鑰或使用額度。"
+  },
+  "c7074b42c22d9089": {
+    "en": "Current SwiftyCrow source is available under the GNU Affero General Public License v3.0 only. Earlier releases retain the license published with their source. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.",
+    "ja": "現在のSwiftyCrowソースはGNU Affero General Public License v3のみで提供しています。以前のリリースには、そのソースと一緒に公開されたライセンスが適用されます。AppleのVision、Translation、ScreenCaptureKitを使っており、Apple Inc.とは提携していません。",
+    "ko": "현재 SwiftyCrow 소스는 GNU Affero General Public License v3 전용으로 제공돼요. 이전 릴리스에는 해당 소스와 함께 공개된 라이선스가 적용돼요. Apple의 Vision, Translation, ScreenCaptureKit으로 만들었으며 Apple Inc.와 제휴한 앱은 아니에요.",
+    "zh-Hans": "当前 SwiftyCrow 源码仅按 GNU Affero General Public License v3 提供。旧版本仍适用随其源码发布的许可证。使用 Apple Vision、Translation 和 ScreenCaptureKit 构建，与 Apple Inc. 无关联。",
+    "zh-Hant": "目前 SwiftyCrow 原始碼僅依 GNU Affero General Public License v3 提供。舊版本仍適用隨其原始碼發布的授權條款。使用 Apple Vision、Translation 與 ScreenCaptureKit 建置，與 Apple Inc. 無關聯。"
+  },
+  "d010d4344cd8c620": {
+    "en": "Recognizes vertical Japanese and Chinese in reading order and places the translation over the source.",
+    "ja": "縦書きの日本語・中国語を読む順序で認識し、原文の位置に訳文を表示します。",
+    "ko": "세로로 쓰인 일본어·중국어를 읽는 순서대로 인식하고 원문 위치에 번역을 표시해요.",
+    "zh-Hans": "按阅读顺序识别竖排日文和中文，在原文位置显示译文。",
+    "zh-Hant": "依閱讀順序辨識直排日文與中文，在原文位置顯示譯文。"
+  },
+  "d767e73566b2627e": {
+    "en": "No notes.",
+    "ja": "記載はありません。",
+    "ko": "작성된 내용이 없어요.",
+    "zh-Hans": "暂无说明。",
+    "zh-Hant": "尚無說明。"
+  },
+  "dc4a8f7575ebc649": {
+    "en": "SwiftyCrow app icon",
+    "ja": "SwiftyCrowのアプリアイコン",
+    "ko": "SwiftyCrow 앱 아이콘",
+    "zh-Hans": "SwiftyCrow 应用图标",
+    "zh-Hant": "SwiftyCrow App 圖示"
+  },
+  "dde83db7774f47c4": {
+    "en": "Apps by {0}: {1} · {2} · {3}",
+    "ja": "{0}のアプリ：{1} · {2} · {3}",
+    "ko": "앱 제작 {0}: {1} · {2} · {3}",
+    "zh-Hans": "{0} 的应用：{1} · {2} · {3}",
+    "zh-Hant": "{0} 的 App：{1} · {2} · {3}"
+  },
+  "e21f935f11d7e966": {
+    "en": "Copy",
+    "ja": "コピー",
+    "ko": "복사",
+    "zh-Hans": "复制",
+    "zh-Hant": "複製"
+  },
+  "e83858f758ab23fe": {
+    "en": "Stays out of the way",
+    "ja": "作業を妨げません",
+    "ko": "작업을 가리지 않아요",
+    "zh-Hans": "不打断原来的操作",
+    "zh-Hant": "不中斷原本的操作"
+  },
+  "e93eade6a8847cb5": {
+    "en": "Version {0} · Requires macOS 26 · Free & open source",
+    "ja": "バージョン{0} · macOS 26以降 · 無料のオープンソース",
+    "ko": "버전 {0} · macOS 26 이상 · 무료 오픈 소스",
+    "zh-Hans": "版本 {0} · 需要 macOS 26 · 免费开源",
+    "zh-Hant": "版本 {0} · 需要 macOS 26 · 免費開放原始碼"
+  },
+  "eea11a93e678c44b": {
+    "en": "Loading releases…",
+    "ja": "リリースを読み込み中…",
+    "ko": "릴리스를 불러오는 중…",
+    "zh-Hans": "正在加载版本…",
+    "zh-Hant": "正在載入版本…"
+  },
+  "f84279ddf4b17c99": {
+    "en": "Live overlay",
+    "ja": "ライブ翻訳",
+    "ko": "실시간 번역",
+    "zh-Hans": "实时翻译",
+    "zh-Hant": "即時翻譯"
+  },
+  "f9fd59ce6b9f81f4": {
+    "en": "Powered by Apple's on-device models. Works offline, with nothing sent to a server.",
+    "ja": "Appleのオンデバイスモデルを使います。内容をサーバーへ送らず、オフラインでも動作します。",
+    "ko": "Apple의 기기 내 모델을 사용해요. 서버로 내용을 보내지 않고 오프라인에서도 동작해요.",
+    "zh-Hans": "使用 Apple 的设备端模型，可离线运行，不向服务器发送内容。",
+    "zh-Hant": "使用 Apple 的裝置端模型，可離線運作，不向伺服器傳送內容。"
+  },
+  "fb1b85ac48e069fe": {
+    "en": "Save or copy",
+    "ja": "保存・コピー",
+    "ko": "저장 또는 복사",
+    "zh-Hans": "保存或复制",
+    "zh-Hant": "儲存或複製"
+  },
+  "feff74f6443868e0": {
+    "en": "Clean on busy pages",
+    "ja": "複雑なページもすっきり",
+    "ko": "복잡한 페이지도 깔끔하게",
+    "zh-Hans": "复杂页面也清晰",
+    "zh-Hant": "複雜頁面也清楚"
+  },
+  "ff7886c8c08de573": {
+    "en": "SwiftyCrow configuration reference: every config.toml key, its default, and the shortcut syntax.",
+    "ja": "SwiftyCrowの設定リファレンス。config.tomlのすべてのキー、初期値、ショートカットの書式を確認できます。",
+    "ko": "SwiftyCrow 설정 참조: config.toml의 모든 키, 기본값, 단축키 표기법을 확인할 수 있어요.",
+    "zh-Hans": "SwiftyCrow 配置参考：查看 config.toml 的所有键、默认值和快捷键语法。",
+    "zh-Hant": "SwiftyCrow 設定參考：查看 config.toml 的所有鍵、預設值與快速鍵語法。"
+  }
+}

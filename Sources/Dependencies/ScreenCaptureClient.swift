@@ -41,15 +41,15 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
   var errorDescription: String? {
     switch self {
     case .emptyRegion:
-      "The capture region is empty."
+      String(localized: "The capture region is empty.")
     case .noDisplay:
-      "No display available for capture."
+      String(localized: "No display available for capture.")
     case .permissionRequired:
-      "Screen Recording permission is required. Allow it in System Settings and restart the app."
+      String(localized: "Screen Recording permission is required. Allow it in System Settings and restart the app.")
     case .windowUnavailable:
-      "That window is no longer available to capture."
+      String(localized: "That window is no longer available to capture.")
     case .unreadableImage:
-      "The captured image has no readable pixel data."
+      String(localized: "The captured image has no readable pixel data.")
     }
   }
 }

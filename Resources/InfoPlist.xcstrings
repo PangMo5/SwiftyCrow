@@ -1,0 +1,41 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSScreenCaptureDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow captures the selected screen region to recognize and translate text."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 화면 영역의 글자를 읽고 번역하기 위해 캡처해요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した画面の範囲をキャプチャして、文字を読み取り翻訳します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow 会截取所选屏幕区域，以识别并翻译文字。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow 會擷取所選螢幕區域，以辨識並翻譯文字。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

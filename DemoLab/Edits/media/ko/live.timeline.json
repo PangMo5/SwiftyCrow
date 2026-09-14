@@ -1,0 +1,54 @@
+{
+  "captureEpochUptimeNanoseconds": 10254017248729,
+  "durationSeconds": 20.0,
+  "events": [
+    {
+      "end": 20.0,
+      "id": "live.chapter",
+      "start": 0,
+      "track": "chapter"
+    },
+    {
+      "end": 3.3678995209993445,
+      "id": "live.intro",
+      "start": 0,
+      "track": "caption"
+    },
+    {
+      "end": 6.438602353999158,
+      "id": "live.select",
+      "start": 3.3678995209993445,
+      "track": "caption"
+    },
+    {
+      "end": 15.939981146000719,
+      "id": "live.play",
+      "start": 6.438602353999158,
+      "track": "caption"
+    },
+    {
+      "end": 20.0,
+      "id": "live.second",
+      "start": 15.939981146000719,
+      "track": "caption"
+    },
+    {
+      "chord": "shift + cmd - 2",
+      "end": 5.367996187000244,
+      "start": 3.3679961870002444,
+      "track": "keys"
+    }
+  ],
+  "film": "live",
+  "scenariosSHA256": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f",
+  "schemaVersion": 1,
+  "uiLanguage": "ko",
+  "reviewEdit": {
+    "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/live-app09-pilot-03/capture-demo.mov",
+    "sourceFrameRange": [
+      0,
+      600
+    ],
+    "originalFrames": 812
+  }
+}

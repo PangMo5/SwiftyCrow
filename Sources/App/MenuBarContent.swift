@@ -87,9 +87,8 @@ struct MenuBarContent: View {
 
         Divider().padding(.leading, 28)
 
-        HStack {
+        VStack(alignment: .leading, spacing: 6) {
           Label("Display", systemImage: "rectangle.on.rectangle.angled")
-          Spacer()
           Picker("", selection: Binding(
             get: { store.settings.overlay.liveMode },
             set: { mode in store.send(.setLiveMode(mode)) }
@@ -100,7 +99,7 @@ struct MenuBarContent: View {
           }
           .pickerStyle(.segmented)
           .labelsHidden()
-          .fixedSize()
+          .frame(maxWidth: .infinity)
         }
         .controlSize(.small)
         .disabled(!store.capture.overlayActive)
@@ -118,6 +117,7 @@ struct MenuBarContent: View {
         NSApp.activate(ignoringOtherApps: true)
       } label: {
         Label("Settings", systemImage: "gearshape")
+          .contentShape(Rectangle())
       }
       .keyboardShortcut(",", modifiers: .command)
 
@@ -125,6 +125,7 @@ struct MenuBarContent: View {
         store.send(.checkForUpdatesTapped)
       } label: {
         Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+          .contentShape(Rectangle())
       }
       .help("Check for Updates")
       .disabled(!store.canCheckForUpdates)

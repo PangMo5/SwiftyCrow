@@ -61,7 +61,7 @@ struct RegionResultView: View {
 
   // MARK: Private
 
-  @State private var hoveredHelp: String?
+  @State private var hoveredHelp: LocalizedStringResource?
   @State private var keyMonitor: Any?
   @State private var exportError: String?
   @State private var zoomModel = CaptureZoomModel()
@@ -150,14 +150,14 @@ struct RegionResultView: View {
         lines: store.overlayLines
       )
     else {
-      exportError = "Could not render the capture image. Please try again."
+      exportError = String(localized: "Could not render the capture image. Please try again.")
       return
     }
     exportError = nil
     action(data)
   }
 
-  private func toolbarButton(_ systemName: String, help: String, action: @escaping () -> Void) -> some View {
+  private func toolbarButton(_ systemName: String, help: LocalizedStringResource, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: systemName)
         .font(.system(size: 13, weight: .semibold))
@@ -165,7 +165,7 @@ struct RegionResultView: View {
     }
     .buttonStyle(.plain)
     .accessibilityLabel(Text(help))
-    .help(help)
+    .help(Text(help))
     .onHover { hovering in
       if hovering {
         hoveredHelp = help
@@ -175,9 +175,9 @@ struct RegionResultView: View {
     }
   }
 
-  private func helpText(_ label: String, _ hotKey: HotKey?) -> String {
+  private func helpText(_ label: LocalizedStringResource, _ hotKey: HotKey?) -> LocalizedStringResource {
     guard let hotKey else { return label }
-    return "\(label) (\(hotKey.displayString))"
+    return "\(String(localized: label)) (\(hotKey.displayString))"
   }
 
   /// Match the customizable shortcuts locally; they aren't registered globally,
@@ -258,12 +258,12 @@ private struct CaptureZoomControls: View {
       .accessibilityLabel("Zoom out")
       .help("Zoom out (⌘−)")
       Button(action: model.resetToFit) {
-        Text("\(model.percentage)%")
+        Text(model.scale, format: .percent.precision(.fractionLength(0)))
           .font(.caption.monospacedDigit())
           .frame(minWidth: 40, minHeight: 26)
           .contentShape(Rectangle())
       }
-      .accessibilityLabel("Zoom \(model.percentage) percent. Fit image")
+      .accessibilityLabel(Text("Zoom \(model.scale, format: .percent.precision(.fractionLength(0))). Fit image"))
       .help("Fit image (⌘0)")
       Button(action: model.zoomIn) {
         Image(systemName: "plus.magnifyingglass").frame(width: 26, height: 26)

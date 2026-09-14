@@ -1,0 +1,19 @@
+{
+  "film": "layout",
+  "locale": "ko",
+  "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/layout-native-host-05/capture-demo.mov",
+  "cameraSHA256": "72aed2a45c45cfd89195c9d462c82bd89c25847459cd27e7eeeec07e869e6ebd",
+  "originalFrames": 718,
+  "sourceFrameRange": [
+    0,
+    718
+  ],
+  "editing": "Uninterrupted original prefix at original speed; only localized editorial overlays added. No replacement application pixels or removed processing waits.",
+  "frames": 718,
+  "duration": 23.933333333333334,
+  "posterSeconds": 14,
+  "timelineSHA256": "3e9b3534f6b0971b6229a379b4ee8115e118f22ecd63ab72dae16975b8e4e4fb",
+  "movieSHA256": "cd41a2e54e766fb3b9bf23d7b47c663df3afffa3b9d50eb67895c187187bb5a5",
+  "posterSHA256": "bde6e0e4c118daed0f1a3fe8fbc3678cd5f30cbd0d0f42c34a58daa465bca651",
+  "subtitlesSHA256": "5f014e0acf44d65acba080b313048b924c01ac56ee29d169a8af4d71745b2362"
+}

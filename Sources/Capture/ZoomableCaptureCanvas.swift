@@ -53,10 +53,6 @@ final class CaptureZoomModel {
   private(set) var minimumScale: CGFloat = 0.1
   private(set) var isFitting = true
 
-  var percentage: Int {
-    Int((scale * 100).rounded())
-  }
-
   var canZoomIn: Bool {
     scale < CaptureZoomGeometry.maximumScale - 0.001
   }
@@ -130,7 +126,10 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
 
     func layoutDocument(in scrollView: CaptureScrollView, force: Bool = false) {
       guard let hostingView else { return }
-      let viewport = scrollView.contentSize
+      // This borderless viewport has no rulers or headers. Legacy scrollers
+      // temporarily shrink contentSize while zoomed, then disappear at Fit.
+      // Use the full viewport so those scrollers cannot reduce the fitted scale.
+      let viewport = scrollView.bounds.size
       let displayScale = scrollView.window?.backingScaleFactor ?? backingScale
       guard let fit = CaptureZoomGeometry.fitScale(image: imageSize, viewport: viewport, backingScale: displayScale)
       else { return }
@@ -180,6 +179,9 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
         x: center.x * imageSize.width,
         y: center.y * imageSize.height
       ))
+      // Magnification can leave legacy scrollers at their previous visibility
+      // until tiling. Finalize the actual clip area before centering the image.
+      scrollView.tile()
       let origin = CaptureZoomGeometry.scrollOrigin(
         center: center,
         visibleSize: scrollView.documentVisibleRect.size,

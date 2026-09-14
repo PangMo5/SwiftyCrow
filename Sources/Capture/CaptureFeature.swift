@@ -84,6 +84,11 @@ struct CaptureFeature {
     var recognitionGeneration = 0
     var lastFrameSignature: LiveFrame.Signature?
     var recognitionSettings: LiveFrame.Settings?
+    /// Keep at most the running/last recognized frame and the newest pending
+    /// frame. Continuous pixel changes must not starve OCR by cancelling it.
+    var recognitionFrame: LiveFrame?
+    var pendingRecognitionFrame: LiveFrame?
+    var recognitionInFlight = false
     var isSourceInteracting = false
     var translationCacheOrder = [TranslationCacheKey]()
     var translationCache = [TranslationCacheKey: TranslatedText]()
@@ -129,6 +134,9 @@ struct CaptureFeature {
         state.recognitionGeneration += 1
         state.lastFrameSignature = nil
         state.recognitionSettings = nil
+        state.recognitionFrame = nil
+        state.pendingRecognitionFrame = nil
+        state.recognitionInFlight = false
         state.isSourceInteracting = false
         state.translationGeneration += 1
         state.overlayActive = false
@@ -181,6 +189,9 @@ struct CaptureFeature {
         state.recognitionGeneration += 1
         state.lastFrameSignature = nil
         state.recognitionSettings = nil
+        state.recognitionFrame = nil
+        state.pendingRecognitionFrame = nil
+        state.recognitionInFlight = false
         state.translationGeneration += 1
         state.overlayLines = []
         state.backdrop = nil
@@ -217,50 +228,68 @@ struct CaptureFeature {
             return .none
           }
           state.lastFrameSignature = snapshot.signature
-          state.recognitionSettings = settings
-          state.recognitionGeneration += 1
-          state.translationGeneration += 1
-          state.translationRequestContext = nil
-          state.overlayLines = []
-          state.backdrop = nil
-          state.isTranslating = false
-          state.isCapturing = true
-          state.lastError = nil
-          let recognitionGeneration = state.recognitionGeneration
-          return .merge(
-            .cancel(id: CancelID.translation),
-            .run { [ocr, clock] send in
-              let result = await Result {
-                let recognized = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) {
-                  try Task.checkCancellation()
-                  return try await ocr.recognizeText(snapshot.backdrop.image, settings.source)
-                }
-                try Task.checkCancellation()
-                return LiveCapture(
-                  backdrop: settings.mode == .window ? snapshot.backdrop : nil,
-                  imageSize: snapshot.imageSize,
-                  result: recognized
-                )
-              }
-              try Task.checkCancellation()
-              await send(.liveCaptureResponse(generation: recognitionGeneration, frame: frame, result: result))
-            }
-            .cancellable(id: CancelID.recognition, cancelInFlight: true)
-          )
+          let invalidate = settings != state.recognitionSettings
+            || (state.recognitionFrame.map { snapshot.imageSize != $0.imageSize } ?? true)
+          if invalidate {
+            state.pendingRecognitionFrame = nil
+            state.translationGeneration += 1
+            state.translationRequestContext = nil
+            state.overlayLines = []
+            state.backdrop = nil
+            state.isTranslating = false
+            return .merge(
+              .cancel(id: CancelID.translation),
+              recognize(snapshot, settings: settings, frame: frame, into: &state)
+            )
+          }
+          // Pixel changes, including video compression, do not establish a
+          // text change. Finish OCR and apply its semantic result before
+          // recognizing the latest pending frame, so continuous video cannot
+          // starve recognition or repeatedly erase a stable translation.
+          if state.recognitionInFlight {
+            state.pendingRecognitionFrame = snapshot == state.recognitionFrame ? nil : snapshot
+            return .none
+          }
+          return recognize(snapshot, settings: settings, frame: frame, into: &state)
         }
 
       case .liveCaptureResponse(let generation, let frame, let result):
         guard
           state.isLive, !state.isSourceInteracting,
           generation == state.recognitionGeneration,
-          frame == state.overlayFrame,
-          state.recognitionSettings == LiveFrame.Settings(state.settings)
+          frame == state.overlayFrame
         else { return .none }
+        // This request has finished even when its settings are no longer
+        // applicable. Leaving it marked in-flight would strand pending frames
+        // if the user switches settings back before the next capture tick.
+        state.recognitionInFlight = false
+        guard state.recognitionSettings == LiveFrame.Settings(state.settings) else {
+          state.recognitionGeneration += 1
+          state.lastFrameSignature = nil
+          state.recognitionSettings = nil
+          state.recognitionFrame = nil
+          state.pendingRecognitionFrame = nil
+          state.translationGeneration += 1
+          state.translationRequestContext = nil
+          state.overlayLines = []
+          state.backdrop = nil
+          state.isCapturing = false
+          state.isTranslating = false
+          state.isPreparingRecognition = false
+          return .merge(.cancel(id: CancelID.preparation), .cancel(id: CancelID.translation))
+        }
         // Validate and apply in the same reducer action. Forwarding an untagged
         // response allowed a queued scroll/dismissal to invalidate it in between.
         switch result {
         case .success(let capture):
-          return captureSucceeded(capture, into: &state)
+          let applied = captureSucceeded(capture, into: &state)
+          guard let pending = state.pendingRecognitionFrame else { return applied }
+          state.pendingRecognitionFrame = nil
+          return .merge(
+            applied,
+            recognize(pending, settings: LiveFrame.Settings(state.settings), frame: frame, into: &state)
+          )
+
         case .failure(let error):
           return captureFailed(error, into: &state)
         }
@@ -289,6 +318,9 @@ struct CaptureFeature {
         state.recognitionGeneration += 1
         state.lastFrameSignature = nil
         state.recognitionSettings = nil
+        state.recognitionFrame = nil
+        state.pendingRecognitionFrame = nil
+        state.recognitionInFlight = false
         state.isSourceInteracting = false
         state.isLive = isLive
         state.isCapturing = isLive
@@ -667,9 +699,44 @@ struct CaptureFeature {
     return .merge(.cancel(id: CancelID.preparation), applyOCRResult(capture, into: &state))
   }
 
+  private func recognize(
+    _ snapshot: LiveFrame,
+    settings: LiveFrame.Settings,
+    frame: OverlayFrame,
+    into state: inout State
+  ) -> Effect<Action> {
+    state.recognitionGeneration += 1
+    state.recognitionFrame = snapshot
+    state.recognitionSettings = settings
+    state.recognitionInFlight = true
+    state.isCapturing = state.overlayLines.isEmpty
+    state.lastError = nil
+    let generation = state.recognitionGeneration
+    return .run { [ocr, clock] send in
+      let result = await Result {
+        let recognized = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) {
+          try Task.checkCancellation()
+          return try await ocr.recognizeText(snapshot.backdrop.image, settings.source)
+        }
+        try Task.checkCancellation()
+        return LiveCapture(
+          backdrop: settings.mode == .window ? snapshot.backdrop : nil,
+          imageSize: snapshot.imageSize,
+          result: recognized
+        )
+      }
+      try Task.checkCancellation()
+      await send(.liveCaptureResponse(generation: generation, frame: frame, result: result))
+    }
+    .cancellable(id: CancelID.recognition, cancelInFlight: true)
+  }
+
   private func captureFailed(_ error: any Error, into state: inout State) -> Effect<Action> {
     state.recognitionGeneration += 1
     state.lastFrameSignature = nil // Retry even when the next pixels are identical.
+    state.recognitionFrame = nil
+    state.pendingRecognitionFrame = nil
+    state.recognitionInFlight = false
     state.isCapturing = false
     state.isPreparingRecognition = false
     state.lastError = error.localizedDescription

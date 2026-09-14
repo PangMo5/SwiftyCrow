@@ -12,6 +12,24 @@ struct ZoomableCaptureCanvasTests {
 
   // MARK: Internal
 
+  @Test(arguments: [NSScroller.Style.legacy, .overlay])
+  func fitReturnsToFullViewportAfterScrollersAppear(style: NSScroller.Style) {
+    let size = CGSize(width: 670, height: 280)
+    let fixture = Fixture(imageSize: size, viewportSize: size, scrollerStyle: style)
+    fixture.scroll.tile()
+    #expect(fixture.model.scale == 1)
+    for _ in 0..<3 {
+      fixture.model.zoomIn()
+      fixture.scroll.tile()
+      #expect(fixture.model.scale == 1.25)
+      if style == .legacy { #expect(fixture.scroll.contentSize.height < size.height) }
+      fixture.model.resetToFit()
+      #expect(fixture.model.scale == 1)
+      #expect(fixture.model.isFitting)
+      #expect(fixture.scroll.contentSize == size)
+    }
+  }
+
   @Test
   func fitTracksWindowSizeUntilUserZooms() {
     let fixture = Fixture()
@@ -111,10 +129,22 @@ struct ZoomableCaptureCanvasTests {
 
     // MARK: Lifecycle
 
-    init(backingScale: CGFloat = 1) {
+    init(
+      backingScale: CGFloat = 1,
+      imageSize: CGSize = CGSize(width: 1600, height: 800),
+      viewportSize: CGSize = CGSize(width: 600, height: 400),
+      scrollerStyle: NSScroller.Style? = nil
+    ) {
       model = CaptureZoomModel()
       coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
-      scroll = CaptureScrollView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
+      scroll = CaptureScrollView(frame: CGRect(origin: .zero, size: viewportSize))
+      scroll.borderType = .noBorder
+      if let scrollerStyle {
+        scroll.hasHorizontalScroller = true
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.scrollerStyle = scrollerStyle
+      }
       scroll.allowsMagnification = true
       scroll.minMagnification = 0.001
       scroll.maxMagnification = 8
@@ -124,7 +154,7 @@ struct ZoomableCaptureCanvasTests {
       hosting.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
       scroll.documentView = hosting
       coordinator.hostingView = hosting
-      coordinator.imageSize = CGSize(width: 1600, height: 800)
+      coordinator.imageSize = imageSize
       coordinator.backingScale = backingScale
       coordinator.connect(to: scroll)
       layout()

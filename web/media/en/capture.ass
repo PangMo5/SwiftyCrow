@@ -1,0 +1,26 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Helvetica Neue,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Helvetica Neue,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:14.44,Chapter,,0,0,0,,{\fad(100,100)}Illustrated instructions
+Dialogue: 0,0:00:17.71,0:00:21.00,Chapter,,0,0,0,,{\fad(100,100)}Illustrated instructions
+Dialogue: 0,0:00:00.00,0:00:03.26,Caption,,0,0,0,,{\fad(100,100)}Keep the instructions with their diagram.
+Dialogue: 0,0:00:03.26,0:00:09.03,Caption,,0,0,0,,{\fad(100,100)}Capture the instruction sheet.\N{\fs25\b0\1c&H8B8686&}Text can stay inside the image.
+Dialogue: 0,0:00:09.03,0:00:12.35,Caption,,0,0,0,,{\fad(100,100)}Read the translated steps and caution.\N{\fs25\b0\1c&H8B8686&}The labeled drawing stays in place.
+Dialogue: 0,0:00:12.35,0:00:17.71,Caption,,0,0,0,,{\fad(100,100)}Copy the translated image.\N{\fs25\b0\1c&H8B8686&}Take the whole result with you.
+Dialogue: 0,0:00:17.71,0:00:21.00,Caption,,0,0,0,,{\fad(100,100)}Open the clipboard image in Preview.\N{\fs25\b0\1c&H8B8686&}Ready to keep or share.
+Dialogue: 1,0:00:03.26,0:00:05.26,Keys,,0,0,0,,{\fad(100,100)}⇧⌘1
+Dialogue: 1,0:00:08.50,0:00:10.50,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:12.35,0:00:14.35,Keys,,0,0,0,,{\fad(100,100)}⌘C
+Dialogue: 1,0:00:14.44,0:00:16.44,Keys,,0,0,0,,{\fad(100,100)}⌘N

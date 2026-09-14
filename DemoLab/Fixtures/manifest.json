@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "content": "Original travel, instruction, video, mixed-direction magazine, and game source material; no translated content or product state.",
+  "sourceLanguages": [
+    "en-US",
+    "ja-JP"
+  ],
+  "files": {
+    "Fixtures/GenerateScenarios.swift": "c1ffa0a800111e2d2a75156b1baa8edec2fa00dc1924f3f8a275183ed8597284",
+    "Fixtures/GenerateScienceVideo.swift": "cd602dae15a650754db508733e07cd81fed4c5daad45d12210e712a6d6020116",
+    "Fixtures/DemoScenes.swift": "5af8f84534777047998947056031367ecf51672fe30697914aecf37a9d21483d",
+    "Fixtures/BuildDemoScenes.swift": "8d557fb923a9eac33d58c415f694ff2d08bfcb9a092483bd96e535b19dd0dfe4",
+    "Fixtures/travel-leaflet.png": "04560eaac157293d0adfaf50a1ad773f4608d9269c1a2584977ba267dc92b874",
+    "Fixtures/camera-manual.png": "33847860e028a29d13834c90e5e894779e4992d96d078a5a012d593f4015a47b",
+    "Fixtures/japanese-magazine.png": "fad5cd4d927f108d3f569738de68a65575751b9534f31b4966ec9a77ed50e6bb",
+    "Fixtures/science-light.mp4": "f052d9383955b669c91b1748b594427878484eef9933f6bf8849c482c88020df",
+    "Fixtures/glass-observatory.png": "78fc834053716b1e6147f27efa7448361ce0394182b830686a6c7a076f276582",
+    "Fixtures/riverside-bookshop.png": "60647d1e73fcfa7d193f6758aecefc0c54ef77b69737ca8e4c605cc494e9d0ed",
+    "Fixtures/scenario-content.json": "0188f1946fdc59a9fad378c6c8db4f33fcd2cbf56c0d2c69224d8e1ff303abbc",
+    "Fixtures/scenarios.json": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f"
+  }
+}

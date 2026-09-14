@@ -1,4 +1,10 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](CONFIGURATION.md) · [한국어](ko/CONFIGURATION.md) · [日本語](ja/CONFIGURATION.md) · [简体中文](zh-Hans/CONFIGURATION.md) · [繁體中文](zh-Hant/CONFIGURATION.md)
+<!-- LANGUAGE-LINKS:END -->
+
 # Configuration
+
+This reference follows `main`. For a released version, read this file in its matching [release tag](https://github.com/PangMo5/SwiftyCrow/tags).
 
 SwiftyCrow reads its configuration from:
 
@@ -8,9 +14,7 @@ SwiftyCrow reads its configuration from:
 
 The path is XDG-aware. If `$XDG_CONFIG_HOME` is set, the file lives at
 `$XDG_CONFIG_HOME/SwiftyCrow/config.toml`. The file is created on first launch
-and written back whenever you change something in the app. Hand edits are
-picked up on the next launch, so you can keep it in your dotfiles and edit it
-in your editor.
+and written back whenever you change something in the app. Changes made in your editor are also picked up while the app is running.
 
 Settings are grouped into tables that mirror the in-app Settings panes:
 
@@ -48,7 +52,7 @@ The former `[capture].interval` setting is ignored and omitted on the next save.
 ## `[languages]`
 
 A nested table per side, each holding a BCP-47 language `code`. The lists
-available in the app are the languages installed on your Mac.
+available in the app are supported by macOS; source languages must also support OCR. Models for your chosen pair need to be downloaded separately.
 
 ```toml
 [languages.source]
@@ -65,11 +69,10 @@ code = "ko-KR"
 
 ## `[overlay]`
 
-The overlay is no longer a persistent window you toggle on. You place it by
-selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
-shortcut), and it starts translating live right away. It always lets clicks pass
-through to the apps below. Use its built-in **LIVE** handle to pause or resume and
-the **×** button to close it.
+Place the overlay by selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
+shortcut), and it starts translating live right away. The translation area lets
+clicks pass through to the app below; controls, resize edges, and an open information
+popover receive input. Use **LIVE** to pause or resume and **×** to close it.
 
 Once you've placed it, the region is remembered. The `toggleLiveOverlay`
 shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the

@@ -1,0 +1,23 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Heiti SC,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Heiti SC,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:27.00,Chapter,,0,0,0,,{\fad(100,100)}游戏对话
+Dialogue: 0,0:00:00.00,0:00:03.13,Caption,,0,0,0,,{\fad(100,100)}保留游戏画面，同时阅读对话。
+Dialogue: 0,0:00:03.13,0:00:07.83,Caption,,0,0,0,,{\fad(100,100)}选取游戏对话区域。\N{\fs25\b0\1c&H8B8686&}在该区域开启实时翻译。
+Dialogue: 0,0:00:07.83,0:00:13.54,Caption,,0,0,0,,{\fad(100,100)}将翻译移到独立窗口。\N{\fs25\b0\1c&H8B8686&}保持游戏原画可见。
+Dialogue: 0,0:00:13.54,0:00:17.37,Caption,,0,0,0,,{\fad(100,100)}在游戏中继续对话。\N{\fs25\b0\1c&H8B8686&}翻译窗口更新为新的台词。
+Dialogue: 0,0:00:17.37,0:00:21.63,Caption,,0,0,0,,{\fad(100,100)}不需要时隐藏翻译。
+Dialogue: 0,0:00:21.63,0:00:27.00,Caption,,0,0,0,,{\fad(100,100)}回到同一对话区域。\N{\fs25\b0\1c&H8B8686&}无需重新选取。
+Dialogue: 1,0:00:03.13,0:00:05.13,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

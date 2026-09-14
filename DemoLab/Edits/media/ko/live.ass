@@ -1,0 +1,28 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Apple SD Gothic Neo,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Apple SD Gothic Neo,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:20.00,Chapter,,0,0,0,,{\fad(100,100)}재생 중인 자막 번역
+Dialogue: 0,0:00:00.00,0:00:03.37,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:03.37,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}외국어 자막만 있는 영상도 편하게 보세요.
+Dialogue: 0,0:00:03.37,0:00:06.44,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:03.37,0:00:06.44,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}자막이 나오는 영역을 한 번 지정해요.
+Dialogue: 0,0:00:06.44,0:00:15.94,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:06.44,0:00:15.94,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}영상을 멈추지 않고 번역을 읽어요.
+Dialogue: 0,0:00:15.94,0:00:20.00,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:15.94,0:00:20.00,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}자막이 바뀌면 번역도 따라와요.
+Dialogue: 1,0:00:15.94,0:00:20.00,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}다시 캡처하지 않아도 돼요.
+Dialogue: 1,0:00:03.37,0:00:05.37,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

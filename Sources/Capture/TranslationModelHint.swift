@@ -79,8 +79,8 @@ struct TranslationModelHint: View {
           Text("Translation unavailable")
             .font(.caption)
             .fontWeight(.semibold)
-          Text(message ??
-            "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again.")
+          Text(message ?? String(localized:
+            "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again."))
             .font(.caption2)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -119,7 +119,7 @@ struct CaptureStatusNote: View {
     let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
     if let first = notices.first {
       Label(
-        notices.count == 1 ? first : "Using installed models for \(notices.count) language pairs.",
+        notices.count == 1 ? first : String(localized: "Using installed models for \(notices.count) language pairs."),
         systemImage: "info.circle"
       )
       .font(.caption2)

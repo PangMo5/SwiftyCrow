@@ -14,6 +14,8 @@ let appVersion = "2.9.1"
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
 let baseSettings: SettingsDictionary = [
+  "SWIFT_EMIT_LOC_STRINGS": "YES",
+  "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
   "DEVELOPMENT_TEAM": SettingValue(stringLiteral: developmentTeam),
   // Sign local builds with the developer's Apple Development cert so the binary's
   // designated requirement stays stable across rebuilds. Tuist otherwise defaults
@@ -66,6 +68,26 @@ let project = Project(
         "Resources/**",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/CONFIGURATION.md",
+        "docs/LANGUAGE_MODELS.md",
+        .folderReference(path: "docs/ko"),
+        .folderReference(path: "docs/ja"),
+        .folderReference(path: "docs/zh-Hans"),
+        .folderReference(path: "docs/zh-Hant"),
+      ],
+      scripts: [
+        .pre(
+          script: "swift run --package-path \"$SRCROOT/Tools\" swiftycrow-tools check",
+          name: "Validate Localizations",
+          basedOnDependencyAnalysis: false
+        ),
+        .post(
+          script: "swift run --package-path \"$SRCROOT/Tools\" swiftycrow-tools check-app --stringsdata \"$TARGET_TEMP_DIR/Objects-normal\"",
+          name: "Check Extracted UI Strings",
+          basedOnDependencyAnalysis: false
+        ),
       ],
       dependencies: [
         .external(name: "ComposableArchitecture"),

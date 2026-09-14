@@ -1,0 +1,229 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "capture.chapter": {
+      "en": "Illustrated instructions",
+      "ja": "図入りの説明書",
+      "ko": "캡처한 이미지 번역",
+      "zh-Hans": "图解说明书",
+      "zh-Hant": "圖解說明書"
+    },
+    "capture.copy": {
+      "en": "Copy the translated image. | Take the whole result with you.",
+      "ja": "翻訳した画像をコピー。 | 図も含めて、そのまま持ち出せます。",
+      "ko": "번역된 이미지를 복사해요.",
+      "zh-Hans": "复制翻译后的图片。 | 将完整结果一起带走。",
+      "zh-Hant": "複製翻譯後的圖片。 | 將完整結果一起帶走。"
+    },
+    "capture.intro": {
+      "en": "Keep the instructions with their diagram.",
+      "ja": "図と一緒に、説明を読む。",
+      "ko": "외국어 설명서를 한국어로 읽고 싶을 때.",
+      "zh-Hans": "结合图解阅读说明。",
+      "zh-Hant": "結合圖解閱讀說明。"
+    },
+    "capture.pasted": {
+      "en": "Open the clipboard image in Preview. | Ready to keep or share.",
+      "ja": "プレビューでコピーした画像を開く。 | 保存や共有に使えます。",
+      "ko": "한국어 설명서로 보관하거나 공유하세요. | 다른 앱에서도 그림과 번역을 함께 볼 수 있어요.",
+      "zh-Hans": "在预览中打开剪贴板图片。 | 可以保存或分享。",
+      "zh-Hant": "在預覽程式中開啟剪貼簿圖片。 | 可以儲存或分享。"
+    },
+    "capture.select": {
+      "en": "Capture the instruction sheet. | Text can stay inside the image.",
+      "ja": "説明書の画像をキャプチャ。 | 選択できない文字も画像から読み取ります。",
+      "ko": "번역할 설명서를 한 장 캡처해요.",
+      "zh-Hans": "截取说明书图片。 | 从图片中读取无法选中的文字。",
+      "zh-Hant": "擷取說明書圖片。 | 從圖片中讀取無法選取的文字。"
+    },
+    "capture.translated": {
+      "en": "Read the translated steps and caution. | The labeled drawing stays in place.",
+      "ja": "手順と注意事項を翻訳。 | 部品の図と説明の位置も確認できます。",
+      "ko": "캡처한 이미지에서 번역을 읽어요. | 그림 옆 설명과 사용 순서를 함께 확인해요.",
+      "zh-Hans": "阅读翻译后的步骤和注意事项。 | 部件图解保留在原位。",
+      "zh-Hant": "閱讀翻譯後的步驟和注意事項。 | 零件圖解保留在原位。"
+    },
+    "compare.chapter": {
+      "en": "Game dialogue",
+      "ja": "ゲームの会話",
+      "ko": "게임 옆에서 대사 번역",
+      "zh-Hans": "游戏对话",
+      "zh-Hant": "遊戲對話"
+    },
+    "compare.hide": {
+      "en": "Hide translation when you do not need it.",
+      "ja": "不要なときは、翻訳を非表示に。",
+      "ko": "그림에 집중할 때는 번역을 잠시 숨겨요.",
+      "zh-Hans": "不需要时隐藏翻译。",
+      "zh-Hant": "不需要時隱藏翻譯。"
+    },
+    "compare.intro": {
+      "en": "Read the conversation without losing the scene.",
+      "ja": "ゲーム画面を見ながら、会話を読む。",
+      "ko": "게임 그림을 가리지 않고 대사를 읽고 싶을 때.",
+      "zh-Hans": "保留游戏画面，同时阅读对话。",
+      "zh-Hant": "保留遊戲畫面，同時閱讀對話。"
+    },
+    "compare.next": {
+      "en": "Continue the conversation in the game. | The translation window follows the new dialogue.",
+      "ja": "ゲームで次の会話へ。 | 別ウインドウも新しい会話に更新されます。",
+      "ko": "다음 대화도 이어서 번역해요.",
+      "zh-Hans": "在游戏中继续对话。 | 翻译窗口更新为新的台词。",
+      "zh-Hant": "在遊戲中繼續對話。 | 翻譯視窗更新為新的台詞。"
+    },
+    "compare.recall": {
+      "en": "Bring it back on the same dialogue area. | No need to select the region again.",
+      "ja": "同じ会話の範囲に再表示。 | 範囲を選び直す必要はありません。",
+      "ko": "필요하면 같은 자리에 다시 표시해요. | 영역을 다시 지정할 필요가 없어요.",
+      "zh-Hans": "回到同一对话区域。 | 无需重新选取。",
+      "zh-Hant": "回到同一對話區域。 | 無需重新選取。"
+    },
+    "compare.select": {
+      "en": "Select the game dialogue. | Start live translation on that region.",
+      "ja": "会話の範囲を選択。 | その範囲でライブ翻訳を始めます。",
+      "ko": "대사 영역에 실시간 번역을 켜요.",
+      "zh-Hans": "选取游戏对话区域。 | 在该区域开启实时翻译。",
+      "zh-Hant": "選取遊戲對話區域。 | 在該區域開啟即時翻譯。"
+    },
+    "compare.separate": {
+      "en": "Move translation into its own window. | Keep the game artwork visible.",
+      "ja": "翻訳を別ウインドウへ。 | 元のゲーム画面を見ながら読めます。",
+      "ko": "번역을 게임 옆의 별도 창에 띄워요.",
+      "zh-Hans": "将翻译移到独立窗口。 | 保持游戏原画可见。",
+      "zh-Hant": "將翻譯移到獨立視窗。 | 保持遊戲原畫可見。"
+    },
+    "layout.chapter": {
+      "en": "Mixed writing directions",
+      "ja": "横書きと縦書き",
+      "ko": "가로·세로 글자 인식",
+      "zh-Hans": "横排与竖排",
+      "zh-Hant": "橫排與直排"
+    },
+    "layout.copy": {
+      "en": "Copy the recognized original. | Inspect what the app actually read.",
+      "ja": "認識した原文をコピー。 | アプリが読み取った内容を確認します。",
+      "ko": "필요한 원문은 글자로 복사할 수 있어요.",
+      "zh-Hans": "复制识别出的原文。 | 检查应用实际读取的内容。",
+      "zh-Hant": "複製辨識出的原文。 | 檢查App實際讀取的內容。"
+    },
+    "layout.intro": {
+      "en": "A magazine page with several reading directions.",
+      "ja": "読む方向が混在する、雑誌の誌面。",
+      "ko": "세로쓰기로 된 일본어 잡지도 읽어보세요.",
+      "zh-Hans": "一页混合多种阅读方向的杂志。",
+      "zh-Hant": "一頁混合多種閱讀方向的雜誌。"
+    },
+    "layout.order": {
+      "en": "Read the body in sequence in TextEdit. | Vertical columns become continuous text.",
+      "ja": "テキストエディットで本文の順番を確認。 | 縦の列が続きの文章になります。",
+      "ko": "세로 글도 이어지는 문장으로 붙여넣어요. | 원문을 메모에 남겨 다시 읽을 수 있어요.",
+      "zh-Hans": "在文本编辑中查看正文顺序。 | 竖排文字连成连续正文。",
+      "zh-Hant": "在文字編輯中查看內文順序。 | 直排文字連成連續內文。"
+    },
+    "layout.select": {
+      "en": "Capture the Japanese page. | Headings, vertical columns and inset text.",
+      "ja": "日本語の誌面をそのままキャプチャ。 | 見出し、縦書き本文、囲み記事が並びます。",
+      "ko": "가로 제목과 세로 본문을 함께 캡처해요.",
+      "zh-Hans": "截取完整日文页面。 | 包含标题、竖排正文和边栏文字。",
+      "zh-Hant": "擷取完整日文頁面。 | 包含標題、直排內文和側欄文字。"
+    },
+    "layout.translated": {
+      "en": "Read the translated page in its original layout. | The photo and its supporting text stay together.",
+      "ja": "誌面の構造を追って、訳文を読む。 | 写真と周りの説明も確認できます。",
+      "ko": "사진 옆 설명부터 세로 본문까지 번역해요.",
+      "zh-Hans": "沿着页面结构阅读翻译。 | 同时查看照片和说明文字。",
+      "zh-Hant": "沿著頁面結構閱讀翻譯。 | 同時查看照片和說明文字。"
+    },
+    "live.chapter": {
+      "en": "A playing video",
+      "ja": "再生中の動画",
+      "ko": "재생 중인 자막 번역",
+      "zh-Hans": "播放中的视频",
+      "zh-Hant": "播放中的影片"
+    },
+    "live.intro": {
+      "en": "Read subtitles as the video keeps playing.",
+      "ja": "動画を見ながら、字幕を読む。",
+      "ko": "외국어 자막만 있는 영상도 편하게 보세요.",
+      "zh-Hans": "一边看视频，一边读字幕。",
+      "zh-Hant": "一邊看影片，一邊讀字幕。"
+    },
+    "live.play": {
+      "en": "Play the video with live translation on. | No repeated screenshots.",
+      "ja": "ライブ翻訳をつけて再生。 | 場面ごとにキャプチャする必要はありません。",
+      "ko": "영상을 멈추지 않고 번역을 읽어요.",
+      "zh-Hans": "开启实时翻译并播放视频。 | 不必反复截图。",
+      "zh-Hant": "開啟即時翻譯並播放影片。 | 不必反覆擷取畫面。"
+    },
+    "live.second": {
+      "en": "A new caption replaces the previous one. | Translation follows the source change.",
+      "ja": "次の字幕へ、翻訳も更新。 | 前の文から新しい内容に切り替わります。",
+      "ko": "자막이 바뀌면 번역도 따라와요. | 다시 캡처하지 않아도 돼요.",
+      "zh-Hans": "新字幕替换上一句。 | 翻译随原文变化而更新。",
+      "zh-Hant": "新字幕取代上一句。 | 翻譯隨原文變化而更新。"
+    },
+    "live.select": {
+      "en": "Select only the subtitle area. | The picture stays visible above it.",
+      "ja": "字幕の範囲だけを選択。 | 上の映像はそのまま見られます。",
+      "ko": "자막이 나오는 영역을 한 번 지정해요.",
+      "zh-Hans": "只选取字幕区域。 | 上方画面保持可见。",
+      "zh-Hant": "只選取字幕區域。 | 上方畫面保持可見。"
+    },
+    "live.third": {
+      "en": "Keep watching through the next explanation. | The same region continues translating.",
+      "ja": "次の説明も、そのまま見る。 | 同じ範囲で翻訳が続きます。",
+      "ko": "다음 설명도 이어서 봐요. | 같은 영역에서 번역이 계속돼요.",
+      "zh-Hans": "继续观看下一段解释。 | 同一区域持续翻译。",
+      "zh-Hant": "繼續觀看下一段解釋。 | 同一區域持續翻譯。"
+    },
+    "tour.capture": {
+      "en": "Capture the visiting information. | Use the capture shortcut assigned in Settings.",
+      "ja": "必要な案内をキャプチャ。 | 設定で割り当てたショートカットを使います。",
+      "ko": "읽고 싶은 부분을 드래그해요. | 이미지 속 외국어가 한국어로 바뀝니다.",
+      "zh-Hans": "选取需要的游览信息。 | 使用在设置中指定的截图快捷键。",
+      "zh-Hant": "選取需要的遊覽資訊。 | 使用在設定中指定的擷取快速鍵。"
+    },
+    "tour.changed": {
+      "en": "When the pier changes, the translation follows. | No new capture or selection.",
+      "ja": "乗り場の変更に、翻訳も追従。 | 範囲を選び直す必要はありません。",
+      "ko": "승선 부두가 바뀌면 번역도 바뀌어요. | 영역을 다시 선택하지 않아도 돼요.",
+      "zh-Hans": "码头变了，翻译随之更新。 | 无需重新截图或选取。",
+      "zh-Hant": "碼頭變了，翻譯隨之更新。 | 無需重新擷取或選取。"
+    },
+    "tour.chapter": {
+      "en": "A harbor afternoon",
+      "ja": "港への小さな旅",
+      "ko": "화면 번역, 이렇게 써요",
+      "zh-Hans": "港口之旅",
+      "zh-Hant": "港口之旅"
+    },
+    "tour.copy": {
+      "en": "Copy the translated text. | The result goes to the Mac clipboard.",
+      "ja": "訳文をコピー。 | 翻訳結果がMacのクリップボードに入ります。",
+      "ko": "필요한 번역문만 복사해요.",
+      "zh-Hans": "复制翻译后的文字。 | 翻译结果进入Mac剪贴板。",
+      "zh-Hant": "複製翻譯後的文字。 | 翻譯結果進入Mac剪貼簿。"
+    },
+    "tour.intro": {
+      "en": "Plan a trip from the information on your screen.",
+      "ja": "画面の案内から、旅の準備を。",
+      "ko": "복사할 수 없는 글도 번역할 수 있어요.",
+      "zh-Hans": "从屏幕上的信息开始规划行程。",
+      "zh-Hant": "從螢幕上的資訊開始規劃行程。"
+    },
+    "tour.live": {
+      "en": "Now follow the departure notice live. | Select the notice area once.",
+      "ja": "出発案内はライブ翻訳で。 | 案内の範囲を一度だけ選びます。",
+      "ko": "출발 안내는 실시간으로 확인해요. | 안내가 나오는 영역을 한 번 선택해요.",
+      "zh-Hans": "实时查看出发通知。 | 只需选取一次通知区域。",
+      "zh-Hant": "即時查看出發通知。 | 只需選取一次通知區域。"
+    },
+    "tour.paste": {
+      "en": "Paste it into your itinerary. | Keep the useful details in another app.",
+      "ja": "旅のメモに貼り付け。 | 必要な情報を別のアプリへ。",
+      "ko": "메모에 붙여넣고 바로 활용하세요.",
+      "zh-Hans": "粘贴到行程笔记中。 | 把需要的信息带到另一个应用。",
+      "zh-Hant": "貼到行程筆記中。 | 把需要的資訊帶到另一個App。"
+    }
+  }
+}

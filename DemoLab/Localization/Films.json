@@ -1,0 +1,100 @@
+{
+  "films": {
+    "capture": {
+      "caption": {
+        "en": "Translate a camera instruction sheet, then copy the image into Preview. The labeled diagram, numbered steps and caution stay together.",
+        "ja": "カメラの説明書を翻訳し、画像ごとコピーしてプレビューで開きます。部品の図、操作の手順、注意事項をまとめて残せます。",
+        "ko": "설명서나 이미지에서 필요한 부분을 캡처하세요. 캡처한 이미지의 글을 번역하고, 그림과 설명이 함께 담긴 이미지를 복사해 보관하거나 공유할 수 있어요.",
+        "zh-Hans": "翻译相机说明书，再复制整张图片到预览应用。部件图解、操作步骤和注意事项都保留在一起。",
+        "zh-Hant": "翻譯相機說明書，再複製整張圖片到預覽程式。零件圖解、操作步驟和注意事項都保留在一起。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "sourceLanguage": "en-US",
+      "title": {
+        "en": "Keep the diagram with the translated instructions.",
+        "ja": "説明書の図も、訳文と一緒に。",
+        "ko": "외국어 설명서를 한국어 이미지로 보관해요.",
+        "zh-Hans": "把图解和翻译后的说明一起保存。",
+        "zh-Hant": "把圖解和翻譯後的說明一起保存。"
+      },
+      "translationLanguage": "ko-KR"
+    },
+    "compare": {
+      "caption": {
+        "en": "Keep the game scene visible while reading translated dialogue beside it. Click Continue to advance the conversation, then hide and recall translation on the same region.",
+        "ja": "ゲーム画面を見ながら、隣のウインドウで会話の翻訳を読みます。次の会話へ進み、不要なときは翻訳を隠して、同じ範囲に再表示できます。",
+        "ko": "번역을 게임 옆의 별도 창에 띄워 그림과 대사를 함께 보세요. 다음 대화의 번역도 이어서 읽고, 필요 없을 때는 잠시 숨길 수 있어요.",
+        "zh-Hans": "保留完整游戏画面，在旁边的窗口阅读翻译后的对话。继续推进剧情，需要时隐藏翻译，再回到同一区域。",
+        "zh-Hant": "保留完整遊戲畫面，在旁邊的視窗閱讀翻譯後的對話。繼續推進劇情，需要時隱藏翻譯，再回到同一區域。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "sourceLanguage": "en-US",
+      "title": {
+        "en": "Read game dialogue in its own translation window.",
+        "ja": "ゲームの会話は、別の翻訳ウインドウで。",
+        "ko": "게임 화면을 가리지 않고 대사를 읽어요.",
+        "zh-Hans": "用独立翻译窗口阅读游戏对话。",
+        "zh-Hant": "用獨立翻譯視窗閱讀遊戲對話。"
+      },
+      "translationLanguage": "ko-KR"
+    },
+    "layout": {
+      "caption": {
+        "en": "Recognize a Japanese magazine with vertical body columns, horizontal headings, a photo caption and an inset note. Copy the recognized original to inspect the body in reading order.",
+        "ja": "縦書き本文、横書き見出し、写真の説明、囲み記事が混在する日本語の誌面を認識します。認識した原文をコピーし、本文が読む順番につながっていることも確認します。",
+        "ko": "가로 제목과 세로 본문이 섞인 일본어 잡지도 번역해요. 사진과 설명을 함께 읽고, 필요한 원문은 읽는 순서대로 복사해 메모에 남기세요.",
+        "zh-Hans": "识别混合竖排正文、横排标题、照片说明和边栏笔记的日文杂志。复制识别出的原文，查看正文的阅读顺序。",
+        "zh-Hant": "辨識混合直排內文、橫排標題、照片說明和側欄筆記的日文雜誌。複製辨識出的原文，查看內文的閱讀順序。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "sourceLanguage": "ja-JP",
+      "title": {
+        "en": "Read horizontal headings and vertical body text.",
+        "ja": "横書きの見出しも、縦書きの本文も。",
+        "ko": "세로쓰기 잡지도 번역해서 읽어요.",
+        "zh-Hans": "横排标题、竖排正文，一起识别。",
+        "zh-Hant": "橫排標題、直排內文，一起辨識。"
+      },
+      "translationLanguage": "ko-KR"
+    },
+    "live": {
+      "caption": {
+        "en": "Select the subtitle area of a playing video once. As the illustration moves and three English captions change, live translation updates in the same area.",
+        "ja": "動画の字幕部分を一度だけ選択。図が動き、英語の字幕が3つの場面に切り替わる間も、同じ範囲で翻訳が更新されます。",
+        "ko": "자막 영역을 한 번 지정하면, 영상이 재생되는 동안 새 자막을 계속 번역해요. 문장이 바뀔 때마다 다시 캡처할 필요가 없어요.",
+        "zh-Hans": "只需选取一次视频的字幕区域。图示持续运动，英文字幕切换三个场景，实时翻译在同一区域更新。",
+        "zh-Hant": "只需選取一次影片的字幕區域。圖示持續移動，英文字幕切換三個場景，即時翻譯在同一區域更新。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "sourceLanguage": "en-US",
+      "title": {
+        "en": "Follow the subtitles as the video plays.",
+        "ja": "映像の字幕に、翻訳がついてくる。",
+        "ko": "영상을 멈추지 않고 자막을 번역해요.",
+        "zh-Hans": "视频字幕变化，翻译随之更新。",
+        "zh-Hant": "影片字幕變化，翻譯隨之更新。"
+      },
+      "translationLanguage": "ko-KR"
+    },
+    "tour": {
+      "caption": {
+        "en": "Translate a tourist leaflet into an itinerary note, then follow a departure board as the boarding pier changes. Original sample content, translated by a real development build of SwiftyCrow.",
+        "ja": "観光案内の画像を翻訳して旅のメモに貼り付け、乗り場が変わる出発案内をライブ翻訳で確認します。オリジナルのサンプルを、開発中の SwiftyCrow で実際に翻訳しています。",
+        "ko": "복사할 수 없는 이미지 속 글도 드래그해서 번역하세요. 필요한 번역문은 메모나 다른 앱에 바로 붙여넣을 수 있어요.",
+        "zh-Hans": "翻译旅游指南图片，将需要的信息粘贴到行程笔记，再用实时翻译查看登船码头的变更。使用原创示例内容，在 SwiftyCrow 开发版本中实际翻译。",
+        "zh-Hant": "翻譯旅遊指南圖片，將需要的資訊貼到行程筆記，再用即時翻譯查看登船碼頭的變更。使用原創範例內容，在 SwiftyCrow 開發版本中實際翻譯。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "sourceLanguage": "en-US",
+      "title": {
+        "en": "A harbor trip, from planning to departure.",
+        "ja": "旅の準備から、出発の案内まで。",
+        "ko": "화면의 외국어를 바로 번역해요.",
+        "zh-Hans": "从规划行程，到查看出发信息。",
+        "zh-Hant": "從規劃行程，到查看出發資訊。"
+      },
+      "translationLanguage": "ko-KR"
+    }
+  },
+  "sourceLanguage": "en"
+}

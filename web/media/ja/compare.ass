@@ -1,0 +1,23 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Hiragino Sans,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Hiragino Sans,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:27.07,Chapter,,0,0,0,,{\fad(100,100)}ゲームの会話
+Dialogue: 0,0:00:00.00,0:00:03.04,Caption,,0,0,0,,{\fad(100,100)}ゲーム画面を見ながら、会話を読む。
+Dialogue: 0,0:00:03.04,0:00:07.69,Caption,,0,0,0,,{\fad(100,100)}会話の範囲を選択。\N{\fs25\b0\1c&H8B8686&}その範囲でライブ翻訳を始めます。
+Dialogue: 0,0:00:07.69,0:00:13.43,Caption,,0,0,0,,{\fad(100,100)}翻訳を別ウインドウへ。\N{\fs25\b0\1c&H8B8686&}元のゲーム画面を見ながら読めます。
+Dialogue: 0,0:00:13.43,0:00:17.43,Caption,,0,0,0,,{\fad(100,100)}ゲームで次の会話へ。\N{\fs25\b0\1c&H8B8686&}別ウインドウも新しい会話に更新されます。
+Dialogue: 0,0:00:17.43,0:00:21.71,Caption,,0,0,0,,{\fad(100,100)}不要なときは、翻訳を非表示に。
+Dialogue: 0,0:00:21.71,0:00:27.07,Caption,,0,0,0,,{\fad(100,100)}同じ会話の範囲に再表示。\N{\fs25\b0\1c&H8B8686&}範囲を選び直す必要はありません。
+Dialogue: 1,0:00:03.04,0:00:05.04,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

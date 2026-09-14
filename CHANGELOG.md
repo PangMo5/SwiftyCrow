@@ -1,8 +1,37 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](CHANGELOG.md) · [한국어](docs/ko/CHANGELOG.md) · [日本語](docs/ja/CHANGELOG.md) · [简体中文](docs/zh-Hans/CHANGELOG.md) · [繁體中文](docs/zh-Hant/CHANGELOG.md)
+<!-- LANGUAGE-LINKS:END -->
+
 # Changelog
 
 All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
+
+## Unreleased
+
+### Improvements
+
+- **Five interface languages:** Use the app, guides, and website in English, Korean, Japanese, Simplified Chinese, and Traditional Chinese for Taiwan.
+
+- **Capture zoom and pan:** Pinch, scroll, or drag to inspect a capture. Zoom controls sit in the bottom-right status bar; click the percentage to fit the image. Saved and copied images include the full capture at its original resolution.
+- **Faster live refresh:** Capture adapts to activity, skips unchanged pixels, and cancels outdated work when the source changes. The manual `[capture].interval` setting is no longer used.
+- **Translations follow the source layout:** Preserve alignment, inline styles, controls, and protected code. Vertical source text uses a writing direction appropriate for the translated language.
+- **More reliable difficult captures:** Improve printed-dialogue boundaries, ruby handling, rotated text, and mixed-language recognition. Review indicators flag uncertain text.
+- **Use available local models:** When the preferred model is missing, use an installed alternative and explain the choice. Click the live overlay's information button for details.
+
+### Fixes
+
+- **Crisp region captures:** Dragged selections align to display pixels, avoiding an extra resampled row or column before text recognition.
+- **Stable video subtitles:** Video compression noise no longer repeatedly clears translated subtitles. Changed text is still recognized and refreshed.
+- **Remember the separate reading window:** Hiding and recalling live translation now restores the window's position and size. If a display is disconnected, the window returns to a visible screen.
+- **Cleaner enlarged image text:** Gray edges around enlarged letters no longer become repeated glyph fragments when restoring the background behind a translation.
+- **Visible language selections:** Equivalent short language codes in configuration files now match the system language picker.
+- **Localized menu controls:** Longer display labels fit their controls, and the settings and update buttons respond across their full label area.
+
+- **Movable capture previews:** Drag the title area to move the result window.
+- **Stable zoom rendering:** Compose the source replacement and translated text together so zooming out does not reveal the covered source text.
+- **Reliable Fit after zooming:** Fit uses the full capture viewport and updates native scrollbar layout immediately, restoring the complete image after zooming even when scrollbars are always visible.
 
 ## 2.9.1 (2026-08-22)
 

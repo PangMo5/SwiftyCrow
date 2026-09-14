@@ -1,0 +1,22 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:27.07,Chapter,,0,0,0,,{\fad(100,100)}재생 중인 영상
+Dialogue: 0,0:00:00.00,0:00:03.37,Caption,,0,0,0,,{\fad(100,100)}영상을 보면서 자막을 읽어요.
+Dialogue: 0,0:00:03.37,0:00:06.44,Caption,,0,0,0,,{\fad(100,100)}자막이 나오는 영역을 선택해요.\N{\fs25\b0\1c&H8B8686&}위쪽 영상은 그대로 볼 수 있어요.
+Dialogue: 0,0:00:06.44,0:00:15.94,Caption,,0,0,0,,{\fad(100,100)}실시간 번역을 켜고 영상을 재생해요.\N{\fs25\b0\1c&H8B8686&}장면마다 캡처할 필요가 없어요.
+Dialogue: 0,0:00:15.94,0:00:23.94,Caption,,0,0,0,,{\fad(100,100)}새 자막이 나오면 번역도 갱신돼요.\N{\fs25\b0\1c&H8B8686&}이전 문장 대신 새 내용을 읽어요.
+Dialogue: 0,0:00:23.94,0:00:27.07,Caption,,0,0,0,,{\fad(100,100)}다음 설명도 이어서 봐요.\N{\fs25\b0\1c&H8B8686&}같은 영역에서 번역이 계속돼요.
+Dialogue: 1,0:00:03.37,0:00:05.37,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

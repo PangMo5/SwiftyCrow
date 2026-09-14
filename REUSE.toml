@@ -10,6 +10,9 @@ path = [
   "Makefile",
   "README.md",
   "Resources/**",
+  "Localization/**",
+  "DemoLab/**",
+  "Tools/**",
   "THIRD_PARTY_NOTICES.md",
   "docs/**",
   "web/**",
@@ -19,7 +22,7 @@ SPDX-FileCopyrightText = "2021-2026 PangMo5 and contributors"
 SPDX-License-Identifier = "AGPL-3.0-only"
 
 [[annotations]]
-path = "Tuist/Package.resolved"
+path = ["Tuist/Package.resolved", "Tools/Package.resolved"]
 precedence = "override"
 SPDX-FileCopyrightText = "NONE"
 SPDX-License-Identifier = "CC0-1.0"

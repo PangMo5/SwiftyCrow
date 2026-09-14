@@ -32,7 +32,7 @@
   </aside>
   <main class="doc-main">
     <p class="doc-eyebrow">Reference</p>
-    <div class="md" id="content">
+    <div class="md" id="content" data-document="CONFIGURATION.md" data-mode="document" data-load-error="Could not load this page." data-source-label="Read on GitHub" data-no-notes="No notes." data-unreleased-label="In development">
       <p class="state">Loading configuration…</p>
     </div>
   </main>
@@ -47,7 +47,7 @@
       <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/LICENSE">License</a>
       <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a>
     </div>
-    <p>This page renders <code>docs/CONFIGURATION.md</code> from the <code>main</code> branch as the single source of truth. Not affiliated with Apple Inc.</p>
+    <p>This page includes the configuration reference from the source version used to build the site. Not affiliated with Apple Inc.</p>
     <p class="footer-apps">Apps by <a href="https://pangmo5.dev/">PangMo5</a>: <span class="cur" aria-current="page">SwiftyCrow</span> · <a href="https://tatami.pangmo5.dev/">Tatami</a> · <a href="https://amado.pangmo5.dev/">Amado</a></p>
   </div>
 </footer>
@@ -58,69 +58,8 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"
   integrity="sha384-XQqX/4yiUGu+oyr87jvWzRuqBUK/adrY0DunhL+tID9m/9dwSpV8h9Fk/Sg6ifVQ"
   crossorigin="anonymous"></script>
-<script>
-  const SRC = "https://raw.githubusercontent.com/PangMo5/SwiftyCrow/main/docs/CONFIGURATION.md";
-  const content = document.getElementById("content");
-
-  function slug(text) {
-    return text.toLowerCase().trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-  }
-
-  async function load() {
-    if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return fail();
-    let md;
-    try {
-      const res = await fetch(SRC, { cache: "no-cache" });
-      if (!res.ok) throw new Error(res.status);
-      md = await res.text();
-    } catch (e) {
-      return fail();
-    }
-
-    content.innerHTML = DOMPurify.sanitize(marked.parse(md));
-
-    // Assign stable ids and build the DocC-style sidebar from headings.
-    const sideNav = document.getElementById("side-nav");
-    const used = {};
-    const headings = content.querySelectorAll("h2, h3");
-    headings.forEach((h) => {
-      let id = slug(h.textContent) || "section";
-      if (used[id] != null) { used[id]++; id = id + "-" + used[id]; } else { used[id] = 0; }
-      h.id = id;
-      const a = document.createElement("a");
-      a.href = "#" + id;
-      a.textContent = h.textContent;
-      a.className = h.tagName === "H3" ? "lvl-3" : "lvl-2";
-      a.dataset.target = id;
-      sideNav.appendChild(a);
-    });
-    if (headings.length) document.getElementById("side").hidden = false;
-
-    // Scroll-spy: highlight the section currently in view.
-    const links = Array.from(sideNav.querySelectorAll("a"));
-    const byId = Object.fromEntries(links.map((a) => [a.dataset.target, a]));
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          links.forEach((a) => a.classList.remove("active"));
-          (byId[entry.target.id] || {}).classList?.add("active");
-        }
-      });
-    }, { rootMargin: "-64px 0px -70% 0px", threshold: 0 });
-    headings.forEach((h) => observer.observe(h));
-  }
-
-  function fail() {
-    content.innerHTML =
-      '<p class="state">Couldn\'t load the configuration reference. ' +
-      'Read it on <a href="https://github.com/PangMo5/SwiftyCrow/blob/main/docs/CONFIGURATION.md">GitHub</a>.</p>';
-  }
-
-  load();
-</script>
+<script src="./docs.js" defer></script>
+<script src="./site.js" defer></script>
 
 </body>
 </html>

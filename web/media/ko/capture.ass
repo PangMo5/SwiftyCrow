@@ -1,0 +1,26 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:14.05,Chapter,,0,0,0,,{\fad(100,100)}그림이 있는 설명서
+Dialogue: 0,0:00:17.28,0:00:20.57,Chapter,,0,0,0,,{\fad(100,100)}그림이 있는 설명서
+Dialogue: 0,0:00:00.00,0:00:02.80,Caption,,0,0,0,,{\fad(100,100)}설명과 그림을 함께 읽어요.
+Dialogue: 0,0:00:02.80,0:00:08.63,Caption,,0,0,0,,{\fad(100,100)}설명서 이미지를 캡처해요.\N{\fs25\b0\1c&H8B8686&}선택할 수 없는 글자도 이미지에서 읽어요.
+Dialogue: 0,0:00:08.63,0:00:11.94,Caption,,0,0,0,,{\fad(100,100)}사용 순서와 주의사항을 번역해요.\N{\fs25\b0\1c&H8B8686&}부품 그림과 설명 위치를 함께 보세요.
+Dialogue: 0,0:00:11.94,0:00:17.28,Caption,,0,0,0,,{\fad(100,100)}번역된 이미지를 복사해요.\N{\fs25\b0\1c&H8B8686&}그림까지 포함한 결과를 가져와요.
+Dialogue: 0,0:00:17.28,0:00:20.57,Caption,,0,0,0,,{\fad(100,100)}미리보기에서 복사한 이미지를 열어요.\N{\fs25\b0\1c&H8B8686&}보관하거나 공유할 수 있어요.
+Dialogue: 1,0:00:02.80,0:00:04.80,Keys,,0,0,0,,{\fad(100,100)}⇧⌘1
+Dialogue: 1,0:00:08.10,0:00:10.10,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:11.94,0:00:13.94,Keys,,0,0,0,,{\fad(100,100)}⌘C
+Dialogue: 1,0:00:14.05,0:00:16.05,Keys,,0,0,0,,{\fad(100,100)}⌘N

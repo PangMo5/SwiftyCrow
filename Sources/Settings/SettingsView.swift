@@ -38,7 +38,7 @@ struct SettingsView: View {
         }
       }
       .formStyle(.grouped)
-      .navigationTitle((pane ?? .general).title)
+      .navigationTitle(Text((pane ?? .general).title))
     }
     .frame(minWidth: 640, minHeight: 460)
     .task { store.send(.task) }
@@ -61,7 +61,7 @@ struct SettingsView: View {
       rawValue
     }
 
-    var title: String {
+    var title: LocalizedStringResource {
       switch self {
       case .general: "General"
       case .languages: "Languages"
@@ -147,6 +147,9 @@ private struct LanguagesSection: View {
 // MARK: - TranslationSection
 
 private struct TranslationSection: View {
+
+  // MARK: Internal
+
   var body: some View {
     Section {
       Picker("Preferred strategy", selection: Binding($settings.translation.strategy)) {
@@ -164,6 +167,8 @@ private struct TranslationSection: View {
       .foregroundStyle(.secondary)
     }
   }
+
+  // MARK: Private
 
   @Shared(.settings) private var settings
 
@@ -187,7 +192,7 @@ private struct OverlaySection: View {
       Text("Overlay")
     } footer: {
       Text(
-        "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The overlay always lets clicks pass through to the apps below."
+        "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The translation area lets clicks pass through; controls and an open information popover receive input."
       )
       .font(.caption)
       .foregroundStyle(.secondary)
@@ -239,7 +244,7 @@ private struct ShortcutsSection: View {
 
   /// Action name + key path for every recordable shortcut, used both to detect
   /// conflicts and to name the offending action in the recorder.
-  private static let allShortcuts: [(title: String, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
+  private static let allShortcuts: [(title: LocalizedStringResource, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
     ("Capture region", \.selectRegion),
     ("Live overlay", \.liveOverlay),
     ("Show / hide overlay", \.toggleLiveOverlay),
@@ -253,7 +258,7 @@ private struct ShortcutsSection: View {
 
   @Shared(.settings) private var settings
 
-  private func recorder(_ title: String, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> some View {
+  private func recorder(_ title: LocalizedStringResource, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> some View {
     LabeledContent(title) {
       ShortcutRecorder(
         hotKey: settings.shortcuts[keyPath: keyPath],
@@ -268,7 +273,7 @@ private struct ShortcutsSection: View {
   private func conflictTitle(for candidate: HotKey, excluding keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> String? {
     Self.allShortcuts.first { entry in
       entry.keyPath != keyPath && settings.shortcuts[keyPath: entry.keyPath] == candidate
-    }?.title
+    }.map { String(localized: $0.title) }
   }
 
 }
@@ -384,8 +389,8 @@ private struct AboutSection: View {
   /// Marketing version + build number from the app bundle, e.g. "2.1.0 (42)".
   private static let appVersion: String = {
     let info = Bundle.main.infoDictionary
-    let short = info?["CFBundleShortVersionString"] as? String ?? "\u{2014}"
-    let build = info?["CFBundleVersion"] as? String ?? "\u{2014}"
+    let short = info?["CFBundleShortVersionString"] as? String ?? String(localized: "Unknown")
+    let build = info?["CFBundleVersion"] as? String ?? String(localized: "Unknown")
     return "\(short) (\(build))"
   }()
 
@@ -429,8 +434,33 @@ private enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
       throw CocoaError(.fileNoSuchFile)
     }
 
+    let locale = Bundle.main.preferredLocalizations.first ?? "en"
+    let overview: URL?
+    if self == .thirdPartyNotices, locale != "en" {
+      guard
+        let localized = Bundle.main.url(
+          forResource: "THIRD_PARTY_NOTICES",
+          withExtension: "md",
+          subdirectory: locale
+        )
+      else { throw CocoaError(.fileNoSuchFile) }
+      overview = localized
+    } else {
+      overview = nil
+    }
     return try await Task.detached(priority: .userInitiated) {
-      try String(contentsOf: url, encoding: .utf8)
+      func readable(_ url: URL) throws -> String {
+        try String(contentsOf: url, encoding: .utf8)
+          .replacingOccurrences(
+            of: #"(?s)<!-- LANGUAGE-LINKS:START -->.*?<!-- LANGUAGE-LINKS:END -->\s*"#,
+            with: "",
+            options: .regularExpression
+          )
+          .replacingOccurrences(of: #"(?m)^<a id="[^"]+"></a>\n"#, with: "", options: .regularExpression)
+      }
+      let original = try readable(url)
+      if let overview { return try readable(overview) + "\n\n" + original }
+      return original
     }.value
   }
 

@@ -1,0 +1,3 @@
+# Preserve the copyright headers of the Tatami-derived tooling sources.
+--header ignore
+--exclude .build,.swiftpm

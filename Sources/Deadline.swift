@@ -43,7 +43,11 @@ struct DeadlineExceededError: Error, LocalizedError, Equatable {
   var stage: DeadlineStage
 
   var errorDescription: String? {
-    "\(stage.rawValue) didn't respond in time."
+    switch stage {
+    case .ocr: String(localized: "Text recognition didn't respond in time.")
+    case .screenCapture: String(localized: "Screen capture didn't respond in time.")
+    case .translation: String(localized: "Translation didn't respond in time.")
+    }
   }
 }
 

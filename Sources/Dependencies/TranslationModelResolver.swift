@@ -51,14 +51,20 @@ enum TranslationModelResolver {
       )
     else {
       throw ModelError(message: requested == .unsupported && other == .unsupported
-        ? "Translation is not supported from \(sourceName) to \(targetName)."
-        : "No translation model is installed for \(sourceName) → \(targetName). Download these languages in System Settings.")
+        ? String(localized: "Translation is not supported from \(sourceName) to \(targetName).")
+        :
+        String(
+          localized: "No translation model is installed for \(sourceName) → \(targetName). Download these languages in System Settings."
+        ))
     }
     // This is resolved before submitting any work, not retried after an opaque
     // engine failure. Every response carries the choice so the UI explains it.
     return Selection(
       strategy: selected,
-      notice: "Using \(selected.displayName) for \(sourceName) → \(targetName); the preferred model is not installed."
+      notice: String(
+        localized: "Using \(String(localized: selected.displayName)) for \(sourceName) → \(targetName); the preferred model is not installed.",
+        comment: "Model notice: strategy name, source language, and translation language, in that order."
+      )
     )
   }
 

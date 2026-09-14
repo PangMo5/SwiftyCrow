@@ -1,0 +1,23 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Helvetica Neue,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Helvetica Neue,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:26.87,Chapter,,0,0,0,,{\fad(100,100)}Game dialogue
+Dialogue: 0,0:00:00.00,0:00:03.03,Caption,,0,0,0,,{\fad(100,100)}Read the conversation without losing the scene.
+Dialogue: 0,0:00:03.03,0:00:07.69,Caption,,0,0,0,,{\fad(100,100)}Select the game dialogue.\N{\fs25\b0\1c&H8B8686&}Start live translation on that region.
+Dialogue: 0,0:00:07.69,0:00:13.39,Caption,,0,0,0,,{\fad(100,100)}Move translation into its own window.\N{\fs25\b0\1c&H8B8686&}Keep the game artwork visible.
+Dialogue: 0,0:00:13.39,0:00:17.23,Caption,,0,0,0,,{\fad(100,100)}Continue the conversation in the game.\N{\fs25\b0\1c&H8B8686&}The translation window follows the new dialogue.
+Dialogue: 0,0:00:17.23,0:00:21.51,Caption,,0,0,0,,{\fad(100,100)}Hide translation when you do not need it.
+Dialogue: 0,0:00:21.51,0:00:26.87,Caption,,0,0,0,,{\fad(100,100)}Bring it back on the same dialogue area.\N{\fs25\b0\1c&H8B8686&}No need to select the region again.
+Dialogue: 1,0:00:03.03,0:00:05.03,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2
