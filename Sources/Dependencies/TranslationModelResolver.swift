@@ -59,13 +59,21 @@ enum TranslationModelResolver {
     }
     // This is resolved before submitting any work, not retried after an opaque
     // engine failure. Every response carries the choice so the UI explains it.
-    return Selection(
-      strategy: selected,
-      notice: String(
-        localized: "Using \(String(localized: selected.displayName)) for \(sourceName) → \(targetName); the preferred model is not installed.",
-        comment: "Model notice: strategy name, source language, and translation language, in that order."
-      )
-    )
+    let preferredName = String(localized: preferred.displayName)
+    let selectedName = String(localized: selected.displayName)
+    let notice =
+      if requested == .unsupported {
+        String(
+          localized: "Requested: \(preferredName). Selected for this translation: \(selectedName).\n\(sourceName) → \(targetName): the requested strategy does not support this language pair.",
+          comment: "Model substitution notice: requested strategy, selected strategy, source language, target language. Describes this translation request, not a changed setting."
+        )
+      } else {
+        String(
+          localized: "Requested: \(preferredName). Selected for this translation: \(selectedName).\n\(sourceName) → \(targetName): the requested model is not installed.",
+          comment: "Model substitution notice: requested strategy, selected strategy, source language, target language. Describes this translation request, not a changed setting."
+        )
+      }
+    return Selection(strategy: selected, notice: notice)
   }
 
 }

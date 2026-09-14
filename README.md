@@ -22,14 +22,14 @@ SwiftyCrow recognizes and translates text in a selected screen region or window.
 
 [![Watch the complete reading workflow](web/media/en/tour.jpg)](https://swiftycrow.pangmo5.dev/#demo-tour)
 
-The overview demonstrates region capture, translation, and copying the translated text into a note. Feature demos below cover image copying, changing subtitles, a separate translation window, and vertical text recognition.
+The overview shows how to capture screen text, translate it, and copy the result into a note. The feature videos below demonstrate examples of image copying, live updates, a separate translation window, and vertical text recognition.
 
 ## Why SwiftyCrow?
 
-Image-based instructions, video subtitles, and game dialogue often cannot be selected and copied as text. SwiftyCrow reads them from the screen so you can understand the content while keeping the source application in view.
+Text on a webpage, in an image, or inside an app isn't always easy to select and copy. SwiftyCrow reads it from the screen so you can translate it while keeping the source application in view.
 
 - **Translate from the screen:** Select the relevant area without first saving a file or moving its text into another app.
-- **Choose the right mode:** Use capture for a still image and live translation for content that continues to change.
+- **Choose the right mode:** Use capture to translate the screen once, or live translation to keep reading as the text changes.
 - **Reuse the result:** Save or copy a translated image, or copy only the original or translated text.
 
 ## Features
@@ -61,7 +61,7 @@ Image-based instructions, video subtitles, and game dialogue often cannot be sel
 <a href="https://swiftycrow.pangmo5.dev/#demo-compare"><img align="right" src="web/media/en/compare.jpg" width="160" alt="" /></a>
 
 - **Display modes:** Place translation over the source or in a separate window beside it.
-- **Separate window:** Keep game artwork or other source content visible while reading the translated text elsewhere. New dialogue updates in the same translation window.
+- **Separate window:** Read translations beside the source app without covering its content. As the text changes, the same translation window updates.
 
 <br clear="right" />
 
@@ -98,14 +98,14 @@ brew install --cask PangMo5/tap/swiftycrow
 
 **Direct download**: grab the latest `.dmg` from the [Releases page](https://github.com/PangMo5/SwiftyCrow/releases/latest), open it, and drag the app to Applications. Each release also links its exact corresponding source archive.
 
-On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. The app keeps itself up to date afterward.
+Quick Setup guides first-time users through screen access, language downloads, and their first capture. Your step and selected language are saved before opening System Settings, so setup resumes if macOS quits and reopens the app. Permission status is also available in Settings → General → Permissions.
 
 ## Usage
 
 1. Pick the **Source** and **Target** languages in Settings (`⌘,`).
-2. **Capture a region:** Trigger **Capture Region** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. Drag the preview’s title area to move the window. Use `⌘+` / `⌘−` to zoom and click the percentage or press `⌘0` to fit; 100% maps each image pixel to one display pixel. The preview supports `⌘S` to save, `⌘C` to copy the image, `⌘O` to copy the original, `⌘T` to copy the translation, and `Esc` to close. Save and copy always include the complete image at the original capture resolution, regardless of zoom or pan.
-3. **Use the live overlay:** Trigger **Live overlay…** from the menu bar or your hotkey, then drag a region or press **Space** to click a window. Use the **LIVE** handle to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
-4. **Reuse a fixed area:** Once the overlay is placed, **Show / hide overlay** toggles it over the same region without another drag. Hiding it stops all capture and translation.
+2. **Capture a region:** Trigger **Capture translation** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. Drag the preview’s title area to move the window. Use `⌘+` / `⌘−` to zoom and click the percentage or press `⌘0` to fit; 100% maps each image pixel to one display pixel. The preview supports `⌘S` to save, `⌘C` to copy the image, `⌘O` to copy the original, `⌘T` to copy the translation, and `Esc` to close. Save and copy always include the complete image at the original capture resolution, regardless of zoom or pan.
+3. **Use live translation:** Click **Live translation** to select a region or window. Click it again to choose a new area. Use the adjacent **Show overlay** switch to show or hide the selected area; it is disabled until an area has been selected. Use **LIVE** on the overlay to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
+4. **Show or hide translation:** The **Show overlay** switch shows or hides translation in the selected area. Hiding it stops capture and translation; showing it resumes in the same area.
 
 Capture, overlay, and save/copy shortcuts are customizable in Settings → Shortcuts.
 

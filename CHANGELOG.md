@@ -12,6 +12,9 @@ appends an Install / Update section when publishing).
 
 ### Improvements
 
+- **A clearer translation menu:** Start capture or live translation directly, see the selected languages, and reveal live controls only while an overlay is active.
+- **Quick Setup and What's New:** First-time users get a short guide to screen access, languages, and their first capture. Existing users see feature highlights once per minor release; both guides remain available from the menu bar.
+
 - **Five interface languages:** Use the app, guides, and website in English, Korean, Japanese, Simplified Chinese, and Traditional Chinese for Taiwan.
 
 - **Capture zoom and pan:** Pinch, scroll, or drag to inspect a capture. Zoom controls sit in the bottom-right status bar; click the percentage to fit the image. Saved and copied images include the full capture at its original resolution.

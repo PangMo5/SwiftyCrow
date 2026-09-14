@@ -33,11 +33,14 @@ injected.
 - [Media provenance](media-manifest.json): selected camera originals, app snapshot,
   source hashes, recording metrics, and publication asset hashes.
 
-The website starts with the harbor travel workflow, then places each focused
-film in its feature section. The builder requires every declared film and selects
-the matching recording for each page language. Generated README files share that
-feature grouping and localized media links. Recordings show development behavior;
-the latest release may differ.
+The website introduces screen translation, then groups recordings by capability.
+The Korean editorial review is in `Edits/README.md`; its live subtitle and game
+recordings are examples of translating changing screen text, not the scope of
+the feature. Describe capture as selecting a screen region or window, and live
+translation as following text changes inside that selection. Keep scene-specific
+language in individual demo descriptions. The builder selects the matching
+recording for each page language; generated README files share the feature
+organization and localized demo links.
 
 ```sh
 swift run --package-path Tools swiftycrow-tools check

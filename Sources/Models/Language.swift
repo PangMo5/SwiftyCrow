@@ -16,7 +16,7 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
 
   var displayName: String {
     if isAuto { return String(localized: "Auto (detect)") }
-    return Locale.current.localizedString(forIdentifier: code) ?? code
+    return Locale.current.localizedString(forIdentifier: localeLanguage.minimalIdentifier) ?? code
   }
 
   /// Whether this is the "detect the source language automatically" sentinel.

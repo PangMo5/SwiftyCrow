@@ -1,8 +1,4 @@
 {
-  "0024c166e4d5d940": {
-    "en": "Image-based instructions, video subtitles, and game dialogue often cannot be selected and copied as text. SwiftyCrow reads them from the screen so you can understand the content while keeping the source application in view.",
-    "ko": "이미지로 된 설명서, 영상 자막, 게임 대사에는 선택해서 복사하기 어려운 글자가 있어요. SwiftyCrow는 화면에서 글자를 읽어, 사용하던 앱을 보면서 내용을 이해할 수 있게 해요."
-  },
   "003e23bd5c5b0bd5": {
     "en": "**Every release exposes its corresponding source:** GitHub release notes and the website now link to the tagged source archive and the third-party notice used for that build.",
     "ja": "**各バージョンのソースを公開：** GitHubのリリースノートとウェブサイトから、対応するタグのソースアーカイブとビルドに使ったサードパーティのライセンスに移動できます。",
@@ -373,13 +369,6 @@
     "zh-Hans": "**自定义快捷键：** 在**设置 → 快捷键**中配置全局区域截图、实时切换、显示切换，以及结果窗口的保存和复制键。",
     "zh-Hant": "**自訂快速鍵：** 在**設定 → 快速鍵**中配置全域區域擷取、即時切換、顯示切換，以及結果視窗的儲存與複製鍵。"
   },
-  "37761a769008f46f": {
-    "en": "**Capture a region:** Trigger **Capture Region** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. Drag the preview’s title area to move the window. Use {0} / {1} to zoom and click the percentage or press {2} to fit; 100% maps each image pixel to one display pixel. The preview supports {3} to save, {4} to copy the image, {5} to copy the original, {6} to copy the translation, and {7} to close. Save and copy always include the complete image at the original capture resolution, regardless of zoom or pan.",
-    "ja": "**範囲をキャプチャ：** 操作パネルかショートカットから**範囲をキャプチャ**を開始し、文章の上をドラッグしてください。**Space**を押すとウインドウ全体を選べます。結果ウインドウはタイトル部分をドラッグして移動できます。{0} / {1}で拡大・縮小し、倍率をクリックするか{2}でウインドウに合わせます。100%では画像の1ピクセルが画面の1ピクセルに対応します。{3}で保存、{4}で画像をコピー、{5}で原文をコピー、{6}で訳文をコピー、{7}で閉じます。保存・コピーには倍率や表示位置に関係なく、元の解像度で画像全体が含まれます。",
-    "ko": "**영역 캡처:** 제어창이나 단축키로 **영역 캡처**를 시작한 뒤 글 위를 드래그해 주세요. **Space**를 누르면 창 전체를 선택할 수 있어요. 결과 창은 제목 부분을 잡아 옮길 수 있어요. {0} / {1}로 확대·축소하고, 배율을 누르거나 {2}로 창에 맞출 수 있어요. 100%는 이미지 픽셀 하나가 화면 픽셀 하나에 대응하는 크기예요. {3}는 저장, {4}는 이미지 복사, {5}는 원문 복사, {6}는 번역문 복사, {7}는 닫기예요. 저장·복사는 현재 확대율이나 이동 위치와 관계없이 전체 이미지를 원본 해상도로 담아요.",
-    "zh-Hans": "**截取区域：** 从控制面板或快捷键启动**截取区域**，再拖动框选文字。按 **Space** 可选择整个窗口。拖动结果窗口的标题区域可移动窗口。用 {0} / {1} 缩放，点击百分比或按 {2} 使图片适合窗口；100% 表示一个图片像素对应一个屏幕像素。{3} 保存、{4} 复制图片、{5} 复制原文、{6} 复制译文、{7} 关闭。无论当前缩放比例或平移位置如何，保存和复制都会包含原始分辨率的完整图片。",
-    "zh-Hant": "**擷取區域：** 從控制面板或快速鍵啟動**擷取區域**，再拖移框選文字。按 **Space** 可選取整個視窗。拖移結果視窗的標題區域即可移動視窗。用 {0} / {1} 縮放，點按百分比或按 {2} 讓影像配合視窗；100% 表示一個影像像素對應一個螢幕像素。{3} 儲存、{4} 複製影像、{5} 複製原文、{6} 複製譯文、{7} 關閉。無論目前縮放比例或平移位置為何，儲存與複製都會包含原始解析度的完整影像。"
-  },
   "37ced2eae9574038": {
     "en": "**Downloading... (gray):** The download is in progress. Wait for it to finish.",
     "ja": "**ダウンロード中（灰色）：** ダウンロードが進行中です。完了するまでお待ちください。",
@@ -521,9 +510,9 @@
     "zh-Hans": "无法使用翻译框架",
     "zh-Hant": "無法使用翻譯框架"
   },
-  "509d7e746a7058e8": {
-    "en": "The overview demonstrates region capture, translation, and copying the translated text into a note. Feature demos below cover image copying, changing subtitles, a separate translation window, and vertical text recognition.",
-    "ko": "대표 영상은 영역 캡처, 번역, 번역문을 메모에 붙여넣는 순서로 구성되어 있어요. 아래 기능별 영상에서는 이미지 복사, 바뀌는 자막, 별도 번역 창, 세로쓰기 인식을 확인할 수 있어요."
+  "50544958335d0213": {
+    "en": "**Show or hide translation:** The **Show overlay** switch shows or hides translation in the selected area. Hiding it stops capture and translation; showing it resumes in the same area.",
+    "ko": "**번역 표시·숨기기:** **오버레이 표시** 스위치로 선택한 영역의 번역을 켜고 끌 수 있어요. 끄면 캡처와 번역이 멈추고, 다시 켜면 같은 영역에서 이어서 번역해요."
   },
   "50fad618b212ebf4": {
     "en": "SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails or SwiftyCrow shows a **\"Translation model not installed\"** hint, the model for the detected language usually is not downloaded yet.",
@@ -609,6 +598,10 @@
     "zh-Hans": "如果觉得翻译较慢：",
     "zh-Hant": "如果覺得翻譯較慢："
   },
+  "58fd61a3305a7929": {
+    "en": "The {0} shortcut and the **Show overlay** switch show or hide translation in the selected area. Turning it off stops capture and translation. Turning it back on uses the remembered area. The switch is disabled until an area has been selected; the shortcut does nothing without a saved area.",
+    "ko": "{0} 단축키와 **오버레이 표시** 스위치로 선택한 영역의 번역을 켜고 끌 수 있어요. 끄면 캡처와 번역이 멈추고, 다시 켜면 기억한 영역을 사용해요. 영역을 고르기 전에는 스위치가 비활성화되며 단축키도 동작하지 않아요."
+  },
   "59b28260faec9163": {
     "en": "**Renamed live overlay shortcut:** {0} is renamed to {1}. It now starts or replaces the live overlay by selecting a region, with Space available to pick a window. An old {2} entry is ignored. Re-add the binding under {3} or in Settings → Shortcuts.",
     "ja": "**ライブ翻訳ショートカットの名前を変更：** {0}が{1}になりました。範囲の選択でライブ翻訳を開始・変更でき、Spaceでウインドウも選べます。以前の{2}は無視されるため、{3}または設定 → ショートカットに割り当て直してください。",
@@ -629,10 +622,6 @@
     "ko": "**다운로드(파란색):** 모델이 설치되어 있지 않아요. 눌러서 다운로드할 수 있어요.",
     "zh-Hans": "**下载（蓝色）：** 模型尚未安装，点击即可下载。",
     "zh-Hant": "**下載（藍色）：** 模型尚未安裝，點按即可下載。"
-  },
-  "5b356504ab109159": {
-    "en": "**Choose the right mode:** Use capture for a still image and live translation for content that continues to change.",
-    "ko": "**내용에 맞는 번역 방식:** 한 장의 이미지는 캡처 번역으로, 계속 바뀌는 글은 실시간 번역으로 읽어요."
   },
   "5bb5d4bf057465b7": {
     "en": "**How much space?** Download size depends on the language and model. Install the languages you use and remove unused downloads when you need disk space.",
@@ -860,6 +849,10 @@
     "zh-Hans": "文档",
     "zh-Hant": "文件"
   },
+  "7bbb1915d8b26eeb": {
+    "en": "The overview shows how to capture screen text, translate it, and copy the result into a note. The feature videos below demonstrate examples of image copying, live updates, a separate translation window, and vertical text recognition.",
+    "ko": "대표 영상에서는 화면의 글을 캡처해 번역하고 메모에 붙여넣는 흐름을 보여줘요. 아래 기능별 영상은 이미지 복사, 실시간 갱신, 별도 번역 창, 세로쓰기 인식을 활용하는 예시예요."
+  },
   "7c15be2e1fe639b5": {
     "en": "Switch the live display between In-place and Window",
     "ja": "原文に重ねる表示と別ウインドウの表示を切り替えます。",
@@ -938,13 +931,6 @@
     "zh-Hans": "出现无法翻译错误",
     "zh-Hant": "出現無法翻譯錯誤"
   },
-  "84939e9ac4469a83": {
-    "en": "**Use the live overlay:** Trigger **Live overlay…** from the menu bar or your hotkey, then drag a region or press **Space** to click a window. Use the **LIVE** handle to pause or resume, {0} to copy the joined translation, and **×** to close.",
-    "ja": "**ライブ翻訳：** メニューバーまたはショートカットから**ライブ翻訳…**を開始し、範囲をドラッグするか**Space**でウインドウを選んでください。**ライブ**ボタンで一時停止・再開し、{0}で訳文全体をコピー、**×**で閉じられます。",
-    "ko": "**실시간 번역:** 메뉴 막대나 단축키에서 **실시간 번역…**을 시작하고 영역을 드래그하거나 **Space**로 창을 선택해 주세요. **실시간** 버튼으로 멈추거나 다시 시작하고, {0}로 번역문 전체를 복사하고, **×**로 닫을 수 있어요.",
-    "zh-Hans": "**使用实时翻译：** 从菜单栏或快捷键启动**实时翻译…**，拖动选择区域，或按 **Space** 选择窗口。**实时**按钮可暂停或继续，{0} 可复制全部译文，**×**可关闭。",
-    "zh-Hant": "**使用即時翻譯：** 從選單列或快速鍵啟動**即時翻譯…**，拖移選取區域，或按 **Space** 選取視窗。**即時**按鈕可暫停或繼續，{0} 可複製全部譯文，**×**可關閉。"
-  },
   "861820293c20d97b": {
     "en": "This README and {0} contain earlier documentation contributions made under MPL-2.0 and remain available under either [MPL-2.0]({1}) or AGPL-3.0-only, as indicated in those files. The project was originally MIT-licensed in 2021 and moved to MPL-2.0, then AGPL-3.0-only, in 2026.",
     "ja": "このREADMEと{0}には、MPL-2.0で提供された以前の文書の寄稿が含まれています。各ファイルの表示どおり、[MPL-2.0]({1})またはAGPL-3.0-onlyのどちらかで利用できます。プロジェクトは2021年にMITライセンスで始まり、2026年にMPL-2.0を経てAGPL-3.0-onlyへ移行しました。",
@@ -958,13 +944,6 @@
     "ko": "쓰지 않는 언어 옆의 **제거**를 눌러 주세요.",
     "zh-Hans": "点击不常用语言旁的**移除**。",
     "zh-Hant": "點按不常用語言旁的**移除**。"
-  },
-  "87bf66ede7df9013": {
-    "en": "On first launch, grant **Screen Recording** permission in System Settings → Privacy & Security, then relaunch the app. The app keeps itself up to date afterward.",
-    "ja": "初回起動時は、システム設定 → プライバシーとセキュリティで**画面収録**を許可してから、アプリを再起動してください。その後のアップデートはアプリから確認できます。",
-    "ko": "처음 실행하면 시스템 설정 → 개인정보 보호 및 보안에서 **화면 기록**을 허용한 뒤 앱을 다시 실행해 주세요. 이후 앱에서 업데이트를 확인할 수 있어요.",
-    "zh-Hans": "首次启动时，请在系统设置 → 隐私与安全性中允许**屏幕录制**，然后重新启动应用。之后可通过应用获取更新。",
-    "zh-Hant": "首次啟動時，請在系統設定 → 隱私權與安全性中允許**螢幕錄製**，再重新啟動 App。之後可透過 App 取得更新。"
   },
   "88a34715f81e4191": {
     "en": "**{0}:** Source and target language pair",
@@ -1040,6 +1019,10 @@
     "zh-Hans": "如果模型安装遇到问题，或翻译仍然失败：",
     "zh-Hant": "如果模型安裝遇到問題，或翻譯仍然失敗："
   },
+  "93febea66ebc3b01": {
+    "en": "**Choose the right mode:** Use capture to translate the screen once, or live translation to keep reading as the text changes.",
+    "ko": "**내용에 맞는 번역 방식:** 한 번 읽고 가져올 때는 캡처 번역을, 바뀌는 글을 이어서 읽을 때는 실시간 번역을 사용해요."
+  },
   "955602605d1000a2": {
     "en": "Copy the original text",
     "ja": "原文をコピー",
@@ -1109,6 +1092,10 @@
     "ko": "**언어 모델 미설치 안내:** 모델이 없을 때 다음에 할 일을 알려드려요. 캡처한 언어의 모델이 없으면 결과 창, 실시간 번역, 별도 창, 메뉴 막대에 미설치 안내가 나와요. **설정 열기**로 다운로드 위치로 이동하고, **다시 보지 않기**로 안내를 숨길 수 있어요.",
     "zh-Hans": "**缺少语言模型时提供指引：** 未安装模型时会提示下一步操作。截图语言的模型缺失时，结果窗口、实时翻译、独立窗口和菜单栏都会显示提示。**打开设置**可前往下载位置，**不再显示**可隐藏提醒。",
     "zh-Hant": "**缺少語言模型時提供指引：** 未安裝模型時會提示下一步操作。擷取語言的模型缺少時，結果視窗、即時翻譯、獨立視窗與選單列都會顯示提示。**開啟設定**可前往下載位置，**不再顯示**可隱藏提醒。"
+  },
+  "9ac286487820d6c1": {
+    "en": "**A clearer translation menu:** Start capture or live translation directly, see the selected languages, and reveal live controls only while an overlay is active.",
+    "ko": "**더 편해진 번역 메뉴:** 캡처와 실시간 번역을 바로 시작하고 선택한 언어를 확인할 수 있어요. 실시간 번역을 켰을 때만 해당 제어 도구가 나타나요."
   },
   "9c1761c037a2ec38": {
     "en": "**Region capture:** Drag to select any area of the screen. It is OCR'd and translated, then shown in a borderless preview window with each line's box **blurred** and the translation drawn on top. {0} saves a PNG (timestamped), {1} copies the image, {2}/{3} copy the original/translated text, and {4} closes.",
@@ -1279,6 +1266,10 @@
     "zh-Hans": "**Mac 支持的语言：** 可选择 macOS 支持的源语言和目标语言。翻译前请下载所需模型。将源语言设为**自动检测**，即可逐行识别混合语言的内容。",
     "zh-Hant": "**Mac 支援的語言：** 可選擇 macOS 支援的原文語言與翻譯語言。翻譯前請下載所需模型。將原文語言設為**自動偵測**，即可逐行辨識混合語言的內容。"
   },
+  "ae5c1e57286ead5c": {
+    "en": "Quick Setup guides first-time users through screen access, language downloads, and their first capture. Your step and selected language are saved before opening System Settings, so setup resumes if macOS quits and reopens the app. Permission status is also available in Settings → General → Permissions.",
+    "ko": "처음 실행하면 빠른 시작에서 화면 기록 권한, 언어 다운로드, 첫 캡처를 안내해요. 시스템 설정을 열기 전에 단계와 선택한 언어를 저장하므로, macOS가 앱을 종료하고 다시 열어도 이어서 진행할 수 있어요. 설정 → 일반 → 권한에서도 현재 상태를 확인할 수 있어요."
+  },
   "afdb687fbbdcf7e4": {
     "en": "Xcode 26.4+ with Swift 6.3 and the macOS 26.4 SDK or newer",
     "ja": "Swift 6.3とmacOS 26.4 SDK以降を含むXcode 26.4以降",
@@ -1335,12 +1326,9 @@
     "zh-Hans": "⚠️ 不兼容变更",
     "zh-Hant": "⚠️ 不相容變更"
   },
-  "b4def6409cf30eb8": {
-    "en": "Once you've placed it, the region is remembered. The {0} shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the overlay on and off over that same region without dragging again. Hiding it stops all capture and translation. Showing it re-places on the remembered region and goes live. That's the \"predefine an area, then translate it on demand\" flow.",
-    "ja": "一度配置した範囲は記憶されます。{0}ショートカットやメニューの**前回の範囲に表示**／**ライブ翻訳を非表示**で、選び直さず同じ場所の表示を切り替えられます。非表示にするとキャプチャと翻訳をすべて停止し、再表示すると保存した範囲でライブ翻訳を始めます。範囲を決めて、必要なときだけ翻訳する使い方です。",
-    "ko": "한 번 배치한 영역은 기억해요. {0} 단축키나 메뉴의 **지난 영역에 표시** / **실시간 번역 숨기기**로 다시 선택하지 않고 같은 위치에서 켜고 끌 수 있어요. 숨기면 캡처와 번역을 모두 멈추고, 다시 표시하면 저장한 영역에서 실시간 번역을 시작해요. 영역을 미리 정해 두고 필요할 때 번역하는 방식이에요.",
-    "zh-Hans": "放置后的区域会被记住。使用 {0} 快捷键，或菜单中的**在上次区域显示**／**隐藏实时翻译**，即可在同一位置切换，无需重新选择。隐藏会停止所有截图和翻译，再次显示会恢复该区域并开始实时翻译，实现预设区域、按需使用。",
-    "zh-Hant": "放置後的區域會被記住。使用 {0} 快速鍵，或選單中的**顯示在上次區域**／**隱藏即時翻譯**，即可在相同位置切換，不必重新選取。隱藏會停止所有擷取與翻譯，再次顯示會還原該區域並開始即時翻譯，實現預設區域、隨需使用。"
+  "b505eb90564f86e7": {
+    "en": "**Capture a region:** Trigger **Capture translation** from the popover or your hotkey, then drag over the text. You can also press **Space** to highlight and click a whole window. Drag the preview’s title area to move the window. Use {0} / {1} to zoom and click the percentage or press {2} to fit; 100% maps each image pixel to one display pixel. The preview supports {3} to save, {4} to copy the image, {5} to copy the original, {6} to copy the translation, and {7} to close. Save and copy always include the complete image at the original capture resolution, regardless of zoom or pan.",
+    "ko": "**영역 캡처:** 제어창이나 단축키로 **캡처 번역**을 시작한 뒤 글 위를 드래그해 주세요. **Space**를 누르면 창 전체를 선택할 수 있어요. 결과 창은 제목 부분을 잡아 옮길 수 있어요. {0} / {1}로 확대·축소하고, 배율을 누르거나 {2}로 창에 맞출 수 있어요. 100%는 이미지 픽셀 하나가 화면 픽셀 하나에 대응하는 크기예요. {3}는 저장, {4}는 이미지 복사, {5}는 원문 복사, {6}는 번역문 복사, {7}는 닫기예요. 저장·복사는 현재 확대율이나 이동 위치와 관계없이 전체 이미지를 원본 해상도로 담아요."
   },
   "b52bd073830e3b13": {
     "en": "If using **Auto** source, install models for all languages that might appear in your captures",
@@ -1549,6 +1537,10 @@
     "zh-Hans": "改进",
     "zh-Hant": "改善"
   },
+  "c47df932d93d72bc": {
+    "en": "Text on a webpage, in an image, or inside an app isn't always easy to select and copy. SwiftyCrow reads it from the screen so you can translate it while keeping the source application in view.",
+    "ko": "웹페이지, 이미지, 앱 화면의 글을 선택하거나 복사하기 어려울 때가 있어요. SwiftyCrow는 화면에서 글자를 읽어, 사용하던 앱을 그대로 보면서 번역할 수 있게 해요."
+  },
   "c4885b75d00dd40b": {
     "en": "**Automatic pass-through:** Pass-through is automatic. Once a translation is on screen, clicks and scrolling pass through to the app underneath while the edges still resize and the badge still drags. Only the idle guide stays interactive.",
     "ja": "**自動で入力を透過：** 訳文が表示されるとクリックやスクロールは背後のアプリに届きます。端でのサイズ変更とバッジのドラッグは引き続き使え、待機ガイドだけが入力を受け取ります。",
@@ -1641,6 +1633,10 @@
     "zh-Hans": "**正确显示所选语言：** 配置文件中的等效短语言代码现在能匹配系统语言选择器。",
     "zh-Hant": "**正確顯示所選語言：** 設定檔中的等效短語言代碼現在能對應系統語言選擇器。"
   },
+  "d0bb257d75cd2b19": {
+    "en": "**Quick Setup and What's New:** First-time users get a short guide to screen access, languages, and their first capture. Existing users see feature highlights once per minor release; both guides remain available from the menu bar.",
+    "ko": "**빠른 시작과 새로운 기능 안내:** 처음 사용하는 분에게는 화면 기록 권한, 언어 설정, 첫 캡처를 짧게 안내해요. 기존 사용자는 새 기능 릴리스마다 주요 변경을 한 번 확인하며, 두 안내 모두 메뉴 막대에서 다시 열 수 있어요."
+  },
   "d1a686e83f15b103": {
     "en": "Click **Download** next to your source *and* target language. With **Auto** source, install every language that might appear in your captures",
     "ja": "原文と翻訳先の**両方**の言語で**ダウンロード**を押してください。原文が**自動検出**の場合は、キャプチャに含まれそうな言語をすべてインストールしてください。",
@@ -1658,13 +1654,6 @@
     "ko": "마우스를 올리면 번역 화면을 숨겨 뒤쪽 원문을 읽을 수 있게 해요.",
     "zh-Hans": "鼠标悬停时隐藏翻译层，便于阅读下方原文。",
     "zh-Hant": "游標停留時隱藏翻譯層，方便閱讀下方原文。"
-  },
-  "d334e5e7e7711650": {
-    "en": "Place the overlay by selecting a region or window (menu bar → **Live overlay…**, or the {0} shortcut), and it starts translating live right away. The translation area lets clicks pass through to the app below; controls, resize edges, and an open information popover receive input. Use **LIVE** to pause or resume and **×** to close it.",
-    "ja": "メニューバーの**ライブ翻訳…**または{0}ショートカットで範囲やウインドウを選ぶと、ライブ翻訳が始まります。本文範囲のクリックは背後のアプリに届き、操作ボタン・サイズ変更の端・開いている情報ポップオーバーは入力を受け取ります。**ライブ**で一時停止・再開し、**×**で閉じられます。",
-    "ko": "메뉴 막대의 **실시간 번역…** 또는 {0} 단축키로 영역이나 창을 선택하면 바로 실시간 번역이 시작돼요. 본문 영역의 클릭은 뒤쪽 앱으로 전달되고, 제어 버튼·크기 조절 가장자리·열린 정보창은 입력을 받아요. **실시간**으로 멈추거나 다시 시작하고 **×**로 닫을 수 있어요.",
-    "zh-Hans": "从菜单栏的**实时翻译…**或 {0} 快捷键选择区域或窗口，即可开始实时翻译。正文区域的点击会传递给下方应用，控件、调整大小的边缘和已打开的信息窗口会接收输入。用**实时**按钮暂停或继续，**×**关闭。",
-    "zh-Hant": "從選單列的**即時翻譯…**或 {0} 快速鍵選取區域或視窗，即可開始即時翻譯。本文區域的點按會傳遞給下方 App，控制項、調整大小的邊緣與開啟的資訊視窗會接收輸入。用**即時**按鈕暫停或繼續，**×**關閉。"
   },
   "d44bf6155602857d": {
     "en": "**Display modes:** Place translation over the source or in a separate window beside it.",
@@ -1849,6 +1838,10 @@
     "zh-Hans": "**现代 macOS 26+ API：** 面向 **macOS 26 及以上版本**，使用 {0}、{1} 和直接调用的 {2} API。",
     "zh-Hant": "**現代 macOS 26+ API：** 以 **macOS 26 以上版本**為目標，使用 {0}、{1} 與直接呼叫的 {2} API。"
   },
+  "e734c546c2283e68": {
+    "en": "**Use live translation:** Click **Live translation** to select a region or window. Click it again to choose a new area. Use the adjacent **Show overlay** switch to show or hide the selected area; it is disabled until an area has been selected. Use **LIVE** on the overlay to pause or resume, {0} to copy the joined translation, and **×** to close.",
+    "ko": "**실시간 번역:** **실시간 번역** 버튼을 눌러 영역이나 창을 고르세요. 다시 누르면 새 영역을 선택할 수 있어요. 옆의 **오버레이 표시** 스위치는 선택한 영역을 켜고 끄며, 아직 영역을 고르지 않았다면 비활성화돼요. 오버레이의 **실시간** 버튼으로 멈추거나 다시 시작하고, {0}로 번역문 전체를 복사하고, **×**로 닫을 수 있어요."
+  },
   "e7d78a09199169d6": {
     "en": "If neither strategy has an installed model, the error names the language pair. An installed Apple Intelligence model does not imply that the corresponding Low Latency model is installed.",
     "ja": "どちらの方式のモデルもない場合、エラーに言語の組み合わせを表示します。Apple Intelligenceのモデルがインストールされていても、速度優先のモデルまでインストールされているとは限りません。",
@@ -1933,6 +1926,10 @@
     "zh-Hans": "**{0}：** 全局快捷键和截图窗口快捷键",
     "zh-Hant": "**{0}：** 全域快速鍵與擷取視窗快速鍵"
   },
+  "ee44ba724a2fc969": {
+    "en": "Click **Live translation** in the menu bar or use the {0} shortcut to select a region or window. Clicking the button again chooses a new area. The translation area lets clicks pass through to the app below; controls, resize edges, and an open information popover receive input. Use **LIVE** to pause or resume and **×** to close it.",
+    "ko": "메뉴 막대의 **실시간 번역** 버튼이나 {0} 단축키로 영역 또는 창을 고르세요. 버튼을 다시 누르면 새 영역을 선택해요. 본문 영역의 클릭은 뒤쪽 앱으로 전달되고, 제어 버튼·크기 조절 가장자리·열린 정보창은 입력을 받아요. **실시간**으로 멈추거나 다시 시작하고 **×**로 닫을 수 있어요."
+  },
   "eeba37cf8a29f6b9": {
     "en": "**Crisp region captures:** Dragged selections align to display pixels, avoiding an extra resampled row or column before text recognition.",
     "ja": "**鮮明な範囲キャプチャ：** ドラッグで選択した範囲を画面のピクセルに合わせ、文字認識の前に余分な1行や1列へ画像が再サンプリングされるのを防ぎます。",
@@ -1982,13 +1979,6 @@
     "zh-Hans": "等待所有下载完成，系统设置中可能显示进度。",
     "zh-Hant": "等待所有下載完成，系統設定中可能會顯示進度。"
   },
-  "f0a1a772c03a7b9f": {
-    "en": "**Reuse a fixed area:** Once the overlay is placed, **Show / hide overlay** toggles it over the same region without another drag. Hiding it stops all capture and translation.",
-    "ja": "**同じ範囲を再利用：** 範囲を一度決めると、**ライブ翻訳を表示／非表示**で同じ場所の表示を切り替えられます。非表示にするとキャプチャと翻訳をすべて停止します。",
-    "ko": "**같은 영역 다시 사용:** 한 번 영역을 정하면 **실시간 번역 표시 / 숨기기**로 같은 위치에서 켜고 끌 수 있어요. 숨기면 캡처와 번역을 모두 멈춰요.",
-    "zh-Hans": "**复用固定区域：** 选定区域后，使用**显示或隐藏实时翻译**即可在同一位置切换。隐藏后会停止所有截图和翻译。",
-    "zh-Hant": "**重複使用固定區域：** 選定區域後，使用**顯示或隱藏即時翻譯**即可在相同位置切換。隱藏後會停止所有擷取與翻譯。"
-  },
   "f20a1cea76f12682": {
     "en": "**Two translation modes:** Choose **Low latency** for speed or **High fidelity** for Apple Intelligence where supported on macOS 26.4 and later.",
     "ja": "**2つの翻訳方式：** 速さを優先するなら**速度優先**、対応デバイスのmacOS 26.4以降でApple Intelligenceを使うなら**品質優先**を選べます。",
@@ -2017,6 +2007,10 @@
     "zh-Hans": "只有部分语言可以翻译",
     "zh-Hant": "只有部分語言可以翻譯"
   },
+  "f65168ab3c1713fd": {
+    "en": "**Separate window:** Read translations beside the source app without covering its content. As the text changes, the same translation window updates.",
+    "ko": "**별도 번역 창:** 원래 앱의 화면을 가리지 않고 옆에서 번역문을 읽어요. 글이 바뀌면 같은 번역 창에서 갱신돼요."
+  },
   "f6662c7a2553c1ca": {
     "en": "**On-device processing:** Processing is 100% on-device with ScreenCaptureKit + Vision OCR + Apple Translation.",
     "ja": "**オンデバイス処理：** ScreenCaptureKit、Vision OCR、Apple翻訳を使い、すべての処理をデバイス上で行います。",
@@ -2030,10 +2024,6 @@
     "ko": "SwiftyCrow를 다시 실행하고 시도해 주세요.",
     "zh-Hans": "重新启动 SwiftyCrow 后再试。",
     "zh-Hant": "重新啟動 SwiftyCrow 後再試。"
-  },
-  "f72729c2c1c7407e": {
-    "en": "**Separate window:** Keep game artwork or other source content visible while reading the translated text elsewhere. New dialogue updates in the same translation window.",
-    "ko": "**별도 번역 창:** 게임 그림이나 원래 화면을 가리지 않고 번역문을 다른 위치에서 읽어요. 새 대사도 같은 번역 창에서 갱신돼요."
   },
   "f8162d4d274c5452": {
     "en": "The in-app hint has an **Open Settings** button that jumps straight there, plus **Don't show again** once you no longer need the reminder. Models are managed by macOS and stored locally. Remove unused models from the same panel to free disk space.",

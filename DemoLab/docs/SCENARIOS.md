@@ -6,6 +6,12 @@ uses only the capture/copy/paste prefix of `tour` and ends `live` after the seco
 caption; the website groups `compare` under Live. Other language edits wait for
 Korean approval. Keep these original fixture contracts intact for provenance.
 
+Product copy should define capabilities before introducing these scenarios.
+Live translation applies to changing text in a selected screen region or window;
+subtitles and game dialogue are two examples. Capture applies to a selected
+region or window, including webpages and app interfaces, not only image files.
+Keep the concrete source descriptions below as recording instructions.
+
 ## Product point of view
 
 SwiftyCrow translates pixels in the app a person is already using. The hero

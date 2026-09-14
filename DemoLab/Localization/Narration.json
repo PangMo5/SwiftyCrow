@@ -46,7 +46,7 @@
     "compare.chapter": {
       "en": "Game dialogue",
       "ja": "ゲームの会話",
-      "ko": "게임 옆에서 대사 번역",
+      "ko": "별도 번역 창 · 게임 활용 예시",
       "zh-Hans": "游戏对话",
       "zh-Hant": "遊戲對話"
     },
@@ -67,7 +67,7 @@
     "compare.next": {
       "en": "Continue the conversation in the game. | The translation window follows the new dialogue.",
       "ja": "ゲームで次の会話へ。 | 別ウインドウも新しい会話に更新されます。",
-      "ko": "다음 대화도 이어서 번역해요.",
+      "ko": "내용이 바뀌면 같은 창에 번역해요.",
       "zh-Hans": "在游戏中继续对话。 | 翻译窗口更新为新的台词。",
       "zh-Hant": "在遊戲中繼續對話。 | 翻譯視窗更新為新的台詞。"
     },
@@ -81,7 +81,7 @@
     "compare.select": {
       "en": "Select the game dialogue. | Start live translation on that region.",
       "ja": "会話の範囲を選択。 | その範囲でライブ翻訳を始めます。",
-      "ko": "대사 영역에 실시간 번역을 켜요.",
+      "ko": "번역할 영역을 지정해요.",
       "zh-Hans": "选取游戏对话区域。 | 在该区域开启实时翻译。",
       "zh-Hant": "選取遊戲對話區域。 | 在該區域開啟即時翻譯。"
     },
@@ -137,14 +137,14 @@
     "live.chapter": {
       "en": "A playing video",
       "ja": "再生中の動画",
-      "ko": "재생 중인 자막 번역",
+      "ko": "실시간 번역 · 영상 활용 예시",
       "zh-Hans": "播放中的视频",
       "zh-Hant": "播放中的影片"
     },
     "live.intro": {
       "en": "Read subtitles as the video keeps playing.",
       "ja": "動画を見ながら、字幕を読む。",
-      "ko": "외국어 자막만 있는 영상도 편하게 보세요.",
+      "ko": "영상 자막을 읽을 때도 활용할 수 있어요.",
       "zh-Hans": "一边看视频，一边读字幕。",
       "zh-Hant": "一邊看影片，一邊讀字幕。"
     },
@@ -158,14 +158,14 @@
     "live.second": {
       "en": "A new caption replaces the previous one. | Translation follows the source change.",
       "ja": "次の字幕へ、翻訳も更新。 | 前の文から新しい内容に切り替わります。",
-      "ko": "자막이 바뀌면 번역도 따라와요. | 다시 캡처하지 않아도 돼요.",
+      "ko": "영역 안의 글이 바뀌면 이어서 번역해요. | 다시 캡처하지 않아도 돼요.",
       "zh-Hans": "新字幕替换上一句。 | 翻译随原文变化而更新。",
       "zh-Hant": "新字幕取代上一句。 | 翻譯隨原文變化而更新。"
     },
     "live.select": {
       "en": "Select only the subtitle area. | The picture stays visible above it.",
       "ja": "字幕の範囲だけを選択。 | 上の映像はそのまま見られます。",
-      "ko": "자막이 나오는 영역을 한 번 지정해요.",
+      "ko": "번역할 영역을 한 번 지정해요.",
       "zh-Hans": "只选取字幕区域。 | 上方画面保持可见。",
       "zh-Hant": "只選取字幕區域。 | 上方畫面保持可見。"
     },

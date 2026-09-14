@@ -69,16 +69,9 @@ code = "ko-KR"
 
 ## `[overlay]`
 
-Place the overlay by selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
-shortcut), and it starts translating live right away. The translation area lets
-clicks pass through to the app below; controls, resize edges, and an open information
-popover receive input. Use **LIVE** to pause or resume and **×** to close it.
+Click **Live translation** in the menu bar or use the `liveOverlay` shortcut to select a region or window. Clicking the button again chooses a new area. The translation area lets clicks pass through to the app below; controls, resize edges, and an open information popover receive input. Use **LIVE** to pause or resume and **×** to close it.
 
-Once you've placed it, the region is remembered. The `toggleLiveOverlay`
-shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the
-overlay on and off over that same region without dragging again. Hiding it stops
-all capture and translation. Showing it re-places on the remembered region and
-goes live. That's the "predefine an area, then translate it on demand" flow.
+The `toggleLiveOverlay` shortcut and the **Show overlay** switch show or hide translation in the selected area. Turning it off stops capture and translation. Turning it back on uses the remembered area. The switch is disabled until an area has been selected; the shortcut does nothing without a saved area.
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -12,22 +12,24 @@ import SwiftUI
 /// form per pane on the right. Mirrors the sibling Tatami / Amado apps.
 struct SettingsView: View {
 
-  // MARK: Internal
-
   let store: StoreOf<SettingsFeature>
 
   var body: some View {
     NavigationSplitView {
       // `id: \.self` so the ForEach id type matches the optional selection
       // type — macOS only wires the selection gesture when they line up.
-      List(Pane.allCases, id: \.self, selection: $pane) { pane in
+      List(
+        SettingsPane.allCases,
+        id: \.self,
+        selection: Binding(get: { Optional(store.pane) }, set: { if let pane = $0 { store.send(.paneSelected(pane)) } })
+      ) { pane in
         Label(pane.title, systemImage: pane.icon)
       }
       .listStyle(.sidebar)
       .navigationSplitViewColumnWidth(min: 170, ideal: 190)
     } detail: {
       Form {
-        switch pane ?? .general {
+        switch store.pane {
         case .general: GeneralSection(store: store)
         case .languages: LanguagesSection(store: store)
         case .translation: TranslationSection()
@@ -38,55 +40,57 @@ struct SettingsView: View {
         }
       }
       .formStyle(.grouped)
-      .navigationTitle(Text((pane ?? .general).title))
+      .navigationTitle(Text((store.pane).title))
     }
     .frame(minWidth: 640, minHeight: 460)
-    .task { store.send(.task) }
+    .task { await store.send(.task).finish() }
+    .onDisappear { store.send(.taskEnded) }
   }
 
   // MARK: Private
 
-  private enum Pane: String, CaseIterable, Identifiable {
-    case general
-    case languages
-    case translation
-    case overlay
-    case shortcuts
-    case updates
-    case about
+}
 
-    // MARK: Internal
+// MARK: - SettingsPane
 
-    var id: String {
-      rawValue
-    }
+enum SettingsPane: String, CaseIterable, Identifiable {
+  case general
+  case languages
+  case translation
+  case overlay
+  case shortcuts
+  case updates
+  case about
 
-    var title: LocalizedStringResource {
-      switch self {
-      case .general: "General"
-      case .languages: "Languages"
-      case .translation: "Translation"
-      case .overlay: "Overlay"
-      case .shortcuts: "Shortcuts"
-      case .updates: "Updates"
-      case .about: "About"
-      }
-    }
+  // MARK: Internal
 
-    var icon: String {
-      switch self {
-      case .general: "gearshape"
-      case .languages: "globe"
-      case .translation: "character.bubble"
-      case .overlay: "rectangle.dashed"
-      case .shortcuts: "command"
-      case .updates: "arrow.down.circle"
-      case .about: "info.circle"
-      }
+  var id: String {
+    rawValue
+  }
+
+  var title: LocalizedStringResource {
+    switch self {
+    case .general: "General"
+    case .languages: "Languages"
+    case .translation: "Translation"
+    case .overlay: "Overlay"
+    case .shortcuts: "Shortcuts"
+    case .updates: "Updates"
+    case .about: "About"
     }
   }
 
-  @State private var pane: Pane? = .general
+  var icon: String {
+    switch self {
+    case .general: "gearshape"
+    case .languages: "globe"
+    case .translation: "character.bubble"
+    case .overlay: "rectangle.dashed"
+    case .shortcuts: "command"
+    case .updates: "arrow.down.circle"
+    case .about: "info.circle"
+    }
+  }
 }
 
 // MARK: - GeneralSection
@@ -105,6 +109,17 @@ private struct GeneralSection: View {
       }
     } header: {
       Text("General")
+    }
+    Section("Permissions") {
+      ScreenRecordingPermissionRow(
+        granted: store.hasScreenRecording,
+        isRequesting: store.isRequestingAccess,
+        grant: { store.send(.grantScreenRecordingTapped) },
+        openSettings: { store.send(.openScreenRecordingSettingsTapped) }
+      )
+      if !store.hasScreenRecording {
+        PermissionRelaunchNotice(isRelaunching: store.isRelaunching, error: store.relaunchError) { store.send(.relaunchTapped) }
+      }
     }
   }
 }
@@ -331,7 +346,7 @@ private struct AboutSection: View {
         VStack(alignment: .leading, spacing: 2) {
           Text("SwiftyCrow")
             .font(.title2.weight(.semibold))
-          Text("On-device screen translator")
+          Text("Translate anything on your screen.\nEntirely on your Mac.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -345,7 +360,12 @@ private struct AboutSection: View {
         Link("PangMo5", destination: URL(string: "https://github.com/PangMo5")!)
       }
       Link("Source Code", destination: URL(string: "https://github.com/PangMo5/SwiftyCrow")!)
+      Button("View Changelog…") { showsChangelog = true }
+        .buttonStyle(.link)
+        .accessibilityIdentifier("about-changelog")
     }
+
+    .sheet(isPresented: $showsChangelog) { BundledDocumentView(document: .changelog) }
 
     Section("Legal") {
       LabeledContent("Copyright", value: "© 2021–2026 PangMo5 and contributors")
@@ -355,7 +375,7 @@ private struct AboutSection: View {
       .font(.caption)
       .foregroundStyle(.secondary)
 
-      ForEach(LegalDocument.allCases) { document in
+      ForEach([BundledDocument.license, .thirdPartyNotices]) { document in
         Button {
           presentedDocument = document
         } label: {
@@ -365,7 +385,7 @@ private struct AboutSection: View {
       }
     }
     .sheet(item: $presentedDocument) { document in
-      LegalDocumentView(document: document)
+      BundledDocumentView(document: document)
     }
 
     Section("Built with") {
@@ -394,138 +414,11 @@ private struct AboutSection: View {
     return "\(short) (\(build))"
   }()
 
-  @State private var presentedDocument: LegalDocument?
+  @State private var presentedDocument: BundledDocument?
+  @State private var showsChangelog = false
 
   private func creditLink(_ title: String, _ urlString: String) -> some View {
     Link(title, destination: URL(string: urlString)!)
   }
-
-}
-
-// MARK: - LegalDocument
-
-/// A legal document shipped in the app bundle and presented without relying on
-/// Launch Services or an external text editor.
-private enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
-  case license
-  case thirdPartyNotices
-
-  // MARK: Internal
-
-  var id: Self {
-    self
-  }
-
-  var title: LocalizedStringResource {
-    switch self {
-    case .license: "License (AGPL-3.0-only)"
-    case .thirdPartyNotices: "Third-Party Notices"
-    }
-  }
-
-  func loadContents() async throws -> String {
-    let resource = resource
-    guard
-      let url = Bundle.main.url(
-        forResource: resource.name,
-        withExtension: resource.extension
-      )
-    else {
-      throw CocoaError(.fileNoSuchFile)
-    }
-
-    let locale = Bundle.main.preferredLocalizations.first ?? "en"
-    let overview: URL?
-    if self == .thirdPartyNotices, locale != "en" {
-      guard
-        let localized = Bundle.main.url(
-          forResource: "THIRD_PARTY_NOTICES",
-          withExtension: "md",
-          subdirectory: locale
-        )
-      else { throw CocoaError(.fileNoSuchFile) }
-      overview = localized
-    } else {
-      overview = nil
-    }
-    return try await Task.detached(priority: .userInitiated) {
-      func readable(_ url: URL) throws -> String {
-        try String(contentsOf: url, encoding: .utf8)
-          .replacingOccurrences(
-            of: #"(?s)<!-- LANGUAGE-LINKS:START -->.*?<!-- LANGUAGE-LINKS:END -->\s*"#,
-            with: "",
-            options: .regularExpression
-          )
-          .replacingOccurrences(of: #"(?m)^<a id="[^"]+"></a>\n"#, with: "", options: .regularExpression)
-      }
-      let original = try readable(url)
-      if let overview { return try readable(overview) + "\n\n" + original }
-      return original
-    }.value
-  }
-
-  // MARK: Private
-
-  private var resource: (name: String, extension: String?) {
-    switch self {
-    case .license: ("LICENSE", nil)
-    case .thirdPartyNotices: ("THIRD_PARTY_NOTICES", "md")
-    }
-  }
-}
-
-// MARK: - LegalDocumentView
-
-private struct LegalDocumentView: View {
-
-  // MARK: Internal
-
-  let document: LegalDocument
-
-  var body: some View {
-    NavigationStack {
-      Group {
-        if let contents {
-          ScrollView {
-            Text(contents)
-              .font(.system(.body, design: .monospaced))
-              .textSelection(.enabled)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding()
-          }
-        } else if let loadErrorMessage {
-          ContentUnavailableView(
-            "Unable to Open Document",
-            systemImage: "doc.badge.exclamationmark",
-            description: Text(loadErrorMessage)
-          )
-        } else {
-          ProgressView("Loading document…")
-        }
-      }
-      .navigationTitle(Text(document.title))
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done") {
-            dismiss()
-          }
-        }
-      }
-    }
-    .frame(minWidth: 680, minHeight: 520)
-    .task(id: document.id) {
-      do {
-        contents = try await document.loadContents()
-      } catch {
-        loadErrorMessage = error.localizedDescription
-      }
-    }
-  }
-
-  // MARK: Private
-
-  @Environment(\.dismiss) private var dismiss
-  @State private var contents: String?
-  @State private var loadErrorMessage: String?
 
 }

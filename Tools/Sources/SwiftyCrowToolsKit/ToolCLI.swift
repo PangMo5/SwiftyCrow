@@ -39,7 +39,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
 
     case .collectWeb: try checks.collect("web")
 
-    case .checkApp: try checks.app(stringsdata.map { URL(fileURLWithPath: $0) })
+    case .checkApp: try checks.app(stringsdata.map { URL(fileURLWithPath: $0) }, locale: locale)
 
     case .syncApp: try checks.syncApp(URL(fileURLWithPath: required(stringsdata, "--stringsdata")))
 

@@ -62,7 +62,9 @@ struct CatalogChecks {
     print("Synced \(extracted.count) compiler-extracted app keys")
   }
 
-  func app(_ directory: URL? = nil) throws {
+  func app(_ directory: URL? = nil, locale selectedLocale: String? = nil) throws {
+    if let selectedLocale { try require(locales.contains(selectedLocale), "Unsupported app locale") }
+    let checkedLocales = selectedLocale.map { $0 == "en" ? ["en"] : ["en", $0] } ?? locales
     var total = 0
     for name in ["Localizable", "InfoPlist"] {
       let catalog = try JSON.read(workspace.root.at("Resources/\(name).xcstrings"))
@@ -70,7 +72,7 @@ struct CatalogChecks {
       for (key, entry) in catalog["strings"].object {
         let english = entry["localizations"]["en"]["stringUnit"]["value"].str
         let source = name == "Localizable" ? key : english
-        for locale in locales {
+        for locale in checkedLocales {
           let unit = entry["localizations"][locale]["stringUnit"]
           let value = unit["value"].str
           try require(
@@ -96,7 +98,7 @@ struct CatalogChecks {
         try require(unused.isEmpty, "Stale app keys; sync compiler output: \(unused.sorted().joined(separator: ", "))")
       }
     }
-    print("Validated \(total) app and permission keys in \(locales.count) locales")
+    print("Validated \(total) app and permission keys in \(checkedLocales.count) locales")
   }
 
   func visit(_ kind: String, _ catalog: TextCatalog) throws {
@@ -165,7 +167,7 @@ struct CatalogChecks {
   }
 
   func all(locale: String? = nil) throws {
-    try app()
+    try app(locale: locale)
     try text("docs", locale: locale)
     try text("web", locale: locale)
     try films()

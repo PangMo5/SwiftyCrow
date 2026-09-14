@@ -58,7 +58,9 @@ struct SwiftyCrowApp: App {
 
   // MARK: Private
 
-  @State private var store = Store(initialState: AppFeature.State()) {
+  @State private var store = Store(initialState: AppFeature
+    .State(hasExistingConfiguration: FileManager.default.fileExists(atPath: ConfigPath.url.path)))
+  {
     AppFeature()
   }
 
@@ -75,6 +77,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_: Notification) {
     guard !ProcessInfo.processInfo.isRunningUnitTests else { return }
+
+    didFinishLaunching = true
+    startOnboardingIfReady()
 
     // Start Sparkle's background check schedule by reading the dependency.
     _ = updater
@@ -95,8 +100,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func applicationWillTerminate(_: Notification) {
+    UserDefaults.standard.synchronize()
     lifetimeTask?.cancel()
     overlayObservation = nil
+    onboardingObservation = nil
     renderStates?.finish()
     renderTask?.cancel()
     warmUpTask?.cancel()
@@ -109,6 +116,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func bind(_ store: StoreOf<AppFeature>) {
     guard self.store == nil, !ProcessInfo.processInfo.isRunningUnitTests else { return }
     self.store = store
+    onboardingObservation = observe { [weak self] in
+      let presented = store.onboarding.isPresented
+      self?.onboardingWindow.render(store.scope(state: \.onboarding, action: \.onboarding), isPresented: presented)
+    }
+
+    startOnboardingIfReady()
 
     // Run the keyboard-shortcut listener for the entire app lifetime.
     lifetimeTask = Task { @MainActor in
@@ -145,13 +158,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   @Dependency(\.overlay) private var overlay
   @Dependency(\.updater) private var updater
 
+  private var didFinishLaunching = false
   private var store: StoreOf<AppFeature>?
   private var lifetimeTask: Task<Void, Never>?
+  private var onboardingObservation: ObserveToken?
+  private let onboardingWindow = OnboardingWindowController()
   private var overlayObservation: ObserveToken?
   private var renderStates: AsyncStream<OverlayRenderState>.Continuation?
   private var renderTask: Task<Void, Never>?
   private var warmUpTask: Task<Void, Never>?
   private var wakeObserver: (any NSObjectProtocol)?
+
+  private func startOnboardingIfReady() {
+    guard didFinishLaunching, let store else { return }
+    store.send(.onboarding(.launchChecked(hasExistingConfiguration: store.hasExistingConfiguration)))
+  }
 
   private func overlaySnapshot() -> OverlayRenderState? {
     guard let store else { return nil }
@@ -194,14 +215,19 @@ extension ProcessInfo {
 /// bridge that turns an `.openSettingsWindow` notification into a scene-level
 /// `openWindow` (see `Notification.Name.openSettingsWindow`).
 private struct MenuBarLabel: View {
+
+  // MARK: Internal
+
   var body: some View {
-    Image(systemName: "character.bubble.fill")
+    Image(nsImage: SwiftyCrowIcon.menuBarImage)
       .accessibilityLabel("SwiftyCrow")
       .onReceive(NotificationCenter.default.publisher(for: .openSettingsWindow)) { _ in
         openWindow(id: settingsWindowID)
         NSApp.activate(ignoringOtherApps: true)
       }
   }
+
+  // MARK: Private
 
   @Environment(\.openWindow) private var openWindow
 

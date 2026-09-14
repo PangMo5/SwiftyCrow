@@ -1,52 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        }
-      },
-      "shouldTranslate": false
-    },
     "%@ (%@)": {
+      "comment": "Toolbar help: localized action name followed by its keyboard shortcut.",
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ (%@)"
-          }
-        },
-        "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ (%@)"
@@ -56,6 +15,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@（%@）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (%@)"
           }
         },
         "zh-Hans": {
@@ -70,8 +35,92 @@
             "value": "%@（%@）"
           }
         }
-      },
-      "comment": "Toolbar help: localized action name followed by its keyboard shortcut."
+      }
+    },
+    "1. Open Language & Region below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Open Language & Region below."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 아래 버튼으로 ‘언어 및 지역’을 열어요."
+          }
+        }
+      }
+    },
+    "2. Choose Translation Languages at the bottom.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Choose Translation Languages at the bottom."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. 화면 아래쪽에서 ‘번역 언어’를 선택해요."
+          }
+        }
+      }
+    },
+    "3. Download both languages, then return here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Download both languages, then return here."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. 두 언어를 다운로드하고 이 창으로 돌아오세요."
+          }
+        }
+      }
+    },
+    "A clearer place to start, smoother live translation, and more ways to use the text on your screen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A clearer place to start, smoother live translation, and more ways to use the text on your screen."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "더 편해진 시작 화면, 안정적인 실시간 번역, 화면 속 글을 활용하는 다양한 방법을 만나보세요."
+          }
+        }
+      }
+    },
+    "A fresh translation menu": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fresh translation menu"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로워진 번역 메뉴"
+          }
+        }
+      }
     },
     "About": {
       "extractionState": "manual",
@@ -82,16 +131,16 @@
             "value": "About"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "정보"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrowについて"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정보"
           }
         },
         "zh-Hans": {
@@ -117,16 +166,16 @@
             "value": "Active only while a capture result window is focused."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 결과 창이 선택되어 있을 때 사용할 수 있어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャ結果のウインドウを選択しているときに使えます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 결과 창이 선택되어 있을 때 사용할 수 있어요."
           }
         },
         "zh-Hans": {
@@ -152,16 +201,16 @@
             "value": "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템 설정 → 일반 → 언어 및 지역 → 번역 언어에서 필요한 모델을 다운로드한 뒤 다시 캡처해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "システム設定 → 一般 → 言語と地域 → 翻訳言語で必要なモデルをダウンロードしてから、もう一度キャプチャしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 설정 → 일반 → 언어 및 지역 → 번역 언어에서 필요한 모델을 다운로드한 뒤 다시 캡처해 주세요."
           }
         },
         "zh-Hans": {
@@ -178,6 +227,57 @@
         }
       }
     },
+    "Allow screen access and choose the language you want to read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow screen access and choose the language you want to read."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 기록을 허용하고 읽고 싶은 언어를 골라주세요."
+          }
+        }
+      }
+    },
+    "Already downloaded? You're ready to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already downloaded? You're ready to continue."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미 다운로드했다면 바로 계속해도 돼요."
+          }
+        }
+      }
+    },
+    "An easier first start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An easier first start"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "더 쉬워진 첫 시작"
+          }
+        }
+      }
+    },
     "Auto (detect)": {
       "extractionState": "manual",
       "localizations": {
@@ -187,16 +287,16 @@
             "value": "Auto (detect)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "자동 감지"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "自動検出"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자동 감지"
           }
         },
         "zh-Hans": {
@@ -222,16 +322,16 @@
             "value": "Automatically check for updates"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "자동으로 업데이트 확인"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "アップデートを自動で確認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자동으로 업데이트 확인"
           }
         },
         "zh-Hans": {
@@ -248,7 +348,25 @@
         }
       }
     },
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전"
+          }
+        }
+      }
+    },
     "Built with": {
+      "comment": "Section listing open-source libraries used by the app.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -257,16 +375,16 @@
             "value": "Built with"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용한 오픈 소스"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "使用しているオープンソース"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용한 오픈 소스"
           }
         },
         "zh-Hans": {
@@ -281,10 +399,10 @@
             "value": "使用的開放原始碼專案"
           }
         }
-      },
-      "comment": "Section listing open-source libraries used by the app."
+      }
     },
     "Capture": {
+      "comment": "Capture result window title.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -293,16 +411,16 @@
             "value": "Capture"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처"
           }
         },
         "zh-Hans": {
@@ -317,42 +435,6 @@
             "value": "擷取"
           }
         }
-      },
-      "comment": "Capture result window title."
-    },
-    "Capture Region": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture Region"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "영역 캡처"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "範囲をキャプチャ"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截取区域"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "擷取區域"
-          }
-        }
       }
     },
     "Capture Window": {
@@ -364,16 +446,16 @@
             "value": "Capture Window"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 창"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャウインドウ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 창"
           }
         },
         "zh-Hans": {
@@ -399,16 +481,16 @@
             "value": "Capture region"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "영역 캡처"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "範囲をキャプチャ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영역 캡처"
           }
         },
         "zh-Hans": {
@@ -425,6 +507,91 @@
         }
       }
     },
+    "Capture translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture translation"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 번역"
+          }
+        }
+      }
+    },
+    "Capture, read, and reuse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture, read, and reuse"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처해서 읽고 활용하기"
+          }
+        }
+      }
+    },
+    "Change translation languages in Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change translation languages in Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정에서 번역 언어 변경"
+          }
+        }
+      }
+    },
+    "Changelog": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changelog"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 내역"
+          }
+        }
+      }
+    },
+    "Changing video frames no longer keep clearing subtitles. A separate translation window remembers where you placed it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing video frames no longer keep clearing subtitles. A separate translation window remembers where you placed it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영상이 재생되는 동안 번역 자막을 안정적으로 유지해요. 별도 번역 창은 옮겨 둔 위치를 기억해요."
+          }
+        }
+      }
+    },
     "Check": {
       "extractionState": "manual",
       "localizations": {
@@ -434,16 +601,16 @@
             "value": "Check"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확인 주기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "確認の頻度"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인 주기"
           }
         },
         "zh-Hans": {
@@ -460,41 +627,6 @@
         }
       }
     },
-    "Check for Updates": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check for Updates"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "업데이트 확인"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アップデートを確認"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "检查更新"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "檢查更新"
-          }
-        }
-      }
-    },
     "Check for Updates Now": {
       "extractionState": "manual",
       "localizations": {
@@ -504,16 +636,16 @@
             "value": "Check for Updates Now"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지금 업데이트 확인"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "今すぐアップデートを確認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 업데이트 확인"
           }
         },
         "zh-Hans": {
@@ -530,6 +662,40 @@
         }
       }
     },
+    "Check for Updates…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 확인…"
+          }
+        }
+      }
+    },
+    "Choose an area once. Keep translating the text inside as it changes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an area once. Keep translating the text inside as it changes."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영역을 한 번 지정하면, 그 안의 글이 바뀔 때마다 이어서 번역해요."
+          }
+        }
+      }
+    },
     "Clear shortcut": {
       "extractionState": "manual",
       "localizations": {
@@ -539,16 +705,16 @@
             "value": "Clear shortcut"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키 지우기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ショートカットを消去"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키 지우기"
           }
         },
         "zh-Hans": {
@@ -565,6 +731,23 @@
         }
       }
     },
+    "Click the menu bar icon and choose Capture translation. Drag over text, or press Space to select a whole window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click the menu bar icon and choose Capture translation. Drag over text, or press Space to select a whole window."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메뉴 막대 아이콘을 눌러 캡처 번역을 선택하세요. 글 위를 드래그하거나 Space를 눌러 창 전체를 고를 수 있어요."
+          }
+        }
+      }
+    },
     "Close (Esc)": {
       "extractionState": "manual",
       "localizations": {
@@ -574,16 +757,16 @@
             "value": "Close (Esc)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "닫기 (Esc)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "閉じる（Esc）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "닫기 (Esc)"
           }
         },
         "zh-Hans": {
@@ -609,16 +792,16 @@
             "value": "Close overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 닫기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳を閉じる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 닫기"
           }
         },
         "zh-Hans": {
@@ -635,6 +818,40 @@
         }
       }
     },
+    "Come back anytime": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come back anytime"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언제든 다시 볼 수 있어요"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계속"
+          }
+        }
+      }
+    },
     "Copy image": {
       "extractionState": "manual",
       "localizations": {
@@ -644,16 +861,16 @@
             "value": "Copy image"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이미지 복사"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "画像をコピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미지 복사"
           }
         },
         "zh-Hans": {
@@ -679,16 +896,16 @@
             "value": "Copy original text"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "원문 복사"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "原文をコピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원문 복사"
           }
         },
         "zh-Hans": {
@@ -714,16 +931,16 @@
             "value": "Copy translation"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역문 복사"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "訳文をコピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역문 복사"
           }
         },
         "zh-Hans": {
@@ -749,16 +966,16 @@
             "value": "Copyright"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "저작권"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "著作権"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저작권"
           }
         },
         "zh-Hans": {
@@ -784,16 +1001,16 @@
             "value": "Could not render the capture image."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 이미지를 만들지 못했어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャ画像を作成できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 이미지를 만들지 못했어요."
           }
         },
         "zh-Hans": {
@@ -819,16 +1036,16 @@
             "value": "Could not render the capture image. Please try again."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 이미지를 만들지 못했어요. 다시 시도해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャ画像を作成できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 이미지를 만들지 못했어요. 다시 시도해 주세요."
           }
         },
         "zh-Hans": {
@@ -854,16 +1071,16 @@
             "value": "Created by"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "만든 사람"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "作成者"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "만든 사람"
           }
         },
         "zh-Hans": {
@@ -881,6 +1098,7 @@
       }
     },
     "Display": {
+      "comment": "Label above the live-translation display-mode picker, not a hardware monitor.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -889,16 +1107,16 @@
             "value": "Display"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "표시 방식"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "表示方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "표시 방식"
           }
         },
         "zh-Hans": {
@@ -913,8 +1131,7 @@
             "value": "顯示方式"
           }
         }
-      },
-      "comment": "Label above the live-translation display-mode picker, not a hardware monitor."
+      }
     },
     "Don't show again": {
       "extractionState": "manual",
@@ -925,16 +1142,16 @@
             "value": "Don't show again"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다시 보지 않기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "今後表示しない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 보지 않기"
           }
         },
         "zh-Hans": {
@@ -960,16 +1177,16 @@
             "value": "Done"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "완료"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "完了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
           }
         },
         "zh-Hans": {
@@ -986,6 +1203,23 @@
         }
       }
     },
+    "Download the languages you want to translate from and into. For English → Korean, download both English and Korean.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역할 원문의 언어와 읽을 언어를 모두 받아주세요. 예를 들어 영어를 한국어로 읽으려면 영어와 한국어가 필요해요."
+          }
+        }
+      }
+    },
     "Drag to move overlay": {
       "extractionState": "manual",
       "localizations": {
@@ -995,16 +1229,16 @@
             "value": "Drag to move overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "끌어서 번역 영역 이동"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ドラッグして翻訳範囲を移動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끌어서 번역 영역 이동"
           }
         },
         "zh-Hans": {
@@ -1030,16 +1264,16 @@
             "value": "Drag to reposition the translation overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "끌어서 번역 영역의 위치를 바꿀 수 있어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ドラッグして翻訳範囲の位置を変えられます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끌어서 번역 영역의 위치를 바꿀 수 있어요."
           }
         },
         "zh-Hans": {
@@ -1056,6 +1290,23 @@
         }
       }
     },
+    "Entirely on your Mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entirely on your Mac"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 처리는 Mac 안에서"
+          }
+        }
+      }
+    },
     "Every day": {
       "extractionState": "manual",
       "localizations": {
@@ -1065,16 +1316,16 @@
             "value": "Every day"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매일"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "毎日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "매일"
           }
         },
         "zh-Hans": {
@@ -1100,16 +1351,16 @@
             "value": "Every hour"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매시간"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "1時間ごと"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "매시간"
           }
         },
         "zh-Hans": {
@@ -1135,16 +1386,16 @@
             "value": "Every week"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매주"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "毎週"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "매주"
           }
         },
         "zh-Hans": {
@@ -1161,6 +1412,40 @@
         }
       }
     },
+    "Finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
+          }
+        }
+      }
+    },
+    "First capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First capture"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "첫 캡처"
+          }
+        }
+      }
+    },
     "Fit image (⌘0)": {
       "extractionState": "manual",
       "localizations": {
@@ -1170,16 +1455,16 @@
             "value": "Fit image (⌘0)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "창에 맞추기 (⌘0)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ウインドウに合わせる（⌘0）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "창에 맞추기 (⌘0)"
           }
         },
         "zh-Hans": {
@@ -1205,16 +1490,16 @@
             "value": "General"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일반"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "一般"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일반"
           }
         },
         "zh-Hans": {
@@ -1231,6 +1516,23 @@
         }
       }
     },
+    "Get ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get ready"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 준비"
+          }
+        }
+      }
+    },
     "Global Shortcuts": {
       "extractionState": "manual",
       "localizations": {
@@ -1240,16 +1542,16 @@
             "value": "Global Shortcuts"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "전역 단축키"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "グローバルショートカット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전역 단축키"
           }
         },
         "zh-Hans": {
@@ -1266,6 +1568,23 @@
         }
       }
     },
+    "Granted. Capture and live translation can read the selected screen area.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granted. Capture and live translation can read the selected screen area."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용됨. 선택한 화면의 글을 캡처하고 실시간으로 번역할 수 있어요."
+          }
+        }
+      }
+    },
     "Hide on hover": {
       "extractionState": "manual",
       "localizations": {
@@ -1275,16 +1594,16 @@
             "value": "Hide on hover"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "마우스를 올리면 숨기기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ポインタを重ねると非表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마우스를 올리면 숨기기"
           }
         },
         "zh-Hans": {
@@ -1301,41 +1620,6 @@
         }
       }
     },
-    "Hide overlay": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide overlay"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 숨기기"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライブ翻訳を非表示"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "隐藏实时翻译"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "隱藏即時翻譯"
-          }
-        }
-      }
-    },
     "High fidelity (Apple Intelligence)": {
       "extractionState": "manual",
       "localizations": {
@@ -1345,16 +1629,16 @@
             "value": "High fidelity (Apple Intelligence)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "자연스럽게 (Apple Intelligence)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "品質優先（Apple Intelligence）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자연스럽게 (Apple Intelligence)"
           }
         },
         "zh-Hans": {
@@ -1371,7 +1655,25 @@
         }
       }
     },
+    "Highlights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlights"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "주요 변경 사항"
+          }
+        }
+      }
+    },
     "In use: %@": {
+      "comment": "Shortcut conflict: the variable is the already-localized name of the other action.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1380,16 +1682,16 @@
             "value": "In use: %@"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용 중: %@"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "使用中：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 중: %@"
           }
         },
         "zh-Hans": {
@@ -1404,10 +1706,10 @@
             "value": "已用於：%@"
           }
         }
-      },
-      "comment": "Shortcut conflict: the variable is the already-localized name of the other action."
+      }
     },
     "In-place": {
+      "comment": "Live translation mode that draws over the original text.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1416,16 +1718,16 @@
             "value": "In-place"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "원문 위에 표시"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "原文に重ねて表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원문 위에 표시"
           }
         },
         "zh-Hans": {
@@ -1440,8 +1742,7 @@
             "value": "顯示在原文上"
           }
         }
-      },
-      "comment": "Live translation mode that draws over the original text."
+      }
     },
     "LIVE": {
       "extractionState": "manual",
@@ -1452,16 +1753,16 @@
             "value": "LIVE"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간"
           }
         },
         "zh-Hans": {
@@ -1487,16 +1788,16 @@
             "value": "Languages"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "언어"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "言語"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어"
           }
         },
         "zh-Hans": {
@@ -1522,16 +1823,16 @@
             "value": "Launch at login"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인할 때 실행"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ログイン時に起動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인할 때 실행"
           }
         },
         "zh-Hans": {
@@ -1557,16 +1858,16 @@
             "value": "Legal"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "법적 고지"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "法的情報"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "법적 고지"
           }
         },
         "zh-Hans": {
@@ -1592,16 +1893,16 @@
             "value": "License (AGPL-3.0-only)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "라이선스 (AGPL-3.0-only)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライセンス（AGPL-3.0-only）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "라이선스 (AGPL-3.0-only)"
           }
         },
         "zh-Hans": {
@@ -1627,16 +1928,16 @@
             "value": "Languages supported by Apple Translation and text recognition on this Mac."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 Mac에서 Apple 번역과 글자 인식이 지원하는 언어예요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "このMacのApple翻訳と文字認識が対応する言語です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Mac에서 Apple 번역과 글자 인식이 지원하는 언어예요."
           }
         },
         "zh-Hans": {
@@ -1662,16 +1963,16 @@
             "value": "Live mode"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 표시"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳の表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 표시"
           }
         },
         "zh-Hans": {
@@ -1697,16 +1998,16 @@
             "value": "Live overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역"
           }
         },
         "zh-Hans": {
@@ -1732,16 +2033,16 @@
             "value": "Live overlay (select a region)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 영역 선택"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳の範囲を選択"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 영역 선택"
           }
         },
         "zh-Hans": {
@@ -1758,41 +2059,6 @@
         }
       }
     },
-    "Live overlay…": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Live overlay…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライブ翻訳…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "实时翻译…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "即時翻譯…"
-          }
-        }
-      }
-    },
     "Live translation": {
       "extractionState": "manual",
       "localizations": {
@@ -1802,16 +2068,16 @@
             "value": "Live translation"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역"
           }
         },
         "zh-Hans": {
@@ -1828,6 +2094,40 @@
         }
       }
     },
+    "Live translation is paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live translation is paused"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 일시 정지"
+          }
+        }
+      }
+    },
+    "Live translation is running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live translation is running"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 중"
+          }
+        }
+      }
+    },
     "Live translation off — click to resume": {
       "extractionState": "manual",
       "localizations": {
@@ -1837,16 +2137,16 @@
             "value": "Live translation is paused. Click to resume."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역을 멈췄어요. 클릭하면 다시 시작해요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳は一時停止中です。クリックすると再開します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역을 멈췄어요. 클릭하면 다시 시작해요."
           }
         },
         "zh-Hans": {
@@ -1872,16 +2172,16 @@
             "value": "Live translation is on. Click to pause."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 중이에요. 클릭하면 잠시 멈춰요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳中です。クリックすると一時停止します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 중이에요. 클릭하면 잠시 멈춰요."
           }
         },
         "zh-Hans": {
@@ -1907,16 +2207,16 @@
             "value": "Loading document…"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "문서를 불러오는 중…"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "書類を読み込み中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문서를 불러오는 중…"
           }
         },
         "zh-Hans": {
@@ -1942,16 +2242,16 @@
             "value": "Low latency"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "빠르게"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "速度優先"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠르게"
           }
         },
         "zh-Hans": {
@@ -1968,37 +2268,19 @@
         }
       }
     },
-    "Move live overlay…": {
+    "More options": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move live overlay…"
+            "value": "More options"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "실시간 번역 영역 바꾸기…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライブ翻訳の範囲を変更…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更改实时翻译区域…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更改即時翻譯區域…"
+            "value": "더 보기"
           }
         }
       }
@@ -2012,16 +2294,16 @@
             "value": "Move overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 영역 이동"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳範囲を移動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 영역 이동"
           }
         },
         "zh-Hans": {
@@ -2038,6 +2320,23 @@
         }
       }
     },
+    "No account or API key needed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account or API key needed."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정이나 API 키가 필요하지 않아요."
+          }
+        }
+      }
+    },
     "No display available for capture.": {
       "extractionState": "manual",
       "localizations": {
@@ -2047,16 +2346,16 @@
             "value": "No display available for capture."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처할 화면을 찾지 못했어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャできる画面が見つかりませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처할 화면을 찾지 못했어요."
           }
         },
         "zh-Hans": {
@@ -2082,16 +2381,16 @@
             "value": "No translation model is installed for %@ → %@. Download these languages in System Settings."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ → %@ 번역 모델이 설치되어 있지 않아요. 시스템 설정에서 해당 언어를 다운로드해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ → %@ の翻訳モデルがインストールされていません。システム設定で必要な言語をダウンロードしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@ 번역 모델이 설치되어 있지 않아요. 시스템 설정에서 해당 언어를 다운로드해 주세요."
           }
         },
         "zh-Hans": {
@@ -2108,72 +2407,36 @@
         }
       }
     },
-    "OVERLAY": {
+    "Open Language & Region…": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overlay"
+            "value": "Open Language & Region…"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "실시간 번역"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライブ翻訳"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "实时翻译"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "即時翻譯"
+            "value": "언어 및 지역 설정 열기…"
           }
         }
       }
     },
-    "On-device screen translator": {
+    "Open Quick Setup again from the menu bar. Languages and shortcuts are always available in Settings.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On-device screen translator"
+            "value": "Open Quick Setup again from the menu bar. Languages and shortcuts are always available in Settings."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기기에서 처리하는 화면 번역"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac上で処理する画面翻訳"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "设备端屏幕翻译"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在裝置上處理的螢幕翻譯"
+            "value": "메뉴 막대에서 빠른 시작을 다시 열 수 있어요. 언어와 단축키는 설정에서 바꿔주세요."
           }
         }
       }
@@ -2187,16 +2450,16 @@
             "value": "Open Settings"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "설정 열기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "設定を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정 열기"
           }
         },
         "zh-Hans": {
@@ -2213,7 +2476,25 @@
         }
       }
     },
+    "Open System Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 설정 열기"
+          }
+        }
+      }
+    },
     "Overlay": {
+      "comment": "Settings pane for live translation.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2222,16 +2503,16 @@
             "value": "Overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역"
           }
         },
         "zh-Hans": {
@@ -2246,8 +2527,7 @@
             "value": "即時翻譯"
           }
         }
-      },
-      "comment": "Settings pane for live translation."
+      }
     },
     "PangMo5": {
       "extractionState": "manual",
@@ -2258,13 +2538,13 @@
             "value": "PangMo5"
           }
         },
-        "ko": {
+        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "PangMo5"
           }
         },
-        "ja": {
+        "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "PangMo5"
@@ -2294,16 +2574,16 @@
             "value": "Pause / resume Live"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 멈추기 / 다시 시작"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳を一時停止／再開"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 멈추기 / 다시 시작"
           }
         },
         "zh-Hans": {
@@ -2320,6 +2600,40 @@
         }
       }
     },
+    "Pause translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause translation"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 일시 정지"
+          }
+        }
+      }
+    },
+    "Permissions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permissions"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한"
+          }
+        }
+      }
+    },
     "Preferred strategy": {
       "extractionState": "manual",
       "localizations": {
@@ -2329,16 +2643,16 @@
             "value": "Preferred strategy"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기본 번역 방식"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "優先する翻訳方式"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본 번역 방식"
           }
         },
         "zh-Hans": {
@@ -2355,6 +2669,23 @@
         }
       }
     },
+    "Prepare your first translation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare your first translation."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "첫 번역을 준비해요."
+          }
+        }
+      }
+    },
     "Preparing text recognition": {
       "extractionState": "manual",
       "localizations": {
@@ -2364,16 +2695,16 @@
             "value": "Preparing text recognition"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "글자 인식을 준비하고 있어요"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "文字認識を準備しています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글자 인식을 준비하고 있어요"
           }
         },
         "zh-Hans": {
@@ -2399,16 +2730,16 @@
             "value": "Press shortcut…"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키 누르기…"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キーを押す…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키 누르기…"
           }
         },
         "zh-Hans": {
@@ -2425,6 +2756,40 @@
         }
       }
     },
+    "Quick Setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Setup"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 시작"
+          }
+        }
+      }
+    },
+    "Quick Setup guides you through screen access, language downloads, and your first capture. Reopen it anytime from the menu bar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Setup guides you through screen access, language downloads, and your first capture. Reopen it anytime from the menu bar."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 시작에서 화면 기록 권한, 언어 다운로드, 첫 캡처까지 안내해요. 메뉴 막대에서 언제든 다시 열 수 있어요."
+          }
+        }
+      }
+    },
     "Quit SwiftyCrow": {
       "extractionState": "manual",
       "localizations": {
@@ -2434,16 +2799,16 @@
             "value": "Quit SwiftyCrow"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SwiftyCrow 종료"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrowを終了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow 종료"
           }
         },
         "zh-Hans": {
@@ -2460,6 +2825,108 @@
         }
       }
     },
+    "Read any text on your screen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read any text on your screen."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 외국어를 바로 읽어요."
+          }
+        }
+      }
+    },
+    "Relaunch SwiftyCrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaunch SwiftyCrow"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow 다시 열기"
+          }
+        }
+      }
+    },
+    "Relaunch after granting access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaunch after granting access"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한을 허용한 뒤 다시 열어주세요"
+          }
+        }
+      }
+    },
+    "Relaunch to apply permission changes. If setup is open, you will return to the same step and language choice.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaunch to apply permission changes. If setup is open, you will return to the same step and language choice."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 변경이 적용되도록 앱을 다시 열어주세요. 온보딩 중이었다면 진행하던 단계와 선택한 언어를 이어서 보여드려요."
+          }
+        }
+      }
+    },
+    "Required to recognize text on your screen. Allow access in System Settings, then relaunch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required to recognize text on your screen. Allow access in System Settings, then relaunch."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 글자를 읽는 데 필요해요. 시스템 설정에서 허용한 뒤 앱을 다시 열어주세요."
+          }
+        }
+      }
+    },
+    "Resume translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume translation"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 다시 시작"
+          }
+        }
+      }
+    },
     "Save image": {
       "extractionState": "manual",
       "localizations": {
@@ -2469,16 +2936,16 @@
             "value": "Save image"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이미지 저장"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "画像を保存"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미지 저장"
           }
         },
         "zh-Hans": {
@@ -2495,6 +2962,23 @@
         }
       }
     },
+    "Screen Recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 기록"
+          }
+        }
+      }
+    },
     "Screen Recording permission is required. Allow it in System Settings and restart the app.": {
       "extractionState": "manual",
       "localizations": {
@@ -2504,16 +2988,16 @@
             "value": "Screen Recording permission is required. Allow it in System Settings and restart the app."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 기록 권한이 필요해요. 시스템 설정에서 허용한 뒤 앱을 다시 실행해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "画面収録の許可が必要です。システム設定で許可してからアプリを再起動してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 기록 권한이 필요해요. 시스템 설정에서 허용한 뒤 앱을 다시 실행해 주세요."
           }
         },
         "zh-Hans": {
@@ -2539,16 +3023,16 @@
             "value": "Screen capture didn't respond in time."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 캡처가 응답하지 않아요. 다시 캡처해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "画面のキャプチャが応答しません。もう一度キャプチャしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 캡처가 응답하지 않아요. 다시 캡처해 주세요."
           }
         },
         "zh-Hans": {
@@ -2565,6 +3049,74 @@
         }
       }
     },
+    "Select an area to translate continuously": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an area to translate continuously"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영역을 골라 계속 번역해요"
+          }
+        }
+      }
+    },
+    "Select an area with Live translation first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an area with Live translation first"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "먼저 실시간 번역 버튼으로 영역을 골라주세요"
+          }
+        }
+      }
+    },
+    "Select part of your screen, read the translation, and copy text or a translated image.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select part of your screen, read the translation, and copy text or a translated image."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "필요한 부분을 캡처해 번역하고, 글이나 번역된 이미지로 복사할 수 있어요."
+          }
+        }
+      }
+    },
+    "Set Up Access…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Up Access…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 설정…"
+          }
+        }
+      }
+    },
     "Set shortcut": {
       "extractionState": "manual",
       "localizations": {
@@ -2574,16 +3126,16 @@
             "value": "Set shortcut"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키 설정"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ショートカットを設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키 설정"
           }
         },
         "zh-Hans": {
@@ -2600,6 +3152,23 @@
         }
       }
     },
+    "Set up later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up later"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에 설정"
+          }
+        }
+      }
+    },
     "Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -2609,16 +3178,16 @@
             "value": "Settings"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "설정"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정"
           }
         },
         "zh-Hans": {
@@ -2644,16 +3213,16 @@
             "value": "Settings…"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "설정…"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "設定…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정…"
           }
         },
         "zh-Hans": {
@@ -2679,16 +3248,16 @@
             "value": "Shortcuts"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ショートカット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키"
           }
         },
         "zh-Hans": {
@@ -2714,16 +3283,16 @@
             "value": "Show / hide overlay"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 번역 표시 / 숨기기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ライブ翻訳を表示／非表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 번역 표시 / 숨기기"
           }
         },
         "zh-Hans": {
@@ -2749,16 +3318,16 @@
             "value": "Show / hide overlay (last region)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지난 영역에 실시간 번역 표시 / 숨기기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "前回の範囲でライブ翻訳を表示／非表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지난 영역에 실시간 번역 표시 / 숨기기"
           }
         },
         "zh-Hans": {
@@ -2775,37 +3344,36 @@
         }
       }
     },
-    "Show on last region": {
+    "Show or hide translation in the selected area": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show on last region"
+            "value": "Show or hide translation in the selected area"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지난 영역에 표시"
+            "value": "선택한 영역의 번역 표시·숨기기"
           }
-        },
-        "ja": {
+        }
+      }
+    },
+    "Show overlay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "前回の範囲に表示"
+            "value": "Show overlay"
           }
         },
-        "zh-Hans": {
+        "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "在上次区域显示"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "顯示在上次區域"
+            "value": "오버레이 표시"
           }
         }
       }
@@ -2819,16 +3387,16 @@
             "value": "Show translation information"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 정보 보기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳情報を表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 정보 보기"
           }
         },
         "zh-Hans": {
@@ -2854,16 +3422,16 @@
             "value": "Software Update"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "소프트웨어 업데이트"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ソフトウェアアップデート"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소프트웨어 업데이트"
           }
         },
         "zh-Hans": {
@@ -2889,16 +3457,16 @@
             "value": "Some text may be misread. Compare the translation with the original."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일부 글자를 잘못 읽었을 수 있어요. 번역문을 원문과 비교해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "一部の文字を読み違えている可能性があります。訳文を原文と比べてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 글자를 잘못 읽었을 수 있어요. 번역문을 원문과 비교해 주세요."
           }
         },
         "zh-Hans": {
@@ -2924,16 +3492,16 @@
             "value": "Some text may be misread. Compare with the original."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일부 글자를 잘못 읽었을 수 있어요. 원문을 확인해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "一部の文字を読み違えている可能性があります。原文を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 글자를 잘못 읽었을 수 있어요. 원문을 확인해 주세요."
           }
         },
         "zh-Hans": {
@@ -2951,6 +3519,7 @@
       }
     },
     "Source": {
+      "comment": "Source-language picker label.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2959,16 +3528,16 @@
             "value": "Source"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "원문 언어"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "原文の言語"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원문 언어"
           }
         },
         "zh-Hans": {
@@ -2983,8 +3552,7 @@
             "value": "原文語言"
           }
         }
-      },
-      "comment": "Source-language picker label."
+      }
     },
     "Source Code": {
       "extractionState": "manual",
@@ -2995,16 +3563,16 @@
             "value": "Source Code"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "소스 코드"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ソースコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소스 코드"
           }
         },
         "zh-Hans": {
@@ -3030,16 +3598,16 @@
             "value": "Start SwiftyCrow automatically when you log in."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인하면 SwiftyCrow가 자동으로 실행돼요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ログインするとSwiftyCrowが自動で起動します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인하면 SwiftyCrow가 자동으로 실행돼요."
           }
         },
         "zh-Hans": {
@@ -3056,6 +3624,23 @@
         }
       }
     },
+    "Start a capture or live translation in one click. See your languages and control an active translation from the menu bar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a capture or live translation in one click. See your languages and control an active translation from the menu bar."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클릭 한 번으로 캡처와 실시간 번역을 시작하세요. 메뉴 막대에서 번역 언어를 확인하고 진행 중인 번역을 조작할 수 있어요."
+          }
+        }
+      }
+    },
     "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The translation area lets clicks pass through; controls and an open information popover receive input.": {
       "extractionState": "manual",
       "localizations": {
@@ -3065,16 +3650,16 @@
             "value": "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The translation area lets clicks pass through; controls and an open information popover receive input."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "메뉴 막대나 단축키로 실시간 번역을 시작한 뒤 영역을 드래그해 주세요. Space를 누르면 창 전체를 고를 수 있어요. 번역문을 원문 위에 표시하거나 별도 창에서 볼 수 있어요. 번역 영역의 클릭은 뒤쪽 앱으로 전달되고, 제어 버튼과 열린 정보 창은 직접 입력을 받아요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "メニューバーまたはショートカットでライブ翻訳を開始し、範囲をドラッグしてください。Spaceを押すとウインドウ全体を選べます。訳文は原文に重ねて表示するか、別のウインドウで読めます。翻訳範囲のクリックは背後のアプリに届きますが、操作ボタンと開いている情報ポップオーバーは入力を受け取ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메뉴 막대나 단축키로 실시간 번역을 시작한 뒤 영역을 드래그해 주세요. Space를 누르면 창 전체를 고를 수 있어요. 번역문을 원문 위에 표시하거나 별도 창에서 볼 수 있어요. 번역 영역의 클릭은 뒤쪽 앱으로 전달되고, 제어 버튼과 열린 정보 창은 직접 입력을 받아요."
           }
         },
         "zh-Hans": {
@@ -3091,6 +3676,40 @@
         }
       }
     },
+    "Start with a capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with a capture"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처로 시작해 보세요"
+          }
+        }
+      }
+    },
+    "Steadier live translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steadier live translation"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "더 안정적인 실시간 번역"
+          }
+        }
+      }
+    },
     "SwiftyCrow": {
       "extractionState": "manual",
       "localizations": {
@@ -3100,13 +3719,13 @@
             "value": "SwiftyCrow"
           }
         },
-        "ko": {
+        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrow"
           }
         },
-        "ja": {
+        "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrow"
@@ -3136,16 +3755,16 @@
             "value": "SwiftyCrow Settings"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SwiftyCrow 설정"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrowの設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow 설정"
           }
         },
         "zh-Hans": {
@@ -3171,16 +3790,16 @@
             "value": "SwiftyCrow checks in the background and notifies you when a new version is available."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "새 버전이 나오면 SwiftyCrow가 백그라운드에서 확인하고 알려드려요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "SwiftyCrowはバックグラウンドで新しいバージョンを確認し、お知らせします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 버전이 나오면 SwiftyCrow가 백그라운드에서 확인하고 알려드려요."
           }
         },
         "zh-Hans": {
@@ -3197,6 +3816,23 @@
         }
       }
     },
+    "SwiftyCrow stays at the top of your screen, ready whenever you need it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow stays at the top of your screen, ready whenever you need it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow는 화면 위쪽 메뉴 막대에서 다음 번역을 기다려요."
+          }
+        }
+      }
+    },
     "Switch display": {
       "extractionState": "manual",
       "localizations": {
@@ -3206,16 +3842,16 @@
             "value": "Switch display"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "표시 방식 바꾸기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "表示方法を切り替える"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "표시 방식 바꾸기"
           }
         },
         "zh-Hans": {
@@ -3241,16 +3877,16 @@
             "value": "Switch display (In-place / Window)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "표시 방식 바꾸기 (원문 위 / 별도 창)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "表示方法を切り替える（原文上／別ウインドウ）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "표시 방식 바꾸기 (원문 위 / 별도 창)"
           }
         },
         "zh-Hans": {
@@ -3268,6 +3904,7 @@
       }
     },
     "Target": {
+      "comment": "Translation-language picker label.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3276,16 +3913,16 @@
             "value": "Target"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 언어"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳先の言語"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 언어"
           }
         },
         "zh-Hans": {
@@ -3300,8 +3937,7 @@
             "value": "翻譯語言"
           }
         }
-      },
-      "comment": "Translation-language picker label."
+      }
     },
     "Text recognition didn't respond in time.": {
       "extractionState": "manual",
@@ -3312,16 +3948,16 @@
             "value": "Text recognition didn't respond in time."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "글자 인식이 응답하지 않아요. 다시 캡처해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "文字認識が応答しません。もう一度キャプチャしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글자 인식이 응답하지 않아요. 다시 캡처해 주세요."
           }
         },
         "zh-Hans": {
@@ -3347,16 +3983,16 @@
             "value": "That window is no longer available to capture."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 창은 더 이상 캡처할 수 없어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "このウインドウはもうキャプチャできません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 창은 더 이상 캡처할 수 없어요."
           }
         },
         "zh-Hans": {
@@ -3382,16 +4018,16 @@
             "value": "The capture region is empty."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처할 영역이 비어 있어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャする範囲が空です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처할 영역이 비어 있어요."
           }
         },
         "zh-Hans": {
@@ -3417,16 +4053,16 @@
             "value": "The captured image has no readable pixel data."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 이미지에서 읽을 수 있는 픽셀을 찾지 못했어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャプチャ画像から読み取れるピクセルが見つかりませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 이미지에서 읽을 수 있는 픽셀을 찾지 못했어요."
           }
         },
         "zh-Hans": {
@@ -3452,16 +4088,16 @@
             "value": "These hotkeys work even when the app is in the background, and are saved to config.toml."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다른 앱을 사용 중일 때도 쓸 수 있어요. 단축키는 config.toml에 저장돼요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "ほかのアプリを使っているときも使えます。ショートカットはconfig.tomlに保存されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 앱을 사용 중일 때도 쓸 수 있어요. 단축키는 config.toml에 저장돼요."
           }
         },
         "zh-Hans": {
@@ -3487,16 +4123,16 @@
             "value": "Third-Party Notices"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "서드파티 고지"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "サードパーティのライセンス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서드파티 고지"
           }
         },
         "zh-Hans": {
@@ -3522,16 +4158,16 @@
             "value": "This program comes with no warranty. You may redistribute it under the GNU AGPL v3. Select License for details."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 프로그램에는 어떠한 보증도 없습니다. GNU AGPL v3에 따라 재배포할 수 있습니다. 자세한 내용은 라이선스를 선택해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "このプログラムには一切の保証がありません。GNU AGPL v3に基づいて再配布できます。詳しくは「ライセンス」を選択してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 프로그램에는 어떠한 보증도 없습니다. GNU AGPL v3에 따라 재배포할 수 있습니다. 자세한 내용은 라이선스를 선택해 주세요."
           }
         },
         "zh-Hans": {
@@ -3548,6 +4184,74 @@
         }
       }
     },
+    "Translate and copy text from your screen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate and copy text from your screen"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 글을 번역하고 복사해요"
+          }
+        }
+      }
+    },
+    "Translate into": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate into"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 언어"
+          }
+        }
+      }
+    },
+    "Translate the text on your screen without leaving the app you're using.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate the text on your screen without leaving the app you're using."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용하던 앱을 그대로 보면서 화면의 외국어를 번역하세요."
+          }
+        }
+      }
+    },
+    "Translating live": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating live"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간으로 번역 중"
+          }
+        }
+      }
+    },
     "Translation": {
       "extractionState": "manual",
       "localizations": {
@@ -3557,16 +4261,16 @@
             "value": "Translation"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역"
           }
         },
         "zh-Hans": {
@@ -3592,16 +4296,16 @@
             "value": "Translation did not return every requested line."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일부 문장의 번역 결과를 받지 못했어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "一部の文の翻訳結果を受け取れませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 문장의 번역 결과를 받지 못했어요."
           }
         },
         "zh-Hans": {
@@ -3627,16 +4331,16 @@
             "value": "Translation didn't respond in time."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역이 응답하지 않아요. 다시 시도해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳が応答しません。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역이 응답하지 않아요. 다시 시도해 주세요."
           }
         },
         "zh-Hans": {
@@ -3662,16 +4366,16 @@
             "value": "Translation information"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 정보"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳情報"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 정보"
           }
         },
         "zh-Hans": {
@@ -3697,16 +4401,16 @@
             "value": "Translation is not supported from %@ to %@."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ → %@ 번역은 지원하지 않아요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "%@から%@への翻訳には対応していません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@ 번역은 지원하지 않아요."
           }
         },
         "zh-Hans": {
@@ -3723,6 +4427,23 @@
         }
       }
     },
+    "Translation paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation paused"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 일시 정지"
+          }
+        }
+      }
+    },
     "Translation returned empty text.": {
       "extractionState": "manual",
       "localizations": {
@@ -3732,16 +4453,16 @@
             "value": "Translation returned empty text."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 결과가 비어 있어요. 다시 시도해 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳結果が空です。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 결과가 비어 있어요. 다시 시도해 주세요."
           }
         },
         "zh-Hans": {
@@ -3767,16 +4488,16 @@
             "value": "Translation unavailable"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역할 수 없어요"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "翻訳できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역할 수 없어요"
           }
         },
         "zh-Hans": {
@@ -3793,6 +4514,23 @@
         }
       }
     },
+    "Try a capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a capture"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처해 보기"
+          }
+        }
+      }
+    },
     "Unable to Open Document": {
       "extractionState": "manual",
       "localizations": {
@@ -3802,16 +4540,16 @@
             "value": "Unable to Open Document"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "문서를 열지 못했어요"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "書類を開けません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문서를 열지 못했어요"
           }
         },
         "zh-Hans": {
@@ -3828,6 +4566,41 @@
         }
       }
     },
+    "Unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알 수 없음"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知"
+          }
+        }
+      }
+    },
     "Updates": {
       "extractionState": "manual",
       "localizations": {
@@ -3837,16 +4610,16 @@
             "value": "Updates"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "업데이트"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "アップデート"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트"
           }
         },
         "zh-Hans": {
@@ -3863,42 +4636,6 @@
         }
       }
     },
-    "Using %@ for %@ → %@; the preferred model is not installed.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Using %@ for %@ → %@; the preferred model is not installed."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "현재 방식: %@ · %@ → %@. 선택한 방식의 모델이 설치되어 있지 않아요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@で%@ → %@を翻訳しています。優先するモデルはインストールされていません。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在使用 %@ 翻译 %@ → %@；首选模型尚未安装。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在使用 %@ 翻譯 %@ → %@；偏好的模型尚未安裝。"
-          }
-        }
-      },
-      "comment": "Model notice: strategy name, source language, and translation language, in that order."
-    },
     "Using installed models for %lld language pairs.": {
       "extractionState": "manual",
       "localizations": {
@@ -3908,16 +4645,16 @@
             "value": "Using installed models for %lld language pairs."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld개 언어 조합에 설치된 모델을 사용하고 있어요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld組の言語でインストール済みのモデルを使っています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 언어 조합에 설치된 모델을 사용하고 있어요."
           }
         },
         "zh-Hans": {
@@ -3943,16 +4680,16 @@
             "value": "Version"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "버전"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "バージョン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "버전"
           }
         },
         "zh-Hans": {
@@ -3969,7 +4706,76 @@
         }
       }
     },
+    "View Full Changelog…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Full Changelog…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 변경 내역 보기…"
+          }
+        }
+      }
+    },
+    "Welcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "환영해요"
+          }
+        }
+      }
+    },
+    "What's New in SwiftyCrow %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's New in SwiftyCrow %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftyCrow %@의 새로운 기능"
+          }
+        }
+      }
+    },
+    "What’s New": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s New"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로운 기능"
+          }
+        }
+      }
+    },
     "Window": {
+      "comment": "Live translation mode that puts the result in a separate window.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3978,16 +4784,16 @@
             "value": "Window"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "별도 창"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "別のウインドウ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별도 창"
           }
         },
         "zh-Hans": {
@@ -4002,8 +4808,41 @@
             "value": "獨立視窗"
           }
         }
-      },
-      "comment": "Live translation mode that puts the result in a separate window."
+      }
+    },
+    "You can finish setup now and allow screen access before your first capture.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can finish setup now and allow screen access before your first capture."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 안내를 마치고, 첫 캡처 전에 화면 기록을 허용해도 괜찮아요."
+          }
+        }
+      }
+    },
+    "Your next translation is in the menu bar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your next translation is in the menu bar."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "필요할 때, 메뉴 막대에서 만나요."
+          }
+        }
+      }
     },
     "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices.": {
       "extractionState": "manual",
@@ -4014,16 +4853,16 @@
             "value": "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 방식의 모델이 설치되어 있으면 우선 사용해요. 없으면 설치된 다른 모델을 사용하고 알려드려요. 자연스럽게 번역하는 방식은 지원 기기에서 Apple Intelligence를 사용해요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "優先する方式のモデルがインストールされていれば、そのモデルを使います。ない場合はインストール済みの別のモデルを使い、選んだ方式を表示します。品質優先は対応デバイスでApple Intelligenceを使います。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 방식의 모델이 설치되어 있으면 우선 사용해요. 없으면 설치된 다른 모델을 사용하고 알려드려요. 자연스럽게 번역하는 방식은 지원 기기에서 Apple Intelligence를 사용해요."
           }
         },
         "zh-Hans": {
@@ -4049,16 +4888,16 @@
             "value": "Zoom %@. Fit image"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확대율 %@. 창에 맞추기"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "拡大率%@。ウインドウに合わせる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확대율 %@. 창에 맞추기"
           }
         },
         "zh-Hans": {
@@ -4084,16 +4923,16 @@
             "value": "Zoom in"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확대"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "拡大"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확대"
           }
         },
         "zh-Hans": {
@@ -4119,16 +4958,16 @@
             "value": "Zoom in (⌘+)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확대 (⌘+)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "拡大（⌘+）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확대 (⌘+)"
           }
         },
         "zh-Hans": {
@@ -4145,6 +4984,23 @@
         }
       }
     },
+    "Zoom into captured text, fit the whole image, and copy or save the full translated image at its original resolution.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom into captured text, fit the whole image, and copy or save the full translated image at its original resolution."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처한 글을 확대하거나 전체 이미지를 창에 맞춰 보세요. 번역된 전체 이미지를 원본 해상도로 복사하고 저장할 수 있어요."
+          }
+        }
+      }
+    },
     "Zoom out": {
       "extractionState": "manual",
       "localizations": {
@@ -4154,16 +5010,16 @@
             "value": "Zoom out"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "축소"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "縮小"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "축소"
           }
         },
         "zh-Hans": {
@@ -4189,16 +5045,16 @@
             "value": "Zoom out (⌘−)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "축소 (⌘−)"
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "縮小（⌘−）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "축소 (⌘−)"
           }
         },
         "zh-Hans": {
@@ -4224,16 +5080,16 @@
             "value": "macOS is loading the recognition model.\nThis only happens the first time, or after it has been unloaded."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "macOS가 글자 인식 모델을 불러오고 있어요.\n처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "macOSが文字認識モデルを読み込んでいます。\n初回やモデルがメモリから解放された後は、少しお待ちください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS가 글자 인식 모델을 불러오고 있어요.\n처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
           }
         },
         "zh-Hans": {
@@ -4259,16 +5115,16 @@
             "value": "macOS is loading the recognition model. This only happens the first time, or after it has been unloaded."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "macOS가 글자 인식 모델을 불러오고 있어요. 처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
-          }
-        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "macOSが文字認識モデルを読み込んでいます。初回やモデルがメモリから解放された後は、少しお待ちください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS가 글자 인식 모델을 불러오고 있어요. 처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
           }
         },
         "zh-Hans": {
@@ -4285,37 +5141,104 @@
         }
       }
     },
-    "Unknown": {
+    "Using another installed model": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unknown"
+            "value": "Using another installed model"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "알 수 없음"
+            "value": "설치된 다른 모델 사용"
           }
-        },
-        "ja": {
+        }
+      }
+    },
+    "Language model settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "不明"
+            "value": "Language model settings…"
           }
         },
-        "zh-Hans": {
+        "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "未知"
+            "value": "언어 모델 설정…"
+          }
+        }
+      }
+    },
+    "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested strategy does not support this language pair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested strategy does not support this language pair."
           }
         },
-        "zh-Hant": {
+        "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "未知"
+            "value": "요청한 방식: %@ · 이번 번역 방식: %@\n%@ → %@는 요청한 방식에서 지원하지 않아 다른 방식을 사용했어요."
+          }
+        }
+      }
+    },
+    "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested model is not installed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested model is not installed."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요청한 방식: %@ · 이번 번역 방식: %@\n%@ → %@의 요청한 모델이 설치되어 있지 않아 다른 방식을 사용했어요."
+          }
+        }
+      }
+    },
+    "View Changelog…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Changelog…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 내역 보기…"
+          }
+        }
+      }
+    },
+    "Translate anything on your screen.\nEntirely on your Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate anything on your screen.\nEntirely on your Mac."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 어떤 글이든 번역해요.\n모든 처리는 Mac 안에서."
           }
         }
       }

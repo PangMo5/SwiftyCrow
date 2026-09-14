@@ -68,7 +68,8 @@ before hashing so decoder allocation details cannot masquerade as visual changes
 
 `docs --locale ko` and `check --locale ko` generate/check only Korean document
 outputs and text catalogs while preserving the other generated documents.
-App, film, and narration catalog checks still run across all languages. `site --locale ko --media-root <directory> --output <preview>`
+App strings are checked in English and the selected locale; film and narration
+catalog checks still run across all languages. `site --locale ko --media-root <directory> --output <preview>`
 builds only Korean pages and selects `<directory>/ko/{film}.{mp4,jpg}`. It omits
 other language navigation in that isolated preview. With these options omitted,
 the full-language delivery checks and assembly remain unchanged. Site assembly
@@ -82,3 +83,8 @@ The Live film ends after its second source caption. The other three films keep
 their camera timelines. Editorial captions retain actual shortcut event times.
 Approve Korean copy, structure and films before updating other language outputs
 or replacing the complete publication media manifest.
+
+For native UI review, pass `SWIFTYCROW_REVIEW_LOCALE=ko` as an Xcode build
+setting. Both catalog validation and compiler-extracted string validation use
+that explicit locale. This option is accepted only for Debug builds; release
+builds retain the complete language gate. Omitting it keeps full validation.

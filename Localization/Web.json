@@ -7,6 +7,10 @@
     "en": "Translate video subtitles",
     "ko": "영상 자막 번역하기"
   },
+  "06fec0e1c2888415": {
+    "en": "Capture a region or a whole window. Read the translation, then copy the result as an image or text.",
+    "ko": "화면에서 읽고 싶은 영역이나 창을 캡처하세요. 번역한 결과는 이미지나 글자로 복사해 다른 앱에서 활용할 수 있어요."
+  },
   "0a181fdc48a85e0c": {
     "en": "Every version of SwiftyCrow, newest first.",
     "ja": "SwiftyCrowの全バージョンを新しい順に確認できます。",
@@ -140,10 +144,6 @@
     "zh-Hans": "开始使用 SwiftyCrow。",
     "zh-Hant": "開始使用 SwiftyCrow。"
   },
-  "26ceae0deed7525b": {
-    "en": "See it in action",
-    "ko": "실제 사용 살펴보기"
-  },
   "2745ce08a9ae3315": {
     "en": "Reads in order",
     "ja": "順序どおりに読む",
@@ -168,7 +168,7 @@
   "308dff1190112904": {
     "en": "Place an overlay on a region or window and it keeps translating as the content changes.",
     "ja": "範囲やウインドウを選ぶと、内容の変化に合わせて翻訳を続けます。",
-    "ko": "영상 자막이나 게임 대사처럼 계속 바뀌는 글은 실시간 번역으로 읽으세요. 한 번 지정한 영역에서 새 내용을 이어서 번역해요.",
+    "ko": "영역이나 창을 한 번 지정하면, 그 안의 글이 바뀔 때마다 이어서 번역해요. 원래 앱을 클릭하고 스크롤하면서 계속 읽을 수 있어요.",
     "zh-Hans": "选择区域或窗口后，会随内容变化持续翻译。",
     "zh-Hant": "選取區域或視窗後，會隨內容變更持續翻譯。"
   },
@@ -303,6 +303,10 @@
     "zh-Hans": "发布说明和未发布更改来自网站附带的更新日志，与 Apple Inc. 无关联。",
     "zh-Hant": "發布說明與未發布變更來自網站附帶的更新紀錄，與 Apple Inc. 無關聯。"
   },
+  "76250eb91058e0d8": {
+    "en": "Usage examples",
+    "ko": "활용 예시"
+  },
   "780bea67085d2d91": {
     "en": "Next video",
     "ko": "다음 영상"
@@ -352,13 +356,6 @@
     "ko": "복사했어요",
     "zh-Hans": "已复制",
     "zh-Hant": "已複製"
-  },
-  "8faca9da8a383b0c": {
-    "en": "Drag a region or pick a whole window. The translation appears in place over the captured image.",
-    "ja": "範囲をドラッグするか、ウインドウ全体を選んでください。キャプチャ画像の原文の位置に訳文を表示します。",
-    "ko": "설명서나 이미지에서 읽고 싶은 부분만 캡처하세요. 캡처한 한 장을 번역하고, 이미지나 글자로 복사해 다른 앱에서 활용할 수 있어요.",
-    "zh-Hans": "拖选区域或选择整个窗口，译文会显示在截图的原文位置。",
-    "zh-Hant": "拖選區域或選取整個視窗，譯文就會顯示在擷取影像的原文位置。"
   },
   "8fadbc8de2733658": {
     "en": "Third-party notices",

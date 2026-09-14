@@ -9,7 +9,7 @@ let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
 /// Single source of truth for the marketing version. The release workflow
 /// verifies the pushed tag matches this before building.
-let appVersion = "2.9.1"
+let appVersion = "2.10.0"
 /// Build number is injected by CI (github.run_number); 1 for local builds.
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
@@ -79,12 +79,32 @@ let project = Project(
       ],
       scripts: [
         .pre(
-          script: "swift run --package-path \"$SRCROOT/Tools\" swiftycrow-tools check",
+          script: """
+            if [ -n "${SWIFTYCROW_REVIEW_LOCALE:-}" ]; then
+              if [ "$CONFIGURATION" != "Debug" ]; then
+                echo "Locale review is supported only in Debug builds." >&2
+                exit 1
+              fi
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check --locale "$SWIFTYCROW_REVIEW_LOCALE"
+            else
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check
+            fi
+            """,
           name: "Validate Localizations",
           basedOnDependencyAnalysis: false
         ),
         .post(
-          script: "swift run --package-path \"$SRCROOT/Tools\" swiftycrow-tools check-app --stringsdata \"$TARGET_TEMP_DIR/Objects-normal\"",
+          script: """
+            if [ -n "${SWIFTYCROW_REVIEW_LOCALE:-}" ]; then
+              if [ "$CONFIGURATION" != "Debug" ]; then
+                echo "Locale review is supported only in Debug builds." >&2
+                exit 1
+              fi
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check-app --stringsdata "$TARGET_TEMP_DIR/Objects-normal" --locale "$SWIFTYCROW_REVIEW_LOCALE"
+            else
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check-app --stringsdata "$TARGET_TEMP_DIR/Objects-normal"
+            fi
+            """,
           name: "Check Extracted UI Strings",
           basedOnDependencyAnalysis: false
         ),

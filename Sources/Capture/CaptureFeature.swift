@@ -112,6 +112,7 @@ struct CaptureFeature {
     case overlayPlaced(CGRect)
     case setLive(Bool)
     case toggleLiveRequested
+    case setOverlayVisible(Bool)
     case toggleLiveOverlayRequested
     case translationUnavailable(generation: Int, lineIDs: Set<UUID>, message: String?)
     case translationResponse(generation: Int, lineID: UUID, key: TranslationCacheKey, translation: TranslatedText)
@@ -390,6 +391,10 @@ struct CaptureFeature {
         guard state.overlayActive else { return .none }
         return .send(.setLive(!state.isLive))
 
+      case .setOverlayVisible(let visible):
+        guard visible != state.overlayActive else { return .none }
+        return .send(.toggleLiveOverlayRequested)
+
       case .toggleLiveOverlayRequested:
         // Flip the live overlay on/off on the last-used region without
         // re-selecting. When it's up, tear it down via dismissOverlay — that
@@ -400,6 +405,7 @@ struct CaptureFeature {
         if state.overlayActive {
           return .send(.dismissOverlay)
         }
+        guard state.overlayFrame.hasSelection else { return .none }
         return .send(.overlayPlaced(state.overlayFrame.rect))
 
       case .translationFinished(let generation):
