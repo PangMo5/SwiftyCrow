@@ -20,7 +20,8 @@ struct QAError: Error, CustomStringConvertible {
 
 struct ScenarioManifest: Decodable {
   let version: Int
-  let films: [String: FilmScenario]
+  let films: [String: FilmScenario]?
+  let locales: [String: [String: FilmScenario]]?
 }
 
 // MARK: - FilmScenario
@@ -31,6 +32,7 @@ struct FilmScenario: Decodable {
   let noteHeading: String?
   let originalReadingOrder: [String]?
   let translationWindowFrame: [Double]?
+  let selectionUsesMenu: Bool?
 }
 
 // MARK: - ScenarioSource
@@ -213,7 +215,7 @@ final class SceneDriver {
   }
 
   func snapshot() throws -> String {
-    try NativeInteractionDriver.snapshot(bundleIdentifier: bundleID)
+    try NativeInteractionDriver.snapshot(bundleIdentifier: bundleID, maximumAttributeLength: nil)
   }
 
   func event(_ name: String) {
@@ -323,7 +325,9 @@ final class SceneDriver {
     var notRecorded = film == nil
       ? ["scroll", "manual resize", "dismiss", "live overlay"]
       : ["initial source and blank note preparation", "primary translation prewarming"]
-    if film == "tour" { notRecorded.append("secondary source launch, geometry preparation, and hiding") }
+    if film == "tour", scenario?.sources.count ?? 0 > 1 {
+      notRecorded.append("secondary source launch, geometry preparation, and hiding")
+    }
     if
       film ==
       "compare" { notRecorded.append("native separate window preparation, In-place restoration, hiding, and source reset") }
@@ -532,13 +536,23 @@ extension SceneDriver {
     scenariosURL = URL(fileURLWithPath: try args.required("scenarios"))
     let manifest = try JSONDecoder().decode(ScenarioManifest.self, from: Data(contentsOf: scenariosURL!))
     guard
-      manifest.version == 1, let scenario = manifest.films[selectedFilm], let primary = scenario.sources.first,
+      [1, 2].contains(manifest.version),
+      let scenario = (manifest.version == 2 ? manifest.locales?[language] : manifest.films)?[selectedFilm],
+      let primary = scenario.sources.first,
       ["tour", "capture", "live", "layout", "compare"].contains(selectedFilm)
     else { throw QAError("Invalid film scenario") }
     self.scenario = scenario
     film = selectedFilm
     translationSource = primary.language
     translationTarget = scenario.targetLanguage
+    func writingSystem(_ code: String) -> String {
+      let value = Locale.Language(identifier: Locale.Language(identifier: code).maximalIdentifier)
+      return "\(value.languageCode?.identifier ?? "")-\(value.script?.identifier ?? "")"
+    }
+    guard writingSystem(translationTarget) == writingSystem(language),
+          writingSystem(translationSource) != writingSystem(translationTarget)
+    else { throw QAError("Demo must translate a different source language into its UI language: \(translationSource) → \(translationTarget), UI \(language)") }
+    actionVerification["translationTargetMatchesUI"] = true
     guard scenario.sources.allSatisfy({ $0.language == translationSource })
     else { throw QAError("A film must use one verified language pair") }
     sourceAppURL = args.values["source-app"].map { URL(fileURLWithPath: $0) }
@@ -565,8 +579,7 @@ extension SceneDriver {
       for app in NSRunningApplication.runningApplications(withBundleIdentifier: sourceBundle) { app.terminate() }
     }
     if ["tour", "layout"].contains(selectedFilm) { try prepareNote() }
-    if selectedFilm == "tour" {
-      guard let secondary = scenario.sources.dropFirst().first else { throw QAError("Tour requires live secondary source") }
+    if selectedFilm == "tour", let secondary = scenario.sources.dropFirst().first {
       try prepareSecondarySource(secondary)
     }
     try openSource(primary)
@@ -576,6 +589,10 @@ extension SceneDriver {
       try activate(primary.bundleID)
     }
     if selectedFilm == "compare" { try prepareCompareWindow(primary) }
+    // Let preparation windows and system banners finish dismissing before
+    // the camera starts; no demo actions or translation waits are skipped.
+    try NativeInteractionDriver.movePointer(to: CGPoint(x: 60, y: 1000))
+    pause(2)
     try settingsAbsent()
     _ = try observe("source-ready")
     sceneStart = Double(DispatchTime.now().uptimeNanoseconds) / 1_000_000_000
@@ -653,18 +670,19 @@ extension SceneDriver {
           narrationID: "tour.copy"
         )
         try pasteIntoNote(text, narrationID: "tour.paste")
-        guard let secondary = scenario.sources.dropFirst().first else { throw QAError("Tour requires live secondary source") }
-        try activatePreparedSecondarySource(secondary)
-        try selectSource(secondary, live: true, stage: "live", narrationID: "tour.live")
-        guard let changed = secondary.changedTranslation else { throw QAError("Missing departure update") }
-        try changeNativeSource(
-          secondary,
-          control: "play",
-          expected: changed,
-          absent: [],
-          stage: "departure-update",
-          narrationID: "tour.changed"
-        )
+        if let secondary = scenario.sources.dropFirst().first {
+          try activatePreparedSecondarySource(secondary)
+          try selectSource(secondary, live: true, stage: "live", narrationID: "tour.live")
+          guard let changed = secondary.changedTranslation else { throw QAError("Missing departure update") }
+          try changeNativeSource(
+            secondary,
+            control: "play",
+            expected: changed,
+            absent: [],
+            stage: "departure-update",
+            narrationID: "tour.changed"
+          )
+        }
         if sceneMode == "record" { pause(3) }
 
       case "capture":
@@ -703,9 +721,8 @@ extension SceneDriver {
       case "live":
         try selectSource(primary, live: true, stage: "live", narrationID: "live.select")
         guard
-          let changed = primary.changedTranslation,
-          let later = primary.laterTranslation
-        else { throw QAError("Science source requires three phases") }
+          let changed = primary.changedTranslation
+        else { throw QAError("Live source requires a changed phase") }
         try changeNativeSource(
           primary,
           control: "play",
@@ -715,10 +732,12 @@ extension SceneDriver {
           narrationID: "live.play"
         )
         cue("live.second")
-        _ = try waitFor("third science subtitle", timeout: 20) { later.allSatisfy($0.contains) }
-        cue("live.third")
-        actionVerification["scienceThirdCaptionVerified"] = true
-        _ = try observe("science-third")
+        if let later = primary.laterTranslation {
+          _ = try waitFor("third science subtitle", timeout: 20) { later.allSatisfy($0.contains) }
+          cue("live.third")
+          actionVerification["scienceThirdCaptionVerified"] = true
+          _ = try observe("science-third")
+        }
         if sceneMode == "record" { pause(3) }
 
       case "compare":
@@ -854,7 +873,8 @@ extension SceneDriver {
   }
 
   private func fixture(_ name: String) throws -> URL {
-    guard !name.contains("/"), name != ".." else { throw QAError("Invalid fixture name") }
+    guard !name.hasPrefix("/"), !name.split(separator: "/").contains(".."), !name.contains("\\")
+    else { throw QAError("Invalid fixture name") }
     let url = source.deletingLastPathComponent().appendingPathComponent(name)
     guard let expected = sourceAssets["Fixtures/" + name], try digest(url) == expected else {
       throw QAError("Fixture hash mismatch: \(name)")
@@ -870,7 +890,7 @@ extension SceneDriver {
       try run("/usr/bin/open", ["-a", "Preview", try fixture(name).path])
       pause(0.5)
       try activate(item.bundleID)
-      guard try NativeInteractionDriver.snapshot(bundleIdentifier: item.bundleID).contains("AXTitle=" + name) else {
+      guard try NativeInteractionDriver.snapshot(bundleIdentifier: item.bundleID).contains("AXTitle=" + URL(fileURLWithPath: name).lastPathComponent) else {
         throw QAError("Preview did not open \(name)")
       }
       let actual = try NativeInteractionDriver.arrangeMainWindow(
@@ -895,7 +915,7 @@ extension SceneDriver {
       }
       try run(
         "/usr/bin/open",
-        ["-na", sourceAppURL.path, "--args", "--scene", scene, "--fixtures", source.deletingLastPathComponent().path]
+        ["-na", sourceAppURL.path, "--args", "--scene", scene, "--fixtures", source.deletingLastPathComponent().path, "--source-language", item.language]
       )
       pause(0.7)
       try activate(item.bundleID)
@@ -1011,8 +1031,15 @@ extension SceneDriver {
     if let narrationID { cue(narrationID) }
     let shortcut = live ? "liveOverlay" : "selectRegion"
     guard let chord = configuredShortcuts[shortcut] else { throw QAError("Missing configured shortcut: \(shortcut)") }
-    try press(chord)
-    event(live ? "Live Overlay shortcut" : "Capture Region shortcut")
+    if scenario?.selectionUsesMenu == true, narrationID != nil {
+      try showStoryMenu()
+      if sceneMode == "record" { pause(1) }
+      try click(live ? "start-live-translation" : "start-capture")
+      event(live ? "Live translation menu button" : "Capture translation menu button")
+    } else {
+      try press(chord)
+      event(live ? "Live Overlay shortcut" : "Capture Region shortcut")
+    }
     _ = try observe(stage + "-selector")
     let rect = try scenarioRect(item.selectionFrame)
     try NativeInteractionDriver.drag(from: rect.origin, to: CGPoint(x: rect.maxX, y: rect.maxY))
@@ -1188,13 +1215,13 @@ extension SceneDriver {
   }
 
   private func showStoryMenu() throws {
-    if !(try snapshot()).contains("AXRadioGroup") { try click("title:SwiftyCrow") }
-    _ = try waitFor("menu visible") { $0.contains("AXRadioGroup") }
+    if !(try snapshot()).contains("AXIdentifier=start-capture") { try click("title:SwiftyCrow") }
+    _ = try waitFor("menu visible") { $0.contains("AXIdentifier=start-capture") }
   }
 
   private func closeStoryMenu() throws {
-    if try snapshot().contains("AXRadioGroup") { try click("title:SwiftyCrow") }
-    _ = try waitFor("menu dismissed") { !$0.contains("AXRadioGroup") }
+    if try snapshot().contains("AXIdentifier=start-capture") { try click("title:SwiftyCrow") }
+    _ = try waitFor("menu dismissed") { !$0.contains("AXIdentifier=start-capture") }
   }
 
   private func compareLiveModes(_ item: ScenarioSource) throws {
@@ -1235,7 +1262,7 @@ extension SceneDriver {
     if sceneMode == "record" { pause(2.5) }
     cue("compare.hide")
     try showStoryMenu()
-    try click("button:" + label("Hide overlay"))
+    try click("overlay-visibility")
     try closeStoryMenu()
     _ = try waitFor("overlay hidden") { text in !changed.contains(where: text.contains) }
     actionVerification["overlayHiddenVerified"] = true
@@ -1243,7 +1270,7 @@ extension SceneDriver {
     if sceneMode == "record" { pause(2) }
     cue("compare.recall")
     try showStoryMenu()
-    try click("button:" + label("Show on last region"))
+    try click("overlay-visibility")
     try closeStoryMenu()
     _ = try waitFor("same region restored", timeout: 30) { changed.allSatisfy($0.contains) }
     let restoredFrame = try NativeInteractionDriver.controlFrame(
@@ -1276,7 +1303,7 @@ extension SceneDriver {
     try click("description:" + label("In-place"))
     try closeStoryMenu()
     try showStoryMenu()
-    try click("button:" + label("Hide overlay"))
+    try click("overlay-visibility")
     try closeStoryMenu()
     _ = try waitFor("warm overlay hidden") { text in !item.expectedTranslation.contains(where: text.contains) }
     try activate(item.bundleID)
@@ -1338,24 +1365,20 @@ extension SceneDriver {
 
   private func verifyLanguagePair() throws {
     try click("title:SwiftyCrow")
-    try click("button:" + label("Settings"))
+    try press("cmd - ,")
     _ = try waitFor("Settings language check") { $0.contains("AXWindow AXIdentifier=settings") }
-    if try snapshot().contains("AXRadioGroup") { try click("title:SwiftyCrow") }
+    if try snapshot().contains("AXIdentifier=start-capture") { try click("title:SwiftyCrow") }
     try click("text:" + label("Languages"))
     let ax = try observe("language-pair")
     let localized = Locale(identifier: locale)
-    let sourceName = localized.localizedString(forIdentifier: translationSource) ?? ""
-    let targetName = localized.localizedString(forIdentifier: translationTarget) ?? ""
+    let sourceName = localized.localizedString(forIdentifier: Locale.Language(identifier: translationSource).minimalIdentifier) ?? ""
+    let targetName = localized.localizedString(forIdentifier: Locale.Language(identifier: translationTarget).minimalIdentifier) ?? ""
     let popups = ax.split(separator: "\n").filter { $0.contains("AXPopUpButton AXValue=") }.map(String.init)
-    // Apple's language picker may add script names; compare the localized
-    // language component while retaining the actual full values as evidence.
-    let sourceLanguage = localized
-      .localizedString(forLanguageCode: Locale.Language(identifier: translationSource).languageCode!.identifier) ?? sourceName
-    let targetLanguage = localized
-      .localizedString(forLanguageCode: Locale.Language(identifier: translationTarget).languageCode!.identifier) ?? targetName
+    // Compare the full localized display names so Chinese script variants
+    // cannot pass validation merely because both contain "Chinese".
     guard
-      popups.count == 2, popups[0].localizedCaseInsensitiveContains(sourceLanguage),
-      popups[1].localizedCaseInsensitiveContains(targetLanguage)
+      popups.count == 2, popups[0].localizedCaseInsensitiveContains("AXValue=" + sourceName),
+      popups[1].localizedCaseInsensitiveContains("AXValue=" + targetName)
     else {
       throw QAError("Actual language picker does not match scenario pair: \(popups)")
     }

@@ -6,7 +6,20 @@ import AVFoundation
 
 /// A real, silent source movie with burned-in English captions. This is separate
 /// from the camera recorder: no SwiftyCrow output is generated here.
-let output = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("science-light.mp4")
+func option(_ name: String) -> String? {
+  guard let index = CommandLine.arguments.firstIndex(of: name), index + 1 < CommandLine.arguments.count else { return nil }
+  return CommandLine.arguments[index + 1]
+}
+let output = option("--output").map { URL(fileURLWithPath: $0) }
+  ?? URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("science-light.mp4")
+let sourceStrings: [String: String]? = try option("--text-catalog").map {
+  try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: $0)))
+}
+func sourceText(_ value: String) -> String {
+  guard let sourceStrings else { return value }
+  guard let authored = sourceStrings[value] else { fatalError("Missing authored source text: \(value)") }
+  return authored
+}
 if FileManager.default.fileExists(atPath: output.path) { try FileManager.default.removeItem(at: output) }
 let width = 1600
 let height = 1000
@@ -71,7 +84,7 @@ func text(
 ) {
   let p = NSMutableParagraphStyle()
   p.lineSpacing = 10
-  (value as NSString).draw(
+  (sourceText(value) as NSString).draw(
     in: CGRect(x: x, y: y, width: w, height: h),
     withAttributes: [.font: NSFont.systemFont(
       ofSize: size,

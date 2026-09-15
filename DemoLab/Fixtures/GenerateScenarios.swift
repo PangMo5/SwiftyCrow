@@ -5,7 +5,24 @@ import AppKit
 import CoreText
 
 // Original source documents. All text is rasterized before SwiftyCrow sees it.
-let destination = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+let sourceDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+func option(_ name: String) -> String? {
+  guard let index = CommandLine.arguments.firstIndex(of: name), index + 1 < CommandLine.arguments.count else { return nil }
+  return CommandLine.arguments[index + 1]
+}
+let destination = option("--output").map { URL(fileURLWithPath: $0) } ?? sourceDirectory
+try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+let magazineName = option("--magazine-name") ?? "japanese-magazine.png"
+let selected = Set((option("--images") ?? "travel-leaflet.png,camera-manual.png,japanese-magazine.png").split(separator: ",").map(String.init))
+let sourceLocale = option("--source-language")
+let sourceStrings: [String: String]? = try option("--text-catalog").map {
+  try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: $0)))
+}
+func sourceText(_ value: String) -> String {
+  guard let sourceStrings else { return value }
+  guard let localized = sourceStrings[value] else { fatalError("Missing authored source text: \(value)") }
+  return localized
+}
 let size = CGSize(width: 1800, height: 1200)
 func color(_ hex: UInt32) -> NSColor {
   NSColor(red: CGFloat((hex >> 16) & 255) / 255, green: CGFloat((hex >> 8) & 255) / 255, blue: CGFloat(hex & 255) / 255, alpha: 1)
@@ -46,9 +63,9 @@ func text(
   let paragraph = NSMutableParagraphStyle()
   paragraph.lineSpacing = 12
   let font = serif
-    ? NSFont(name: "Hiragino Mincho ProN", size: fontSize)!
+    ? NSFont(name: sourceLocale == "zh-Hant" ? "PingFang TC" : "Hiragino Mincho ProN", size: fontSize)!
     : NSFont.systemFont(ofSize: fontSize, weight: bold ? .bold : .regular)
-  (value as NSString).draw(
+  (sourceText(value) as NSString).draw(
     in: rect(x, y, w, h),
     withAttributes: [.font: font, .foregroundColor: color(hex), .paragraphStyle: paragraph]
   )
@@ -60,6 +77,7 @@ func ellipse(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ hex: UInt
 }
 
 func make(_ name: String, draw: () -> Void) throws {
+  guard selected.contains(name) else { return }
   let bitmap = NSBitmapImageRep(
     bitmapDataPlanes: nil,
     pixelsWide: Int(size.width),
@@ -150,12 +168,12 @@ try make("camera-manual.png") {
 }
 
 let verticalBody = "雨上がりの町を歩くと、古い本屋の窓に明かりが見えた。店主は温かいお茶を用意して、旅の話を聞いてくれた。帰り道には川沿いの橋を渡った。静かな水面に夕方の空が映っていた。橋の向こうには小さな喫茶店がある。窓際の席で地図を広げ、次に歩く道を決めた。急がずに歩くと、いつもの町にも新しい発見がある。"
-try make("japanese-magazine.png") {
-  text("町を歩く", 80, 45, 900, 120, 78, 0x263A38, bold: true, serif: true)
-  text("週末の小さな旅", 1120, 100, 600, 70, 37, 0x7F4936, serif: true)
+try make(magazineName) {
+  text("町を歩く", sourceLocale == "zh-Hant" ? 1410 : 80, 45, sourceLocale == "zh-Hant" ? 350 : 900, 120, 78, 0x263A38, bold: true, serif: true)
+  text("週末の小さな旅", sourceLocale == "zh-Hant" ? 600 : 1120, 100, 600, 70, 37, 0x7F4936, serif: true)
   fill(80, 190, 1640, 3, 0x8D8C72)
   // Original editorial photography sits beside independent horizontal and vertical text blocks.
-  guard let photograph = NSImage(contentsOf: destination.appendingPathComponent("riverside-bookshop.png")) else {
+  guard let photograph = NSImage(contentsOf: sourceDirectory.appendingPathComponent("riverside-bookshop.png")) else {
     fatalError("Missing original riverside bookshop photograph")
   }
   photograph.draw(in: rect(80, 250, 735, 490))
@@ -166,9 +184,9 @@ try make("japanese-magazine.png") {
   let paragraph = NSMutableParagraphStyle()
   paragraph.lineSpacing = 22
   let value = NSAttributedString(
-    string: verticalBody,
+    string: sourceText(verticalBody),
     attributes: [
-      .font: NSFont(name: "Hiragino Mincho ProN", size: 42)!,
+      .font: NSFont(name: sourceLocale == "zh-Hant" ? "PingFang TC" : "Hiragino Mincho ProN", size: sourceLocale == "zh-Hant" ? 46 : 42)!,
       .foregroundColor: color(0x263A38),
       .verticalGlyphForm: true,
       .paragraphStyle: paragraph,
@@ -190,8 +208,8 @@ try make("japanese-magazine.png") {
 }
 
 let evidence: [String: Any] = [
-  "japaneseVerticalBody": verticalBody,
-  "sourceLanguages": ["travel-leaflet.png": "en-US", "camera-manual.png": "en-US", "japanese-magazine.png": "ja-JP"],
+  "verticalBody": selected.contains(magazineName) ? sourceText(verticalBody) : "",
+  "sourceLanguages": Dictionary(uniqueKeysWithValues: selected.map { ($0, sourceLocale ?? ($0 == "japanese-magazine.png" ? "ja-JP" : "en-US")) }),
   "note": "Original source material; no translated text is present.",
 ]
 try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])

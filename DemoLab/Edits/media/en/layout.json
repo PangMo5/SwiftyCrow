@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/en/layout-final-02/capture-demo.mov",
+  "cameraSHA256": "05155a59dd7435e1cf736803f4a900f691a207f61f93093595b9cd3ad1216f29",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "22.866016",
+    "height": 1200,
+    "nb_read_frames": "686",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "layout",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/en/layout.mp4",
+  "movieSHA256": "87de2f867791204ff8a17d78b06ddaf91d8ee77bdde434640b805bcabafc1b68",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "22.866667",
+    "height": 1200,
+    "nb_read_frames": "686",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/en/layout.jpg",
+  "posterSHA256": "a4cd5633bbe7bed958cc948ad02800c0156d20a3dc11f13037d5824177721201",
+  "posterSeconds": 14,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/en/layout.timeline.json",
+  "presentationTimelineSHA256": "c6acfe54f6241facb7b8130129d28940573e99920f01c337152e0a792a52b430",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 22.866666666,
+    "error": null,
+    "frames": 686,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 686,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/en/layout-final-02/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "ja-JP",
+  "subtitles": "DemoLab/Edits/media/en/layout.ass",
+  "subtitlesSHA256": "7e630a43f49e1453224827ba3f5196cf7156c2b6f3ce512ab48ee52a580f6a18",
+  "translationLanguage": "en-US",
+  "uiLanguage": "en",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "en",
+    "film": "layout",
+    "source": "ja-JP",
+    "target": "en-US",
+    "actualTranslationText": "Walk around the town\nA small weekend trip\nThe scenery of an old bookstore that remains along the river.\nMemo for a walk\nFrom the station to the river, fifteen minutes slowly.\nWhen I walked through the town after the rain, I saw a light in the window of an old bookstore. The owner prepared warm tea and listened to the story of the trip. On the way back, I crossed the bridge along the river. The evening sky was reflected on the quiet water. There is a small coffee shop across the bridge. I spread the map at the window seat and decided on the next way to walk. If you walk without rushing, there will be new discoveries in your usual town.\nText and photos: Editorial Department",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/en/layout-final-02/layout-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=Japanese",
+      "       AXPopUpButton AXValue=English"
+    ]
+  }
+}

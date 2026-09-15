@@ -167,8 +167,8 @@ with its development entitlements. The global Tart installation was unchanged.
 Earlier local builds entered a run loop without opening a window or starting
 the guest; the Xcode 27 build opened the window successfully. Preserve the exact
 build and runtime evidence rather than attributing the difference to a proven
-compiler defect. Use `--no-display-refit --no-clipboard --no-audio` for the owned
-guest, and verify the guest display remains 1920 × 1200 at 1× after resizing.
+compiler defect. Set `tart set swiftycrow-demo --no-display-refit`, then run the owned
+guest with `--no-clipboard --no-audio`, and verify the guest display remains 1920 × 1200 at 1× after resizing.
 
 Supply a JSON viewport containing `ownerPID`, `windowID`, `displayID`, `title`,
 `x`, `y`, `width`, `height` and `scale`. Coordinates are relative to the selected
@@ -285,3 +285,31 @@ The `demoqa collect` and legacy `demoqa capture` commands still use
 `source-sample.html` to exercise Settings, error paths, Zoom and Fit. They are
 regression evidence, not substitutes for the product films. Keep their output
 in a separate directory and do not export them under the five story IDs.
+
+### Korean 2.10.0 review session
+
+The September 15 Korean batch uses guest-local `DemoRecorder` successfully at
+1920 × 1200 and 30 fps. All five scenarios pass; four takes have no missed slots,
+and the mixed-direction layout take has 2 of 664 slots missed (0.301%). This is
+fresh evidence for this VM session, not a claim that the September 11 scheduling
+regression is fixed. Preserve the per-take statistics and continue enforcing the
+1% gate. Host camera/input relays are not used for these final takes.
+
+Disable Tips notifications through guest System Settings before framing the
+source. The system hides notifications when capture begins, so an existing banner
+can remain in the first frames even though later frames look clean. Check frame
+zero, park the pointer away from controls to avoid tooltips, and let preparation
+windows settle before starting the recorder. Never edit an alert out of footage.
+
+### Translation output must match the page
+
+New recordings use `DemoLab/Scenarios/localized-2.10.json`. The runner requires the
+translation target language and script to match `--locale` and checks complete
+localized picker values. It also verifies real translated text fragments; full AX
+values are read for assertions, so long paragraphs are not silently truncated.
+`FilmLanguagePair` enforces the same contract in exports and site assembly.
+
+Changing only UI language and editorial subtitles does not produce a localized
+demo. Select foreign source material suitable for the target page and confirm the
+actual output in capture results and live windows. Original-text copying in the
+layout demo intentionally remains in the source language and is labeled as such.

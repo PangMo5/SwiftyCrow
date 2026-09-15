@@ -83,3 +83,24 @@ from the final native screen recorder.
 The website and all READMEs share these five contracts. Privacy remains factual
 supporting information rather than a staged network-audit animation. A demo is
 bounded evidence for its visible scene, not a universal OCR benchmark.
+
+## Korean 2.10.0 retake
+
+`DemoLab/Scenarios/korean-2.10.json` defines the Korean review batch. It retains
+the verified fixtures while shortening the introduction to capture, translation
+copy, and pasting into notes. The live video ends after the second translated
+phase. Tour, live, and compare select an area through the current menu buttons.
+Compare hides and restores the saved region with the overlay visibility switch.
+The capture and mixed-direction recognition films keep their existing workflows.
+
+Record and review these five Korean takes before producing other locales. Use
+`export-video --media-root <review-directory>` to retain the published media while
+preparing the isolated review exports.
+
+## Page-language outputs
+
+`localized-2.10.json` supersedes the fixed Korean-target matrix for additional
+locales. Each locale has its own source/target pair and note headings. English
+uses Korean originals; Japanese uses a Chinese magazine for the vertical-text
+example. Other pages use English or Japanese originals. Actual translated results
+must match the page language, including Simplified versus Traditional Chinese.

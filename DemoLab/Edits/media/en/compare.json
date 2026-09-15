@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/en/compare-final-01/capture-demo.mov",
+  "cameraSHA256": "53155e561b7c97c55cb68e6aa4dcf8e17934bf0d7a3a9a68419bf56802f45c11",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "12975/433",
+    "codec_name": "h264",
+    "duration": "28.866016",
+    "height": 1200,
+    "nb_read_frames": "865",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "compare",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/en/compare.mp4",
+  "movieSHA256": "bf376677443c9523132f13115b5dc5acc1e6272d5710f6a62bdcc5d8d377f744",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "12975/433",
+    "codec_name": "hevc",
+    "duration": "28.866667",
+    "height": 1200,
+    "nb_read_frames": "865",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/en/compare.jpg",
+  "posterSHA256": "d06e3ce6b02dd879f1fe1646481af851bbb404086c0708fdc590831cde11f489",
+  "posterSeconds": 26.866666666,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/en/compare.timeline.json",
+  "presentationTimelineSHA256": "17b01592ab6269b5804f314e82e2619f7af0bc3527c6c80ccc493736ec975298",
+  "recorder": {
+    "code": 0,
+    "dropped": 1,
+    "durationSeconds": 28.866666666,
+    "error": null,
+    "frames": 865,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 1,
+        "frames": 865,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/en/compare-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "ko-KR",
+  "subtitles": "DemoLab/Edits/media/en/compare.ass",
+  "subtitlesSHA256": "4cae33250914ec06bb41d9be1ce937a98b7ba08c57c811c7c7818adacfb57e7d",
+  "translationLanguage": "en-US",
+  "uiLanguage": "en",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "en",
+    "film": "compare",
+    "source": "ko-KR",
+    "target": "en-US",
+    "actualTranslationText": "An astronomer\nI need a brass key.\nLook for it next to the old telescope.",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/en/compare-final-01/compare-restored-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=Korean",
+      "       AXPopUpButton AXValue=English"
+    ]
+  }
+}

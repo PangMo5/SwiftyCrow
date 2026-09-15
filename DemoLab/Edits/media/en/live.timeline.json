@@ -1,0 +1,40 @@
+{
+  "captureEpochUptimeNanoseconds" : 2029881988833,
+  "durationSeconds" : 20.300000000000001,
+  "events" : [
+    {
+      "end" : 20.300000000000001,
+      "id" : "live.chapter",
+      "start" : 0,
+      "track" : "chapter"
+    },
+    {
+      "end" : 2.4242454580000867,
+      "id" : "live.intro",
+      "start" : 0,
+      "track" : "caption"
+    },
+    {
+      "end" : 7.7597888750001403,
+      "id" : "live.select",
+      "start" : 2.4242454580000867,
+      "track" : "caption"
+    },
+    {
+      "end" : 17.178213249999999,
+      "id" : "live.play",
+      "start" : 7.7597888750001403,
+      "track" : "caption"
+    },
+    {
+      "end" : 20.300000000000001,
+      "id" : "live.second",
+      "start" : 17.178213249999999,
+      "track" : "caption"
+    }
+  ],
+  "film" : "live",
+  "scenariosSHA256" : "598e8f2cc3ad963a91f03a86a82cf41d10912c1661ebcbed9659a0e28d651257",
+  "schemaVersion" : 1,
+  "uiLanguage" : "en"
+}

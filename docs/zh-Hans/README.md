@@ -12,71 +12,86 @@ SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
 
 [![最新版本](https://img.shields.io/github/v/release/PangMo5/SwiftyCrow?sort=semver)](https://github.com/PangMo5/SwiftyCrow/releases/latest) [![下载](https://img.shields.io/github/downloads/PangMo5/SwiftyCrow/total)](https://github.com/PangMo5/SwiftyCrow/releases) ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue) [![许可证：AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](../../LICENSE)
 
-一款完全在 Mac 上处理的屏幕翻译应用。通过 [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit) 截取任意屏幕区域，用 [Vision](https://developer.apple.com/documentation/vision) 识别文字，再通过 [Apple 翻译](https://developer.apple.com/documentation/translation)进行翻译。无需云端 API、密钥或配额。
+一款完全在本机处理的 macOS 屏幕翻译应用。
+
+SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静态图片，阅读并利用译文；也可以使用实时翻译，持续阅读不断变化的内容。识别与翻译使用 Mac 上的语言模型，无需云端 API 或账号。
 
 <a id="see-swiftycrow-in-action"></a>
 ## 看看 SwiftyCrow 如何使用
 
 [![观看完整阅读流程](../../web/media/zh-Hans/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-tour)
 
-规划一次港口之旅：翻译旅游指南并记入笔记，再用实时翻译查看不断变化的出发信息。各功能演示分别展示图解说明书、视频字幕、竖排日文杂志，以及独立窗口中的游戏对话。原创示例内容由真实开发版本翻译成韩语，应用界面使用本指南的语言。
+概览视频展示如何截取屏幕文字、翻译并将结果复制到笔记中。下方的功能视频分别演示图片复制、实时更新、独立翻译窗口和竖排文字识别。
+
+<a id="why-swiftycrow"></a>
+## 为什么选择 SwiftyCrow？
+
+网页、图片或应用中的文字并不总能方便地选择和复制。SwiftyCrow 从屏幕读取文字，让你在查看原应用的同时翻译。
+
+- **从屏幕翻译：** 直接选择相关区域，无需先保存文件或将文字移入其他应用。
+- **选择合适的模式：** 用截图翻译一次屏幕内容，或用实时翻译持续阅读变化的文字。
+- **利用翻译结果：** 保存或复制翻译后的图片，也可以只复制原文或译文。
 
 <a id="features"></a>
 ## 主要功能
 
-本 README 以 `main` 为准，包含尚未发布的更改。各版本的可用功能请查看[更新日志](CHANGELOG.md)。
-
 <a id="capture-and-reuse"></a>
 ### 截图后用于自己的工作
 
-<img align="right" src="../../web/media/zh-Hans/capture.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-capture"><img align="right" src="../../web/media/zh-Hans/capture.jpg" width="160" alt="" /></a>
 
-[观看操作流程](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-capture)
-
-- **区域截图：** 拖动选择屏幕区域，或按 **Space**，像 macOS 截图工具一样选中整个窗口。结果会在浮动窗口中显示，译文直接覆盖在原文位置。支持保存或复制图片，也可单独复制原文或译文。
+- **区域或窗口：** 拖动选择屏幕区域，或按**空格键**高亮并选择整个窗口。
+- **截图翻译：** 在独立的结果窗口中阅读译文，同时保留图片及其布局。
+- **缩放与适配：** 放大图片，或使其适配结果窗口。100% 时，一个截图像素对应一个屏幕像素。
+- **保存与复制：** 保存为 PNG、复制翻译后的图片，或将识别的原文和译文复制为文字。无论如何缩放或平移，图片输出均保持完整截图的原始分辨率。
 
 <br clear="right" />
 
 <a id="follow-changing-content"></a>
 ### 跟随画面变化继续阅读
 
-<img align="right" src="../../web/media/zh-Hans/live.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-live"><img align="right" src="../../web/media/zh-Hans/live.jpg" width="160" alt="" /></a>
 
-[观看操作流程](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-live)
+- **持续翻译：** 选定一次区域或窗口，其中的文字变化时就会重新识别并翻译。
+- **操作原应用：** 内容区域的点击和滚动会直接传递给下方的应用。
+- **暂停与继续：** 使用 **实时** 按钮暂停或继续翻译，使用 **×** 关闭悬浮翻译。
+- **记住所选区域：** 无需重新选择，即可显示或隐藏上次区域的翻译。隐藏时会停止截图和翻译；再次遇到相同文字时可复用之前的译文。
 
-- **实时翻译：** 用同样的方式选择目标，内容变化时会持续翻译。正文区域内的点击和滚动会传递给下方应用。**实时**按钮可暂停或继续，**×**可关闭。译文可显示在**原文上**，也可放到**独立窗口**，原位置仅保留区域边框。
-- **预设区域，按需翻译：** 应用会记住上次区域，使用**显示或隐藏实时翻译**即可在同一位置切换翻译。适合游戏面板或固定位置的信息。隐藏后会停止所有截图和翻译，直到再次显示。
-- **复用实时翻译：** 再次查看相同文字时，会复用之前的翻译结果。
+<br clear="right" />
+
+<a id="keep-the-original-in-view"></a>
+#### 对照原文阅读
+
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-compare"><img align="right" src="../../web/media/zh-Hans/compare.jpg" width="160" alt="" /></a>
+
+- **显示方式：** 在原文上方显示翻译，或在旁边的独立窗口中阅读。
+- **独立翻译窗口：** 在原应用旁阅读译文，不遮挡其内容。文字变化时，同一个翻译窗口会随之更新。
 
 <br clear="right" />
 
 <a id="read-images-and-documents"></a>
 ### 阅读图片和文档
 
-<img align="right" src="../../web/media/zh-Hans/layout.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-layout"><img align="right" src="../../web/media/zh-Hans/layout.jpg" width="160" alt="" /></a>
 
-[观看操作流程](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-layout)
+- **阅读顺序：** 按阅读顺序识别竖排日文、中文和多栏文字。
+- **文档结构：** 识别截取页面中的标题、正文、图片说明和边栏文字。
+- **原文文字：** 直接复制识别出的文字，用于笔记或其他用途，无需手动抄写。
 
-- **识别文档结构：** 按阅读顺序识别竖排日文、中文和多栏文本，并根据译文语言选择合适的书写方向。
+<br clear="right" />
+
+<a id="languages-and-translation"></a>
+### 语言与翻译
+
 - **Mac 支持的语言：** 可选择 macOS 支持的源语言和目标语言。翻译前请下载所需模型。将源语言设为**自动检测**，即可逐行识别混合语言的内容。
 - **两种翻译方式：** 选择**快速**以优先保证速度，或在运行 macOS 26.4 及以上版本的支持设备上选择**高质量**，使用 Apple Intelligence。
 
-<br clear="right" />
+<a id="interface-and-settings"></a>
+### 界面与设置
 
-<a id="keep-the-original-in-view"></a>
-### 对照原文阅读
-
-<img align="right" src="../../web/media/zh-Hans/compare.jpg" width="200" alt="" />
-
-[观看操作流程](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-compare)
-
-- **选择阅读位置：** 在原文上显示译文，或在独立窗口中阅读，保留完整画面。隐藏翻译后，无需重新选择区域即可回到原来的位置。
-- **常驻菜单栏：** 点击菜单栏图标打开控制面板，或按 `⌘,` 打开设置。
-- **自定义快捷键：** 在设置 → 快捷键中配置截图、实时翻译、上次区域的显示与隐藏、暂停与继续、显示方式，以及保存和复制操作。
-- **登录时启动：** 登录后自动启动 SwiftyCrow。
-- **直接编辑配置文件：** 可手动编辑与应用内设置保持同步的文本文件。
-
-<br clear="right" />
+- **菜单栏控制：** 从菜单栏启动截图或实时翻译，并在设置中配置快捷键。
+- **启动与更新：** 设置登录时启动，以及自动检查更新。
+- **配置文件：** 应用内设置与 TOML 配置文件保持同步。
 
 <a id="install"></a>
 ## 安装
@@ -91,15 +106,15 @@ brew install --cask PangMo5/tap/swiftycrow
 
 **直接下载：** 从[发布页面](https://github.com/PangMo5/SwiftyCrow/releases/latest)获取最新的 `.dmg`，打开后将应用拖到“应用程序”文件夹。每个版本也提供对应源代码归档的链接。
 
-首次启动时，请在系统设置 → 隐私与安全性中允许**屏幕录制**，然后重新启动应用。之后可通过应用获取更新。
+首次启动时，快速设置会引导你允许屏幕录制、下载语言并完成首次截图。打开系统设置前会保存当前步骤和所选语言，因此即使 macOS 退出并重新打开应用，也能继续设置。还可在设置 → 通用 → 权限中查看当前状态。
 
 <a id="usage"></a>
 ## 使用方法
 
 1. 在设置（`⌘,`）中选择**源语言**和**目标语言**。
-2. **截取区域：** 从控制面板或快捷键启动**截取区域**，再拖动框选文字。按 **Space** 可选择整个窗口。拖动结果窗口的标题区域可移动窗口。用 `⌘+` / `⌘−` 缩放，点击百分比或按 `⌘0` 使图片适合窗口；100% 表示一个图片像素对应一个屏幕像素。`⌘S` 保存、`⌘C` 复制图片、`⌘O` 复制原文、`⌘T` 复制译文、`Esc` 关闭。无论当前缩放比例或平移位置如何，保存和复制都会包含原始分辨率的完整图片。
-3. **使用实时翻译：** 从菜单栏或快捷键启动**实时翻译…**，拖动选择区域，或按 **Space** 选择窗口。**实时**按钮可暂停或继续，`⌘C` 可复制全部译文，**×**可关闭。
-4. **复用固定区域：** 选定区域后，使用**显示或隐藏实时翻译**即可在同一位置切换。隐藏后会停止所有截图和翻译。
+2. **截取区域：** 从弹出面板或快捷键启动**截图翻译**，然后拖过文字。也可按**空格键**高亮并点击整个窗口。拖动预览的标题区域可移动窗口。使用 `⌘+` / `⌘−` 缩放，点击百分比或按 `⌘0` 适配窗口；100% 表示一个图片像素对应一个屏幕像素。预览支持 `⌘S` 保存、`⌘C` 复制图片、`⌘O` 复制原文、`⌘T` 复制译文，以及 `Esc` 关闭。保存和复制始终包含原始分辨率的完整图片，与缩放或平移无关。
+3. **使用实时翻译：** 点击**实时翻译**按钮选择区域或窗口，再次点击可选择新区域。旁边的**显示悬浮翻译**开关控制所选区域的显示和隐藏；选择区域前处于停用状态。使用悬浮翻译中的 **实时** 暂停或继续，使用 `⌘C` 复制完整译文，使用 **×** 关闭。
+4. **显示或隐藏翻译：** **显示悬浮翻译**开关控制所选区域的翻译。隐藏时停止截图和翻译，再次显示时在同一区域继续。
 
 截图、实时翻译和保存、复制操作的快捷键，可在设置 → 快捷键中修改。
 

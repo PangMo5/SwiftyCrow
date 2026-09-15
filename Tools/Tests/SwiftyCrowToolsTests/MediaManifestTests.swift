@@ -41,11 +41,15 @@ struct MediaManifestTests {
     try recordedCatalog.write(catalog.text())
     try review.write("Reviewed every film in every locale")
     let filmIDs = ["tour", "capture"]
+    let targets = ["en": "en-US", "ko": "ko-KR", "ja": "ja-JP", "zh-Hans": "zh-Hans", "zh-Hant": "zh-Hant"]
+    func sourceLanguage(_ locale: String) -> String { locale == "en" ? "ja-JP" : "en-US" }
     let films = JSON.object(filmIDs.map { id in
       (id, .object([
         ("sourceFixture", .string("Fixtures/manifest.json")),
-        ("sourceLanguage", .string("en-US")),
-        ("translationLanguage", .string("ko-KR")),
+        ("languagePairs", .object(locales.map { locale in
+          (locale, .object([("sourceLanguage", .string(sourceLanguage(locale))),
+                           ("translationLanguage", .string(targets[locale]!))]))
+        })),
         ("title", .object(locales.map { ($0, .string("\(id) title \($0)")) })),
         ("caption", .object(locales.map { ($0, .string("\(id) caption \($0)")) })),
       ]))
@@ -59,8 +63,8 @@ struct MediaManifestTests {
           ("film", .string(film)),
           ("uiLanguage", .string(locale)),
           ("visualReviewEvidence", .string("review.md")),
-          ("sourceLanguage", .string("en-US")),
-          ("translationLanguage", .string("ko-KR")),
+          ("sourceLanguage", .string(sourceLanguage(locale))),
+          ("translationLanguage", .string(targets[locale]!)),
           ("narrationCatalogSHA256", .string(sha(narration))),
           ("recorder", .object([("durationSeconds", .decimal(6))])),
         ])
@@ -104,8 +108,8 @@ struct MediaManifestTests {
         try JSON.object([
           ("film", .string(film)),
           ("uiLanguage", .string(locale)),
-          ("translationSource", .string("en-US")),
-          ("translationTarget", .string("ko-KR")),
+          ("translationSource", .string(sourceLanguage(locale))),
+          ("translationTarget", .string(targets[locale]!)),
           ("scenariosSHA256", .string(sha(scenarios))),
           ("sourceSHA256", .string(sha(fixture))),
           ("catalogSHA256", .string(sha(catalog))),

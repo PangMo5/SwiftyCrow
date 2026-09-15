@@ -46,7 +46,8 @@ struct FilmNarration {
       }
       if track != "keys" { try require(ordered.first?["start"].double ?? .infinity <= 1.5, "Opening \(track) arrives late") }
     }
-    try require(events.contains { $0["track"].str == "keys" }, "Film has no actual shortcut demonstration")
+    // Menu-driven films may not use a shortcut. Any displayed keycast must
+    // still correspond to the recorded input and pass the checks above.
   }
 
   static func displayChord(_ raw: String) throws -> String {

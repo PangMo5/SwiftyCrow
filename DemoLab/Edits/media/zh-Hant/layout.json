@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/layout-final-01/capture-demo.mov",
+  "cameraSHA256": "274fd2d3b89f3aa0a182b1cc4d56c2147256cd50f997850788602924c52a2357",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "23.200000",
+    "height": 1200,
+    "nb_read_frames": "696",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "layout",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/zh-Hant/layout.mp4",
+  "movieSHA256": "7598bd62a28892c0d4230d19ee80c65f6892b92835f576267e97dec802d8af8c",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "23.200000",
+    "height": 1200,
+    "nb_read_frames": "696",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/zh-Hant/layout.jpg",
+  "posterSHA256": "33def82674c22ef67cc518ca24fefb511bdc2ca5677df791aa097e0d072db135",
+  "posterSeconds": 14,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/zh-Hant/layout.timeline.json",
+  "presentationTimelineSHA256": "e0a95d8590d02e1e25742535af9f7c8a16e6ceeda90aca7dc8a011c1cd398fbb",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 23.2,
+    "error": null,
+    "frames": 696,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 696,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/zh-Hant/layout-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "ja-JP",
+  "subtitles": "DemoLab/Edits/media/zh-Hant/layout.ass",
+  "subtitlesSHA256": "5100f11a560e547552f624b18ee869e62ded46bff634791907e7b0d51e690ee8",
+  "translationLanguage": "zh-Hant",
+  "uiLanguage": "zh-Hant",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "zh-Hant",
+    "film": "layout",
+    "source": "ja-JP",
+    "target": "zh-Hant",
+    "actualTranslationText": "在街上散步\n週末的小旅行\n河邊殘留著的舊書店的風景。\n散步的備忘錄\n從車站到河邊，悠閒地15分鐘。\n走在雨後的街道上，老書店的窗戶裡看到了燈光。 店主準備了熱茶，聽了旅行的故事。 回去的路上過了河邊的橋。 安靜的水面映照著傍晚的天空。 橋的對面有一家小咖啡店。 在靠窗的座位上展開地圖，決定接下來要走的路。 不著急走的話，平常的小鎮也有新的發現。\n文章和照片：編輯部",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/layout-final-01/layout-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=日文",
+      "       AXPopUpButton AXValue=中文（台灣）"
+    ]
+  }
+}

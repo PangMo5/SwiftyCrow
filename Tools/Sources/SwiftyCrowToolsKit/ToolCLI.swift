@@ -66,7 +66,8 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         film: required(film, "--film"),
         locale: required(locale, "--locale"),
         posterSeconds: posterSeconds,
-        review: URL(fileURLWithPath: required(reviewReport, "--review-report"))
+        review: URL(fileURLWithPath: required(reviewReport, "--review-report")),
+        mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) }
       )
 
     case .mediaManifest:

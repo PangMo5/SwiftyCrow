@@ -1,78 +1,70 @@
 {
-  "captureEpochUptimeNanoseconds": 10510226367208,
-  "durationSeconds": 23.933333333333334,
-  "events": [
+  "captureEpochUptimeNanoseconds" : 25480106708958,
+  "durationSeconds" : 22.133333332999999,
+  "events" : [
     {
-      "end": 23.933333333,
-      "id": "layout.chapter",
-      "start": 0,
-      "track": "chapter"
+      "end" : 22.133333332999999,
+      "id" : "layout.chapter",
+      "start" : 0,
+      "track" : "chapter"
     },
     {
-      "end": 3.243838541999139,
-      "id": "layout.intro",
-      "start": 0,
-      "track": "caption"
+      "end" : 2.4102556249999907,
+      "id" : "layout.intro",
+      "start" : 0,
+      "track" : "caption"
     },
     {
-      "end": 12.927129291998426,
-      "id": "layout.select",
-      "start": 3.243838541999139,
-      "track": "caption"
+      "end" : 11.066644833001192,
+      "id" : "layout.select",
+      "start" : 2.4102556249999907,
+      "track" : "caption"
     },
     {
-      "end": 16.24821579199852,
-      "id": "layout.translated",
-      "start": 12.927129291998426,
-      "track": "caption"
+      "end" : 14.395136458002526,
+      "id" : "layout.translated",
+      "start" : 11.066644833001192,
+      "track" : "caption"
     },
     {
-      "end": 18.649954791999335,
-      "id": "layout.copy",
-      "start": 16.24821579199852,
-      "track": "caption"
+      "end" : 16.800701457999821,
+      "id" : "layout.copy",
+      "start" : 14.395136458002526,
+      "track" : "caption"
     },
     {
-      "end": 23.933333333,
-      "id": "layout.order",
-      "start": 18.649954791999335,
-      "track": "caption"
+      "end" : 22.133333332999999,
+      "id" : "layout.order",
+      "start" : 16.800701457999821,
+      "track" : "caption"
     },
     {
-      "chord": "shift + cmd - 1",
-      "end": 5.243889291999949,
-      "start": 3.243889291999949,
-      "track": "keys"
+      "chord" : "shift + cmd - 1",
+      "end" : 4.4103063330003351,
+      "start" : 2.4103063330003351,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - 0",
-      "end": 14.394932374998461,
-      "start": 12.394932374998461,
-      "track": "keys"
+      "chord" : "cmd - 0",
+      "end" : 12.536836292001681,
+      "start" : 10.536836292001681,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - o",
-      "end": 18.24949837499844,
-      "start": 16.24949837499844,
-      "track": "keys"
+      "chord" : "cmd - o",
+      "end" : 16.396294000001944,
+      "start" : 14.396294000001944,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - v",
-      "end": 21.13270412499878,
-      "start": 19.13270412499878,
-      "track": "keys"
+      "chord" : "cmd - v",
+      "end" : 19.293746041999839,
+      "start" : 17.293746041999839,
+      "track" : "keys"
     }
   ],
-  "film": "layout",
-  "scenariosSHA256": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f",
-  "schemaVersion": 1,
-  "uiLanguage": "ko",
-  "reviewEdit": {
-    "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/layout-native-host-05/capture-demo.mov",
-    "sourceFrameRange": [
-      0,
-      718
-    ],
-    "originalFrames": 718
-  }
+  "film" : "layout",
+  "scenariosSHA256" : "3a04472031dc9e23bf75c9e217a53f88702304ad5550e8ac3d16701d5de5a7df",
+  "schemaVersion" : 1,
+  "uiLanguage" : "ko"
 }

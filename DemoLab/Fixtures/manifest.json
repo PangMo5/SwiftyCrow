@@ -1,14 +1,16 @@
 {
   "version": 2,
-  "content": "Original travel, instruction, video, mixed-direction magazine, and game source material; no translated content or product state.",
+  "content": "Authored foreign-language inputs for page-language translation demonstrations. No SwiftyCrow output or injected translation data.",
   "sourceLanguages": [
     "en-US",
-    "ja-JP"
+    "ja-JP",
+    "ko-KR",
+    "zh-Hant"
   ],
   "files": {
-    "Fixtures/GenerateScenarios.swift": "c1ffa0a800111e2d2a75156b1baa8edec2fa00dc1924f3f8a275183ed8597284",
-    "Fixtures/GenerateScienceVideo.swift": "cd602dae15a650754db508733e07cd81fed4c5daad45d12210e712a6d6020116",
-    "Fixtures/DemoScenes.swift": "5af8f84534777047998947056031367ecf51672fe30697914aecf37a9d21483d",
+    "Fixtures/GenerateScenarios.swift": "a9b30b57aa2befed1312c70b3b803be7c679536a9aa68833d08da2564eacc227",
+    "Fixtures/GenerateScienceVideo.swift": "e3a42dc7035c49a289452ad8e69272aab4d2caafbf95a95745d77e9846004771",
+    "Fixtures/DemoScenes.swift": "16813c74ad9f3cd3c0e7dd0b2a30a760b861ddf43dfd21a937eca759bbabd289",
     "Fixtures/BuildDemoScenes.swift": "8d557fb923a9eac33d58c415f694ff2d08bfcb9a092483bd96e535b19dd0dfe4",
     "Fixtures/travel-leaflet.png": "04560eaac157293d0adfaf50a1ad773f4608d9269c1a2584977ba267dc92b874",
     "Fixtures/camera-manual.png": "33847860e028a29d13834c90e5e894779e4992d96d078a5a012d593f4015a47b",
@@ -17,6 +19,14 @@
     "Fixtures/glass-observatory.png": "78fc834053716b1e6147f27efa7448361ce0394182b830686a6c7a076f276582",
     "Fixtures/riverside-bookshop.png": "60647d1e73fcfa7d193f6758aecefc0c54ef77b69737ca8e4c605cc494e9d0ed",
     "Fixtures/scenario-content.json": "0188f1946fdc59a9fad378c6c8db4f33fcd2cbf56c0d2c69224d8e1ff303abbc",
-    "Fixtures/scenarios.json": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f"
+    "Fixtures/scenarios.json": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f",
+    "Fixtures/LocalizedSources/zh-Hant/source-text.json": "4b83e796211448a00e66fb2002dcee18d6e93fd03f385482e60da239b2e70b21",
+    "Fixtures/LocalizedSources/zh-Hant/scenario-content.json": "b9ae43ac137a42235c15b27e357dbbe615742e0ab52f6c7806bd46b9abbc22b8",
+    "Fixtures/LocalizedSources/zh-Hant/chinese-magazine.png": "50cdb475083a14a2b3efdf5bdc34171538754ea75c4802f5ed63f017c08e2f40",
+    "Fixtures/LocalizedSources/ko/science-light.mp4": "f72381acf29d73f9aa47fc81b2a02135a7763054abba6e85a71eff77ce37b7f0",
+    "Fixtures/LocalizedSources/ko/source-text.json": "c15e5894a8a82604ef7d798090714c03e558d678f832b4ff948e787fbc9f28ee",
+    "Fixtures/LocalizedSources/ko/scenario-content.json": "7148b4544282df4e7fa5466d3c745fa33ecc1b0b9c5fd5629f91edbb43fc01a6",
+    "Fixtures/LocalizedSources/ko/travel-leaflet.png": "90650c8cd7dfd70197b4d44704c82faab142e91dc750e3a331d6e88bbb0e68ee",
+    "Fixtures/LocalizedSources/ko/camera-manual.png": "c3e13dab7ababbf81eeae5164a18fe5479106332a3fd550c0ba72f8896bab4f0"
   }
 }

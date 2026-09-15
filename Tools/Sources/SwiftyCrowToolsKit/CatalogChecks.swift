@@ -152,6 +152,7 @@ struct CatalogChecks {
     for (name, film) in catalog["films"].object {
       try require(fullMatch("[a-z][a-z0-9-]*", name), "Invalid film identifier: \(name)")
       try require(!film["sourceFixture"].str.isEmpty, "Missing source fixture: \(name)")
+      for locale in locales { _ = try FilmLanguagePair(film: film, locale: locale) }
       for field in ["title", "caption"] {
         for locale in locales {
           let value = film[field][locale].str

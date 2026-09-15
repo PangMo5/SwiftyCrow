@@ -1,0 +1,31 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Helvetica Neue,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Helvetica Neue,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Helvetica Neue,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Helvetica Neue,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:28.87,Chapter,,0,0,0,,{\fad(100,100)}Separate window · Game example
+Dialogue: 0,0:00:00.00,0:00:02.43,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:02.43,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}Read dialogue without covering the game.
+Dialogue: 0,0:00:02.43,0:00:09.44,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:02.43,0:00:09.44,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}Choose the area to translate.
+Dialogue: 0,0:00:09.44,0:00:15.25,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:09.44,0:00:15.25,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}Show translation in a window beside the game.
+Dialogue: 0,0:00:15.25,0:00:19.08,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:15.25,0:00:19.08,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}New text is translated in the same window.
+Dialogue: 0,0:00:19.08,0:00:23.42,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:19.08,0:00:23.42,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}Hide translation to focus on the artwork.
+Dialogue: 0,0:00:23.42,0:00:28.87,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:23.42,0:00:28.87,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}Show it in the same place when you need it.
+Dialogue: 1,0:00:23.42,0:00:28.87,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}No need to select the area again.

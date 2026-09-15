@@ -293,7 +293,7 @@ public enum NativeInteractionDriver {
     Thread.sleep(forTimeInterval: 0.5)
   }
 
-  public static func snapshot(bundleIdentifier: String) throws -> String {
+  public static func snapshot(bundleIdentifier: String, maximumAttributeLength: Int? = 180) throws -> String {
     guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first
     else { throw InteractionError("app is not running") }
     var lines = [String]()
@@ -302,7 +302,7 @@ public enum NativeInteractionDriver {
       let role = attribute(node, kAXRoleAttribute) as? String ?? "?"
       let attrs = [kAXIdentifierAttribute, kAXTitleAttribute, kAXValueAttribute, kAXHelpAttribute, kAXDescriptionAttribute]
         .compactMap { key -> String? in guard let value = attribute(node, key) as? String,!value.isEmpty else { return nil }
-          return "\(key)=\(value.prefix(180))"
+          return "\(key)=\(maximumAttributeLength.map { String(value.prefix($0)) } ?? value)"
         }
       lines.append(String(repeating: " ", count: depth) + role + " " + attrs.joined(separator: " | "))
       for child in attribute(node, kAXChildrenAttribute) as? [AXUIElement] ?? [] { visit(child, depth + 1) }

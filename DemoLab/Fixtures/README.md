@@ -1,28 +1,40 @@
-# Original sources for five distinct demonstrations
+# Original inputs for page-language demos
 
-The fixtures provide only foreign-language source pixels. SwiftyCrow performs
-real recognition and translation while the camera records the desktop.
+The fixtures contain only authored source material. SwiftyCrow recognizes and
+translates their rendered pixels while the camera records the desktop.
 
-| Film | Source | Language |
-| --- | --- | --- |
-| `tour` | Harbor leaflet and a changing departure board | English |
-| `capture` | Camera manual with a labeled diagram, numbered steps and caution | English |
-| `live` | Animated educational MP4 with three changing captions | English |
-| `layout` | Magazine photo, horizontal headings, eight vertical body columns and inset note | Japanese |
-| `compare` | Interactive pixel-art game with two dialogue states | English |
+The current [scenario matrix](../Scenarios/localized-2.10.json) requires the actual
+translation target to match the page language, including Chinese script variants.
+UI and caption localization alone is insufficient.
 
-`scenarios.json` declares each source, native window geometry, selection area,
-expected source/translation fragments and the Japanese body reading order.
-`manifest.json` hashes all source inputs and generators. Rebuild the manifest
-after intentional source changes and record new takes.
+| Page | Tour, manual, video, game inputs | Magazine input | Translation output |
+| --- | --- | --- | --- |
+| English | Korean | Japanese | English |
+| Korean | English | Japanese | Korean |
+| Japanese | English | Traditional Chinese | Japanese |
+| Simplified Chinese | English | Japanese | Simplified Chinese |
+| Traditional Chinese | English | Japanese | Traditional Chinese |
 
-Build the sources with the Swift programs documented in
-[ASSET-SOURCES.md](ASSET-SOURCES.md). The independent native `DemoScenes.app`
-uses AppKit and AVPlayerView to show the game, departure board and actual MP4.
-It does not link SwiftyCrow, provide OCR results, inject translations or write
-clipboard output. Native paste destinations receive the real app's clipboard.
+`LocalizedSources/ko/` holds the authored Korean leaflet, manual, science movie,
+and source-text catalog used by the independent game renderer.
+`LocalizedSources/zh-Hant/` holds the Chinese magazine used for the Japanese page.
+The baseline English/Japanese artwork remains unchanged for the approved Korean
+recordings. Original game/background photographs are shared across inputs.
 
-All five UI locales use the same source language for a given film. UI localization
-does not change the input material. Earlier guide/comic rehearsal inputs are
-preserved with their manifest under
-`DerivedData/QA/diverse-demos-2026-09-11/previous-fixtures/`.
+The source application only displays original content through AppKit and
+AVPlayerView. It never supplies OCR, translation, or clipboard results. Use
+`--source-language ko-KR` for its Korean movie/game sources and `en-US` for the
+baseline sources. `manifest.json` hashes the assets and generator sources.
+
+Example source generation:
+
+```sh
+swift DemoLab/Fixtures/GenerateScenarios.swift --output DemoLab/Fixtures/LocalizedSources/ko --images travel-leaflet.png,camera-manual.png --source-language ko-KR --text-catalog DemoLab/Fixtures/LocalizedSources/ko/source-text.json
+swift DemoLab/Fixtures/GenerateScienceVideo.swift --output DemoLab/Fixtures/LocalizedSources/ko/science-light.mp4 --text-catalog DemoLab/Fixtures/LocalizedSources/ko/source-text.json
+swift DemoLab/Fixtures/GenerateScenarios.swift --output DemoLab/Fixtures/LocalizedSources/zh-Hant --images chinese-magazine.png --magazine-name chinese-magazine.png --source-language zh-Hant --text-catalog DemoLab/Fixtures/LocalizedSources/zh-Hant/source-text.json
+```
+
+Refresh the source manifest after intentional source changes. Preserve each
+recorded source-manifest snapshot rather than pretending older takes used new
+assets. The earlier fixed-pair `scenarios.json` and departure scene remain only
+for reproducing previous recordings; new localized recordings use the matrix.

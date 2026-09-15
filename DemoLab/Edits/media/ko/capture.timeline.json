@@ -1,84 +1,76 @@
 {
-  "captureEpochUptimeNanoseconds": 10352552779645,
-  "durationSeconds": 20.566666666666666,
-  "events": [
+  "captureEpochUptimeNanoseconds" : 25395653477541,
+  "durationSeconds" : 20.399999999999999,
+  "events" : [
     {
-      "end": 14.048317020999093,
-      "id": "capture.chapter",
-      "start": 0,
-      "track": "chapter"
+      "end" : 13.782825083999342,
+      "id" : "capture.chapter",
+      "start" : 0,
+      "track" : "chapter"
     },
     {
-      "end": 20.566666666,
-      "id": "capture.chapter",
-      "start": 17.275593229998776,
-      "track": "chapter"
+      "end" : 20.399999999999999,
+      "id" : "capture.chapter",
+      "start" : 17.133579291999922,
+      "track" : "chapter"
     },
     {
-      "end": 2.8048121880001418,
-      "id": "capture.intro",
-      "start": 0,
-      "track": "caption"
+      "end" : 2.421170459001587,
+      "id" : "capture.intro",
+      "start" : 0,
+      "track" : "caption"
     },
     {
-      "end": 8.627036437999777,
-      "id": "capture.select",
-      "start": 2.8048121880001418,
-      "track": "caption"
+      "end" : 8.3699428750005609,
+      "id" : "capture.select",
+      "start" : 2.421170459001587,
+      "track" : "caption"
     },
     {
-      "end": 11.938987937999627,
-      "id": "capture.translated",
-      "start": 8.627036437999777,
-      "track": "caption"
+      "end" : 11.683700083998701,
+      "id" : "capture.translated",
+      "start" : 8.3699428750005609,
+      "track" : "caption"
     },
     {
-      "end": 17.27562172999933,
-      "id": "capture.copy",
-      "start": 11.938987937999627,
-      "track": "caption"
+      "end" : 17.133640916999866,
+      "id" : "capture.copy",
+      "start" : 11.683700083998701,
+      "track" : "caption"
     },
     {
-      "end": 20.566666666,
-      "id": "capture.pasted",
-      "start": 17.27562172999933,
-      "track": "caption"
+      "end" : 20.399999999999999,
+      "id" : "capture.pasted",
+      "start" : 17.133640916999866,
+      "track" : "caption"
     },
     {
-      "chord": "shift + cmd - 1",
-      "end": 4.804877729999134,
-      "start": 2.8048777299991343,
-      "track": "keys"
+      "chord" : "shift + cmd - 1",
+      "end" : 4.421230125000875,
+      "start" : 2.421230125000875,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - 0",
-      "end": 10.097501688000193,
-      "start": 8.097501688000193,
-      "track": "keys"
+      "chord" : "cmd - 0",
+      "end" : 9.8427974170008383,
+      "start" : 7.8427974170008383,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - c",
-      "end": 13.939961145999405,
-      "start": 11.939961145999405,
-      "track": "keys"
+      "chord" : "cmd - c",
+      "end" : 13.684560792000411,
+      "start" : 11.684560792000411,
+      "track" : "keys"
     },
     {
-      "chord": "cmd - n",
-      "end": 16.04842039599862,
-      "start": 14.048420395998619,
-      "track": "keys"
+      "chord" : "cmd - n",
+      "end" : 15.782957874998829,
+      "start" : 13.782957874998829,
+      "track" : "keys"
     }
   ],
-  "film": "capture",
-  "scenariosSHA256": "37adb186825a7e0631dd3f6091fdd98d2557e8f5e16edd2587d780f7060c5c6f",
-  "schemaVersion": 1,
-  "uiLanguage": "ko",
-  "reviewEdit": {
-    "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/capture-native-host-05/capture-demo.mov",
-    "sourceFrameRange": [
-      0,
-      617
-    ],
-    "originalFrames": 617
-  }
+  "film" : "capture",
+  "scenariosSHA256" : "3a04472031dc9e23bf75c9e217a53f88702304ad5550e8ac3d16701d5de5a7df",
+  "schemaVersion" : 1,
+  "uiLanguage" : "ko"
 }

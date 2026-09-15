@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "films": {
+    "tour": {
+      "sources": [
+        {
+          "id": "primary",
+          "kind": "image",
+          "bundleID": "com.apple.Preview",
+          "language": "en-US",
+          "windowFrame": [
+            80,
+            110,
+            1760,
+            880
+          ],
+          "selectionFrame": [
+            882,
+            444,
+            650,
+            270
+          ],
+          "expectedOriginal": [
+            "The lighthouse opens at noon.",
+            "Take the ferry from the east pier.",
+            "The last return boat leaves at six."
+          ],
+          "expectedTranslation": [
+            "등대",
+            "부두"
+          ],
+          "asset": "travel-leaflet.png"
+        }
+      ],
+      "targetLanguage": "ko-KR",
+      "noteHeading": "HARBOR AFTERNOON\nVisit notes\n",
+      "selectionUsesMenu": true
+    },
+    "capture": {
+      "sources": [
+        {
+          "id": "primary",
+          "kind": "image",
+          "bundleID": "com.apple.Preview",
+          "language": "en-US",
+          "windowFrame": [
+            80,
+            110,
+            1760,
+            880
+          ],
+          "selectionFrame": [
+            339,
+            162,
+            1242,
+            828
+          ],
+          "expectedOriginal": [
+            "Insert the battery",
+            "Hold the power button for two seconds.",
+            "Do not remove the battery while the light is flashing."
+          ],
+          "expectedTranslation": [
+            "배터리",
+            "전원"
+          ],
+          "asset": "camera-manual.png"
+        }
+      ],
+      "targetLanguage": "ko-KR"
+    },
+    "layout": {
+      "sources": [
+        {
+          "id": "primary",
+          "kind": "image",
+          "bundleID": "com.apple.Preview",
+          "language": "ja-JP",
+          "windowFrame": [
+            80,
+            110,
+            1760,
+            880
+          ],
+          "selectionFrame": [
+            339,
+            162,
+            1242,
+            828
+          ],
+          "expectedOriginal": [
+            "町を歩く",
+            "雨上がりの町を歩くと",
+            "窓際の席で地図を広げ"
+          ],
+          "expectedTranslation": [
+            "따뜻",
+            "지도"
+          ],
+          "asset": "japanese-magazine.png"
+        }
+      ],
+      "targetLanguage": "ko-KR",
+      "originalReadingOrder": [
+        "雨上がりの町を歩くと",
+        "古い本屋の窓に明かりが見えた",
+        "店主は温かいお茶を用意して",
+        "旅の話を聞いてくれた",
+        "帰り道には川沿いの橋を渡った",
+        "静かな水面に夕方の空が映っていた",
+        "橋の向こうには小さな喫茶店がある",
+        "窓際の席で地図を広げ",
+        "次に歩く道を決めた",
+        "いつもの町にも新しい発見がある"
+      ],
+      "noteHeading": "Japanese reading notes\nWeekend walks\n\n"
+    },
+    "live": {
+      "sources": [
+        {
+          "id": "primary",
+          "kind": "native",
+          "bundleID": "dev.PangMo5.SwiftyCrow.DemoScenes",
+          "language": "en-US",
+          "windowFrame": [
+            320,
+            110,
+            1277,
+            878
+          ],
+          "selectionFrame": [
+            374,
+            788,
+            1170,
+            108
+          ],
+          "expectedOriginal": [
+            "A shadow forms when an object blocks the light."
+          ],
+          "expectedTranslation": [
+            "그림자",
+            "빛"
+          ],
+          "scene": "science",
+          "changedOriginal": [
+            "Move the light to change the shadow's direction."
+          ],
+          "changedTranslation": [
+            "방향"
+          ]
+        }
+      ],
+      "targetLanguage": "ko-KR",
+      "selectionUsesMenu": true
+    },
+    "compare": {
+      "sources": [
+        {
+          "id": "primary",
+          "kind": "native",
+          "bundleID": "dev.PangMo5.SwiftyCrow.DemoScenes",
+          "language": "en-US",
+          "windowFrame": [
+            30,
+            110,
+            1099,
+            760
+          ],
+          "selectionFrame": [
+            90,
+            635,
+            980,
+            145
+          ],
+          "expectedOriginal": [
+            "The bridge is closed after sunset.",
+            "Take the tunnel beneath the observatory."
+          ],
+          "expectedTranslation": [
+            "다리",
+            "터널"
+          ],
+          "scene": "game",
+          "changedOriginal": [
+            "You will need the brass key.",
+            "Look for it beside the old telescope."
+          ],
+          "changedTranslation": [
+            "열쇠",
+            "망원경"
+          ]
+        }
+      ],
+      "targetLanguage": "ko-KR",
+      "translationWindowFrame": [
+        1160,
+        210,
+        730,
+        163
+      ],
+      "selectionUsesMenu": true
+    }
+  }
+}

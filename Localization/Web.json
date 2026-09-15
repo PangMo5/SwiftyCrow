@@ -1,15 +1,31 @@
 {
+  "0062b07f3198fc3e": {
+    "en": "Capture screen text and translate it.",
+    "ko": "화면의 글을 캡처해서 번역해요.",
+    "ja": "画面の文字をキャプチャして翻訳。",
+    "zh-Hans": "截取屏幕文字并翻译。",
+    "zh-Hant": "擷取螢幕文字並翻譯。"
+  },
   "021396e24b11af74": {
     "en": "Previous video",
-    "ko": "이전 영상"
+    "ja": "前の動画",
+    "ko": "이전 영상",
+    "zh-Hans": "上一个视频",
+    "zh-Hant": "上一部影片"
   },
   "02e6d6c6a946969c": {
     "en": "Translate video subtitles",
-    "ko": "영상 자막 번역하기"
+    "ja": "動画の字幕を翻訳",
+    "ko": "영상 자막 번역하기",
+    "zh-Hans": "翻译视频字幕",
+    "zh-Hant": "翻譯影片字幕"
   },
   "06fec0e1c2888415": {
     "en": "Capture a region or a whole window. Read the translation, then copy the result as an image or text.",
-    "ko": "화면에서 읽고 싶은 영역이나 창을 캡처하세요. 번역한 결과는 이미지나 글자로 복사해 다른 앱에서 활용할 수 있어요."
+    "ja": "読みたい範囲やウインドウをキャプチャ。翻訳した結果を画像や文字としてコピーし、ほかのアプリで活用できます。",
+    "ko": "화면에서 읽고 싶은 영역이나 창을 캡처하세요. 번역한 결과는 이미지나 글자로 복사해 다른 앱에서 활용할 수 있어요.",
+    "zh-Hans": "截取想阅读的区域或整个窗口。阅读译文，再将结果复制为图片或文字，在其他应用中使用。",
+    "zh-Hant": "擷取想閱讀的區域或整個視窗。閱讀譯文，再將結果複製為圖片或文字，在其他 App 中使用。"
   },
   "0a181fdc48a85e0c": {
     "en": "Every version of SwiftyCrow, newest first.",
@@ -45,6 +61,13 @@
     "ko": "사이트를 만든 소스 버전의 설정 안내를 함께 제공해요. Apple Inc.와 제휴한 앱은 아니에요.",
     "zh-Hans": "本页附带构建网站时所用源码版本的配置参考，与 Apple Inc. 无关联。",
     "zh-Hant": "本頁附有建置網站時所用原始碼版本的設定參考，與 Apple Inc. 無關聯。"
+  },
+  "11d9c3022244e1cd": {
+    "en": "Read the translation in the captured image, with diagrams and instructions together.",
+    "ko": "캡처한 이미지에 번역을 표시해요. 그림과 설명을 함께 보면서 읽을 수 있어요.",
+    "ja": "キャプチャした画像に訳文を表示。図と説明を一緒に見ながら読めます。",
+    "zh-Hans": "在截图中显示译文，结合图解和说明一起阅读。",
+    "zh-Hant": "在擷取圖片中顯示譯文，結合圖解和說明一起閱讀。"
   },
   "1254829bd9996472": {
     "en": "Release notes",
@@ -102,12 +125,12 @@
     "zh-Hans": "免费开源，常驻菜单栏。",
     "zh-Hant": "免費開放原始碼，常駐選單列。"
   },
-  "1bdc61793d8c5f8a": {
-    "en": "Read the translation in a floating preview over the captured text.",
-    "ja": "独立したプレビューウインドウで、原文に重なった訳文を読めます。",
-    "ko": "캡처한 이미지에 번역을 표시해요. 그림과 설명을 함께 보면서 읽을 수 있어요.",
-    "zh-Hans": "在浮动预览窗口中，直接阅读原文位置的译文。",
-    "zh-Hant": "在浮動預覽視窗中，直接閱讀原文位置的譯文。"
+  "1b5f4b9d6d77151b": {
+    "en": "Live translation",
+    "ko": "실시간 번역",
+    "ja": "ライブ翻訳",
+    "zh-Hans": "实时翻译",
+    "zh-Hant": "即時翻譯"
   },
   "1f6b5ac00e473ca0": {
     "en": "Translate anything on your screen.{0}Entirely on your Mac.",
@@ -165,12 +188,12 @@
     "zh-Hans": "保存为 PNG、复制图片，或只复制原文与译文。",
     "zh-Hant": "儲存為 PNG、複製影像，或只複製原文與譯文。"
   },
-  "308dff1190112904": {
-    "en": "Place an overlay on a region or window and it keeps translating as the content changes.",
-    "ja": "範囲やウインドウを選ぶと、内容の変化に合わせて翻訳を続けます。",
-    "ko": "영역이나 창을 한 번 지정하면, 그 안의 글이 바뀔 때마다 이어서 번역해요. 원래 앱을 클릭하고 스크롤하면서 계속 읽을 수 있어요.",
-    "zh-Hans": "选择区域或窗口后，会随内容变化持续翻译。",
-    "zh-Hant": "選取區域或視窗後，會隨內容變更持續翻譯。"
+  "34d74c049bededf8": {
+    "en": "Image translation",
+    "ko": "캡처 이미지 번역",
+    "ja": "キャプチャ画像を翻訳",
+    "zh-Hans": "截图翻译",
+    "zh-Hant": "擷取圖片翻譯"
   },
   "3acb5759dbb6b394": {
     "en": "Could not load this page.",
@@ -207,13 +230,6 @@
     "zh-Hans": "画面变化，翻译随之更新。",
     "zh-Hant": "畫面變更，翻譯隨之更新。"
   },
-  "4549be7200c37900": {
-    "en": "Translated preview",
-    "ja": "訳文をプレビュー",
-    "ko": "캡처 이미지 번역",
-    "zh-Hans": "译文预览",
-    "zh-Hant": "譯文預覽"
-  },
   "485ca594ccc9003b": {
     "en": "Private by design",
     "ja": "プライバシーを守る設計",
@@ -230,7 +246,10 @@
   },
   "5255c85f0f92c650": {
     "en": "Choose a live translation video",
-    "ko": "실시간 번역 영상 선택"
+    "ja": "ライブ翻訳の動画を選ぶ",
+    "ko": "실시간 번역 영상 선택",
+    "zh-Hans": "选择实时翻译视频",
+    "zh-Hant": "選擇即時翻譯影片"
   },
   "5259ae65614671c4": {
     "en": "In development",
@@ -283,11 +302,17 @@
   },
   "6837b22879b7a1e1": {
     "en": "Live translation videos",
-    "ko": "실시간 번역 영상 모음"
+    "ja": "ライブ翻訳の動画",
+    "ko": "실시간 번역 영상 모음",
+    "zh-Hans": "实时翻译视频",
+    "zh-Hant": "即時翻譯影片"
   },
   "6a7e0e816ae69273": {
     "en": "Read game dialogue beside the game",
-    "ko": "게임 옆에서 대사 읽기"
+    "ja": "ゲームの隣で会話を読む",
+    "ko": "게임 옆에서 대사 읽기",
+    "zh-Hans": "在游戏旁阅读对话",
+    "zh-Hant": "在遊戲旁閱讀對話"
   },
   "71bf90935fc231d2": {
     "en": "Reference",
@@ -305,11 +330,17 @@
   },
   "76250eb91058e0d8": {
     "en": "Usage examples",
-    "ko": "활용 예시"
+    "ja": "活用例",
+    "ko": "활용 예시",
+    "zh-Hans": "使用示例",
+    "zh-Hant": "使用範例"
   },
   "780bea67085d2d91": {
     "en": "Next video",
-    "ko": "다음 영상"
+    "ja": "次の動画",
+    "ko": "다음 영상",
+    "zh-Hans": "下一个视频",
+    "zh-Hant": "下一部影片"
   },
   "782a2322c714f3bb": {
     "en": "Draw the translation over the source, or send it to a separate window while the overlay stays a thin frame.",
@@ -334,7 +365,10 @@
   },
   "7fb07236a7380d1a": {
     "en": "Press play to watch",
-    "ko": "재생 버튼을 눌러주세요"
+    "ja": "再生ボタンでご覧ください",
+    "ko": "재생 버튼을 눌러주세요",
+    "zh-Hans": "点击播放按钮观看",
+    "zh-Hant": "點選播放按鈕觀看"
   },
   "847e62fa1710e5d1": {
     "en": "Region or window",
@@ -406,13 +440,6 @@
     "zh-Hans": "通过 Apple Vision 和翻译框架在设备上识别和翻译，截图内容不会离开 Mac。",
     "zh-Hant": "透過 Apple Vision 與翻譯框架在裝置上辨識和翻譯，擷取內容不會離開 Mac。"
   },
-  "b181cbc2d0cfbe4f": {
-    "en": "Grab any text on screen.",
-    "ja": "画面の読みたい文章をキャプチャ。",
-    "ko": "화면의 글을 캡처해서 번역해요.",
-    "zh-Hans": "截取屏幕上想读的文字。",
-    "zh-Hant": "擷取螢幕上想讀的文字。"
-  },
   "b332c3492d5eb10a": {
     "en": "Configuration",
     "ja": "設定ガイド",
@@ -426,6 +453,13 @@
     "ko": "실시간 번역",
     "zh-Hans": "实时翻译",
     "zh-Hant": "即時翻譯"
+  },
+  "b6eaca12f532195b": {
+    "en": "Choose a region or window once. New text keeps translating while you click and scroll in the original app.",
+    "ko": "영역이나 창을 한 번 지정하면, 그 안의 글이 바뀔 때마다 이어서 번역해요. 원래 앱을 클릭하고 스크롤하면서 계속 읽을 수 있어요.",
+    "ja": "範囲やウインドウを一度選ぶと、その中の文字が変わるたびに翻訳を続けます。元のアプリをクリックしたりスクロールしたりしながら読めます。",
+    "zh-Hans": "选定一次区域或窗口，里面的文字变化时就会继续翻译。你仍可在原应用中点击和滚动，同时阅读译文。",
+    "zh-Hant": "選定一次區域或視窗，裡面的文字變化時就會繼續翻譯。你仍可在原 App 中點選和捲動，同時閱讀譯文。"
   },
   "bc8fd86dcffdd94e": {
     "en": "Loading configuration…",
@@ -524,13 +558,6 @@
     "ko": "릴리스를 불러오는 중…",
     "zh-Hans": "正在加载版本…",
     "zh-Hant": "正在載入版本…"
-  },
-  "f84279ddf4b17c99": {
-    "en": "Live overlay",
-    "ja": "ライブ翻訳",
-    "ko": "실시간 번역",
-    "zh-Hans": "实时翻译",
-    "zh-Hant": "即時翻譯"
   },
   "f9fd59ce6b9f81f4": {
     "en": "Powered by Apple's on-device models. Works offline, with nothing sent to a server.",

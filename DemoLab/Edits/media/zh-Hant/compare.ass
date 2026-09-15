@@ -1,0 +1,31 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Heiti TC,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Heiti TC,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Heiti TC,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Heiti TC,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:29.10,Chapter,,0,0,0,,{\fad(100,100)}獨立視窗 · 遊戲範例
+Dialogue: 0,0:00:00.00,0:00:02.42,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:02.42,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}想閱讀對話，又不遮擋遊戲畫面時。
+Dialogue: 0,0:00:02.42,0:00:09.52,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:02.42,0:00:09.52,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}選取要翻譯的區域。
+Dialogue: 0,0:00:09.52,0:00:15.35,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:09.52,0:00:15.35,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}在遊戲旁的獨立視窗中顯示翻譯。
+Dialogue: 0,0:00:15.35,0:00:19.21,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:15.35,0:00:19.21,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}文字變化時，在同一視窗繼續翻譯。
+Dialogue: 0,0:00:19.21,0:00:23.56,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:19.21,0:00:23.56,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}專注欣賞畫面時，可以暫時隱藏翻譯。
+Dialogue: 0,0:00:23.56,0:00:29.10,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:23.56,0:00:29.10,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}需要時，在原來的位置重新顯示。
+Dialogue: 1,0:00:23.56,0:00:29.10,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}無須再次選取區域。

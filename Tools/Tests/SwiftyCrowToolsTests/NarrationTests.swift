@@ -20,7 +20,7 @@ struct NarrationTests {
     #expect(try FilmNarration.displayChord("ctrl + alt - l") == "⌃⌥L")
   }
 
-  @Test(arguments: ["duration", "epoch", "locale", "shortCaption", "overlap", "lateOpening", "fakeKey", "noKey"])
+  @Test(arguments: ["duration", "epoch", "locale", "shortCaption", "overlap", "lateOpening", "fakeKey"])
   func rejectsUnreviewableOrMisidentifiedTiming(_ fault: String) throws {
     var value = try timeline()
     var events = value["events"].array
@@ -32,10 +32,17 @@ struct NarrationTests {
     case "overlap": events[1]["end"] = .decimal(4)
     case "lateOpening": events[0]["start"] = .decimal(2)
     case "fakeKey": events[3]["id"] = .string("Pretend shortcut")
-    default: events.removeLast()
+    default: Issue.record("Unexpected fault case")
     }
     value["events"] = .array(events)
     #expect(throws: ToolError.self) { try FilmNarration.validate(value, film: "tour", locale: "ko", duration: 10) }
+  }
+
+  @Test
+  func acceptsMenuOnlyDemonstrationWithoutInventedKeycasts() throws {
+    var value = try timeline()
+    value["events"] = .array(value["events"].array.filter { $0["track"].str != "keys" })
+    try FilmNarration.validate(value, film: "tour", locale: "ko", duration: 10)
   }
 
   @Test

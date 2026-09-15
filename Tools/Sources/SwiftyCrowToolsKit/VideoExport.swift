@@ -31,11 +31,12 @@ struct VideoExport {
         try require(sha(workspace.root.at("DemoLab/\(path)")) == expectedHash.str, "Source asset changed: \(path)")
       }
       for locale in locales {
+        let pair = try FilmLanguagePair(film: film, locale: locale)
         let metadata = try JSON.read(workspace.root.at("web/media/\(locale)/\(filmID).json"))
         try require(metadata["film"].str == filmID, "Media film mismatch: \(filmID)/\(locale)")
         try require(metadata["uiLanguage"].str == locale, "Media locale mismatch: \(locale)")
         try require(
-          metadata["sourceLanguage"] == film["sourceLanguage"] && metadata["translationLanguage"] == film["translationLanguage"],
+          metadata["sourceLanguage"].str == pair.source && metadata["translationLanguage"].str == pair.target,
           "Media language pair mismatch: \(filmID)/\(locale)"
         )
         try require(metadata["narrationCatalogSHA256"].str == narrationHash, "Media narration is stale: \(filmID)/\(locale)")
@@ -54,7 +55,7 @@ struct VideoExport {
         try require(scene["film"].str == filmID, "Recorded film mismatch: \(filmID)/\(locale)")
         try require(scene["uiLanguage"].str == locale, "Recorded locale mismatch: \(filmID)/\(locale)")
         try require(
-          scene["translationSource"] == film["sourceLanguage"] && scene["translationTarget"] == film["translationLanguage"],
+          scene["translationSource"].str == pair.source && scene["translationTarget"].str == pair.target,
           "Recorded language pair mismatch: \(filmID)/\(locale)"
         )
         try require(scene["scenariosSHA256"].str == scenariosHash, "Recorded scenarios are stale: \(locale)")
@@ -124,15 +125,15 @@ struct VideoExport {
     return streams[0]
   }
 
-  func export(source: URL, film: String, locale: String, posterSeconds: Double, review: URL) async throws {
+  func export(source: URL, film: String, locale: String, posterSeconds: Double, review: URL, mediaRoot: URL? = nil) async throws {
     try require(locales.contains(locale), "Unsupported interface locale")
     let films = try CatalogChecks(workspace: workspace).films()
     try require(!films[film].isNull, "Unknown film: \(film)")
+    let pair = try FilmLanguagePair(film: films[film], locale: locale)
     let scene = try JSON.read(source.deletingLastPathComponent().at("scene.json"))
     try require(scene["film"].str == film && scene["uiLanguage"].str == locale, "Recording does not match film and locale")
     try require(
-      scene["translationSource"] == films[film]["sourceLanguage"] && scene["translationTarget"] ==
-        films[film]["translationLanguage"],
+      scene["translationSource"].str == pair.source && scene["translationTarget"].str == pair.target,
       "Recorded language pair differs from the film"
     )
     try require(review.exists, "Visual review evidence is required")
@@ -179,7 +180,7 @@ struct VideoExport {
       "Narration scenarios differ from the recording"
     )
     try require(posterSeconds >= 0 && posterSeconds < original["duration"].double, "Poster must be inside the take")
-    let directory = workspace.root.at("web/media/\(locale)")
+    let directory = (mediaRoot ?? workspace.root.at("web/media")).at(locale)
     try directory.makeDirectory()
     let movie = directory.at("\(film).mp4")
     let poster = directory.at("\(film).jpg")
@@ -256,8 +257,8 @@ struct VideoExport {
     let metadata = try JSON.object([
       ("film", .string(film)),
       ("uiLanguage", .string(locale)),
-      ("sourceLanguage", films[film]["sourceLanguage"]),
-      ("translationLanguage", films[film]["translationLanguage"]),
+      ("sourceLanguage", .string(pair.source)),
+      ("translationLanguage", .string(pair.target)),
       ("cameraOriginal", .string(relativePath(source, from: workspace.root))),
       ("cameraSHA256", .string(sha(source))),
       ("recorder", stats),

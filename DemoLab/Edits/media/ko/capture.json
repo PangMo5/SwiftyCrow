@@ -1,19 +1,70 @@
 {
+  "cameraOriginal": "DerivedData/QA/tart-share/korean-retake-20260915/ko/capture-final-01/capture-demo.mov",
+  "cameraSHA256": "ebbb68df09a546603ae25413d12434105b20f757e215f27c3582e5a6414023d8",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "20.400000",
+    "height": 1200,
+    "nb_read_frames": "612",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
   "film": "capture",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/ko/capture.mp4",
+  "movieSHA256": "056563c7c47e08909a0ff9cd8023bed8f941709d8f6c29d74e1afb1416b1a5b1",
+  "narrationCatalogSHA256": "55e7938056c273a3e922aedc7d75dbd48621651c4a79c999cc22c9bb24392702",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "20.400000",
+    "height": 1200,
+    "nb_read_frames": "612",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/ko/capture.jpg",
+  "posterSHA256": "18ef9ce658b9ee863a74206d13ac5517b55ba8e171fa4f567c0e41b3a7a1c486",
+  "posterSeconds": 18,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/ko/capture.timeline.json",
+  "presentationTimelineSHA256": "be87ea6946a31c543a90e83024232138a13e9512479a1672ef409d77d01d6a5d",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 20.4,
+    "error": null,
+    "frames": 612,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 612,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/korean-retake-20260915/ko/capture-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "en-US",
+  "subtitles": "DemoLab/Edits/media/ko/capture.ass",
+  "subtitlesSHA256": "30799bdc8c000d50bdefe58dd805939985a59f98698d2d2a34c92fbaa7e4c781",
+  "translationLanguage": "ko-KR",
+  "uiLanguage": "ko",
+  "visualReviewEvidence": "DemoLab/Edits/korean-2.10-review.md",
   "locale": "ko",
-  "cameraOriginal": "DerivedData/QA/tart-share/diverse-final-20260911/ko/capture-native-host-05/capture-demo.mov",
-  "cameraSHA256": "eb6d29365155a57fe9258ab80ddbbe1cb96e07c4574f9e7806d6cc4c2d42e714",
-  "originalFrames": 617,
+  "originalFrames": 612,
   "sourceFrameRange": [
     0,
-    617
+    612
   ],
-  "editing": "Uninterrupted original prefix at original speed; only localized editorial overlays added. No replacement application pixels or removed processing waits.",
-  "frames": 617,
-  "duration": 20.566666666666666,
-  "posterSeconds": 19,
-  "timelineSHA256": "957dcde46e39b8d74ad9295b05872ad177ce2acaef8b3aabd34d738574e30a6b",
-  "movieSHA256": "a0bbe5d2ccab394af3211832274f7164b2ba1b03ba44fd8eb84125de25f71a01",
-  "posterSHA256": "1eb88f8f699dc7275cc067a80bb223c9772f5f4dc77c50cfed704b24f51d61b4",
-  "subtitlesSHA256": "d68185776e88252c32b48da51b2a4fd0d3c38c41bc7cf4e593ac2753bcd6fb4c"
+  "editing": "Complete fresh camera original at original speed; only Korean editorial overlays added. No cuts, replacement application pixels or removed processing waits.",
+  "frames": 612,
+  "duration": 20.4,
+  "timelineSHA256": "be87ea6946a31c543a90e83024232138a13e9512479a1672ef409d77d01d6a5d"
 }

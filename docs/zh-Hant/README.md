@@ -12,71 +12,86 @@ SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
 
 [![最新版本](https://img.shields.io/github/v/release/PangMo5/SwiftyCrow?sort=semver)](https://github.com/PangMo5/SwiftyCrow/releases/latest) [![下載](https://img.shields.io/github/downloads/PangMo5/SwiftyCrow/total)](https://github.com/PangMo5/SwiftyCrow/releases) ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue) [![授權條款：AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](../../LICENSE)
 
-這款螢幕翻譯 App 的所有處理都在 Mac 上完成。透過 [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit) 擷取任意螢幕區域，以 [Vision](https://developer.apple.com/documentation/vision) 辨識文字，再透過 [Apple 翻譯](https://developer.apple.com/documentation/translation)進行翻譯。不需要雲端 API、金鑰或使用額度。
+一款完全在本機處理的 macOS 螢幕翻譯 App。
+
+SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜態圖片，閱讀並運用譯文；也可以使用即時翻譯，持續閱讀不斷變化的內容。辨識與翻譯使用 Mac 上的語言模型，不需要雲端 API 或帳號。
 
 <a id="see-swiftycrow-in-action"></a>
 ## 看看 SwiftyCrow 如何使用
 
 [![觀看完整閱讀流程](../../web/media/zh-Hant/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-tour)
 
-規劃一趟港口之旅：翻譯旅遊指南並記入筆記，再用即時翻譯查看不斷變化的出發資訊。各功能示範分別展示圖解說明書、影片字幕、直排日文雜誌，以及獨立視窗中的遊戲對話。原創範例內容由真實開發版本翻譯成韓文，App 介面使用本指南的語言。
+概覽影片展示如何擷取螢幕文字、翻譯並將結果複製到筆記中。下方的功能影片分別示範圖片複製、即時更新、獨立翻譯視窗和直排文字辨識。
+
+<a id="why-swiftycrow"></a>
+## 為什麼選擇 SwiftyCrow？
+
+網頁、圖片或 App 中的文字並不總能方便地選取和複製。SwiftyCrow 從螢幕讀取文字，讓你在查看原 App 的同時翻譯。
+
+- **從螢幕翻譯：** 直接選取相關區域，無須先儲存檔案或將文字移入其他 App。
+- **選擇合適的模式：** 用擷取翻譯一次螢幕內容，或用即時翻譯持續閱讀變化的文字。
+- **運用翻譯結果：** 儲存或複製翻譯後的圖片，也可以只複製原文或譯文。
 
 <a id="features"></a>
 ## 主要功能
 
-這份 README 以 `main` 為準，包含尚未發布的變更。各版本提供的功能請查看[更新紀錄](CHANGELOG.md)。
-
 <a id="capture-and-reuse"></a>
 ### 擷取後用於自己的工作
 
-<img align="right" src="../../web/media/zh-Hant/capture.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-capture"><img align="right" src="../../web/media/zh-Hant/capture.jpg" width="160" alt="" /></a>
 
-[觀看操作流程](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-capture)
-
-- **區域擷取：** 拖移選取螢幕區域，或按 **Space**，像 macOS 螢幕截圖工具一樣選取整個視窗。結果會在浮動視窗中顯示，譯文直接顯示在原文位置。支援儲存或複製影像，也能單獨複製原文或譯文。
+- **區域或視窗：** 拖曳選取螢幕區域，或按**空白鍵**反白並選取整個視窗。
+- **擷取圖片翻譯：** 在獨立的結果視窗中閱讀譯文，同時保留圖片及其版面。
+- **縮放與符合視窗：** 放大圖片，或使其符合結果視窗大小。100% 時，一個擷取像素對應一個螢幕像素。
+- **儲存與複製：** 儲存為 PNG、複製翻譯後的圖片，或將辨識的原文和譯文複製為文字。不論如何縮放或平移，圖片輸出均維持完整擷取畫面的原始解析度。
 
 <br clear="right" />
 
 <a id="follow-changing-content"></a>
 ### 跟隨畫面變化繼續閱讀
 
-<img align="right" src="../../web/media/zh-Hant/live.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-live"><img align="right" src="../../web/media/zh-Hant/live.jpg" width="160" alt="" /></a>
 
-[觀看操作流程](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-live)
+- **持續翻譯：** 選定一次區域或視窗，其中的文字變化時就會重新辨識並翻譯。
+- **操作原 App：** 內容區域的點選和捲動會直接傳遞給下方的 App。
+- **暫停與繼續：** 使用 **即時** 按鈕暫停或繼續翻譯，使用 **×** 關閉浮動翻譯。
+- **記住所選區域：** 無須重新選取，即可顯示或隱藏上次區域的翻譯。隱藏時會停止擷取和翻譯；再次遇到相同文字時可重用先前的譯文。
 
-- **即時翻譯：** 用相同方式選取目標，內容變更時會持續翻譯。本文區域內的點按與捲動會傳遞給下方 App。**即時**按鈕可暫停或繼續，**×**可關閉。譯文可顯示在**原文上**，也能放到**獨立視窗**，原位置僅保留區域邊框。
-- **預設區域，隨需翻譯：** App 會記住上次區域，使用**顯示或隱藏即時翻譯**即可在相同位置切換翻譯。適合遊戲面板或固定位置的資訊。隱藏後會停止所有擷取與翻譯，直到再次顯示。
-- **重複使用即時翻譯：** 再次查看相同文字時，會重複使用先前的翻譯結果。
+<br clear="right" />
+
+<a id="keep-the-original-in-view"></a>
+#### 對照原文閱讀
+
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-compare"><img align="right" src="../../web/media/zh-Hant/compare.jpg" width="160" alt="" /></a>
+
+- **顯示方式：** 在原文上方顯示翻譯，或在旁邊的獨立視窗中閱讀。
+- **獨立翻譯視窗：** 在原 App 旁閱讀譯文，不遮擋其內容。文字變化時，同一個翻譯視窗會隨之更新。
 
 <br clear="right" />
 
 <a id="read-images-and-documents"></a>
 ### 閱讀圖片與文件
 
-<img align="right" src="../../web/media/zh-Hant/layout.jpg" width="200" alt="" />
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-layout"><img align="right" src="../../web/media/zh-Hant/layout.jpg" width="160" alt="" /></a>
 
-[觀看操作流程](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-layout)
+- **閱讀順序：** 依閱讀順序辨識直排日文、中文和多欄文字。
+- **文件結構：** 辨識擷取頁面中的標題、內文、圖片說明和側欄文字。
+- **原文文字：** 直接複製辨識出的文字，用於筆記或其他用途，無須手動抄寫。
 
-- **辨識文件結構：** 依閱讀順序辨識直排日文、中文與多欄文字，並依譯文語言選擇合適的書寫方向。
+<br clear="right" />
+
+<a id="languages-and-translation"></a>
+### 語言與翻譯
+
 - **Mac 支援的語言：** 可選擇 macOS 支援的原文語言與翻譯語言。翻譯前請下載所需模型。將原文語言設為**自動偵測**，即可逐行辨識混合語言的內容。
 - **兩種翻譯方式：** 選擇**快速**以速度優先，或在執行 macOS 26.4 以上版本的支援裝置上選擇**高品質**，使用 Apple Intelligence。
 
-<br clear="right" />
+<a id="interface-and-settings"></a>
+### 介面與設定
 
-<a id="keep-the-original-in-view"></a>
-### 對照原文閱讀
-
-<img align="right" src="../../web/media/zh-Hant/compare.jpg" width="200" alt="" />
-
-[觀看操作流程](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-compare)
-
-- **選擇閱讀位置：** 在原文上顯示譯文，或在獨立視窗中閱讀，保留完整畫面。隱藏翻譯後，不必重新選取區域即可回到原本的位置。
-- **常駐選單列：** 點按選單列圖示開啟控制面板，或按 `⌘,` 開啟設定。
-- **自訂快速鍵：** 在設定 → 快速鍵中配置擷取、即時翻譯、上次區域的顯示與隱藏、暫停與繼續、顯示方式，以及儲存和複製操作。
-- **登入時啟動：** 登入後自動啟動 SwiftyCrow。
-- **直接編輯設定檔：** 可手動編輯與 App 內設定保持同步的文字檔。
-
-<br clear="right" />
+- **選單列控制：** 從選單列啟動擷取或即時翻譯，並在設定中配置快速鍵。
+- **啟動與更新：** 設定登入時啟動，以及自動檢查更新。
+- **設定檔：** App 內設定與 TOML 設定檔保持同步。
 
 <a id="install"></a>
 ## 安裝
@@ -91,15 +106,15 @@ brew install --cask PangMo5/tap/swiftycrow
 
 **直接下載：** 從[發布頁面](https://github.com/PangMo5/SwiftyCrow/releases/latest)取得最新的 `.dmg`，開啟後將 App 拖到「應用程式」檔案夾。每個版本也提供對應原始碼封存檔的連結。
 
-首次啟動時，請在系統設定 → 隱私權與安全性中允許**螢幕錄製**，再重新啟動 App。之後可透過 App 取得更新。
+首次啟動時，快速設定會引導你允許螢幕錄製、下載語言並完成首次擷取。開啟系統設定前會儲存目前步驟和所選語言，因此即使 macOS 結束並重新開啟 App，也能繼續設定。還可在設定 → 一般 → 權限中查看目前狀態。
 
 <a id="usage"></a>
 ## 使用方式
 
 1. 在設定（`⌘,`）中選擇**原文語言**與**翻譯語言**。
-2. **擷取區域：** 從控制面板或快速鍵啟動**擷取區域**，再拖移框選文字。按 **Space** 可選取整個視窗。拖移結果視窗的標題區域即可移動視窗。用 `⌘+` / `⌘−` 縮放，點按百分比或按 `⌘0` 讓影像配合視窗；100% 表示一個影像像素對應一個螢幕像素。`⌘S` 儲存、`⌘C` 複製影像、`⌘O` 複製原文、`⌘T` 複製譯文、`Esc` 關閉。無論目前縮放比例或平移位置為何，儲存與複製都會包含原始解析度的完整影像。
-3. **使用即時翻譯：** 從選單列或快速鍵啟動**即時翻譯…**，拖移選取區域，或按 **Space** 選取視窗。**即時**按鈕可暫停或繼續，`⌘C` 可複製全部譯文，**×**可關閉。
-4. **重複使用固定區域：** 選定區域後，使用**顯示或隱藏即時翻譯**即可在相同位置切換。隱藏後會停止所有擷取與翻譯。
+2. **擷取區域：** 從彈出面板或快速鍵啟動**擷取翻譯**，然後拖曳文字範圍。也可按**空白鍵**反白並點選整個視窗。拖曳預覽的標題區域可移動視窗。使用 `⌘+` / `⌘−` 縮放，點選百分比或按 `⌘0` 符合視窗大小；100% 表示一個圖片像素對應一個螢幕像素。預覽支援 `⌘S` 儲存、`⌘C` 複製圖片、`⌘O` 複製原文、`⌘T` 複製譯文，以及 `Esc` 關閉。儲存和複製始終包含原始解析度的完整圖片，與縮放或平移無關。
+3. **使用即時翻譯：** 點選**即時翻譯**按鈕選取區域或視窗，再次點選可選取新區域。旁邊的**顯示浮動翻譯**開關控制所選區域的顯示和隱藏；選取區域前處於停用狀態。使用浮動翻譯中的 **即時** 暫停或繼續，使用 `⌘C` 複製完整譯文，使用 **×** 關閉。
+4. **顯示或隱藏翻譯：** **顯示浮動翻譯**開關控制所選區域的翻譯。隱藏時停止擷取和翻譯，再次顯示時在同一區域繼續。
 
 擷取、即時翻譯及儲存、複製操作的快速鍵，可在設定 → 快速鍵中修改。
 

@@ -13,8 +13,11 @@ final class SourceCanvas: NSView {
 
   // MARK: Lifecycle
 
-  init(scene: String, assets: URL) {
+  init(scene: String, assets: URL, textAssets: URL) {
     self.scene = scene
+    let textURL = textAssets.appendingPathComponent("source-text.json")
+    sourceStrings = FileManager.default.fileExists(atPath: textURL.path)
+      ? try! JSONDecoder().decode([String: String].self, from: Data(contentsOf: textURL)) : nil
     background = scene == "game" ? NSImage(contentsOf: assets.appendingPathComponent("glass-observatory.png")) : nil
     super.init(frame: .zero)
     if scene == "game" { precondition(background != nil, "Missing original game background") }
@@ -31,6 +34,7 @@ final class SourceCanvas: NSView {
   // MARK: Internal
 
   let scene: String
+  let sourceStrings: [String: String]?
   let background: NSImage?
   var index = 0
 
@@ -67,7 +71,12 @@ final class SourceCanvas: NSView {
     let font = mono
       ? NSFont.monospacedSystemFont(ofSize: size, weight: .medium)
       : NSFont.systemFont(ofSize: size, weight: bold ? .bold : .regular)
-    (value as NSString).draw(
+    let authored: String
+    if let sourceStrings {
+      guard let text = sourceStrings[value] else { preconditionFailure("Missing authored source text: \(value)") }
+      authored = text
+    } else { authored = value }
+    (authored as NSString).draw(
       in: CGRect(x: x, y: y, width: w, height: h),
       withAttributes: [.font: font, .foregroundColor: ink(color), .paragraphStyle: p]
     )
@@ -142,15 +151,21 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
 
   // MARK: Lifecycle
 
-  init(scene: String, assets: URL) {
+  init(scene: String, assets: URL, sourceLanguage: String) {
     self.scene = scene
     self.assets = assets
+    switch sourceLanguage {
+    case "en-US": textAssets = assets
+    case "ko-KR": textAssets = assets.appendingPathComponent("LocalizedSources/ko")
+    default: preconditionFailure("Unsupported authored source language: \(sourceLanguage)")
+    }
   }
 
   // MARK: Internal
 
   let scene: String
   let assets: URL
+  let textAssets: URL
   var window: NSWindow!
   var canvas: SourceCanvas?
   var player: AVPlayer?
@@ -180,7 +195,7 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
     let root = window.contentView!
     let content: NSView
     if scene == "science" {
-      let url = assets.appendingPathComponent("science-light.mp4")
+      let url = textAssets.appendingPathComponent("science-light.mp4")
       precondition(FileManager.default.fileExists(atPath: url.path), "Missing original science video")
       let p = AVPlayer(url: url)
       player = p
@@ -198,7 +213,7 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
           MainActor.assumeIsolated { self?.updateState() }
         }
     } else {
-      let view = SourceCanvas(scene: scene, assets: assets)
+      let view = SourceCanvas(scene: scene, assets: assets, textAssets: textAssets)
       canvas = view
       content = view
     }
@@ -306,7 +321,7 @@ struct DemoScenesMain {
     submenu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     item.submenu = submenu
     app.mainMenu = menu
-    let delegate = DemoScenesDelegate(scene: scene, assets: URL(fileURLWithPath: path, isDirectory: true))
+    let delegate = DemoScenesDelegate(scene: scene, assets: URL(fileURLWithPath: path, isDirectory: true), sourceLanguage: option("--source-language") ?? "en-US")
     app.delegate = delegate
     withExtendedLifetime(delegate) { app.run() }
   }
