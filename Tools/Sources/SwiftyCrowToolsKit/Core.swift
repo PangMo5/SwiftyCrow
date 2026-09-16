@@ -98,23 +98,32 @@ func textKey(_ text: String) -> String {
 
 func matches(_ pattern: String, _ text: String) -> [[String]] {
   let regex = try! NSRegularExpression(pattern: pattern)
-  return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).map { match in
-    (0..<match.numberOfRanges).map { Range(match.range(at: $0), in: text).map { String(text[$0]) } ?? "" }
+  let source = text as NSString
+  return regex.matches(in: text, range: NSRange(location: 0, length: source.length)).map { match in
+    (0..<match.numberOfRanges).map { index in
+      let range = match.range(at: index)
+      return range.location == NSNotFound ? "" : source.substring(with: range)
+    }
   }
 }
 
 func replacing(_ pattern: String, in text: String, _ transform: ([String]) throws -> String) rethrows -> String {
   let regex = try! NSRegularExpression(pattern: pattern)
+  // Regex offsets are UTF-16 positions and may split a Swift Character, such
+  // as the warning symbol and its variation selector in a changelog heading.
+  let source = text as NSString
   var result = ""
-  var cursor = text.startIndex
-  for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
-    let groups = (0..<match.numberOfRanges).map { Range(match.range(at: $0), in: text).map { String(text[$0]) } ?? "" }
-    let replacement = try transform(groups)
-    let range = Range(match.range, in: text)!
-    result += text[cursor..<range.lowerBound] + replacement
-    cursor = range.upperBound
+  var cursor = 0
+  for match in regex.matches(in: text, range: NSRange(location: 0, length: source.length)) {
+    let groups = (0..<match.numberOfRanges).map { index in
+      let range = match.range(at: index)
+      return range.location == NSNotFound ? "" : source.substring(with: range)
+    }
+    result += source.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
+      + (try transform(groups))
+    cursor = NSMaxRange(match.range)
   }
-  return result + text[cursor...]
+  return result + source.substring(from: cursor)
 }
 
 func trim(_ value: String) -> String {

@@ -19,6 +19,22 @@ struct LocalizationTests {
   }
 
   @Test
+  func regexOffsetsCanSplitCombiningCharacters() {
+    let text = "Cafe\u{301}"
+    #expect(matches(#"(e)(\p{M})"#, text) == [["e\u{301}", "e", "\u{301}"]])
+    #expect(replacing(#"\p{M}"#, in: text) { _ in "" } == "Cafe")
+    #expect(replacing(#"(a)?b"#, in: "b") { $0[1] + "c" } == "c")
+  }
+
+  @Test
+  func headingSlugsHandleEmojiVariationSelectors() {
+    #expect(DocumentBuilder(workspace: workspace).headings("## ⚠️ Breaking changes\n## 🎉 Features") == [
+      "breaking-changes",
+      "features",
+    ])
+  }
+
+  @Test
   func translationScopeExcludesInternalGuidance() {
     let docs = DocumentBuilder(workspace: workspace)
     #expect(docs.documents.allSatisfy { !$0.hasPrefix("DemoLab/") && !$0.contains("LOCALIZATION") && !$0.contains("AGENTS") })
