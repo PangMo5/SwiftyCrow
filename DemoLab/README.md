@@ -64,3 +64,8 @@ The encoder preserves every frame, the full desktop and the take's timing.
 Top corners hold chapter and actual shortcut badges; the bottom margin holds
 two-line stage captions. Global capture/live shortcuts are assigned in Settings
 for recording and are described as assigned shortcuts, not app defaults.
+
+See [the maintained Swift batch workflow](docs/SWIFT-WORKFLOW.md) for recording/resume, explicit
+take selection, contact sheets, export, review bundle merging, and verified asset
+installation. The current complete bundle is `DemoLab/Edits/review-bundle.json`;
+CI checks its portable evidence without requiring local camera originals.

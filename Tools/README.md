@@ -42,15 +42,13 @@ libass, set `SWIFTYCROW_FFMPEG` to a build that includes it, for example
 `/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg`. The exporter fails explicitly when
 the filter or a required font is unavailable.
 
-After exporting every film in all five languages, `media-manifest --review-report <report>
---recorded-catalog <snapshot>`
-assembles `DemoLab/media-manifest.json`. It verifies the original, video, and
-poster hashes and rejects missing film/locale pairs, wrong-film recordings, and
-recordings made with a different source fixture or changed image asset,
-app catalog, app archive, or review report. The recorded catalog must match its
-original raw hash; only translator comments may differ in the current catalog.
-Keep the camera originals and recorded catalog snapshot available when rebuilding
-this provenance file.
+Use `select-takes`, `export-batch`, and `merge-review-bundle` to assemble current
+review media. The selection pins each camera original and its independent
+runtime, language, narration, and review evidence. `verify-media` checks the
+complete bundle; `install-assets` copies it into a fresh verified directory.
+The former single-archive `media-manifest` command has been replaced by this
+workflow. Historical publication manifests remain as evidence, not as input to
+the current assembler. See the maintained workflow below for complete commands.
 
 The initial migration preserved the existing translated documents byte for byte.
 Swift Testing covers translation contracts, generated output, release metadata
@@ -88,3 +86,8 @@ For native UI review, pass `SWIFTYCROW_REVIEW_LOCALE=ko` as an Xcode build
 setting. Both catalog validation and compiler-extracted string validation use
 that explicit locale. This option is accepted only for Debug builds; release
 builds retain the complete language gate. Omitting it keeps full validation.
+
+See [the maintained Swift batch workflow](../DemoLab/docs/SWIFT-WORKFLOW.md) for recording/resume, explicit
+take selection, contact sheets, export, review bundle merging, and verified asset
+installation. The current complete bundle is `DemoLab/Edits/review-bundle.json`;
+CI checks its portable evidence without requiring local camera originals.

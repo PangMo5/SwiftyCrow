@@ -24,6 +24,51 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
       return value
     }
     switch command {
+    case .recordLocales:
+      try await RecordingBatch(workspace: workspace).record(
+        source: URL(fileURLWithPath: required(source, "--source")),
+        output: URL(fileURLWithPath: required(output, "--output")),
+        check: check
+      )
+
+    case .selectTakes:
+      try TakeLibrary(workspace: workspace).select(
+        source: URL(fileURLWithPath: required(source, "--source")),
+        output: URL(fileURLWithPath: required(output, "--output"))
+      )
+
+    case .prepareReview:
+      try await TakeLibrary(workspace: workspace).prepare(
+        source: URL(fileURLWithPath: required(source, "--source")),
+        output: URL(fileURLWithPath: required(output, "--output"))
+      )
+
+    case .exportBatch:
+      try await TakeLibrary(workspace: workspace).export(
+        source: URL(fileURLWithPath: required(source, "--source")),
+        output: URL(fileURLWithPath: required(mediaRoot, "--media-root"))
+      )
+
+    case .mergeReviewBundle:
+      try ReviewBundle(workspace: workspace).merge(
+        selection: URL(fileURLWithPath: required(source, "--source")),
+        mediaRoot: URL(fileURLWithPath: required(mediaRoot, "--media-root")),
+        output: URL(fileURLWithPath: required(output, "--output")),
+        base: baseReview.map { URL(fileURLWithPath: $0) }
+      )
+
+    case .verifyMedia:
+      try ReviewBundle(workspace: workspace).verify(
+        JSON.read(URL(fileURLWithPath: required(source, "--source"))),
+        portable: portable
+      )
+
+    case .installAssets:
+      try ReviewBundle(workspace: workspace).install(
+        source: URL(fileURLWithPath: required(source, "--source")),
+        output: URL(fileURLWithPath: required(output, "--output"))
+      )
+
     case .check: try checks.all(locale: locale)
 
     case .docs: try DocumentBuilder(workspace: workspace).build(check: check, locale: locale)
@@ -70,12 +115,6 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) }
       )
 
-    case .mediaManifest:
-      try VideoExport(workspace: workspace).manifest(
-        review: URL(fileURLWithPath: required(reviewReport, "--review-report")),
-        recordedCatalog: URL(fileURLWithPath: required(recordedCatalog, "--recorded-catalog"))
-      )
-
     case .renderNarration:
       let timeline = try JSON.read(URL(fileURLWithPath: required(source, "--source")))
       let rendered = try await FilmNarration(workspace: workspace).render(
@@ -89,6 +128,11 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   // MARK: Internal
 
   enum Command: String, ExpressibleByArgument {
+    case recordLocales = "record-locales"
+    case selectTakes = "select-takes"
+    case prepareReview = "prepare-review"
+    case exportBatch = "export-batch", mergeReviewBundle = "merge-review-bundle"
+    case verifyMedia = "verify-media", installAssets = "install-assets"
     case check
     case docs
     case site
@@ -97,7 +141,6 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
     case collectWeb = "collect-web"
     case checkApp = "check-app", syncApp = "sync-app"
     case exportVideo = "export-video", appcastNotes = "appcast-notes", auditVideo = "audit-video"
-    case mediaManifest = "media-manifest"
     case renderNarration = "render-narration"
   }
 
@@ -107,7 +150,11 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   var port: UInt16 = 8085
   @Option(help: "Repository root. Discovered from the current directory when omitted.")
   var root: String?
-  @Flag(help: "Check generated documents without writing.")
+  @Option(help: "Existing verified review bundle whose unselected films are retained during merging.")
+  var baseReview: String?
+  @Flag(help: "Verify committed media and preserved evidence without requiring local camera originals.")
+  var portable = false
+  @Flag(help: "Check documents or validate a recording plan without running it.")
   var check = false
   @Option(help: "Site output directory.")
   var output: String?
@@ -117,7 +164,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   var version: String?
   @Option(help: "Compiler-generated .stringsdata directory.")
   var stringsdata: String?
-  @Option(help: "Reviewed camera-original MOV.")
+  @Option(help: "Input movie, recording plan, take decisions, selection, or review manifest.")
   var source: String?
   @Option(help: "App interface locale of the recording.")
   var locale: String?
@@ -127,7 +174,5 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   var posterSeconds: Double?
   @Option(help: "Existing visual review evidence for the accepted take.")
   var reviewReport: String?
-  @Option(help: "Preserved app catalog whose raw hash matches every recording scene.")
-  var recordedCatalog: String?
 
 }

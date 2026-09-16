@@ -1,0 +1,179 @@
+{
+  "takes" : [
+    {
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/tour-final-01",
+      "film" : "tour",
+      "locale" : "ko",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/korean-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/capture-final-01",
+      "film" : "capture",
+      "locale" : "ko",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/korean-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/live-final-01",
+      "film" : "live",
+      "locale" : "ko",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/korean-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/layout-final-01",
+      "film" : "layout",
+      "locale" : "ko",
+      "posterSeconds" : 12,
+      "review" : "DemoLab/Edits/korean-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/compare-final-01",
+      "film" : "compare",
+      "locale" : "ko",
+      "posterSeconds" : 27,
+      "review" : "DemoLab/Edits/korean-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/tour-final-02",
+      "film" : "tour",
+      "locale" : "en",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/capture-final-01",
+      "film" : "capture",
+      "locale" : "en",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/live-final-01",
+      "film" : "live",
+      "locale" : "en",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/layout-final-02",
+      "film" : "layout",
+      "locale" : "en",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/compare-final-01",
+      "film" : "compare",
+      "locale" : "en",
+      "posterSeconds" : 26.866666666,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/tour-final-01",
+      "film" : "tour",
+      "locale" : "ja",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/capture-final-01",
+      "film" : "capture",
+      "locale" : "ja",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/live-final-01",
+      "film" : "live",
+      "locale" : "ja",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/layout-final-02",
+      "film" : "layout",
+      "locale" : "ja",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/compare-final-01",
+      "film" : "compare",
+      "locale" : "ja",
+      "posterSeconds" : 27.199999999999999,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/tour-final-01",
+      "film" : "tour",
+      "locale" : "zh-Hans",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/capture-final-01",
+      "film" : "capture",
+      "locale" : "zh-Hans",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/live-final-01",
+      "film" : "live",
+      "locale" : "zh-Hans",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/layout-final-01",
+      "film" : "layout",
+      "locale" : "zh-Hans",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/compare-final-01",
+      "film" : "compare",
+      "locale" : "zh-Hans",
+      "posterSeconds" : 27.300000000000001,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/tour-final-01",
+      "film" : "tour",
+      "locale" : "zh-Hant",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/capture-final-01",
+      "film" : "capture",
+      "locale" : "zh-Hant",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/live-final-01",
+      "film" : "live",
+      "locale" : "zh-Hant",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/layout-final-01",
+      "film" : "layout",
+      "locale" : "zh-Hant",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    },
+    {
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/compare-final-01",
+      "film" : "compare",
+      "locale" : "zh-Hant",
+      "posterSeconds" : 27.100000000000001,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md"
+    }
+  ]
+}

@@ -257,22 +257,26 @@ swift run --package-path Tools swiftycrow-tools export-video \
   --review-report DerivedData/QA/new-session/RENDERING-REVIEW.md
 ```
 
-After all 25 independent exports pass visual comparison:
+After all selected exports pass visual comparison, follow the
+[Swift batch workflow](SWIFT-WORKFLOW.md):
 
 ```sh
-swift run --package-path Tools swiftycrow-tools media-manifest \
-  --recorded-catalog DerivedData/QA/new-session/Localizable.xcstrings \
-  --review-report DerivedData/QA/new-session/RENDERING-REVIEW.md
-swift run --package-path Tools swiftycrow-tools site --output DerivedData/LocalizedSite
+swift run --package-path Tools swiftycrow-tools select-takes \
+  --source decisions.json --output selection.json
+swift run --package-path Tools swiftycrow-tools merge-review-bundle \
+  --source selection.json --media-root DerivedData/Exports --output review-bundle.json
+swift run --package-path Tools swiftycrow-tools verify-media --source review-bundle.json
+swift run --package-path Tools swiftycrow-tools site \
+  --media-root DerivedData/Exports --output DerivedData/LocalizedSite
 swift run --package-path Tools swiftycrow-tools serve --output DerivedData/LocalizedSite --port 8765
 ```
 
-Preserve the recorded app catalog alongside the evidence. Its raw hash must
-match every scene. Comparison with the current catalog ignores only translator
-comments, while requiring every other field to match and retaining both hashes.
-The manifest rejects missing films, locale/film/language-pair mismatches, stale
-fixture assets, scenarios or catalogs, mixed app archives, inconsistent reviews,
-and changed media, subtitle or presentation files.
+Each selection retains its own original app/archive, source, and scenario hashes
+through the preserved scene record. Complete review bundles reject missing or
+duplicate film/locale pairs, mismatched language evidence, changed raw takes,
+changed reviews, and changed media or narration. Independently approved app and
+resource cohorts can coexist without claiming that they share one archive.
+
 
 Check every feature film, poster, language selection and README section link in
 the generated site at desktop and mobile widths. Review remaining locale copy

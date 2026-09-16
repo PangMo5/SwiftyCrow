@@ -4,104 +4,7 @@ import Foundation
 
 struct VideoExport {
 
-  // MARK: Internal
-
   let workspace: Workspace
-
-  func manifest(review: URL, recordedCatalog: URL) throws {
-    try require(review.exists, "Visual review evidence is required")
-    let reviewPath = relativePath(review, from: workspace.root)
-    let films = try CatalogChecks(workspace: workspace).films()
-    let currentCatalog = workspace.root.at("Resources/Localizable.xcstrings")
-    let catalogHash = try sha(recordedCatalog)
-    let narrationHash = try sha(workspace.root.at("DemoLab/Localization/Narration.json"))
-    let scenariosHash = try sha(workspace.root.at("DemoLab/Fixtures/scenarios.json"))
-    try require(
-      catalogWithoutTranslatorComments(JSON.read(recordedCatalog)) == catalogWithoutTranslatorComments(JSON.read(currentCatalog)),
-      "Recorded app catalog content is stale"
-    )
-    var recordings = [JSON]()
-    var archiveHash: String?
-    for (filmID, film) in films.object {
-      let fixture = workspace.root.at("DemoLab/\(film["sourceFixture"].str)")
-      let fixtureHash = try sha(fixture)
-      let assets = try JSON.read(fixture)["files"].object
-      try require(!assets.isEmpty, "Source fixture manifest has no assets: \(filmID)")
-      for (path, expectedHash) in assets {
-        try require(sha(workspace.root.at("DemoLab/\(path)")) == expectedHash.str, "Source asset changed: \(path)")
-      }
-      for locale in locales {
-        let pair = try FilmLanguagePair(film: film, locale: locale)
-        let metadata = try JSON.read(workspace.root.at("web/media/\(locale)/\(filmID).json"))
-        try require(metadata["film"].str == filmID, "Media film mismatch: \(filmID)/\(locale)")
-        try require(metadata["uiLanguage"].str == locale, "Media locale mismatch: \(locale)")
-        try require(
-          metadata["sourceLanguage"].str == pair.source && metadata["translationLanguage"].str == pair.target,
-          "Media language pair mismatch: \(filmID)/\(locale)"
-        )
-        try require(metadata["narrationCatalogSHA256"].str == narrationHash, "Media narration is stale: \(filmID)/\(locale)")
-        try require(metadata["visualReviewEvidence"].str == reviewPath, "Media review mismatch: \(locale)")
-        for (path, hash) in [
-          ("cameraOriginal", "cameraSHA256"),
-          ("movie", "movieSHA256"),
-          ("poster", "posterSHA256"),
-          ("presentationTimeline", "presentationTimelineSHA256"),
-          ("subtitles", "subtitlesSHA256"),
-        ] {
-          try require(sha(workspace.root.at(metadata[path].str)) == metadata[hash].str, "Media hash mismatch: \(locale)/\(path)")
-        }
-        let camera = workspace.root.at(metadata["cameraOriginal"].str)
-        let scene = try JSON.read(camera.deletingLastPathComponent().at("scene.json"))
-        try require(scene["film"].str == filmID, "Recorded film mismatch: \(filmID)/\(locale)")
-        try require(scene["uiLanguage"].str == locale, "Recorded locale mismatch: \(filmID)/\(locale)")
-        try require(
-          scene["translationSource"].str == pair.source && scene["translationTarget"].str == pair.target,
-          "Recorded language pair mismatch: \(filmID)/\(locale)"
-        )
-        try require(scene["scenariosSHA256"].str == scenariosHash, "Recorded scenarios are stale: \(locale)")
-        let timeline = try JSON.read(workspace.root.at(metadata["presentationTimeline"].str))
-        try FilmNarration.validate(
-          timeline,
-          film: filmID,
-          locale: locale,
-          duration: metadata["recorder"]["durationSeconds"].double
-        )
-        try require(timeline["scenariosSHA256"].str == scenariosHash, "Narration scenarios are stale: \(locale)")
-        try require(scene["sourceSHA256"].str == fixtureHash, "Recorded source is stale: \(locale)")
-        try require(scene["catalogSHA256"].str == catalogHash, "Recorded app catalog is stale: \(locale)")
-        try require(scene["appArchiveSHA256"].str.count == 64, "Missing recorded app archive hash: \(locale)")
-        if let archiveHash {
-          try require(archiveHash == scene["appArchiveSHA256"].str, "Recordings use different app archives")
-        }
-        archiveHash = scene["appArchiveSHA256"].str
-        recordings.append(metadata.merging([("scene", scene)]))
-      }
-    }
-    try JSON.object([
-      ("schemaVersion", .integer(3)),
-      (
-        "sourceBoundary",
-        .string(
-          "Development recordings from a working-tree app snapshot. Scene executable hashes identify the tools used for each take; recorder source provenance describes the preserved source and its local adaptations."
-        )
-      ),
-      ("visualReviewEvidence", .string(reviewPath)),
-      ("visualReviewSHA256", .string(sha(review))),
-      ("recordedCatalog", .string(relativePath(recordedCatalog, from: workspace.root))),
-      ("recordedCatalogSHA256", .string(catalogHash)),
-      ("currentCatalogSHA256", .string(sha(currentCatalog))),
-      (
-        "catalogComparison",
-        .string("All catalog fields match except translator comments on string entries; original file hashes are preserved.")
-      ),
-      ("filmCatalogSHA256", .string(sha(workspace.root.at("DemoLab/Localization/Films.json")))),
-      ("narrationCatalogSHA256", .string(narrationHash)),
-      ("scenariosSHA256", .string(scenariosHash)),
-      ("recorderSourceProvenance", JSON.read(workspace.root.at("DemoLab/Recorder/source-provenance.json"))),
-      ("recordings", .array(recordings)),
-    ]).write(workspace.root.at("DemoLab/media-manifest.json"))
-    print("Assembled media provenance for \(recordings.count) reviewed recordings")
-  }
 
   func probe(_ file: URL) async throws -> JSON {
     let output = try await runProcess(
@@ -288,13 +191,4 @@ struct VideoExport {
     try print(metadata.rendered())
   }
 
-  // MARK: Private
-
-  private func catalogWithoutTranslatorComments(_ catalog: JSON) -> JSON {
-    var result = catalog
-    result["strings"] = .object(catalog["strings"].object.map { key, entry in
-      (key, .object(entry.object.filter { $0.0 != "comment" }))
-    })
-    return result
-  }
 }

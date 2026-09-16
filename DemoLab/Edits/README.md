@@ -38,3 +38,8 @@ full decoding, and visual review. All 25 demos passed 100 playback checks across
 Chromium/WebKit and desktop/mobile sizes, including per-page output-language and
 media hash checks. Earlier app validation passed 230 tests; app tests were not
 rerun for this media/tooling correction.
+
+See [the maintained Swift batch workflow](../docs/SWIFT-WORKFLOW.md) for recording/resume, explicit
+take selection, contact sheets, export, review bundle merging, and verified asset
+installation. The current complete bundle is `DemoLab/Edits/review-bundle.json`;
+CI checks its portable evidence without requiring local camera originals.

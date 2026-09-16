@@ -144,15 +144,17 @@ func runProcess(
   _ arguments: [String],
   cwd: URL? = nil,
   environment: [String: String] = [:],
-  capture: Bool = false
+  capture: Bool = false,
+  removingEnvironment: [String] = []
 ) async throws -> String {
   try require(!arguments.isEmpty, "Missing executable")
   let executable: Executable = arguments[0].contains("/") ? .path(FilePath(arguments[0])) : .name(arguments[0])
   let argv = Subprocess.Arguments(Array(arguments.dropFirst()))
-  let overrides = Dictionary(uniqueKeysWithValues: environment.map { (
+  var overrides = Dictionary(uniqueKeysWithValues: environment.map { (
     Subprocess.Environment.Key(stringLiteral: $0.key),
     Optional($0.value)
   ) })
+  for key in removingEnvironment { overrides[Subprocess.Environment.Key(stringLiteral: key)] = .some(nil) }
   if capture {
     let result = try await Subprocess.run(
       executable,
