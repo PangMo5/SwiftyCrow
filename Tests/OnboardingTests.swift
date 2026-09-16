@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import AppKit
 import ComposableArchitecture
+import Foundation
 import Sharing
 import Testing
+import TOML
 @testable import SwiftyCrow
 
 @MainActor
@@ -114,8 +117,8 @@ struct OnboardingTests {
     }
     await store.receive(\.accessRequestFinished) { $0.isRequestingAccess = false }
     await store.send(.nextTapped) {
-      $0.step = .ready
-      $0.$savedStep.withLock { $0 = 2 }
+      $0.step = .shortcuts
+      $0.$savedStep.withLock { $0 = 3 }
     }
   }
 
@@ -188,7 +191,220 @@ struct OnboardingTests {
     #expect(!WhatsNewClient.shouldShow(current: "", lastShown: nil, hasExistingConfiguration: true))
   }
 
+  @Test
+  func shortcutStepKeepsSavedStepValuesAndNavigationOrder() async {
+    #expect(OnboardingFeature.Step(rawValue: 2) == .ready)
+    var initial = state()
+    initial.step = .shortcuts
+    initial.$savedStep.withLock { $0 = 3 }
+    let store = TestStore(initialState: initial) { OnboardingFeature() }
+    await store.send(.nextTapped) {
+      $0.step = .ready
+      $0.$savedStep.withLock { $0 = 2 }
+    }
+    await store.send(.backTapped) {
+      $0.step = .shortcuts
+      $0.$savedStep.withLock { $0 = 3 }
+    }
+    await store.send(.backTapped) {
+      $0.step = .prepare
+      $0.$savedStep.withLock { $0 = 1 }
+    }
+  }
+
+  @Test
+  func primaryShortcutsDefaultForNewAndPartialConfigurations() throws {
+    let fresh = AppSettings()
+    #expect(fresh.shortcuts.selectRegion == HotKey(parsing: "cmd + shift - 1"))
+    #expect(fresh.shortcuts.liveOverlay == HotKey(parsing: "cmd + shift - 2"))
+    #expect(fresh.shortcuts.toggleLiveOverlay == nil)
+    for text in ["", "[shortcuts]", "[shortcuts]\nregionSave = \"cmd - s\"".replacingOccurrences(of: "\\", with: "")] {
+      let loaded = try TOMLDecoder().decode(AppSettings.self, from: text)
+      #expect(loaded.shortcuts.selectRegion == fresh.shortcuts.selectRegion)
+      #expect(loaded.shortcuts.liveOverlay == fresh.shortcuts.liveOverlay)
+      #expect(loaded.shortcuts.toggleLiveOverlay == nil)
+    }
+  }
+
+  @Test
+  func clearedAndCustomShortcutsSurviveTOMLRoundTrip() throws {
+    var value = AppSettings()
+    value.shortcuts.selectRegion = nil
+    value.shortcuts.regionCopyImage = nil
+    value.shortcuts.liveOverlay = HotKey(parsing: "cmd + shift - 2")
+    let encoded = try TOMLEncoder().encode(value)
+    let decoded = try TOMLDecoder().decode(AppSettings.self, from: String(decoding: encoded, as: UTF8.self))
+    #expect(decoded == value)
+    #expect(decoded.shortcuts.selectRegion == nil)
+    #expect(decoded.shortcuts.regionCopyImage == nil)
+  }
+
+  @Test
+  func defaultBindingsDoNotOverwriteExplicitCustomOrClearedValues() throws {
+    let loaded = try TOMLDecoder().decode(AppSettings.self, from: """
+      [shortcuts]
+      selectRegion = "cmd + shift - 9"
+      liveOverlay = ""
+      toggleLiveOverlay = "alt + cmd - t"
+      """)
+    #expect(loaded.shortcuts.selectRegion == HotKey(parsing: "cmd + shift - 9"))
+    #expect(loaded.shortcuts.liveOverlay == nil)
+    #expect(loaded.shortcuts.toggleLiveOverlay == HotKey(parsing: "alt + cmd - t"))
+  }
+
+  @Test
+  func leavingShortcutRecorderRestoresGlobalShortcuts() {
+    let field = RecorderField()
+    var enabled = true
+    field.onRecordingChange = { enabled = !$0 }
+    // Begin recording with a real mouse event through the field's event path.
+    if
+      let event = NSEvent.mouseEvent(
+        with: .leftMouseDown,
+        location: .zero,
+        modifierFlags: [],
+        timestamp: 0,
+        windowNumber: 0,
+        context: nil,
+        eventNumber: 0,
+        clickCount: 1,
+        pressure: 1
+      )
+    {
+      field.mouseDown(with: event)
+    }
+    #expect(!enabled)
+    field.cancelRecording()
+    #expect(enabled)
+  }
+
+  @Test
+  func shortcutCancelRetainsBindingAndCanRecordAgain() throws {
+    let field = RecorderField()
+    defer { field.cancelRecording() }
+    let old = try #require(HotKey(parsing: "cmd + shift - 1"))
+    field.hotKey = old
+    var changes = [HotKey?]()
+    var recording = [Bool]()
+    field.onChange = { changes.append($0) }
+    field.onRecordingChange = { recording.append($0) }
+    #expect(field.accessibilityPerformPress())
+    #expect(field.performKeyEquivalent(with: try shortcutEvent(53)))
+    #expect(!field.isRecording)
+    #expect(field.hotKey == old)
+    #expect(changes.isEmpty)
+    #expect(field.accessibilityPerformPress())
+    #expect(field.performKeyEquivalent(with: try shortcutEvent(19, modifiers: [.command, .shift])))
+    #expect(field.hotKey == HotKey(parsing: "cmd + shift - 2"))
+    #expect(changes.count == 1)
+    #expect(recording == [true, false, true, false])
+  }
+
+  @Test
+  func duplicateShortcutShowsOwnerAndDoesNotPoisonNextRecording() throws {
+    let field = RecorderField()
+    defer { field.cancelRecording() }
+    let original = try #require(HotKey(parsing: "cmd + shift - 1"))
+    let taken = try #require(HotKey(parsing: "cmd + shift - 2"))
+    field.hotKey = original
+    field.conflict = { $0 == taken ? "Live translation" : nil }
+    var changes = [HotKey?]()
+    field.onChange = { changes.append($0) }
+    #expect(field.accessibilityPerformPress())
+    #expect(field.performKeyEquivalent(with: try shortcutEvent(19, modifiers: [.command, .shift])))
+    #expect(field.hotKey == original)
+    #expect(changes.isEmpty)
+    #expect(!field.isRecording)
+    #expect(field.toolTip?.contains("Live translation") == true)
+    #expect(field.accessibilityPerformPress())
+    #expect(field.toolTip == nil)
+    #expect(field.isRecording)
+    #expect(field.performKeyEquivalent(with: try shortcutEvent(20, modifiers: [.command, .shift])))
+    #expect(field.hotKey == HotKey(parsing: "cmd + shift - 3"))
+    #expect(changes.count == 1)
+  }
+
+  @Test
+  func clearingWhileRecordingStopsCaptureAndAllowsRebinding() throws {
+    let field = RecorderField()
+    defer { field.cancelRecording() }
+    field.hotKey = HotKey(parsing: "cmd + shift - 1")
+    var suspended = false
+    field.onRecordingChange = { suspended = $0 }
+    #expect(field.accessibilityPerformPress())
+    #expect(suspended)
+    field.synchronizeBinding(nil)
+    #expect(!field.isRecording)
+    #expect(!suspended)
+    #expect(field.hotKey == nil)
+    #expect(field.accessibilityPerformPress())
+    #expect(field.performKeyEquivalent(with: try shortcutEvent(18, modifiers: [.command, .shift])))
+    #expect(field.hotKey == HotKey(parsing: "cmd + shift - 1"))
+    #expect(!suspended)
+  }
+
+  @Test
+  func movingBetweenFieldsAndLeavingWindowResumesHotkeys() {
+    let window = NSWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
+      styleMask: [.titled],
+      backing: .buffered,
+      defer: false
+    )
+    window.isReleasedWhenClosed = false
+    let first = RecorderField()
+    let second = RecorderField()
+    window.contentView?.addSubview(first)
+    window.contentView?.addSubview(second)
+    defer { first.cancelRecording()
+      second.cancelRecording()
+      window.close()
+    }
+    var recording = [Bool]()
+    first.onRecordingChange = { recording.append($0) }
+    second.onRecordingChange = { recording.append($0) }
+    #expect(first.accessibilityPerformPress())
+    #expect(second.accessibilityPerformPress())
+    #expect(!first.isRecording && second.isRecording)
+    NotificationCenter.default.post(name: NSWindow.didResignKeyNotification, object: window)
+    #expect(!second.isRecording)
+    #expect(recording == [true, false, true, false])
+    #expect(second.accessibilityPerformPress())
+    second.removeFromSuperview()
+    #expect(!second.isRecording)
+    #expect(recording.suffix(2) == [true, false])
+  }
+
+  @Test
+  func unchangedBindingDoesNotCancelInputAndPlainKeysDoNotCommit() throws {
+    let field = RecorderField()
+    defer { field.cancelRecording() }
+    let value = HotKey(parsing: "cmd + shift - 1")
+    field.hotKey = value
+    #expect(field.accessibilityPerformPress())
+    field.synchronizeBinding(value)
+    #expect(field.isRecording)
+    field.keyDown(with: try shortcutEvent(0))
+    #expect(field.isRecording)
+    #expect(field.hotKey == value)
+  }
+
   // MARK: Private
+
+  private func shortcutEvent(_ keyCode: UInt16, modifiers: NSEvent.ModifierFlags = []) throws -> NSEvent {
+    try #require(NSEvent.keyEvent(
+      with: .keyDown,
+      location: .zero,
+      modifierFlags: modifiers,
+      timestamp: 0,
+      windowNumber: 0,
+      context: nil,
+      characters: "",
+      charactersIgnoringModifiers: "",
+      isARepeat: false,
+      keyCode: keyCode
+    ))
+  }
 
   private func parseChangelog(_ source: String) throws -> [BundledDocumentBlock] {
     try ParsedBundledDocument(markdown: source, document: .changelog).blocks

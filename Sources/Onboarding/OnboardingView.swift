@@ -22,6 +22,7 @@ struct OnboardingView: View {
             switch store.step {
             case .welcome: welcome
             case .prepare: preparation
+            case .shortcuts: shortcuts
             case .ready: ready
             }
           }
@@ -51,7 +52,7 @@ struct OnboardingView: View {
       VStack(alignment: .leading, spacing: 10) {
         ForEach(OnboardingFeature.Step.allCases) { step in
           HStack(spacing: 10) {
-            Image(systemName: step.rawValue < store.step.rawValue ? "checkmark.circle.fill" : step.symbol)
+            Image(systemName: step.position < store.step.position ? "checkmark.circle.fill" : step.symbol)
               .frame(width: 20)
             Text(step.title).font(.callout.weight(.medium))
           }
@@ -129,6 +130,24 @@ struct OnboardingView: View {
           .font(.caption).foregroundStyle(.secondary)
       }
       .setupCard()
+    }
+  }
+
+  private var shortcuts: some View {
+    Group {
+      heading("Translate with a shortcut.", detail: "Start a translation from any app without opening the menu bar.")
+      VStack(spacing: 18) {
+        ShortcutSettingRow("Capture translation", \.selectRegion)
+        Divider()
+        ShortcutSettingRow("Live overlay (select a region)", \.liveOverlay)
+        Divider()
+        ShortcutSettingRow("Show / hide overlay (last region)", \.toggleLiveOverlay)
+      }
+      .setupCard()
+      Text("Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it.")
+        .font(.callout).foregroundStyle(.secondary)
+      Text("Changes are saved immediately. You can change all shortcuts later in Settings.")
+        .font(.caption).foregroundStyle(.secondary)
     }
   }
 
@@ -211,6 +230,7 @@ extension OnboardingFeature.Step {
     switch self {
     case .welcome: "Welcome"
     case .prepare: "Get ready"
+    case .shortcuts: "Shortcuts"
     case .ready: "First capture"
     }
   }
@@ -219,6 +239,7 @@ extension OnboardingFeature.Step {
     switch self {
     case .welcome: "hand.wave"
     case .prepare: "slider.horizontal.3"
+    case .shortcuts: "command"
     case .ready: "viewfinder"
     }
   }

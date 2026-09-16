@@ -10,9 +10,17 @@ struct OnboardingFeature {
   // MARK: Internal
 
   enum Step: Int, CaseIterable, Identifiable {
-    case welcome
-    case prepare
-    case ready
+    // Keep persisted values stable when inserting a new setup step.
+    case welcome = 0
+    case prepare = 1
+    case ready = 2
+    case shortcuts = 3
+
+    static let allCases: [Self] = [.welcome, .prepare, .shortcuts, .ready]
+
+    var position: Int {
+      Self.allCases.firstIndex(of: self)!
+    }
 
     var id: Int {
       rawValue
@@ -160,13 +168,15 @@ struct OnboardingFeature {
         return .none
 
       case .nextTapped:
-        guard let step = Step(rawValue: state.step.rawValue + 1) else { return .none }
+        guard state.step.position + 1 < Step.allCases.count else { return .none }
+        let step = Step.allCases[state.step.position + 1]
         state.step = step
         state.$savedStep.withLock { $0 = step.rawValue }
         return .none
 
       case .backTapped:
-        guard let step = Step(rawValue: state.step.rawValue - 1) else { return .none }
+        guard state.step.position > 0 else { return .none }
+        let step = Step.allCases[state.step.position - 1]
         state.step = step
         state.$savedStep.withLock { $0 = step.rawValue }
         return .none

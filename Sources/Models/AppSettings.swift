@@ -94,24 +94,41 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     let d = ShortcutSettings()
-    selectRegion = try c.decodeIfPresent(HotKey.self, forKey: .selectRegion) ?? d.selectRegion
-    liveOverlay = try c.decodeIfPresent(HotKey.self, forKey: .liveOverlay) ?? d.liveOverlay
-    toggleLive = try c.decodeIfPresent(HotKey.self, forKey: .toggleLive) ?? d.toggleLive
-    toggleLiveMode = try c.decodeIfPresent(HotKey.self, forKey: .toggleLiveMode) ?? d.toggleLiveMode
-    toggleLiveOverlay = try c.decodeIfPresent(HotKey.self, forKey: .toggleLiveOverlay) ?? d.toggleLiveOverlay
-    regionSave = try c.decodeIfPresent(HotKey.self, forKey: .regionSave) ?? d.regionSave
-    regionCopyImage = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyImage) ?? d.regionCopyImage
-    regionCopyOriginal = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyOriginal) ?? d.regionCopyOriginal
-    regionCopyTranslation = try c.decodeIfPresent(HotKey.self, forKey: .regionCopyTranslation) ?? d.regionCopyTranslation
+    func shortcut(_ key: CodingKeys, default value: HotKey? = nil) throws -> HotKey? {
+      // An empty string represents an explicitly cleared shortcut in TOML.
+      if (try? c.decode(String.self, forKey: key)) == "" { return nil }
+      return try c.decodeIfPresent(HotKey.self, forKey: key) ?? value
+    }
+    selectRegion = try shortcut(.selectRegion, default: d.selectRegion)
+    liveOverlay = try shortcut(.liveOverlay, default: d.liveOverlay)
+    toggleLive = try shortcut(.toggleLive)
+    toggleLiveMode = try shortcut(.toggleLiveMode)
+    toggleLiveOverlay = try shortcut(.toggleLiveOverlay)
+    regionSave = try shortcut(.regionSave, default: d.regionSave)
+    regionCopyImage = try shortcut(.regionCopyImage, default: d.regionCopyImage)
+    regionCopyOriginal = try shortcut(.regionCopyOriginal, default: d.regionCopyOriginal)
+    regionCopyTranslation = try shortcut(.regionCopyTranslation, default: d.regionCopyTranslation)
   }
 
   // MARK: Internal
 
-  /// Global hotkeys — unbound by default; the user assigns them.
-  var selectRegion: HotKey?
+  enum CodingKeys: String, CodingKey {
+    case selectRegion
+    case liveOverlay
+    case toggleLive
+    case toggleLiveMode
+    case toggleLiveOverlay
+    case regionSave
+    case regionCopyImage
+    case regionCopyOriginal
+    case regionCopyTranslation
+  }
+
+  /// Default bindings also apply when these keys are omitted from config.toml.
+  var selectRegion: HotKey? = HotKey(carbonKeyCode: 18, carbonModifiers: 768) // ⇧⌘1
   /// Starts (or re-places) the live overlay by selecting a region/window.
   /// Renamed from `toggleOverlay` in 2.6.0.
-  var liveOverlay: HotKey?
+  var liveOverlay: HotKey? = HotKey(carbonKeyCode: 19, carbonModifiers: 768) // ⇧⌘2
   var toggleLive: HotKey?
   var toggleLiveMode: HotKey?
   /// Shows or hides the live overlay on the last-used region — no re-selecting.
@@ -125,6 +142,29 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
   var regionCopyImage: HotKey? = HotKey(carbonKeyCode: 8, carbonModifiers: 256) // ⌘C
   var regionCopyOriginal: HotKey? = HotKey(carbonKeyCode: 31, carbonModifiers: 256) // ⌘O
   var regionCopyTranslation: HotKey? = HotKey(carbonKeyCode: 17, carbonModifiers: 256) // ⌘T
+
+  func encode(to encoder: any Encoder) throws {
+    var c = encoder.container(keyedBy: CodingKeys.self)
+    if let selectRegion { try c.encode(selectRegion, forKey: .selectRegion) }
+    else { try c.encode("", forKey: .selectRegion) }
+    if let liveOverlay { try c.encode(liveOverlay, forKey: .liveOverlay) }
+    else { try c.encode("", forKey: .liveOverlay) }
+    if let toggleLive { try c.encode(toggleLive, forKey: .toggleLive) }
+    else { try c.encode("", forKey: .toggleLive) }
+    if let toggleLiveMode { try c.encode(toggleLiveMode, forKey: .toggleLiveMode) }
+    else { try c.encode("", forKey: .toggleLiveMode) }
+    if let toggleLiveOverlay { try c.encode(toggleLiveOverlay, forKey: .toggleLiveOverlay) }
+    else { try c.encode("", forKey: .toggleLiveOverlay) }
+    if let regionSave { try c.encode(regionSave, forKey: .regionSave) }
+    else { try c.encode("", forKey: .regionSave) }
+    if let regionCopyImage { try c.encode(regionCopyImage, forKey: .regionCopyImage) }
+    else { try c.encode("", forKey: .regionCopyImage) }
+    if let regionCopyOriginal { try c.encode(regionCopyOriginal, forKey: .regionCopyOriginal) }
+    else { try c.encode("", forKey: .regionCopyOriginal) }
+    if let regionCopyTranslation { try c.encode(regionCopyTranslation, forKey: .regionCopyTranslation) }
+    else { try c.encode("", forKey: .regionCopyTranslation) }
+  }
+
 }
 
 // MARK: - TranslationSettings

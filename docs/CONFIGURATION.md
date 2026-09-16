@@ -42,7 +42,7 @@ cmd + ctrl + shift + alt - z
 
 Modifiers: `cmd`, `ctrl`, `alt` (option), `shift`. Keys are letters, digits,
 `tab`, `return`, `space`, arrow keys (`left`/`right`/`up`/`down`), punctuation,
-etc. Omit a key to leave that action unbound.
+etc. Use an empty string to leave an action unbound.
 
 Live capture adapts automatically: it checks frequently while content changes
 and slows down when the screen is still. OCR runs only for changed pixels or
@@ -80,8 +80,7 @@ The `toggleLiveOverlay` shortcut and the **Show overlay** switch show or hide tr
 
 ## `[shortcuts]`
 
-All values are skhd-style shortcut strings (see above). Omit a global key to
-leave that action unbound (the default).
+All values are skhd-style shortcut strings (see above). Capture defaults to ⇧⌘1 and live area selection to ⇧⌘2, including when those keys are omitted from the configuration. Explicit custom bindings are preserved. An empty string clears any shortcut, including its default.
 
 **Global hotkeys:** Fire even when the app is in the background.
 

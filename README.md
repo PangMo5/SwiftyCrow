@@ -107,7 +107,7 @@ Quick Setup guides first-time users through screen access, language downloads, a
 3. **Use live translation:** Click **Live translation** to select a region or window. Click it again to choose a new area. Use the adjacent **Show overlay** switch to show or hide the selected area; it is disabled until an area has been selected. Use **LIVE** on the overlay to pause or resume, `⌘C` to copy the joined translation, and **×** to close.
 4. **Show or hide translation:** The **Show overlay** switch shows or hides translation in the selected area. Hiding it stops capture and translation; showing it resumes in the same area.
 
-Capture, overlay, and save/copy shortcuts are customizable in Settings → Shortcuts.
+New installations include ⇧⌘1 for capture and ⇧⌘2 to select a live translation area. Set these during Quick Setup, or change all capture, overlay, and save/copy shortcuts in Settings → Shortcuts.
 
 ## Troubleshooting
 

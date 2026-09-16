@@ -224,15 +224,13 @@ private struct OverlaySection: View {
 
 private struct ShortcutsSection: View {
 
-  // MARK: Internal
-
   var body: some View {
     Section {
-      recorder("Capture region", \.selectRegion)
-      recorder("Live overlay (select a region)", \.liveOverlay)
-      recorder("Show / hide overlay (last region)", \.toggleLiveOverlay)
-      recorder("Pause / resume Live", \.toggleLive)
-      recorder("Switch display (In-place / Window)", \.toggleLiveMode)
+      ShortcutSettingRow("Capture region", \.selectRegion)
+      ShortcutSettingRow("Live overlay (select a region)", \.liveOverlay)
+      ShortcutSettingRow("Show / hide overlay (last region)", \.toggleLiveOverlay)
+      ShortcutSettingRow("Pause / resume Live", \.toggleLive)
+      ShortcutSettingRow("Switch display (In-place / Window)", \.toggleLiveMode)
     } header: {
       Text("Global Shortcuts")
     } footer: {
@@ -242,10 +240,10 @@ private struct ShortcutsSection: View {
     }
 
     Section {
-      recorder("Save image", \.regionSave)
-      recorder("Copy image", \.regionCopyImage)
-      recorder("Copy original text", \.regionCopyOriginal)
-      recorder("Copy translation", \.regionCopyTranslation)
+      ShortcutSettingRow("Save image", \.regionSave)
+      ShortcutSettingRow("Copy image", \.regionCopyImage)
+      ShortcutSettingRow("Copy original text", \.regionCopyOriginal)
+      ShortcutSettingRow("Copy translation", \.regionCopyTranslation)
     } header: {
       Text("Capture Window")
     } footer: {
@@ -255,11 +253,23 @@ private struct ShortcutsSection: View {
     }
   }
 
-  // MARK: Private
+}
 
-  /// Action name + key path for every recordable shortcut, used both to detect
-  /// conflicts and to name the offending action in the recorder.
-  private static let allShortcuts: [(title: LocalizedStringResource, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
+// MARK: - ShortcutSettingRow
+
+/// Shared by Settings and Quick Setup so recording, persistence, and conflicts agree.
+struct ShortcutSettingRow: View {
+
+  // MARK: Lifecycle
+
+  init(_ title: LocalizedStringResource, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) {
+    self.title = title
+    self.keyPath = keyPath
+  }
+
+  // MARK: Internal
+
+  static let allShortcuts: [(title: LocalizedStringResource, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
     ("Capture region", \.selectRegion),
     ("Live overlay", \.liveOverlay),
     ("Show / hide overlay", \.toggleLiveOverlay),
@@ -271,25 +281,28 @@ private struct ShortcutsSection: View {
     ("Copy translation", \.regionCopyTranslation),
   ]
 
-  @Shared(.settings) private var settings
+  let title: LocalizedStringResource
+  let keyPath: WritableKeyPath<ShortcutSettings, HotKey?>
 
-  private func recorder(_ title: LocalizedStringResource, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> some View {
-    LabeledContent(title) {
-      ShortcutRecorder(
-        hotKey: settings.shortcuts[keyPath: keyPath],
-        conflict: { candidate in conflictTitle(for: candidate, excluding: keyPath) }
-      ) { hotKey in
+  var body: some View {
+    HStack(spacing: 16) {
+      Text(title)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+      ShortcutRecorder(hotKey: settings.shortcuts[keyPath: keyPath], accessibilityLabel: title, conflict: { candidate in
+        Self.allShortcuts.first { $0.keyPath != keyPath && settings.shortcuts[keyPath: $0.keyPath] == candidate }
+          .map { String(localized: $0.title) }
+      }) { hotKey in
         $settings.withLock { $0.shortcuts[keyPath: keyPath] = hotKey }
       }
+      .fixedSize()
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// The name of another action already bound to `candidate`, or nil if free.
-  private func conflictTitle(for candidate: HotKey, excluding keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> String? {
-    Self.allShortcuts.first { entry in
-      entry.keyPath != keyPath && settings.shortcuts[keyPath: entry.keyPath] == candidate
-    }.map { String(localized: $0.title) }
-  }
+  // MARK: Private
+
+  @Shared(.settings) private var settings
 
 }
 
