@@ -1,6 +1,8 @@
 name: Automation tools
 
 on:
+  push:
+    branches: ["pangmo5/release-*"]
   pull_request:
     paths:
       - "Tools/**"
