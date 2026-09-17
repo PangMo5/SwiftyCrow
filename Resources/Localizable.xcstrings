@@ -7048,41 +7048,6 @@
         }
       }
     },
-    "Ready using another installed translation mode.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready using another installed translation mode."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "설치된 다른 번역 방식으로 번역할 수 있어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "インストール済みの別の翻訳方式で翻訳できます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可使用另一种已安装的翻译模式进行翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可使用另一種已安裝的翻譯模式進行翻譯。"
-          }
-        }
-      }
-    },
     "Source language to check": {
       "extractionState": "manual",
       "localizations": {
@@ -7219,6 +7184,146 @@
           "stringUnit": {
             "state": "translated",
             "value": "保留原文結構的翻譯"
+          }
+        }
+      }
+    },
+    "Download languages for the selected translation mode.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download languages for the selected translation mode."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 번역 방식의 언어를 다운로드해 주세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した翻訳方式の言語をダウンロードしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请下载所选翻译模式的语言。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請下載所選翻譯模式的語言。"
+          }
+        }
+      }
+    },
+    "You can translate now using another installed mode.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can translate now using another installed mode."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 설치된 다른 방식으로 번역할 수 있어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はインストール済みの別の方式で翻訳できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前可使用另一种已安装的模式进行翻译。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前可使用另一種已安裝的模式進行翻譯。"
+          }
+        }
+      }
+    },
+    "The selected translation mode does not support this language pair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected translation mode does not support this language pair."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 번역 방식은 이 언어 조합을 지원하지 않아요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した翻訳方式はこの言語の組み合わせに対応していません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选翻译模式不支持此语言组合。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所選翻譯模式不支援此語言組合。"
+          }
+        }
+      }
+    },
+    "Download the languages to use another translation mode.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download the languages to use another translation mode."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 번역 방식을 사용하려면 언어를 다운로드해 주세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別の翻訳方式を使うには、言語をダウンロードしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请下载语言以使用另一种翻译模式。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請下載語言以使用另一種翻譯模式。"
           }
         }
       }
