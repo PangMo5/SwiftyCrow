@@ -37,8 +37,7 @@ extension LanguageCatalogClient: DependencyKey {
         let alternative: TranslationStrategy = strategy == .lowLatency ? .highFidelity : .lowLatency
         let other = await LanguageAvailability(preferredStrategy: alternative.sessionStrategy)
           .status(from: source.localeLanguage, to: target.localeLanguage)
-        if other == .installed { return .alternativeInstalled }
-        return status == .unsupported && other == .unsupported ? .unsupported : .downloadRequired
+        return LanguageReadiness.resolve(preferred: status, alternative: other)
       }
       let status = await LanguageAvailability().status(from: source.localeLanguage, to: target.localeLanguage)
       switch status {
@@ -66,7 +65,35 @@ enum LanguageReadiness: Equatable, Sendable {
   case checking
   case installed
   case alternativeInstalled
+  case preferredUnsupported
+  case alternativeDownloadRequired
   case downloadRequired
   case unsupported
   case sameLanguage
+
+  // MARK: Internal
+
+  var needsLanguageDownload: Bool {
+    switch self {
+    case .downloadRequired,
+         .alternativeInstalled,
+         .alternativeDownloadRequired: true
+    default: false
+    }
+  }
+
+  /// An installed fallback is usable but is not readiness of the selected mode.
+  static func resolve(preferred: LanguageAvailability.Status, alternative: LanguageAvailability.Status) -> Self {
+    switch (preferred, alternative) {
+    case (.installed, _): .installed
+    case (.supported, .installed): .alternativeInstalled
+    case (.unsupported, .installed): .preferredUnsupported
+    case (.unsupported, .supported): .alternativeDownloadRequired
+    case (.supported, .supported),
+         (.supported, .unsupported): .downloadRequired
+    case (.unsupported, .unsupported): .unsupported
+    default: .unchecked
+    }
+  }
+
 }

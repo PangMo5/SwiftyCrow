@@ -129,7 +129,7 @@ struct OnboardingView: View {
         languageReadiness
         Text("This checks only this language pair. Your source-language setting stays unchanged.")
           .font(.caption).foregroundStyle(.secondary)
-        if store.modelReadiness == .downloadRequired {
+        if store.modelReadiness.needsLanguageDownload {
           Text(
             "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
           )
@@ -168,7 +168,25 @@ struct OnboardingView: View {
       Label("Ready to translate this language pair.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
 
     case .alternativeInstalled:
-      Label("Ready using another installed translation mode.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+      VStack(alignment: .leading, spacing: 6) {
+        Label("Download languages for the selected translation mode.", systemImage: "exclamationmark.triangle.fill")
+          .foregroundStyle(.orange)
+        Text("You can translate now using another installed mode.").font(.callout).foregroundStyle(.secondary)
+      }
+
+    case .preferredUnsupported:
+      VStack(alignment: .leading, spacing: 6) {
+        Label("The selected translation mode does not support this language pair.", systemImage: "exclamationmark.triangle.fill")
+          .foregroundStyle(.orange)
+        Text("You can translate now using another installed mode.").font(.callout).foregroundStyle(.secondary)
+      }
+
+    case .alternativeDownloadRequired:
+      VStack(alignment: .leading, spacing: 6) {
+        Label("The selected translation mode does not support this language pair.", systemImage: "exclamationmark.triangle.fill")
+          .foregroundStyle(.orange)
+        Text("Download the languages to use another translation mode.").font(.callout).foregroundStyle(.secondary)
+      }
 
     case .downloadRequired:
       Label("Download these languages to start translating.", systemImage: "arrow.down.circle").foregroundStyle(.orange)

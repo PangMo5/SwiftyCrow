@@ -7,6 +7,7 @@ import Foundation
 import Sharing
 import Testing
 import TOML
+import Translation
 @testable import SwiftyCrow
 
 @MainActor
@@ -389,7 +390,15 @@ struct OnboardingTests {
     #expect(field.hotKey == value)
   }
 
-  @Test(arguments: [LanguageReadiness.installed, .alternativeInstalled, .downloadRequired, .unsupported, .sameLanguage])
+  @Test(arguments: [
+    LanguageReadiness.installed,
+    .alternativeInstalled,
+    .preferredUnsupported,
+    .alternativeDownloadRequired,
+    .downloadRequired,
+    .unsupported,
+    .sameLanguage,
+  ])
   func setupReportsReadinessForTheSelectedPair(_ readiness: LanguageReadiness) async {
     var initial = state()
     initial.isPresented = true
@@ -473,6 +482,20 @@ struct OnboardingTests {
     await store.send(.closed) { $0.isPresented = false }
     await store.send(.modelReadinessLoaded(current, .installed))
     #expect(store.state.modelReadiness == .downloadRequired)
+  }
+
+  @Test
+  func alternativeModesDistinguishMissingDownloadsFromUnsupportedPairs() {
+    #expect(LanguageReadiness.resolve(preferred: .installed, alternative: .installed) == .installed)
+    #expect(LanguageReadiness.resolve(preferred: .supported, alternative: .installed) == .alternativeInstalled)
+    #expect(LanguageReadiness.alternativeInstalled.needsLanguageDownload)
+    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .installed) == .preferredUnsupported)
+    #expect(!LanguageReadiness.preferredUnsupported.needsLanguageDownload)
+    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .supported) == .alternativeDownloadRequired)
+    #expect(LanguageReadiness.alternativeDownloadRequired.needsLanguageDownload)
+    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .unsupported) == .unsupported)
+    #expect(!LanguageReadiness.unsupported.needsLanguageDownload)
+    #expect(LanguageReadiness.resolve(preferred: .supported, alternative: .unsupported) == .downloadRequired)
   }
 
   // MARK: Private
