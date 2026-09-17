@@ -69,6 +69,10 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         output: URL(fileURLWithPath: required(output, "--output"))
       )
 
+    case .checkRelease:
+      let releaseVersion = try required(version, "--version")
+      try ReleaseMetadata(workspace: workspace).validateRelease(version: releaseVersion, allowUnreleased: allowUnreleased)
+
     case .check: try checks.all(locale: locale)
 
     case .docs: try DocumentBuilder(workspace: workspace).build(check: check, locale: locale)
@@ -133,6 +137,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
     case prepareReview = "prepare-review"
     case exportBatch = "export-batch", mergeReviewBundle = "merge-review-bundle"
     case verifyMedia = "verify-media", installAssets = "install-assets"
+    case checkRelease = "check-release"
     case check
     case docs
     case site
@@ -152,6 +157,8 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   var root: String?
   @Option(help: "Existing verified review bundle whose unselected films are retained during merging.")
   var baseReview: String?
+  @Flag(help: "Allow a versioned draft when checking release notes locally or in PR CI.")
+  var allowUnreleased = false
   @Flag(help: "Verify committed media and preserved evidence without requiring local camera originals.")
   var portable = false
   @Flag(help: "Check documents or validate a recording plan without running it.")

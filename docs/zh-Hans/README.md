@@ -19,7 +19,7 @@ SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静
 <a id="see-swiftycrow-in-action"></a>
 ## 看看 SwiftyCrow 如何使用
 
-[![观看完整阅读流程](../../web/media/zh-Hans/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-tour)
+[![观看完整阅读流程](../../DemoLab/Edits/media/zh-Hans/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hans/#demo-tour)
 
 概览视频展示如何截取屏幕文字、翻译并将结果复制到笔记中。下方的功能视频分别演示图片复制、实时更新、独立翻译窗口和竖排文字识别。
 
@@ -38,7 +38,7 @@ SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静
 <a id="capture-and-reuse"></a>
 ### 截图后用于自己的工作
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-capture"><img align="right" src="../../web/media/zh-Hans/capture.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-capture"><img align="right" src="../../DemoLab/Edits/media/zh-Hans/capture.jpg" width="160" alt="" /></a>
 
 - **区域或窗口：** 拖动选择屏幕区域，或按**空格键**高亮并选择整个窗口。
 - **截图翻译：** 在独立的结果窗口中阅读译文，同时保留图片及其布局。
@@ -50,7 +50,7 @@ SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静
 <a id="follow-changing-content"></a>
 ### 跟随画面变化继续阅读
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-live"><img align="right" src="../../web/media/zh-Hans/live.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-live"><img align="right" src="../../DemoLab/Edits/media/zh-Hans/live.jpg" width="160" alt="" /></a>
 
 - **持续翻译：** 选定一次区域或窗口，其中的文字变化时就会重新识别并翻译。
 - **操作原应用：** 内容区域的点击和滚动会直接传递给下方的应用。
@@ -62,7 +62,7 @@ SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静
 <a id="keep-the-original-in-view"></a>
 #### 对照原文阅读
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-compare"><img align="right" src="../../web/media/zh-Hans/compare.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-compare"><img align="right" src="../../DemoLab/Edits/media/zh-Hans/compare.jpg" width="160" alt="" /></a>
 
 - **显示方式：** 在原文上方显示翻译，或在旁边的独立窗口中阅读。
 - **独立翻译窗口：** 在原应用旁阅读译文，不遮挡其内容。文字变化时，同一个翻译窗口会随之更新。
@@ -72,7 +72,7 @@ SwiftyCrow 能识别并翻译所选屏幕区域或窗口中的文字。截取静
 <a id="read-images-and-documents"></a>
 ### 阅读图片和文档
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-layout"><img align="right" src="../../web/media/zh-Hans/layout.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hans/#demo-layout"><img align="right" src="../../DemoLab/Edits/media/zh-Hans/layout.jpg" width="160" alt="" /></a>
 
 - **阅读顺序：** 按阅读顺序识别竖排日文、中文和多栏文字。
 - **文档结构：** 识别截取页面中的标题、正文、图片说明和边栏文字。

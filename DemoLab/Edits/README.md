@@ -18,7 +18,7 @@ Rebuild and serve this checkpoint from the repository root:
 ```sh
 swift run --package-path Tools swiftycrow-tools docs
 swift run --package-path Tools swiftycrow-tools check
-swift run --package-path Tools swiftycrow-tools site --media-root DemoLab/Edits/media --output DerivedData/PageLanguageReview
+swift run --package-path Tools swiftycrow-tools site --output DerivedData/PageLanguageReview
 swift run --package-path Tools swiftycrow-tools serve --output DerivedData/PageLanguageReview --port 8765
 ```
 
@@ -28,8 +28,10 @@ available. English is at `/`; other pages are at `/ko/`, `/ja/`, `/zh-Hans/`, an
 navigation and mobile tabs. The README retains factual feature groups while the
 website introduces usage examples.
 
-This is a local review checkpoint, separate from the prior publication media and
-manifest in `web/media/` and `DemoLab/media-manifest.json`. No release was published.
+This approved bundle is now the default media source for local previews, CI, and
+release/site deployment. The older `web/media/` and `DemoLab/media-manifest.json`
+files are historical evidence and are no longer consumed by site assembly. No
+release has been published.
 Camera originals and detailed runtime evidence remain in ignored QA storage.
 
 Validation for this correction: 27 tool tests pass, and catalogs and generated

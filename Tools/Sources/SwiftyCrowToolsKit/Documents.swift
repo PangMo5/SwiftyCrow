@@ -95,9 +95,9 @@ struct DocumentBuilder {
       var original = workspace.root.at(name).deletingLastPathComponent().at(parts.path).standardizedFileURL
       let relative = relativePath(original, from: workspace.root)
       guard !relative.hasPrefix("../") else { return value }
-      if relative.hasPrefix("web/media/en/") { original = workspace.root.at(relative.replacingOccurrences(
-        of: "web/media/en/",
-        with: "web/media/\(locale)/"
+      if relative.hasPrefix("DemoLab/Edits/media/en/") { original = workspace.root.at(relative.replacingOccurrences(
+        of: "DemoLab/Edits/media/en/",
+        with: "DemoLab/Edits/media/\(locale)/"
       )) }
       let target = documents.contains(relative) && relative != "THIRD_PARTY_NOTICES.md" ? destination(relative, locale) : original
       parts.path = relativePath(target, from: targetDirectory)

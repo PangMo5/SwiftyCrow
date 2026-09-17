@@ -27,6 +27,13 @@ struct OnboardingFeature {
     }
   }
 
+  struct ModelCheck: Equatable, Sendable {
+    let id: Int
+    let source: Language
+    let target: Language
+    let strategy: TranslationStrategy
+  }
+
   @ObservableState
   struct State: Equatable {
     @Shared(.appStorage("onboardingStarted")) var hasStarted = false
@@ -34,6 +41,7 @@ struct OnboardingFeature {
     @Shared(.appStorage("onboardingStep")) var savedStep = 0
     @Shared(.appStorage("onboardingDraftTarget")) var savedTarget = ""
     @Shared(.appStorage("onboardingResumeRequested")) var resumeRequested = false
+    @Shared(.appStorage("onboardingCheckSource")) var savedCheckSource = Language.defaultSource.code
     @Shared(.settings) var settings
     var isPresented = false
     var hasCheckedLaunch = false
@@ -46,6 +54,13 @@ struct OnboardingFeature {
     var targetLanguages = [Language]()
     var target = Language.systemPreferred()
     var startCaptureAfterDismissal = false
+    var modelReadiness = LanguageReadiness.unchecked
+    var modelCheck: ModelCheck?
+    var modelCheckID = 0
+
+    var modelSource: Language {
+      Language(code: savedCheckSource)
+    }
   }
 
   enum Action {
@@ -62,13 +77,16 @@ struct OnboardingFeature {
     case relaunchFailed(String)
     case languagesLoaded([Language])
     case targetChanged(Language)
+    case modelSourceChanged(Language)
+    case checkModelsTapped
+    case modelReadinessLoaded(ModelCheck, LanguageReadiness)
     case nextTapped
     case backTapped
     case skipTapped
     case finishTapped(startCapture: Bool)
   }
 
-  enum CancelID { case access, languages, changes }
+  enum CancelID { case access, languages, changes, models }
 
   @Dependency(\.screenRecordingAccess) var access
   @Dependency(\.languageCatalog) var languages
@@ -165,6 +183,41 @@ struct OnboardingFeature {
       case .targetChanged(let target):
         state.target = target
         state.$savedTarget.withLock { $0 = target.code }
+        state.modelCheck = nil
+        state.modelReadiness = .unchecked
+        return .cancel(id: CancelID.models)
+
+      case .modelSourceChanged(let source):
+        state.$savedCheckSource.withLock { $0 = source.code }
+        state.modelCheck = nil
+        state.modelReadiness = .unchecked
+        return .cancel(id: CancelID.models)
+
+      case .checkModelsTapped:
+        guard state.isPresented else { return .none }
+        state.modelCheckID += 1
+        let request = ModelCheck(
+          id: state.modelCheckID,
+          source: state.modelSource,
+          target: state.target,
+          strategy: state.settings.translation.strategy
+        )
+        state.modelCheck = request
+        state.modelReadiness = .checking
+        return .run { [languages] send in
+          let result = await languages.readiness(request.source, request.target, request.strategy)
+          try Task.checkCancellation()
+          await send(.modelReadinessLoaded(request, result))
+        }
+        .cancellable(id: CancelID.models, cancelInFlight: true)
+
+      case .modelReadinessLoaded(let request, let result):
+        guard
+          state.isPresented, state.modelCheck == request,
+          state.modelSource == request.source, state.target == request.target,
+          state.settings.translation.strategy == request.strategy
+        else { return .none }
+        state.modelReadiness = result
         return .none
 
       case .nextTapped:
@@ -201,7 +254,12 @@ struct OnboardingFeature {
 
       case .closed:
         state.isPresented = false
-        return .merge(.cancel(id: CancelID.access), .cancel(id: CancelID.languages), .cancel(id: CancelID.changes))
+        return .merge(
+          .cancel(id: CancelID.access),
+          .cancel(id: CancelID.languages),
+          .cancel(id: CancelID.changes),
+          .cancel(id: CancelID.models)
+        )
       }
     }
   }
@@ -219,6 +277,8 @@ struct OnboardingFeature {
     let restore = resuming || !state.completed
     state.target = restore && !state.savedTarget.isEmpty ? Language(code: state.savedTarget) : state.settings.languages.target
     state.step = restore ? (Step(rawValue: state.savedStep) ?? .welcome) : .welcome
+    state.modelReadiness = .unchecked
+    state.modelCheck = nil
     state.relaunchError = nil
     state.isRelaunching = false
     state.startCaptureAfterDismissal = false

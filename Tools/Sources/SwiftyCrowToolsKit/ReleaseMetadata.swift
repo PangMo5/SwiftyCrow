@@ -46,7 +46,19 @@ struct MarkdownStructure {
 struct ReleaseMetadata {
   let workspace: Workspace
 
-  func embedNotes(file: URL, version: String) throws {
+  func validateRelease(version: String, allowUnreleased: Bool) throws {
+    let notes = try localizedNotes(version: version)
+    if !allowUnreleased {
+      let source = try workspace.root.at("CHANGELOG.md").text()
+      let datedHeading = "## " + version + " ("
+      try require(lines(source).contains { line in
+        line.hasPrefix(datedHeading) && fullMatch(#"## [0-9]+\.[0-9]+\.[0-9]+ \([0-9]{4}-[0-9]{2}-[0-9]{2}\)"#, line)
+      }, "Set the publication date for \(version) before releasing; draft notes are allowed only with --allow-unreleased")
+    }
+    print("Verified release notes for \(version) in \(notes.count) languages")
+  }
+
+  func localizedNotes(version: String) throws -> [(String, String)] {
     try require(fullMatch(#"\d+\.\d+\.\d+"#, version), "Invalid appcast version")
     let builder = DocumentBuilder(workspace: workspace)
     var notes = [(String, String)]()
@@ -76,6 +88,11 @@ struct ReleaseMetadata {
       }
       notes.append((locale, try html.body()?.html() ?? ""))
     }
+    return notes
+  }
+
+  func embedNotes(file: URL, version: String) throws {
+    let notes = try localizedNotes(version: version)
     let document = try XMLDocument(contentsOf: file, options: [.nodePreserveAll])
     let items = try document.nodes(forXPath: "/rss/channel/item")
     try require(items.count == 1, "Expected a single release item in the generated appcast")

@@ -72,6 +72,7 @@ jobs:
           mkdir -p "$SITE"
 
           swift run --package-path Tools swiftycrow-tools check
+          swift run --package-path Tools swiftycrow-tools check-release --version "$VERSION"
           swift run --package-path Tools swiftycrow-tools site --output "$SITE" --version "$VERSION"
 
           # Every deployment must include the latest signed release feed.

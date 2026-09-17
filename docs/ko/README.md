@@ -19,7 +19,7 @@ SwiftyCrow는 화면에서 선택한 영역이나 창의 글자를 인식하고 
 <a id="see-swiftycrow-in-action"></a>
 ## SwiftyCrow 사용 모습
 
-[![전체 읽기 흐름 보기](../../web/media/ko/tour.jpg)](https://swiftycrow.pangmo5.dev/ko/#demo-tour)
+[![전체 읽기 흐름 보기](../../DemoLab/Edits/media/ko/tour.jpg)](https://swiftycrow.pangmo5.dev/ko/#demo-tour)
 
 대표 영상에서는 화면의 글을 캡처해 번역하고 메모에 붙여넣는 흐름을 보여줘요. 아래 기능별 영상은 이미지 복사, 실시간 갱신, 별도 번역 창, 세로쓰기 인식을 활용하는 예시예요.
 
@@ -38,7 +38,7 @@ SwiftyCrow는 화면에서 선택한 영역이나 창의 글자를 인식하고 
 <a id="capture-and-reuse"></a>
 ### 캡처 번역
 
-<a href="https://swiftycrow.pangmo5.dev/ko/#demo-capture"><img align="right" src="../../web/media/ko/capture.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ko/#demo-capture"><img align="right" src="../../DemoLab/Edits/media/ko/capture.jpg" width="160" alt="" /></a>
 
 - **영역·창 선택:** 화면의 원하는 영역을 드래그하거나 **Space**를 눌러 창 전체를 선택해요.
 - **캡처 이미지 번역:** 이미지와 배치를 유지한 별도 결과 창에서 번역문을 읽어요.
@@ -50,7 +50,7 @@ SwiftyCrow는 화면에서 선택한 영역이나 창의 글자를 인식하고 
 <a id="follow-changing-content"></a>
 ### 실시간 번역
 
-<a href="https://swiftycrow.pangmo5.dev/ko/#demo-live"><img align="right" src="../../web/media/ko/live.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ko/#demo-live"><img align="right" src="../../DemoLab/Edits/media/ko/live.jpg" width="160" alt="" /></a>
 
 - **자동 갱신:** 영역이나 창을 한 번 지정하면 내용이 바뀔 때마다 새 글자를 인식하고 번역해요.
 - **원래 앱 조작:** 본문 영역의 클릭과 스크롤은 뒤쪽 앱으로 전달돼요.
@@ -62,7 +62,7 @@ SwiftyCrow는 화면에서 선택한 영역이나 창의 글자를 인식하고 
 <a id="keep-the-original-in-view"></a>
 #### 번역 표시 방식
 
-<a href="https://swiftycrow.pangmo5.dev/ko/#demo-compare"><img align="right" src="../../web/media/ko/compare.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ko/#demo-compare"><img align="right" src="../../DemoLab/Edits/media/ko/compare.jpg" width="160" alt="" /></a>
 
 - **표시 방식:** 원문 위에 번역을 표시하거나 옆의 별도 창에서 읽을 수 있어요.
 - **별도 번역 창:** 원래 앱의 화면을 가리지 않고 옆에서 번역문을 읽어요. 글이 바뀌면 같은 번역 창에서 갱신돼요.
@@ -72,7 +72,7 @@ SwiftyCrow는 화면에서 선택한 영역이나 창의 글자를 인식하고 
 <a id="read-images-and-documents"></a>
 ### 글자 인식
 
-<a href="https://swiftycrow.pangmo5.dev/ko/#demo-layout"><img align="right" src="../../web/media/ko/layout.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ko/#demo-layout"><img align="right" src="../../DemoLab/Edits/media/ko/layout.jpg" width="160" alt="" /></a>
 
 - **읽는 순서:** 세로로 쓰인 일본어·중국어와 여러 단으로 나뉜 글을 읽는 순서대로 인식해요.
 - **문서 구조:** 캡처한 지면의 제목, 본문, 사진 설명, 메모를 인식해요.

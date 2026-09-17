@@ -20,7 +20,7 @@ SwiftyCrow recognizes and translates text in a selected screen region or window.
 
 ## See SwiftyCrow in action
 
-[![Watch the complete reading workflow](web/media/en/tour.jpg)](https://swiftycrow.pangmo5.dev/#demo-tour)
+[![Watch the complete reading workflow](DemoLab/Edits/media/en/tour.jpg)](https://swiftycrow.pangmo5.dev/#demo-tour)
 
 The overview shows how to capture screen text, translate it, and copy the result into a note. The feature videos below demonstrate examples of image copying, live updates, a separate translation window, and vertical text recognition.
 
@@ -36,7 +36,7 @@ Text on a webpage, in an image, or inside an app isn't always easy to select and
 
 ### Capture and reuse
 
-<a href="https://swiftycrow.pangmo5.dev/#demo-capture"><img align="right" src="web/media/en/capture.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/#demo-capture"><img align="right" src="DemoLab/Edits/media/en/capture.jpg" width="160" alt="" /></a>
 
 - **Region or window:** Drag a screen region, or press **Space** to highlight and select a whole window.
 - **Captured-image translation:** Read translated text in a separate capture result window with the image and its layout retained.
@@ -47,7 +47,7 @@ Text on a webpage, in an image, or inside an app isn't always easy to select and
 
 ### Follow changing content
 
-<a href="https://swiftycrow.pangmo5.dev/#demo-live"><img align="right" src="web/media/en/live.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/#demo-live"><img align="right" src="DemoLab/Edits/media/en/live.jpg" width="160" alt="" /></a>
 
 - **Continuous translation:** Select a region or window once. New text in that area is recognized and translated as it changes.
 - **Source interaction:** Clicks and scrolling in the content area pass through to the application below.
@@ -58,7 +58,7 @@ Text on a webpage, in an image, or inside an app isn't always easy to select and
 
 #### Keep the original in view
 
-<a href="https://swiftycrow.pangmo5.dev/#demo-compare"><img align="right" src="web/media/en/compare.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/#demo-compare"><img align="right" src="DemoLab/Edits/media/en/compare.jpg" width="160" alt="" /></a>
 
 - **Display modes:** Place translation over the source or in a separate window beside it.
 - **Separate window:** Read translations beside the source app without covering its content. As the text changes, the same translation window updates.
@@ -67,7 +67,7 @@ Text on a webpage, in an image, or inside an app isn't always easy to select and
 
 ### Read images and documents
 
-<a href="https://swiftycrow.pangmo5.dev/#demo-layout"><img align="right" src="web/media/en/layout.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/#demo-layout"><img align="right" src="DemoLab/Edits/media/en/layout.jpg" width="160" alt="" /></a>
 
 - **Reading order:** Recognize vertical Japanese or Chinese and multi-column text in reading order.
 - **Document structure:** Recognize headings, body text, captions, and inset text within the captured page.

@@ -19,7 +19,7 @@ SwiftyCrowは、選んだ画面範囲やウインドウの文字を認識して�
 <a id="see-swiftycrow-in-action"></a>
 ## SwiftyCrow の使い方
 
-[![一連の読書の流れを見る](../../web/media/ja/tour.jpg)](https://swiftycrow.pangmo5.dev/ja/#demo-tour)
+[![一連の読書の流れを見る](../../DemoLab/Edits/media/ja/tour.jpg)](https://swiftycrow.pangmo5.dev/ja/#demo-tour)
 
 概要動画では、画面の文字をキャプチャして翻訳し、メモにコピーする流れを紹介します。下の機能別動画では、画像のコピー、ライブ更新、別の翻訳ウインドウ、縦書き認識の活用例をご覧いただけます。
 
@@ -38,7 +38,7 @@ SwiftyCrowは、選んだ画面範囲やウインドウの文字を認識して�
 <a id="capture-and-reuse"></a>
 ### キャプチャした内容を活用
 
-<a href="https://swiftycrow.pangmo5.dev/ja/#demo-capture"><img align="right" src="../../web/media/ja/capture.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ja/#demo-capture"><img align="right" src="../../DemoLab/Edits/media/ja/capture.jpg" width="160" alt="" /></a>
 
 - **範囲やウインドウを選択：** 画面の範囲をドラッグするか、**Space**キーでウインドウ全体をハイライトして選択できます。
 - **キャプチャ画像を翻訳：** 画像とレイアウトを保った別の結果ウインドウで訳文を読めます。
@@ -50,7 +50,7 @@ SwiftyCrowは、選んだ画面範囲やウインドウの文字を認識して�
 <a id="follow-changing-content"></a>
 ### 変わる内容を読み続ける
 
-<a href="https://swiftycrow.pangmo5.dev/ja/#demo-live"><img align="right" src="../../web/media/ja/live.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ja/#demo-live"><img align="right" src="../../DemoLab/Edits/media/ja/live.jpg" width="160" alt="" /></a>
 
 - **継続して翻訳：** 範囲やウインドウを一度選ぶと、その中の文字が変わるたびに認識して翻訳します。
 - **元のアプリを操作：** 本文部分のクリックやスクロールは、背後のアプリにそのまま届きます。
@@ -62,7 +62,7 @@ SwiftyCrowは、選んだ画面範囲やウインドウの文字を認識して�
 <a id="keep-the-original-in-view"></a>
 #### 原文も見ながら読む
 
-<a href="https://swiftycrow.pangmo5.dev/ja/#demo-compare"><img align="right" src="../../web/media/ja/compare.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ja/#demo-compare"><img align="right" src="../../DemoLab/Edits/media/ja/compare.jpg" width="160" alt="" /></a>
 
 - **表示方法：** 原文の上に翻訳を重ねるか、隣の別ウインドウで読めます。
 - **別の翻訳ウインドウ：** 元のアプリを隠さずに、その隣で訳文を読めます。文字が変わると同じ翻訳ウインドウが更新されます。
@@ -72,7 +72,7 @@ SwiftyCrowは、選んだ画面範囲やウインドウの文字を認識して�
 <a id="read-images-and-documents"></a>
 ### 画像や文書を読む
 
-<a href="https://swiftycrow.pangmo5.dev/ja/#demo-layout"><img align="right" src="../../web/media/ja/layout.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/ja/#demo-layout"><img align="right" src="../../DemoLab/Edits/media/ja/layout.jpg" width="160" alt="" /></a>
 
 - **読む順番を認識：** 縦書きの日本語・中国語や段組みの文章を、読む順番に沿って認識します。
 - **文書の構造：** キャプチャしたページの見出し、本文、写真の説明、囲み記事を認識します。

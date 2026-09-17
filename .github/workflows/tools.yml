@@ -35,4 +35,5 @@ jobs:
           swift run --package-path Tools swiftycrow-tools check
           swift run --package-path Tools swiftycrow-tools docs --check
           swift run --package-path Tools swiftycrow-tools verify-media --source DemoLab/Edits/review-bundle.json --portable
-          swift run --package-path Tools swiftycrow-tools site --media-root DemoLab/Edits/media --output /tmp/swiftycrow-site
+          swift run --package-path Tools swiftycrow-tools check-release --allow-unreleased --version "$(sed -nE 's/^let appVersion = "([^"]+)"/\1/p' Project.swift)"
+          swift run --package-path Tools swiftycrow-tools site --output /tmp/swiftycrow-site

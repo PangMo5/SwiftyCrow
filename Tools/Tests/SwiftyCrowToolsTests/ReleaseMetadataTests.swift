@@ -17,6 +17,30 @@ struct ReleaseMetadataTests {
   }
 
   @Test
+  func publicationRequiresADateWhileReviewCanUseVersionedDrafts() throws {
+    let root = fm.temporaryDirectory.at("release-draft-" + UUID().uuidString)
+    defer { try? fm.removeItem(at: root) }
+    let workspace = Workspace(root: root)
+    let builder = DocumentBuilder(workspace: workspace)
+    for locale in locales {
+      try builder.destination("CHANGELOG.md", locale).write("## 3.0.0 (Unreleased)\n\n- Reviewed changes.\n")
+    }
+    let metadata = ReleaseMetadata(workspace: workspace)
+    try metadata.validateRelease(version: "3.0.0", allowUnreleased: true)
+    #expect(throws: ToolError.self) { try metadata.validateRelease(version: "3.0.0", allowUnreleased: false) }
+    try root.at("CHANGELOG.md").write("## 3.0.0 (2026-09-17)\n\n- Reviewed changes.\n")
+    try metadata.validateRelease(version: "3.0.0", allowUnreleased: false)
+  }
+
+  @Test
+  func preparedReleaseNotesExistInEveryLocaleAndMissingVersionFails() throws {
+    let notes = try ReleaseMetadata(workspace: workspace).localizedNotes(version: "2.10.0")
+    #expect(notes.count == locales.count)
+    #expect(notes.allSatisfy { $0.1.contains("2.10.0") && $0.1.contains("⇧⌘1") })
+    #expect(throws: ToolError.self) { try ReleaseMetadata(workspace: workspace).localizedNotes(version: "99.0.0") }
+  }
+
+  @Test
   func notesCoverEveryLocaleAndPreserveTheSignedEnclosure() throws {
     let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try temporary.makeDirectory()

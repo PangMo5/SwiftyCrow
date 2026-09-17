@@ -11,6 +11,15 @@ struct SiteBuilder {
     locale selectedLocale: String? = nil,
     mediaRoot: URL? = nil
   ) async throws {
+    // The approved review bundle is the single source for preview, CI, and release.
+    // Explicit media roots remain available for incomplete review batches.
+    let approvedMedia = workspace.root.at("DemoLab/Edits/media")
+    if mediaRoot == nil {
+      try ReviewBundle(workspace: workspace).verify(
+        JSON.read(workspace.root.at("DemoLab/Edits/review-bundle.json")),
+        portable: true
+      )
+    }
     if let selectedLocale { try require(locales.contains(selectedLocale), "Unsupported site locale") }
     let siteLocales = selectedLocale.map { [$0] } ?? locales
     let checks = CatalogChecks(workspace: workspace)
@@ -30,14 +39,16 @@ struct SiteBuilder {
     for locale in siteLocales {
       for (name, film) in films.object {
         let pair = try FilmLanguagePair(film: film, locale: locale)
-        let metadata = try JSON.read((mediaRoot ?? workspace.root.at("web/media")).at("\(locale)/\(name).json"))
-        try require(metadata["uiLanguage"].str == locale
-          && metadata["sourceLanguage"].str == pair.source
-          && metadata["translationLanguage"].str == pair.target,
-          "Demo result language does not match the page: \(name)/\(locale)")
+        let metadata = try JSON.read((mediaRoot ?? approvedMedia).at("\(locale)/\(name).json"))
+        try require(
+          metadata["uiLanguage"].str == locale
+            && metadata["sourceLanguage"].str == pair.source
+            && metadata["translationLanguage"].str == pair.target,
+          "Demo result language does not match the page: \(name)/\(locale)"
+        )
         for suffix in ["mp4", "jpg"] {
           let relative = "media/\(locale)/\(name).\(suffix)"
-          try copy((mediaRoot ?? workspace.root.at("web/media")).at("\(locale)/\(name).\(suffix)"), output.at(relative))
+          try copy((mediaRoot ?? approvedMedia).at("\(locale)/\(name).\(suffix)"), output.at(relative))
         }
       }
     }

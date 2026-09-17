@@ -2,7 +2,7 @@ name: Release
 
 # Push a tag like `v1.2.0` to cut a release: builds, signs, notarizes,
 # packages a DMG, signs it for Sparkle, regenerates appcast.xml, publishes a
-# GitHub Release, and updates the appcast on GitHub Pages.
+# GitHub Release, and deploys the website and appcast to Cloudflare Workers.
 on:
   push:
     tags:
@@ -38,6 +38,18 @@ jobs:
 
       - uses: jdx/mise-action@v4
 
+      - name: Validate release content and assemble site before publishing
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          brew install ffmpeg
+          swift test --package-path Tools
+          swift run --package-path Tools swiftycrow-tools check
+          swift run --package-path Tools swiftycrow-tools check-release --version "$VERSION"
+          swift run --package-path Tools swiftycrow-tools site --output "$RUNNER_TEMP/site" --version "$VERSION"
+          cp web/_headers "$RUNNER_TEMP/site/_headers"
+
       - name: Import Developer ID certificate
         env:
           CERT_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
@@ -53,7 +65,11 @@ jobs:
           security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
             -T /usr/bin/codesign -T /usr/bin/productsign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          existing_keychains=()
+          while IFS= read -r keychain_path; do
+            existing_keychains+=("$keychain_path")
+          done < <(security list-keychains -d user | sed -E 's/^[[:space:]]*"(.*)"[[:space:]]*$/\1/')
+          security list-keychains -d user -s "$KEYCHAIN" "${existing_keychains[@]}"
 
       - name: Generate Xcode project
         env:
@@ -106,13 +122,21 @@ jobs:
       - name: Create DMG
         run: |
           set -euo pipefail
-          brew install create-dmg ffmpeg
+          brew install create-dmg
           create-dmg \
             --volname "SwiftyCrow" \
             --app-drop-link 420 180 \
             --window-size 600 360 \
             "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" \
             "$RUNNER_TEMP/SwiftyCrow.app"
+
+      - name: Sign disk image
+        run: |
+          set -euo pipefail
+          DMG="$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg"
+          codesign --sign "Developer ID Application" --timestamp \
+            --identifier "dev.PangMo5.SwiftyCrow.dmg" "$DMG"
+          codesign --verify --strict --verbose=2 "$DMG"
 
       - name: Notarize + staple
         env:
@@ -140,6 +164,8 @@ jobs:
             exit 1
           fi
           xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          spctl --assess --type open --context context:primary-signature --verbose=4 "$DMG"
 
       - name: Sign for Sparkle + build appcast
         env:
@@ -244,19 +270,8 @@ jobs:
           git commit -am "swiftycrow ${VERSION}"
           git push
 
-      - name: Assemble static site (landing page + appcast)
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/site"
-          swift run --package-path Tools swiftycrow-tools check
-          swift run --package-path Tools swiftycrow-tools site --output "$RUNNER_TEMP/site" --version "$VERSION"
-          # Sparkle feed.
-          cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
-
-      - name: Add static asset headers
-        run: cp web/_headers "$RUNNER_TEMP/site/_headers"
+      - name: Attach signed feed to the validated site
+        run: cp "$RUNNER_TEMP/release/appcast.xml" "$RUNNER_TEMP/site/appcast.xml"
 
       - uses: actions/upload-artifact@v4
         with:

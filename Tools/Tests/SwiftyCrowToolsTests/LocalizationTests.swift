@@ -19,6 +19,14 @@ struct LocalizationTests {
   }
 
   @Test
+  func readmePostersFollowTheApprovedLocaleMedia() {
+    let docs = DocumentBuilder(workspace: workspace)
+    let result = docs.rewriteLinks("![Capture](DemoLab/Edits/media/en/capture.jpg)", "README.md", "ja")
+    #expect(result.contains("../../DemoLab/Edits/media/ja/capture.jpg"))
+    #expect(!result.contains("web/media"))
+  }
+
+  @Test
   func regexOffsetsCanSplitCombiningCharacters() {
     let text = "Cafe\u{301}"
     #expect(matches(#"(e)(\p{M})"#, text) == [["e\u{301}", "e", "\u{301}"]])

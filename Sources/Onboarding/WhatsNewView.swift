@@ -18,29 +18,34 @@ struct WhatsNewView: View {
         VStack(alignment: .leading, spacing: 24) {
           VStack(alignment: .leading, spacing: 8) {
             Text("What's New in SwiftyCrow \(version)").font(.title.weight(.semibold))
-            Text("A clearer place to start, smoother live translation, and more ways to use the text on your screen.")
+            Text("Better recognition, clearer translated layouts, and smoother capture and live translation.")
               .font(.subheadline).foregroundStyle(.secondary)
           }
           Label("Highlights", systemImage: "sparkles").font(.headline)
           item(
-            "A fresh translation menu",
-            icon: "menubar.rectangle",
-            detail: "Start a capture or live translation in one click. See your languages and control an active translation from the menu bar."
+            "Read difficult text more clearly",
+            icon: "text.viewfinder",
+            detail: "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results."
           )
           item(
-            "An easier first start",
-            icon: "hand.wave",
-            detail: "Quick Setup guides you through screen access, language downloads, and your first capture. Reopen it anytime from the menu bar."
+            "Translations that follow the page",
+            icon: "text.alignleft",
+            detail: "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read."
           )
           item(
-            "Steadier live translation",
-            icon: "waveform",
-            detail: "Changing video frames no longer keep clearing subtitles. A separate translation window remembers where you placed it."
-          )
-          item(
-            "Capture, read, and reuse",
+            "Capture, inspect, and reuse",
             icon: "doc.on.clipboard",
-            detail: "Zoom into captured text, fit the whole image, and copy or save the full translated image at its original resolution."
+            detail: "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution."
+          )
+          item(
+            "Keep reading as the screen changes",
+            icon: "waveform",
+            detail: "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position."
+          )
+          item(
+            "Get started in your language",
+            icon: "hand.wave",
+            detail: "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages."
           )
         }
       }

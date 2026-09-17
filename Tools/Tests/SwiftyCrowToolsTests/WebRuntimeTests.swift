@@ -39,11 +39,19 @@ struct WebRuntimeTests {
       if locale == "en" { markdown = try docs.anchorHeadings(markdown, docs.headings(markdown)) }
       let context = try render(markdown)
       #expect(context.evaluateScript("container.children.length")?.toInt32() == 22)
-      #expect(context.evaluateScript("container.children[0].id")?.toString() == "unreleased")
+      #expect(context.evaluateScript("container.children[0].id")?.toString() == "2100-2026-09-17")
       #expect(context.evaluateScript("container.children[0].innerHTML.includes('<a id=\"improvements\"></a>')")?.toBool() == true)
-      #expect(context.evaluateScript("container.children[0].innerHTML.includes('releases/tag/')")?.toBool() == false)
+      #expect(context.evaluateScript("container.children[0].innerHTML.includes('releases/tag/v2.10.0')")?.toBool() == true)
       #expect(context.evaluateScript("container.children[1].innerHTML.includes('releases/tag/v2.9.1')")?.toBool() == true)
     }
+  }
+
+  @Test
+  func versionedDraftHasNoPublicTagLink() throws {
+    let context = try render("<a id=\"2100-unreleased\"></a>\n## 2.10.0（未リリース）\n\n- Draft notes\n")
+    #expect(context.evaluateScript("container.children.length")?.toInt32() == 1)
+    #expect(context.evaluateScript("container.children[0].innerHTML.includes('2.10.0')")?.toBool() == true)
+    #expect(context.evaluateScript("container.children[0].innerHTML.includes('releases/tag/')")?.toBool() == false)
   }
 
   @Test

@@ -42,8 +42,9 @@
     if (!entries.length) throw new Error('Empty release history');
     container.replaceChildren();
     for (const entry of entries) {
-      const unreleased = entry.anchor === 'unreleased' || entry.head.toLowerCase() === 'unreleased';
-      const match = entry.head.match(/^(v?\d+\.\d+\.\d+(?:[-.][\w.]+)?)(?:\s+\((\d{4}-\d{2}-\d{2})\))?$/);
+      const unreleased = entry.anchor === 'unreleased' || /^\d+-unreleased$/.test(entry.anchor) || entry.head.toLowerCase() === 'unreleased';
+      const match = entry.head.match(/^(v?\d+\.\d+\.\d+(?:[-.][\w.]+)?)(?:\s+\((\d{4}-\d{2}-\d{2})\))?$/) ||
+        (unreleased && entry.head.match(/^(v?\d+\.\d+\.\d+)\s*[（(].*[）)]$/));
       if (!unreleased && !match) throw new Error('Invalid release heading');
       const title = match ? match[1] : entry.head;
       const tag = match ? 'v' + match[1].replace(/^v/, '') : '';

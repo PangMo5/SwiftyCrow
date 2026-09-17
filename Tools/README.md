@@ -91,3 +91,24 @@ See [the maintained Swift batch workflow](../DemoLab/docs/SWIFT-WORKFLOW.md) for
 take selection, contact sheets, export, review bundle merging, and verified asset
 installation. The current complete bundle is `DemoLab/Edits/review-bundle.json`;
 CI checks its portable evidence without requiring local camera originals.
+
+## Release preflight
+
+Build release notes, What's New, and the release PR inventory from
+`git diff <previous-public-tag>..HEAD`, including changes already on `main`.
+Keep uncommitted preparation changes separate until they are part of the
+candidate commit; a branch-only PR diff is not the full release inventory.
+Describe the final user-visible capability. Fixes made while building a feature
+that was absent from the previous public tag belong in that feature's description,
+not as separate fixes to an experience users never received. Reserve fix entries
+for problems that can be traced to the previous published version.
+
+Default site assembly verifies `DemoLab/Edits/review-bundle.json` and uses its
+approved `DemoLab/Edits/media` assets. CI and deployment invoke that same default
+path. `--media-root` is reserved for explicitly selected review batches.
+`check-release --version 2.10.0 --allow-unreleased` checks the exact version's notes in all five
+languages without touching an appcast. A candidate heading may retain
+`(Unreleased)` during preparation; replace it with the publication date and
+regenerate documents before tagging. Without `--allow-unreleased`, a missing
+publication date fails the check. The release workflow validates notes and
+builds the site before importing signing credentials or publishing artifacts.

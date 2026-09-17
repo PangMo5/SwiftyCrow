@@ -83,7 +83,7 @@ struct VideoExport {
       "Narration scenarios differ from the recording"
     )
     try require(posterSeconds >= 0 && posterSeconds < original["duration"].double, "Poster must be inside the take")
-    let directory = (mediaRoot ?? workspace.root.at("web/media")).at(locale)
+    let directory = (mediaRoot ?? workspace.root.at("DemoLab/Edits/media")).at(locale)
     try directory.makeDirectory()
     let movie = directory.at("\(film).mp4")
     let poster = directory.at("\(film).jpg")

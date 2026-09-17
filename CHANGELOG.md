@@ -8,33 +8,28 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
-## Unreleased
+## 2.10.0 (2026-09-17)
 
 ### Improvements
 
-- **A clearer translation menu:** Start capture or live translation directly, see the selected languages, and reveal live controls only while an overlay is active.
-- **Quick Setup and What's New:** First-time users get a short guide to screen access, languages, and their first capture. Existing users see feature highlights once per minor release; both guides remain available from the menu bar.
-
-- **Five interface languages:** Use the app, guides, and website in English, Korean, Japanese, Simplified Chinese, and Traditional Chinese for Taiwan.
-
-- **Capture zoom and pan:** Pinch, scroll, or drag to inspect a capture. Zoom controls sit in the bottom-right status bar; click the percentage to fit the image. Saved and copied images include the full capture at its original resolution.
-- **Faster live refresh:** Capture adapts to activity, skips unchanged pixels, and cancels outdated work when the source changes. The manual `[capture].interval` setting is no longer used.
-- **Translations follow the source layout:** Preserve alignment, inline styles, controls, and protected code. Vertical source text uses a writing direction appropriate for the translated language.
+- **Translations follow the source layout:** Keep paragraph alignment and text styles close to the original. Text recognized as code or commands stays untranslated. Vertical text uses a writing direction appropriate for the translated language.
 - **More reliable difficult captures:** Improve printed-dialogue boundaries, ruby handling, rotated text, and mixed-language recognition. Review indicators flag uncertain text.
+- **Capture zoom and pan:** Move the capture window, then pinch, scroll, or drag to inspect the image. Click the zoom percentage to fit the whole capture. Save or copy the complete translated image at its original resolution.
+- **Live translation:** Refresh from the current screen with adaptive capture timing, skip unchanged content, and cancel outdated work. Hide translation and resume in the remembered area and reading-window position; disconnected displays no longer leave that window offscreen.
 - **Use available local models:** When the preferred model is missing, use an installed alternative and explain the choice. Click the live overlay's information button for details.
+- **A clearer translation menu:** Start capture or live translation directly, see the selected languages, and reveal live controls only while an overlay is active.
+- **Quick Setup and What's New:** New users can prepare screen access, language downloads, and shortcuts before their first capture. Existing users can see the main changes after a feature release. Both guides are available from the menu bar.
+- **Default shortcuts:** Start a capture with ⇧⌘1 and select a live translation area with ⇧⌘2. Customize them in Quick Setup or Settings. Existing custom bindings remain unchanged.
+- **Five interface languages:** Use the app, guides, and website in English, Korean, Japanese, Simplified Chinese, and Traditional Chinese for Taiwan.
 
 ### Fixes
 
 - **Crisp region captures:** Dragged selections align to display pixels, avoiding an extra resampled row or column before text recognition.
-- **Stable video subtitles:** Video compression noise no longer repeatedly clears translated subtitles. Changed text is still recognized and refreshed.
-- **Remember the separate reading window:** Hiding and recalling live translation now restores the window's position and size. If a display is disconnected, the window returns to a visible screen.
-- **Cleaner enlarged image text:** Gray edges around enlarged letters no longer become repeated glyph fragments when restoring the background behind a translation.
 - **Visible language selections:** Equivalent short language codes in configuration files now match the system language picker.
-- **Localized menu controls:** Longer display labels fit their controls, and the settings and update buttons respond across their full label area.
 
-- **Movable capture previews:** Drag the title area to move the result window.
-- **Stable zoom rendering:** Compose the source replacement and translated text together so zooming out does not reveal the covered source text.
-- **Reliable Fit after zooming:** Fit uses the full capture viewport and updates native scrollbar layout immediately, restoring the complete image after zooming even when scrollbars are always visible.
+### Configuration
+
+- The manual `[capture].interval` setting is no longer used; live translation adjusts its capture timing automatically.
 
 ## 2.9.1 (2026-08-22)
 

@@ -389,6 +389,92 @@ struct OnboardingTests {
     #expect(field.hotKey == value)
   }
 
+  @Test(arguments: [LanguageReadiness.installed, .alternativeInstalled, .downloadRequired, .unsupported, .sameLanguage])
+  func setupReportsReadinessForTheSelectedPair(_ readiness: LanguageReadiness) async {
+    var initial = state()
+    initial.isPresented = true
+    initial.target = Language(code: "ko")
+    let request = OnboardingFeature.ModelCheck(
+      id: 1,
+      source: initial.modelSource,
+      target: initial.target,
+      strategy: initial.settings.translation.strategy
+    )
+    let store = TestStore(initialState: initial) { OnboardingFeature() } withDependencies: {
+      $0.languageCatalog.readiness = { source, target, strategy in
+        #expect(source == request.source && target == request.target && strategy == request.strategy)
+        return readiness
+      }
+    }
+    await store.send(.checkModelsTapped) {
+      $0.modelCheckID = 1
+      $0.modelCheck = request
+      $0.modelReadiness = .checking
+    }
+    await store.receive(\.modelReadinessLoaded) { $0.modelReadiness = readiness }
+    #expect(store.state.settings.languages.source == initial.settings.languages.source)
+  }
+
+  @Test
+  func changingLanguageInvalidatesPreviousReadiness() async {
+    var initial = state()
+    initial.isPresented = true
+    let old = OnboardingFeature.ModelCheck(
+      id: 1,
+      source: initial.modelSource,
+      target: initial.target,
+      strategy: initial.settings.translation.strategy
+    )
+    initial.modelCheck = old
+    initial.modelReadiness = .installed
+    let store = TestStore(initialState: initial) { OnboardingFeature() }
+    await store.send(.targetChanged(Language(code: "de"))) {
+      $0.target = Language(code: "de")
+      $0.$savedTarget.withLock { $0 = "de" }
+      $0.modelCheck = nil
+      $0.modelReadiness = .unchecked
+    }
+    await store.send(.modelReadinessLoaded(old, .installed))
+    #expect(store.state.modelReadiness == .unchecked)
+    await store.send(.modelSourceChanged(Language(code: "ja"))) {
+      $0.$savedCheckSource.withLock { $0 = "ja" }
+    }
+    #expect(store.state.settings.languages.source == initial.settings.languages.source)
+  }
+
+  @Test
+  func repeatedReadinessChecksRejectEarlierRepliesAndStopAfterClosing() async {
+    var initial = state()
+    initial.isPresented = true
+    initial.modelCheckID = 1
+    let old = OnboardingFeature.ModelCheck(
+      id: 1,
+      source: initial.modelSource,
+      target: initial.target,
+      strategy: initial.settings.translation.strategy
+    )
+    let current = OnboardingFeature.ModelCheck(
+      id: 2,
+      source: initial.modelSource,
+      target: initial.target,
+      strategy: initial.settings.translation.strategy
+    )
+    initial.modelCheck = old
+    let store = TestStore(initialState: initial) { OnboardingFeature() } withDependencies: {
+      $0.languageCatalog.readiness = { _, _, _ in .downloadRequired }
+    }
+    await store.send(.checkModelsTapped) {
+      $0.modelCheckID = 2
+      $0.modelCheck = current
+      $0.modelReadiness = .checking
+    }
+    await store.receive(\.modelReadinessLoaded) { $0.modelReadiness = .downloadRequired }
+    await store.send(.modelReadinessLoaded(old, .installed))
+    await store.send(.closed) { $0.isPresented = false }
+    await store.send(.modelReadinessLoaded(current, .installed))
+    #expect(store.state.modelReadiness == .downloadRequired)
+  }
+
   // MARK: Private
 
   private func shortcutEvent(_ keyCode: UInt16, modifiers: NSEvent.ModifierFlags = []) throws -> NSEvent {

@@ -19,7 +19,7 @@ SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜
 <a id="see-swiftycrow-in-action"></a>
 ## 看看 SwiftyCrow 如何使用
 
-[![觀看完整閱讀流程](../../web/media/zh-Hant/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-tour)
+[![觀看完整閱讀流程](../../DemoLab/Edits/media/zh-Hant/tour.jpg)](https://swiftycrow.pangmo5.dev/zh-Hant/#demo-tour)
 
 概覽影片展示如何擷取螢幕文字、翻譯並將結果複製到筆記中。下方的功能影片分別示範圖片複製、即時更新、獨立翻譯視窗和直排文字辨識。
 
@@ -38,7 +38,7 @@ SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜
 <a id="capture-and-reuse"></a>
 ### 擷取後用於自己的工作
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-capture"><img align="right" src="../../web/media/zh-Hant/capture.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-capture"><img align="right" src="../../DemoLab/Edits/media/zh-Hant/capture.jpg" width="160" alt="" /></a>
 
 - **區域或視窗：** 拖曳選取螢幕區域，或按**空白鍵**反白並選取整個視窗。
 - **擷取圖片翻譯：** 在獨立的結果視窗中閱讀譯文，同時保留圖片及其版面。
@@ -50,7 +50,7 @@ SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜
 <a id="follow-changing-content"></a>
 ### 跟隨畫面變化繼續閱讀
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-live"><img align="right" src="../../web/media/zh-Hant/live.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-live"><img align="right" src="../../DemoLab/Edits/media/zh-Hant/live.jpg" width="160" alt="" /></a>
 
 - **持續翻譯：** 選定一次區域或視窗，其中的文字變化時就會重新辨識並翻譯。
 - **操作原 App：** 內容區域的點選和捲動會直接傳遞給下方的 App。
@@ -62,7 +62,7 @@ SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜
 <a id="keep-the-original-in-view"></a>
 #### 對照原文閱讀
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-compare"><img align="right" src="../../web/media/zh-Hant/compare.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-compare"><img align="right" src="../../DemoLab/Edits/media/zh-Hant/compare.jpg" width="160" alt="" /></a>
 
 - **顯示方式：** 在原文上方顯示翻譯，或在旁邊的獨立視窗中閱讀。
 - **獨立翻譯視窗：** 在原 App 旁閱讀譯文，不遮擋其內容。文字變化時，同一個翻譯視窗會隨之更新。
@@ -72,7 +72,7 @@ SwiftyCrow 能辨識並翻譯所選螢幕區域或視窗中的文字。擷取靜
 <a id="read-images-and-documents"></a>
 ### 閱讀圖片與文件
 
-<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-layout"><img align="right" src="../../web/media/zh-Hant/layout.jpg" width="160" alt="" /></a>
+<a href="https://swiftycrow.pangmo5.dev/zh-Hant/#demo-layout"><img align="right" src="../../DemoLab/Edits/media/zh-Hant/layout.jpg" width="160" alt="" /></a>
 
 - **閱讀順序：** 依閱讀順序辨識直排日文、中文和多欄文字。
 - **文件結構：** 辨識擷取頁面中的標題、內文、圖片說明和側欄文字。

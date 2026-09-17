@@ -307,26 +307,12 @@
     "zh-Hans": "**记住所选区域：** 无需重新选择，即可显示或隐藏上次区域的翻译。隐藏时会停止截图和翻译；再次遇到相同文字时可复用之前的译文。",
     "zh-Hant": "**記住所選區域：** 無須重新選取，即可顯示或隱藏上次區域的翻譯。隱藏時會停止擷取和翻譯；再次遇到相同文字時可重用先前的譯文。"
   },
-  "2ccb9750ade60844": {
-    "en": "**Stable video subtitles:** Video compression noise no longer repeatedly clears translated subtitles. Changed text is still recognized and refreshed.",
-    "ja": "**動画字幕の表示を安定化：** 動画の圧縮ノイズによって翻訳字幕が繰り返し消える問題を修正しました。文字が変わった場合は引き続き認識して更新します。",
-    "ko": "**안정적인 영상 자막:** 영상 압축으로 생기는 미세한 픽셀 변화 때문에 번역 자막이 반복해서 사라지는 문제를 수정했어요. 글자가 바뀌면 계속 인식하고 번역을 갱신해요.",
-    "zh-Hans": "**稳定显示视频字幕：** 修复视频压缩噪点导致翻译字幕反复消失的问题。文字发生变化时，仍会继续识别并更新翻译。",
-    "zh-Hant": "**穩定顯示影片字幕：** 修正影片壓縮雜訊導致翻譯字幕反覆消失的問題。文字發生變化時，仍會繼續辨識並更新翻譯。"
-  },
   "2f3259da45ab8af4": {
     "en": "Install your source language (e.g., English)",
     "ja": "原文の言語（例：英語）をインストールしてください。",
     "ko": "원문 언어(예: 영어)를 설치해 주세요.",
     "zh-Hans": "安装源语言，例如英语。",
     "zh-Hant": "安裝原文語言，例如英語。"
-  },
-  "2fb1c672be5f4eda": {
-    "en": "Unreleased",
-    "ja": "未リリース",
-    "ko": "출시 예정",
-    "zh-Hans": "尚未发布",
-    "zh-Hant": "尚未發布"
   },
   "30de75c8b2007a0a": {
     "en": "Once complete, try translating again in SwiftyCrow",
@@ -481,13 +467,6 @@
     "ko": "시스템 설정에서 두 언어의 모델을 모두 설치해 주세요.",
     "zh-Hans": "在系统设置中安装两种语言的模型。",
     "zh-Hant": "在系統設定中安裝兩種語言的模型。"
-  },
-  "4a56a24ead896f5a": {
-    "en": "**Movable capture previews:** Drag the title area to move the result window.",
-    "ja": "**キャプチャ結果ウインドウを移動：** タイトル部分をドラッグして結果ウインドウを移動できます。",
-    "ko": "**캡처 결과 창 이동:** 제목 부분을 드래그해 결과 창을 옮길 수 있어요.",
-    "zh-Hans": "**移动截图预览：** 拖动标题区域即可移动结果窗口。",
-    "zh-Hant": "**移動擷取預覽：** 拖移標題區域即可移動結果視窗。"
   },
   "4a61f43dce275696": {
     "en": "**Automatic updates:** Sparkle now starts correctly because the public key is included in the build.",
@@ -790,13 +769,6 @@
     "zh-Hans": "重点更新",
     "zh-Hant": "重點更新"
   },
-  "6eafc07493bee0d7": {
-    "en": "**Reliable Fit after zooming:** Fit uses the full capture viewport and updates native scrollbar layout immediately, restoring the complete image after zooming even when scrollbars are always visible.",
-    "ja": "**拡大後も正確にウインドウに合わせる:** キャプチャの表示領域全体を基準に倍率を計算し、標準スクロールバーの配置をすぐに更新します。スクロールバーを常に表示する設定でも、拡大後に画像全体が表示されます。",
-    "ko": "**확대 후에도 정확한 창 맞춤:** 캡처 영역 전체를 기준으로 배율을 계산하고 기본 스크롤 막대 배치를 즉시 갱신해요. 스크롤 막대를 항상 표시하도록 설정해도 확대 후 이미지 전체가 다시 보여요.",
-    "zh-Hans": "**放大后可靠地适合窗口：** 按完整的截图显示区域计算缩放比例，并立即更新原生滚动条布局。即使设置为始终显示滚动条，放大后也能恢复显示完整图像。",
-    "zh-Hant": "**放大後可靠地符合視窗：** 依完整的擷取顯示區域計算縮放比例，並立即更新原生捲軸配置。即使設定為永遠顯示捲軸，放大後也能恢復顯示完整影像。"
-  },
   "6f96180c6db63298": {
     "en": "**Use available local models:** When the preferred model is missing, use an installed alternative and explain the choice. Click the live overlay's information button for details.",
     "ja": "**インストール済みモデルを活用：** 優先するモデルがない場合は、別のインストール済みモデルを使って理由を表示します。ライブ翻訳の情報ボタンから詳細を確認できます。",
@@ -923,26 +895,12 @@
     "zh-Hans": "向下滚动并选择**翻译语言…**。",
     "zh-Hant": "向下捲動並選擇**翻譯語言…**。"
   },
-  "7ee673dc3d1c0450": {
-    "en": "**Cleaner enlarged image text:** Gray edges around enlarged letters no longer become repeated glyph fragments when restoring the background behind a translation.",
-    "ja": "**拡大した画像の文字をきれいに置き換え：** 翻訳の背後の背景を復元するとき、拡大した文字の灰色の縁が文字の残像として繰り返し表示される問題を修正しました。",
-    "ko": "**확대한 이미지의 글자 잔상 수정:** 번역 뒤의 배경을 복원할 때 확대한 글자의 회색 가장자리가 반복되는 글자 조각으로 남는 문제를 수정했어요.",
-    "zh-Hans": "**更干净地替换放大图片中的文字：** 恢复译文背后的背景时，放大字母的灰色边缘不再形成重复的文字残影。",
-    "zh-Hant": "**更乾淨地替換放大圖片中的文字：** 還原譯文背後的背景時，放大字母的灰色邊緣不再形成重複的文字殘影。"
-  },
   "7f91e9cf0b676746": {
     "en": "**Translate from the screen:** Select the relevant area without first saving a file or moving its text into another app.",
     "ko": "**화면에서 바로 번역:** 파일로 저장하거나 글을 다른 앱에 옮기지 않고 필요한 영역을 선택해요.",
     "ja": "**画面から翻訳：** ファイルを保存したり、文字をほかのアプリへ移したりする前に、必要な範囲を選んで翻訳できます。",
     "zh-Hans": "**从屏幕翻译：** 直接选择相关区域，无需先保存文件或将文字移入其他应用。",
     "zh-Hant": "**從螢幕翻譯：** 直接選取相關區域，無須先儲存檔案或將文字移入其他 App。"
-  },
-  "8095bb140461321d": {
-    "en": "**Capture zoom and pan:** Pinch, scroll, or drag to inspect a capture. Zoom controls sit in the bottom-right status bar; click the percentage to fit the image. Saved and copied images include the full capture at its original resolution.",
-    "ja": "**キャプチャの拡大・移動：** ピンチ、スクロール、ドラッグでキャプチャを詳しく見られます。右下のステータスバーにズーム操作があり、倍率をクリックするとウインドウに収まります。保存・コピーには元の解像度の画像全体が含まれます。",
-    "ko": "**캡처 확대·이동:** 핀치, 스크롤, 드래그로 캡처를 자세히 볼 수 있어요. 줌 도구는 우측 하단 상태바에 있고 배율을 누르면 창에 맞춰져요. 저장·복사에는 원본 해상도의 전체 이미지가 포함돼요.",
-    "zh-Hans": "**截图缩放与平移：** 通过捏合、滚动或拖动查看截图细节。缩放控件位于右下角状态栏，点击百分比可使图片适合窗口。保存和复制均包含原始分辨率的完整图片。",
-    "zh-Hant": "**擷取縮放與平移：** 透過捏合、捲動或拖移查看擷取細節。縮放控制項位於右下角狀態列，點按百分比可讓影像配合視窗。儲存與複製均包含原始解析度的完整影像。"
   },
   "8153ad883694933d": {
     "en": "Supported on macOS 26+ (the language list changes by macOS version)",
@@ -1265,13 +1223,6 @@
     "ko": "**입력 통과 모드:** 번역문을 위에 둔 채 클릭·스크롤·드래그를 뒤쪽 앱으로 전달하는 설정과 전역 단축키를 추가했어요. 가장자리 크기 조절과 우측 상단 배지 이동은 계속 가능하고, 켜면 강조 테두리와 PASS-THROUGH 배지가 보여요.",
     "zh-Hans": "**输入透传模式：** 新增开关和全局快捷键，在译文保持置顶时将点击、滚动和拖动传递给下方应用。边缘仍可调整大小，右上角徽标仍可移动窗口；启用时显示强调边框和 PASS-THROUGH 标记。",
     "zh-Hant": "**輸入傳遞模式：** 新增開關與全域快速鍵，在譯文維持置頂時將點按、捲動與拖移傳遞給下方 App。邊緣仍可調整大小，右上角標記仍可移動視窗；啟用時會顯示強調邊框與 PASS-THROUGH 標記。"
-  },
-  "aa80fcdf09903e06": {
-    "en": "**Stable zoom rendering:** Compose the source replacement and translated text together so zooming out does not reveal the covered source text.",
-    "ja": "**安定したズーム表示：** 原文を覆う背景と訳文を一緒に合成し、縮小時に隠した原文が再び見えないようにしました。",
-    "ko": "**안정적인 확대·축소:** 원문을 가리는 배경과 번역문을 함께 합성해, 축소할 때 가려진 원문이 다시 비치지 않도록 했어요.",
-    "zh-Hans": "**稳定的缩放显示：** 将原文替换区域与译文一起合成，避免缩小时露出已覆盖的原文。",
-    "zh-Hant": "**穩定的縮放顯示：** 將原文替換區域與譯文一起合成，避免縮小時露出已覆蓋的原文。"
   },
   "aaa22c6f110a3784": {
     "en": "**Zoom and fit:** Magnify the image or fit it to the result window. At 100%, one captured pixel maps to one display pixel.",
@@ -1672,13 +1623,6 @@
     "zh-Hans": "源语言和目标语言分别使用嵌套表，包含 BCP-47 语言 {0}。列表以 macOS 支持的语言为准，源语言还需支持文字识别。所选语言组合的模型需要另外下载。",
     "zh-Hant": "原文語言與翻譯語言分別使用巢狀資料表，包含 BCP-47 語言 {0}。清單以 macOS 支援的語言為準，原文語言還需支援文字辨識。所選語言組合的模型需要另外下載。"
   },
-  "ce813c4815dcb280": {
-    "en": "**Localized menu controls:** Longer display labels fit their controls, and the settings and update buttons respond across their full label area.",
-    "ja": "**ローカライズしたメニューを改善：** 長い表示方法の名前も収まるように配置し、設定・更新ボタンはアイコンと文字の間もクリックできるようにしました。",
-    "ko": "**현지화된 메뉴 개선:** 긴 표시 방식 이름도 잘리지 않게 배치하고, 설정·업데이트 버튼은 아이콘과 글자 사이까지 클릭되도록 했어요.",
-    "zh-Hans": "**改善本地化菜单：** 较长的显示标签也能完整容纳，设置和更新按钮的整个标签区域均可点击。",
-    "zh-Hant": "**改善在地化選單：** 較長的顯示標籤也能完整容納，設定與更新按鈕的整個標籤區域均可點按。"
-  },
   "ced0485d135ac639": {
     "en": "English → Spanish, French, German, Chinese, Japanese",
     "ja": "英語 → スペイン語、フランス語、ドイツ語、中国語、日本語",
@@ -1699,13 +1643,6 @@
     "ko": "**언어 선택값 표시:** 설정 파일의 짧은 언어 코드도 같은 언어의 시스템 목록 항목과 일치하도록 했어요.",
     "zh-Hans": "**正确显示所选语言：** 配置文件中的等效短语言代码现在能匹配系统语言选择器。",
     "zh-Hant": "**正確顯示所選語言：** 設定檔中的等效短語言代碼現在能對應系統語言選擇器。"
-  },
-  "d0bb257d75cd2b19": {
-    "en": "**Quick Setup and What's New:** First-time users get a short guide to screen access, languages, and their first capture. Existing users see feature highlights once per minor release; both guides remain available from the menu bar.",
-    "ko": "**빠른 시작과 새로운 기능 안내:** 처음 사용하는 분에게는 화면 기록 권한, 언어 설정, 첫 캡처를 짧게 안내해요. 기존 사용자는 새 기능 릴리스마다 주요 변경을 한 번 확인하며, 두 안내 모두 메뉴 막대에서 다시 열 수 있어요.",
-    "ja": "**クイック設定と新機能の案内：** 初めて使う方には画面収録の許可、言語設定、最初のキャプチャを短く案内します。既存のユーザーにはマイナーリリースごとに主な変更点を一度表示します。どちらの案内もメニューバーから開き直せます。",
-    "zh-Hans": "**快速设置与新功能介绍：** 首次使用时，简要引导屏幕录制权限、语言设置和首次截图。现有用户会在每次次版本更新后看到一次主要变化；两种引导都可从菜单栏重新打开。",
-    "zh-Hant": "**快速設定與新功能介紹：** 首次使用時，簡短引導螢幕錄製權限、語言設定和首次擷取。現有使用者會在每次次版本更新後看到一次主要變更；兩種引導都可從選單列重新開啟。"
   },
   "d1a686e83f15b103": {
     "en": "Click **Download** next to your source *and* target language. With **Auto** source, install every language that might appear in your captures",
@@ -1762,13 +1699,6 @@
     "ko": "설정은 {0}에 저장돼요. 앱의 설정 탭에 맞춰 {1}, {2}, {3}, {4}, {5} 테이블로 나뉘며, 앱에서 바꾸거나 파일을 직접 편집한 내용이 서로 동기화돼요.",
     "zh-Hans": "设置保存在 {0}，按应用的设置页分为 {1}、{2}、{3}、{4} 和 {5} 表。应用内的修改与手动编辑文件的更改会保持同步。",
     "zh-Hant": "設定儲存在 {0}，依 App 的設定頁分為 {1}、{2}、{3}、{4} 和 {5} 資料表。App 內的修改與手動編輯檔案的變更會保持同步。"
-  },
-  "d7ee999b69ceaa42": {
-    "en": "**Faster live refresh:** Capture adapts to activity, skips unchanged pixels, and cancels outdated work when the source changes. The manual {0} setting is no longer used.",
-    "ja": "**ライブ更新を高速化：** 画面の動きに合わせてキャプチャ間隔を調整し、変わっていないピクセルは処理を省き、原文が変わると古い処理を取り消します。手動の{0}設定は使わなくなりました。",
-    "ko": "**빠른 실시간 갱신:** 화면의 활동에 맞춰 캡처 주기를 조절하고, 바뀌지 않은 픽셀은 건너뛰며, 원문이 바뀌면 이전 작업을 취소해요. 수동 {0} 설정은 더 이상 사용하지 않아요.",
-    "zh-Hans": "**更快的实时刷新：** 根据画面活动调整截图频率，跳过未变化的像素，并在原文变化时取消过期任务。不再使用手动 {0} 设置。",
-    "zh-Hant": "**更快的即時更新：** 依畫面活動調整擷取頻率，略過未變更的像素，並在原文變更時取消過期工作。不再使用手動 {0} 設定。"
   },
   "d82272c023b200d8": {
     "en": "**Tuist** generated workspace ({0}, {1})",
@@ -1832,13 +1762,6 @@
     "ko": "필수 환경",
     "zh-Hans": "环境要求",
     "zh-Hant": "環境需求"
-  },
-  "e110c2037ccfd75b": {
-    "en": "**Remember the separate reading window:** Hiding and recalling live translation now restores the window's position and size. If a display is disconnected, the window returns to a visible screen.",
-    "ja": "**別ウインドウの配置を記憶：** ライブ翻訳を隠してから再表示すると、ウインドウの位置と大きさが復元されます。ディスプレイの接続が外れた場合は、表示中の画面内に戻ります。",
-    "ko": "**별도 번역창 위치 기억:** 실시간 번역을 숨겼다가 다시 켜면 창의 위치와 크기를 복원해요. 디스플레이 연결이 해제되면 보이는 화면 안으로 돌아와요.",
-    "zh-Hans": "**记住独立翻译窗口的位置：** 隐藏并重新显示实时翻译时，会恢复窗口的位置和大小。如果显示器已断开连接，窗口会回到可见屏幕内。",
-    "zh-Hant": "**記住獨立翻譯視窗的位置：** 隱藏並重新顯示即時翻譯時，會還原視窗的位置和大小。如果顯示器已中斷連接，視窗會回到可見螢幕內。"
   },
   "e237a8dcb5e48152": {
     "en": "Preferred local strategy: {0} or {1} (macOS 26.4+). SwiftyCrow uses this strategy when its model is installed, otherwise an installed alternative and displays a notice.",
@@ -2127,13 +2050,6 @@
     "zh-Hans": "**安装翻译模型：**",
     "zh-Hant": "**安裝翻譯模型：**"
   },
-  "fe4d221e155917c4": {
-    "en": "**Translations follow the source layout:** Preserve alignment, inline styles, controls, and protected code. Vertical source text uses a writing direction appropriate for the translated language.",
-    "ja": "**原文の配置を保つ翻訳：** 配置、インラインの書式、操作部品、保護対象のコードを維持します。縦書きの原文も翻訳先の言語に合った方向で表示します。",
-    "ko": "**원문 배치를 따르는 번역:** 정렬, 인라인 스타일, 제어 요소와 보호된 코드를 유지해요. 세로 원문도 번역 언어에 맞는 방향으로 표시해요.",
-    "zh-Hans": "**保持原文布局：** 保留对齐方式、行内样式、控件和受保护的代码。竖排原文会采用适合译文语言的书写方向。",
-    "zh-Hant": "**保留原文配置：** 保留對齊方式、行內樣式、控制項與受保護的程式碼。直排原文會採用適合譯文語言的書寫方向。"
-  },
   "fe53f3b425a51549": {
     "en": "**Multi-monitor region capture:** The selector now opens on the screen under the cursor, so the selection and capture target the display you're actually pointing at instead of spanning all of them.",
     "ja": "**複数ディスプレイでの範囲キャプチャ：** 選択画面がすべてのディスプレイにまたがらず、ポインタがある画面に開くようにしました。見ている画面を正しく選んでキャプチャできます。",
@@ -2175,5 +2091,47 @@
     "ko": "수정 키는 {0}, {1}, {2}(option), {3}예요. 키에는 영문자, 숫자, {4}, {5}, {6}, 방향 키({7}/{8}/{9}/{10}), 문장 부호 등을 쓸 수 있어요. 빈 문자열을 넣으면 해당 동작의 단축키를 해제해요.",
     "zh-Hans": "修饰键为 {0}、{1}、{2}（option）和 {3}。按键可使用字母、数字、{4}、{5}、{6}、方向键（{7}/{8}/{9}/{10}）、标点等。使用空字符串可解除该操作的快捷键。",
     "zh-Hant": "修飾鍵為 {0}、{1}、{2}（option）與 {3}。按鍵可使用字母、數字、{4}、{5}、{6}、方向鍵（{7}/{8}/{9}/{10}）、標點等。使用空字串即可解除該操作的快捷鍵。"
+  },
+  "2f6eaba5275c4a3a": {
+    "en": "**Quick Setup and What's New:** New users can prepare screen access, language downloads, and shortcuts before their first capture. Existing users can see the main changes after a feature release. Both guides are available from the menu bar.",
+    "ja": "**クイック設定と新機能の案内：** 初めて使う方は、最初のキャプチャまでに画面へのアクセス、言語のダウンロード、ショートカットを準備できます。既存の利用者には機能リリースの主な変更を案内し、どちらもメニューバーから開けます。",
+    "ko": "**빠른 시작과 새로운 기능 안내:** 처음 사용하는 분은 첫 캡처 전에 화면 기록 권한, 언어 다운로드, 단축키를 준비할 수 있어요. 기존 사용자는 새 기능 릴리스의 주요 변경을 확인할 수 있으며, 두 안내 모두 메뉴 막대에서 다시 열 수 있어요.",
+    "zh-Hans": "**快速设置与新功能介绍：** 新用户可在首次截图前准备屏幕访问权限、语言下载和快捷键。现有用户可查看功能版本的主要变化，两种指南均可从菜单栏打开。",
+    "zh-Hant": "**快速設定與新功能介紹：** 新使用者可在首次擷取前準備螢幕存取權限、語言下載與快捷鍵。現有使用者可查看功能版本的主要變更，兩種指南皆可從選單列開啟。"
+  },
+  "3f31ff34fa8e996e": {
+    "en": "**Default shortcuts:** Start a capture with ⇧⌘1 and select a live translation area with ⇧⌘2. Customize them in Quick Setup or Settings. Existing custom bindings remain unchanged.",
+    "ja": "**既定のショートカット：** ⇧⌘1でキャプチャ、⇧⌘2でライブ翻訳の範囲を選択できます。クイック設定や設定で変更でき、既存の独自設定は保持されます。",
+    "ko": "**기본 단축키:** ⇧⌘1로 캡처하고 ⇧⌘2로 실시간 번역 영역을 선택해요. 빠른 시작이나 설정에서 바꿀 수 있으며, 기존에 직접 지정한 단축키는 유지돼요.",
+    "zh-Hans": "**默认快捷键：** 使用 ⇧⌘1 截图，使用 ⇧⌘2 选择实时翻译区域。可在快速设置或设置中自定义，现有自定义绑定会保留。",
+    "zh-Hant": "**預設快捷鍵：** 使用 ⇧⌘1 擷取，使用 ⇧⌘2 選取即時翻譯區域。可在快速設定或設定中自訂，現有自訂綁定會保留。"
+  },
+  "4eff644b20af64bb": {
+    "en": "**Capture zoom and pan:** Move the capture window, then pinch, scroll, or drag to inspect the image. Click the zoom percentage to fit the whole capture. Save or copy the complete translated image at its original resolution.",
+    "ja": "**キャプチャの拡大と移動：** ウインドウを移動し、ピンチ、スクロール、ドラッグで画像を詳しく確認できます。倍率をクリックすると全体が収まり、翻訳画像全体を元の解像度で保存・コピーできます。",
+    "ko": "**캡처 확대와 이동:** 캡처 창을 옮기고 핀치, 스크롤, 드래그로 이미지를 자세히 볼 수 있어요. 배율을 누르면 캡처 전체가 창에 맞춰져요. 번역된 이미지 전체를 원래 해상도로 저장하거나 복사할 수 있어요.",
+    "zh-Hans": "**截图缩放与移动：** 移动截图窗口，通过捏合、滚动或拖动仔细查看图片。点击缩放比例可适配整张截图，并可按原始分辨率保存或复制完整译图。",
+    "zh-Hant": "**擷取縮放與移動：** 移動擷取視窗，透過捏合、捲動或拖曳仔細查看圖片。點選縮放比例可符合整張擷取畫面，並可依原始解析度儲存或複製完整譯圖。"
+  },
+  "7d614beaf1480553": {
+    "en": "**Translations follow the source layout:** Keep paragraph alignment and text styles close to the original. Text recognized as code or commands stays untranslated. Vertical text uses a writing direction appropriate for the translated language.",
+    "ja": "**原文の配置に沿った翻訳：** 段落の配置や文字のスタイルを原文に近く保ちます。コードやコマンドと認識した文字は翻訳せず、そのまま残します。縦書きも翻訳先の言語に合った方向で表示します。",
+    "ko": "**원문 배치를 따르는 번역:** 문단의 정렬과 글자 스타일을 원문에 가깝게 유지해요. 코드나 명령어로 인식한 글은 번역하지 않고 그대로 남겨요. 세로 글도 번역 언어에 맞는 방향으로 표시해요.",
+    "zh-Hans": "**保留原文布局的翻译：** 尽量保留原文的段落对齐和文字样式。识别为代码或命令的文字不翻译，保留原样。竖排文字也会按译文语言适合的方向排列。",
+    "zh-Hant": "**保留原文配置的翻譯：** 盡量保留原文的段落對齊與文字樣式。辨識為程式碼或指令的文字不翻譯，保留原樣。直排文字也會依譯文語言適合的方向排列。"
+  },
+  "afd232f3f79f9dd3": {
+    "en": "The manual {0} setting is no longer used; live translation adjusts its capture timing automatically.",
+    "ja": "手動の{0}設定は使わなくなり、ライブ翻訳が更新間隔を自動で調整します。",
+    "ko": "수동 {0} 설정은 더 이상 사용하지 않으며, 실시간 번역이 갱신 주기를 자동으로 조절해요.",
+    "zh-Hans": "不再使用手动 {0} 设置，实时翻译会自动调整更新间隔。",
+    "zh-Hant": "不再使用手動 {0} 設定，即時翻譯會自動調整更新間隔。"
+  },
+  "be362c5d00211bab": {
+    "en": "**Live translation:** Refresh from the current screen with adaptive capture timing, skip unchanged content, and cancel outdated work. Hide translation and resume in the remembered area and reading-window position; disconnected displays no longer leave that window offscreen.",
+    "ja": "**ライブ翻訳：** 画面の変化に合わせて更新間隔を調整し、変化のない内容を省き、古い処理をキャンセルします。隠した翻訳を記憶した範囲とウインドウ位置で再開でき、ディスプレイを外した場合も見える画面に戻します。",
+    "ko": "**실시간 번역:** 화면 변화에 맞춰 갱신 주기를 조절하고, 바뀌지 않은 내용은 건너뛰며, 지난 작업은 취소해요. 번역을 숨겼다가 기억한 영역과 번역창 위치에서 다시 시작할 수 있고, 모니터 연결이 해제되면 창을 보이는 화면으로 옮겨요.",
+    "zh-Hans": "**实时翻译：** 根据画面变化调整更新间隔，跳过未变化的内容并取消过时任务。隐藏后可在记住的区域与翻译窗口位置恢复；断开显示器后窗口会回到可见屏幕。",
+    "zh-Hant": "**即時翻譯：** 依畫面變化調整更新間隔，跳過未變化的內容並取消過時工作。隱藏後可在記住的區域與翻譯視窗位置恢復；中斷顯示器連線後視窗會回到可見螢幕。"
   }
 }

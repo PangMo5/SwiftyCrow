@@ -35,6 +35,10 @@ struct OnboardingView: View {
     }
     .frame(width: 800, height: 570)
     .task { store.send(.appeared) }
+    .task(id: modelCheckKey) { store.send(.checkModelsTapped) }
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+      store.send(.checkModelsTapped)
+    }
   }
 
   // MARK: Private
@@ -115,21 +119,66 @@ struct OnboardingView: View {
           }
           ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
         }
-        Text(
-          "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
-        )
-        .font(.callout).foregroundStyle(.secondary)
-        VStack(alignment: .leading, spacing: 6) {
-          Text("1. Open Language & Region below.")
-          Text("2. Choose Translation Languages at the bottom.")
-          Text("3. Download both languages, then return here.")
+        Picker(
+          "Source language to check",
+          selection: Binding(get: { store.modelSource }, set: { store.send(.modelSourceChanged($0)) })
+        ) {
+          if !store.targetLanguages.contains(store.modelSource) { Text(store.modelSource.displayName).tag(store.modelSource) }
+          ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
         }
-        .font(.callout)
-        Button("Open Language & Region…") { openLanguageSettings() }
-        Text("Already downloaded? You're ready to continue.")
+        languageReadiness
+        Text("This checks only this language pair. Your source-language setting stays unchanged.")
           .font(.caption).foregroundStyle(.secondary)
+        if store.modelReadiness == .downloadRequired {
+          Text(
+            "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
+          )
+          .font(.callout).foregroundStyle(.secondary)
+          VStack(alignment: .leading, spacing: 6) {
+            Text("1. Open Language & Region below.")
+            Text("2. Choose Translation Languages at the bottom.")
+            Text("3. Download both languages, then return here.")
+          }
+          .font(.callout)
+        }
+        Button("Open Language & Region…") { openLanguageSettings() }
+        Button("Check downloads again") { store.send(.checkModelsTapped) }
+          .disabled(store.modelReadiness == .checking)
       }
       .setupCard()
+    }
+  }
+
+  private var modelCheckKey: String {
+    "\(store.modelSource.id)|\(store.target.id)|\(store.settings.translation.strategy)"
+  }
+
+  @ViewBuilder
+  private var languageReadiness: some View {
+    switch store.modelReadiness {
+    case .unchecked:
+      Label("Language downloads have not been checked.", systemImage: "questionmark.circle")
+
+    case .checking:
+      HStack { ProgressView().controlSize(.small)
+        Text("Checking language downloads…")
+      }
+
+    case .installed:
+      Label("Ready to translate this language pair.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+
+    case .alternativeInstalled:
+      Label("Ready using another installed translation mode.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+
+    case .downloadRequired:
+      Label("Download these languages to start translating.", systemImage: "arrow.down.circle").foregroundStyle(.orange)
+
+    case .unsupported:
+      Label("This language pair is not supported. Choose another language.", systemImage: "exclamationmark.circle")
+        .foregroundStyle(.orange)
+
+    case .sameLanguage:
+      Label("Choose a different source language to check downloads.", systemImage: "info.circle")
     }
   }
 

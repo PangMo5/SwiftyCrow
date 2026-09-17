@@ -157,6 +157,19 @@ struct ReviewFixture {
 
 @Suite("Recording and review workflow")
 struct RecordingWorkflowTests {
+  @Test
+  func defaultSiteBuildRejectsChangedApprovedMediaBeforeWritingOutput() async throws {
+    let f = try ReviewFixture()
+    defer { try? fm.removeItem(at: f.root) }
+    try f.assemble()
+    try copy(f.merged, f.root.at("DemoLab/Edits/review-bundle.json"))
+    try f.root.at("media/en/tour.mp4").write("changed after approval")
+    await #expect(throws: ToolError.self) {
+      try await SiteBuilder(workspace: f.workspace).build(output: f.root.at("site"), version: "2.10.0")
+    }
+    #expect(!f.root.at("site").exists)
+  }
+
   @Test(arguments: [
     "capture-demo.mov",
     "scene.json",
