@@ -142,6 +142,21 @@ enum SourceRestorationBuilder {
           width: (maxX - minX) / CGFloat(image.width),
           height: (maxY - minY) / CGFloat(image.height)
         )
+        // Resampling spreads the glyph edge beyond the high-contrast ink.
+        // Exclude that fringe before estimating background variation, too:
+        // otherwise gray antialiasing is mistaken for texture and copied back
+        // into the removed letters as a restoration sample.
+        let fringe = max(1, min(3, Int(ceil(original.height * 0.04))))
+        let originalInk = ink
+        for k in originalInk.indices where originalInk[k] {
+          let x = k % w
+          let y = k / w
+          for ny in max(0, y - fringe)...min(h - 1, y + fringe) {
+            for nx in max(0, x - fringe)...min(w - 1, x + fringe) {
+              ink[ny * w + nx] = true
+            }
+          }
+        }
         // The spread of non-glyph pixels distinguishes texture from a flat
         // surface. Keep the cheap color fill for ordinary UI and paper.
         var background = [Int]()
@@ -162,14 +177,6 @@ enum SourceRestorationBuilder {
           ), let destination = tile.data
         {
           let out = destination.bindMemory(to: UInt8.self, capacity: w * h * 4)
-          let originalInk = ink
-          for k in originalInk.indices where originalInk[k] {
-            let x = k % w
-            let y = k / w
-            for ny in max(0, y - 1)...min(h - 1, y + 1) {
-              for nx in max(0, x - 1)...min(w - 1, x + 1) { ink[ny * w + nx] = true }
-            }
-          }
           for k in ink.indices {
             let x = k % w
             let y = k / w

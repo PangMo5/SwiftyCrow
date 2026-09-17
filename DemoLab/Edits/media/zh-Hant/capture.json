@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/capture-final-01/capture-demo.mov",
+  "cameraSHA256": "515d054750fd899533b28cd445e03979e6cca34249171c26feb910d8ba05d4e0",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "20.766016",
+    "height": 1200,
+    "nb_read_frames": "623",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "capture",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/zh-Hant/capture.mp4",
+  "movieSHA256": "6c84c64f53aca56467118bafc91b2653992bc72db206fe89ae01d36aac9f46c5",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "20.766667",
+    "height": 1200,
+    "nb_read_frames": "623",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/zh-Hant/capture.jpg",
+  "posterSHA256": "129d6ee5dd88a3b198a75f769197cb149f8ca666c5434b9e0eb15316a20dd1ec",
+  "posterSeconds": 18,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/zh-Hant/capture.timeline.json",
+  "presentationTimelineSHA256": "317f13902209c7f9270590486122f99b4967ebc53537d1df8a1a792d159f4736",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 20.766666666,
+    "error": null,
+    "frames": 623,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 623,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/zh-Hant/capture-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "en-US",
+  "subtitles": "DemoLab/Edits/media/zh-Hant/capture.ass",
+  "subtitlesSHA256": "f9b09b6cdb375704562fa24a4fb85ba16f441fcbd5e6c705e473bcd8bf506c97",
+  "translationLanguage": "zh-Hant",
+  "uiLanguage": "zh-Hant",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "zh-Hant",
+    "film": "capture",
+    "source": "en-US",
+    "target": "zh-Hant",
+    "actualTranslationText": "野戰相機\n快速啟動/03\n電源按鈕\n01 插入電池\n開啟底部的蓋子。\n將電池滑入，直到咔嗒一聲。\n02 開啟你的相機\n按住電源按鈕兩秒鐘。\n電池\n拍攝時請取下鏡頭蓋。\n謹慎\n燈閃爍時，不要拆下電池。",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/capture-final-01/capture-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=英文",
+      "       AXPopUpButton AXValue=中文（台灣）"
+    ]
+  }
+}

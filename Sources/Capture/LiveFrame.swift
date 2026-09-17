@@ -5,10 +5,9 @@ import CoreGraphics
 import CryptoKit
 import Foundation
 
-/// A captured frame can invalidate stale text before the much slower OCR stage
-/// finishes. Only the digest lives in reducer state; pixels belong to the OCR
-/// effect (and, in detached mode, the displayed backdrop).
-struct LiveFrame: Sendable {
+/// Exact pixel identity schedules OCR even for a small change. OCR determines
+/// whether the source text changed before replacing its displayed translation.
+struct LiveFrame: Equatable, Sendable {
 
   // MARK: Lifecycle
 
@@ -68,4 +67,9 @@ struct LiveFrame: Sendable {
   var imageSize: CGSize {
     CGSize(width: signature.width, height: signature.height)
   }
+
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.signature == rhs.signature
+  }
+
 }

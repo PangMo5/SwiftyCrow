@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/tour-final-01/capture-demo.mov",
+  "cameraSHA256": "49976e78983ff87bcf34dbc44d1bd19ab17a628da7ca5931b604632b5b96268c",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "21.166016",
+    "height": 1200,
+    "nb_read_frames": "635",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "tour",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/zh-Hant/tour.mp4",
+  "movieSHA256": "87abffc13b67d59c372fef2d58b00056ae124a1938b499cd27b39b0118cec54e",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "21.166667",
+    "height": 1200,
+    "nb_read_frames": "635",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/zh-Hant/tour.jpg",
+  "posterSHA256": "3cec882920e89a6e150d402481b56981f62bbacbef9c28e25900704f27b5e669",
+  "posterSeconds": 10,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/zh-Hant/tour.timeline.json",
+  "presentationTimelineSHA256": "b0be21addbb0d2d2d41896f2879d741ff8e48188f4bb173f274d07e4b631d4ec",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 21.166666666,
+    "error": null,
+    "frames": 635,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 635,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/zh-Hant/tour-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "en-US",
+  "subtitles": "DemoLab/Edits/media/zh-Hant/tour.ass",
+  "subtitlesSHA256": "5c9ce23ee9a96de14d6316c029b4a9f1d72f3f61329f8fabc102a69ea3198eff",
+  "translationLanguage": "zh-Hant",
+  "uiLanguage": "zh-Hant",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "zh-Hant",
+    "film": "tour",
+    "source": "en-US",
+    "target": "zh-Hant",
+    "actualTranslationText": "計劃你的訪問\n燈塔在中午開放。\n從東碼頭乘坐渡輪。\n最後一艘回程船六點出發。",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/tour-final-01/capture-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=英文",
+      "       AXPopUpButton AXValue=中文（台灣）"
+    ]
+  }
+}

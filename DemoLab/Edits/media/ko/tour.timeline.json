@@ -1,0 +1,58 @@
+{
+  "captureEpochUptimeNanoseconds" : 25353334885083,
+  "durationSeconds" : 20.899999999999999,
+  "events" : [
+    {
+      "end" : 20.899999999999999,
+      "id" : "tour.chapter",
+      "start" : 0,
+      "track" : "chapter"
+    },
+    {
+      "end" : 2.4191877080011182,
+      "id" : "tour.intro",
+      "start" : 0,
+      "track" : "caption"
+    },
+    {
+      "end" : 11.660605541997938,
+      "id" : "tour.capture",
+      "start" : 2.4191877080011182,
+      "track" : "caption"
+    },
+    {
+      "end" : 14.066125041998021,
+      "id" : "tour.copy",
+      "start" : 11.660605541997938,
+      "track" : "caption"
+    },
+    {
+      "end" : 20.899999999999999,
+      "id" : "tour.paste",
+      "start" : 14.066125041998021,
+      "track" : "caption"
+    },
+    {
+      "chord" : "cmd - 0",
+      "end" : 10.819933916998707,
+      "start" : 8.819933916998707,
+      "track" : "keys"
+    },
+    {
+      "chord" : "cmd - t",
+      "end" : 13.661386249998031,
+      "start" : 11.661386249998031,
+      "track" : "keys"
+    },
+    {
+      "chord" : "cmd - v",
+      "end" : 16.577899916999741,
+      "start" : 14.577899916999741,
+      "track" : "keys"
+    }
+  ],
+  "film" : "tour",
+  "scenariosSHA256" : "3a04472031dc9e23bf75c9e217a53f88702304ad5550e8ac3d16701d5de5a7df",
+  "schemaVersion" : 1,
+  "uiLanguage" : "ko"
+}

@@ -1,0 +1,26 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Heiti TC,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Heiti TC,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:14.41,Chapter,,0,0,0,,{\fad(100,100)}圖解說明書
+Dialogue: 0,0:00:17.69,0:00:20.97,Chapter,,0,0,0,,{\fad(100,100)}圖解說明書
+Dialogue: 0,0:00:00.00,0:00:03.15,Caption,,0,0,0,,{\fad(100,100)}結合圖解閱讀說明。
+Dialogue: 0,0:00:03.15,0:00:08.99,Caption,,0,0,0,,{\fad(100,100)}擷取說明書圖片。\N{\fs25\b0\1c&H8B8686&}從圖片中讀取無法選取的文字。
+Dialogue: 0,0:00:08.99,0:00:12.30,Caption,,0,0,0,,{\fad(100,100)}閱讀翻譯後的步驟和注意事項。\N{\fs25\b0\1c&H8B8686&}零件圖解保留在原位。
+Dialogue: 0,0:00:12.30,0:00:17.69,Caption,,0,0,0,,{\fad(100,100)}複製翻譯後的圖片。\N{\fs25\b0\1c&H8B8686&}將完整結果一起帶走。
+Dialogue: 0,0:00:17.69,0:00:20.97,Caption,,0,0,0,,{\fad(100,100)}在預覽程式中開啟剪貼簿圖片。\N{\fs25\b0\1c&H8B8686&}可以儲存或分享。
+Dialogue: 1,0:00:03.15,0:00:05.15,Keys,,0,0,0,,{\fad(100,100)}⇧⌘1
+Dialogue: 1,0:00:08.46,0:00:10.46,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:12.30,0:00:14.30,Keys,,0,0,0,,{\fad(100,100)}⌘C
+Dialogue: 1,0:00:14.41,0:00:16.41,Keys,,0,0,0,,{\fad(100,100)}⌘N

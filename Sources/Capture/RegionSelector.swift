@@ -279,11 +279,17 @@ private final class SelectionView: NSView {
   override func mouseDragged(with event: NSEvent) {
     guard controller.mode == .region, let start = startPoint else { return }
     let point = convert(event.locationInWindow, from: nil)
-    selection = CGRect(
-      x: min(start.x, point.x),
-      y: min(start.y, point.y),
-      width: abs(point.x - start.x),
-      height: abs(point.y - start.y)
+    // Mouse coordinates can contain fractional backing pixels. Draw and commit
+    // the same pixel-aligned region so capture does not resample the source
+    // into an extra row or column before text recognition.
+    selection = backingAlignedRect(
+      CGRect(
+        x: min(start.x, point.x),
+        y: min(start.y, point.y),
+        width: abs(point.x - start.x),
+        height: abs(point.y - start.y)
+      ),
+      options: .alignAllEdgesNearest
     )
     needsDisplay = true
   }

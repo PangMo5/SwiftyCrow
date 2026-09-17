@@ -1,8 +1,35 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](CHANGELOG.md) · [한국어](docs/ko/CHANGELOG.md) · [日本語](docs/ja/CHANGELOG.md) · [简体中文](docs/zh-Hans/CHANGELOG.md) · [繁體中文](docs/zh-Hant/CHANGELOG.md)
+<!-- LANGUAGE-LINKS:END -->
+
 # Changelog
 
 All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
+
+## 2.10.0 (2026-09-17)
+
+### Improvements
+
+- **Translations follow the source layout:** Keep paragraph alignment and text styles close to the original. Text recognized as code or commands stays untranslated. Vertical text uses a writing direction appropriate for the translated language.
+- **More reliable difficult captures:** Improve printed-dialogue boundaries, ruby handling, rotated text, and mixed-language recognition. Review indicators flag uncertain text.
+- **Capture zoom and pan:** Move the capture window, then pinch, scroll, or drag to inspect the image. Click the zoom percentage to fit the whole capture. Save or copy the complete translated image at its original resolution.
+- **Live translation:** Refresh from the current screen with adaptive capture timing, skip unchanged content, and cancel outdated work. Hide translation and resume in the remembered area and reading-window position; disconnected displays no longer leave that window offscreen.
+- **Use available local models:** When the preferred model is missing, use an installed alternative and explain the choice. Click the live overlay's information button for details.
+- **A clearer translation menu:** Start capture or live translation directly, see the selected languages, and reveal live controls only while an overlay is active.
+- **Quick Setup and What's New:** New users can prepare screen access, language downloads, and shortcuts before their first capture. Existing users can see the main changes after a feature release. Both guides are available from the menu bar.
+- **Default shortcuts:** Start a capture with ⇧⌘1 and select a live translation area with ⇧⌘2. Customize them in Quick Setup or Settings. Existing custom bindings remain unchanged.
+- **Five interface languages:** Use the app, guides, and website in English, Korean, Japanese, Simplified Chinese, and Traditional Chinese for Taiwan.
+
+### Fixes
+
+- **Crisp region captures:** Dragged selections align to display pixels, avoiding an extra resampled row or column before text recognition.
+- **Visible language selections:** Equivalent short language codes in configuration files now match the system language picker.
+
+### Configuration
+
+- The manual `[capture].interval` setting is no longer used; live translation adjusts its capture timing automatically.
 
 ## 2.9.1 (2026-08-22)
 

@@ -9,11 +9,13 @@ let developmentTeam = Environment.developmentTeam.getString(default: "")
 let sparklePublicEDKey = Environment.sparklePublicEdKey.getString(default: "")
 /// Single source of truth for the marketing version. The release workflow
 /// verifies the pushed tag matches this before building.
-let appVersion = "2.9.1"
+let appVersion = "2.10.0"
 /// Build number is injected by CI (github.run_number); 1 for local builds.
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
 let baseSettings: SettingsDictionary = [
+  "SWIFT_EMIT_LOC_STRINGS": "YES",
+  "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
   "DEVELOPMENT_TEAM": SettingValue(stringLiteral: developmentTeam),
   // Sign local builds with the developer's Apple Development cert so the binary's
   // designated requirement stays stable across rebuilds. Tuist otherwise defaults
@@ -66,6 +68,46 @@ let project = Project(
         "Resources/**",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/CONFIGURATION.md",
+        "docs/LANGUAGE_MODELS.md",
+        .folderReference(path: "docs/ko"),
+        .folderReference(path: "docs/ja"),
+        .folderReference(path: "docs/zh-Hans"),
+        .folderReference(path: "docs/zh-Hant"),
+      ],
+      scripts: [
+        .pre(
+          script: """
+            if [ -n "${SWIFTYCROW_REVIEW_LOCALE:-}" ]; then
+              if [ "$CONFIGURATION" != "Debug" ]; then
+                echo "Locale review is supported only in Debug builds." >&2
+                exit 1
+              fi
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check --locale "$SWIFTYCROW_REVIEW_LOCALE"
+            else
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check
+            fi
+            """,
+          name: "Validate Localizations",
+          basedOnDependencyAnalysis: false
+        ),
+        .post(
+          script: """
+            if [ -n "${SWIFTYCROW_REVIEW_LOCALE:-}" ]; then
+              if [ "$CONFIGURATION" != "Debug" ]; then
+                echo "Locale review is supported only in Debug builds." >&2
+                exit 1
+              fi
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check-app --stringsdata "$TARGET_TEMP_DIR/Objects-normal" --locale "$SWIFTYCROW_REVIEW_LOCALE"
+            else
+              swift run --package-path "$SRCROOT/Tools" swiftycrow-tools check-app --stringsdata "$TARGET_TEMP_DIR/Objects-normal"
+            fi
+            """,
+          name: "Check Extracted UI Strings",
+          basedOnDependencyAnalysis: false
+        ),
       ],
       dependencies: [
         .external(name: "ComposableArchitecture"),

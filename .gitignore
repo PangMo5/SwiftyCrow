@@ -84,3 +84,10 @@ buildServer.json
 # Cloudflare local output
 /dist/
 /.wrangler/
+
+### Demo recorder build products ###
+DemoLab/Recorder/.build/
+DemoLab/Recorder/.swiftpm/
+
+Tools/.build/
+Tools/.swiftpm/

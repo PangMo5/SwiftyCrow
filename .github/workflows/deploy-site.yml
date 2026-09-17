@@ -8,8 +8,13 @@ on:
     branches: [main]
     paths:
       - "web/**"
+      - "Localization/**"
+      - "DemoLab/Localization/**"
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "Tools/**"
       - "Resources/Marketing/app-icon.png"
-      - "Resources/Marketing/demo.gif"
       - ".github/workflows/deploy-site.yml"
       - "wrangler.jsonc"
   workflow_dispatch:
@@ -46,6 +51,15 @@ jobs:
           echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
 
+      - uses: swift-actions/setup-swift@v2
+        if: steps.release.outputs.should-deploy == 'true'
+        with:
+          swift-version: "6.2"
+
+      - name: Install video metadata tools
+        if: steps.release.outputs.should-deploy == 'true'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Assemble site
         if: steps.release.outputs.should-deploy == 'true'
         env:
@@ -57,19 +71,9 @@ jobs:
           SITE="$RUNNER_TEMP/site"
           mkdir -p "$SITE"
 
-          # Latest release version for the no-JS download/version fallback in
-          # index.html (the page also resolves this live via the API).
-          echo "Latest version: $VERSION"
-
-          cp web/*.html web/*.css "$SITE/"
-          sed -i "s/__VERSION__/${VERSION}/g" "$SITE/index.html"
-          cp Resources/Marketing/app-icon.png "$SITE/icon.png"
-          cp Resources/Marketing/demo.gif "$SITE/demo.gif"
-
-          # Cache-bust the stylesheet so a CSS change is never masked by a
-          # stale browser cache (HTML + CSS stay in lockstep per deploy).
-          BUST="${GITHUB_SHA:0:8}"
-          sed -i "s#\"./style.css\"#\"./style.css?v=${BUST}\"#g" "$SITE"/*.html
+          swift run --package-path Tools swiftycrow-tools check
+          swift run --package-path Tools swiftycrow-tools check-release --version "$VERSION"
+          swift run --package-path Tools swiftycrow-tools site --output "$SITE" --version "$VERSION"
 
           # Every deployment must include the latest signed release feed.
           # Fail if it is unavailable instead of publishing a stale or missing feed.

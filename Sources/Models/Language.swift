@@ -11,12 +11,12 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   let code: String
 
   var id: String {
-    code
+    isAuto ? Self.autoCode : localeLanguage.maximalIdentifier
   }
 
   var displayName: String {
-    if isAuto { return "Auto (detect)" }
-    return Locale.current.localizedString(forIdentifier: code) ?? code
+    if isAuto { return String(localized: "Auto (detect)") }
+    return Locale.current.localizedString(forIdentifier: localeLanguage.minimalIdentifier) ?? code
   }
 
   /// Whether this is the "detect the source language automatically" sentinel.
@@ -27,6 +27,17 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   var localeLanguage: Locale.Language {
     Locale.Language(identifier: code)
   }
+
+  /// Config files may use en-US while Apple's catalog returns en-Latn-US.
+  /// Preserve the stored spelling, but use the same identity for picker tags.
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
 }
 
 extension Locale.Language {

@@ -1,0 +1,23 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,42,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,2,110,110,96,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:27.07,Chapter,,0,0,0,,{\fad(100,100)}게임 대사
+Dialogue: 0,0:00:00.00,0:00:03.03,Caption,,0,0,0,,{\fad(100,100)}게임 장면을 보면서 대사를 읽어요.
+Dialogue: 0,0:00:03.03,0:00:07.64,Caption,,0,0,0,,{\fad(100,100)}대사가 나오는 영역을 선택해요.\N{\fs25\b0\1c&H8B8686&}그 영역에 실시간 번역을 켜요.
+Dialogue: 0,0:00:07.64,0:00:13.38,Caption,,0,0,0,,{\fad(100,100)}번역을 별도 창으로 옮겨요.\N{\fs25\b0\1c&H8B8686&}게임의 원래 그림을 보면서 읽어요.
+Dialogue: 0,0:00:13.38,0:00:17.40,Caption,,0,0,0,,{\fad(100,100)}게임에서 다음 대화로 진행해요.\N{\fs25\b0\1c&H8B8686&}별도 창도 새 대사로 갱신돼요.
+Dialogue: 0,0:00:17.40,0:00:21.68,Caption,,0,0,0,,{\fad(100,100)}필요하지 않을 때는 번역을 숨겨요.
+Dialogue: 0,0:00:21.68,0:00:27.07,Caption,,0,0,0,,{\fad(100,100)}같은 대사 영역에 다시 표시해요.\N{\fs25\b0\1c&H8B8686&}영역을 다시 선택하지 않아도 돼요.
+Dialogue: 1,0:00:03.03,0:00:05.03,Keys,,0,0,0,,{\fad(100,100)}⇧⌘2

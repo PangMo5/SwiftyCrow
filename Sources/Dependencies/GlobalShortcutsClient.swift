@@ -16,9 +16,7 @@ enum ShortcutEvent: String, Equatable, CaseIterable, Sendable {
   case toggleLiveMode
   case toggleLiveOverlay
 
-  var identifier: String {
-    rawValue
-  }
+  // MARK: Internal
 
   /// Each global hotkey paired with its persisted binding in `ShortcutSettings`,
   /// so the registrar can be driven by iterating this instead of hand-wiring
@@ -30,6 +28,11 @@ enum ShortcutEvent: String, Equatable, CaseIterable, Sendable {
     (.toggleLiveMode, \.toggleLiveMode),
     (.toggleLiveOverlay, \.toggleLiveOverlay),
   ]
+
+  var identifier: String {
+    rawValue
+  }
+
 }
 
 // MARK: - GlobalShortcutsClient
@@ -42,7 +45,7 @@ struct GlobalShortcutsClient {
   var setShortcut: @Sendable (_ event: ShortcutEvent, _ hotKey: HotKey?) -> Void
   /// Temporarily suspends/resumes all global hotkeys — used while the shortcut
   /// recorder is capturing so a press doesn't trigger the action it's binding.
-  var setEnabled: @Sendable (_ enabled: Bool) -> Void
+  var setEnabled: @MainActor @Sendable (_ enabled: Bool) -> Void
 }
 
 // MARK: DependencyKey
@@ -63,9 +66,9 @@ extension GlobalShortcutsClient: DependencyKey {
       }
     },
     setEnabled: { enabled in
-      Task { @MainActor in
-        GlobalHotKeyRegistrar.shared.setEnabled(enabled)
-      }
+      // A recorder starts on the main actor. Suspend before the next key event,
+      // rather than enqueueing a task that could run after that event.
+      GlobalHotKeyRegistrar.shared.setEnabled(enabled)
     }
   )
 }

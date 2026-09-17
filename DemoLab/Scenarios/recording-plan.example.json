@@ -1,0 +1,15 @@
+{
+  "demoqa": "DemoLab/Recorder/.build/release/demoqa",
+  "app": "RecordingInputs/SwiftyCrow.app",
+  "archive": "RecordingInputs/app.zip",
+  "catalog": "RecordingInputs/Localizable.xcstrings",
+  "source": "DemoLab/Fixtures/manifest.json",
+  "scenarios": "DemoLab/Scenarios/localized-2.10.json",
+  "sourceApp": "RecordingInputs/DemoScenes.app",
+  "config": "RecordingInputs/config.toml",
+  "recorder": "DemoLab/Recorder/.build/release/DemoRecorder",
+  "takes": [
+    {"locale": "ja", "film": "tour", "directory": "DerivedData/RecordingBatch/ja/tour-01"},
+    {"locale": "zh-Hant", "film": "tour", "directory": "DerivedData/RecordingBatch/zh-Hant/tour-01"}
+  ]
+}

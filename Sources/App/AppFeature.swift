@@ -7,15 +7,18 @@ import Sharing
 @Reducer
 struct AppFeature {
   @ObservableState
-  struct State {
+  struct State: Equatable {
     var capture = CaptureFeature.State()
+    var onboarding = OnboardingFeature.State()
     var settingsScreen = SettingsFeature.State()
     var canCheckForUpdates = false
+    var hasExistingConfiguration = false
 
     @Shared(.settings) var settings
   }
 
   enum Action {
+    case onboarding(OnboardingFeature.Action)
     case capture(CaptureFeature.Action)
     case settingsScreen(SettingsFeature.Action)
     case task
@@ -24,13 +27,18 @@ struct AppFeature {
     case setLiveMode(OverlayLiveMode)
     case canCheckForUpdatesChanged(Bool)
     case checkForUpdatesTapped
+    case whatsNewTapped
+    case screenAccessChanged(Bool)
   }
 
   @Dependency(\.globalShortcuts) var globalShortcuts
   @Dependency(\.overlay) var overlay
   @Dependency(\.updater) var updater
+  @Dependency(\.whatsNew) var whatsNew
+  @Dependency(\.screenRecordingAccess) var screenAccess
 
   var body: some Reducer<State, Action> {
+    Scope(state: \.onboarding, action: \.onboarding) { OnboardingFeature() }
     Scope(state: \.capture, action: \.capture) {
       CaptureFeature()
     }
@@ -39,14 +47,42 @@ struct AppFeature {
     }
     Reduce { state, action in
       switch action {
+      case .onboarding(.closed):
+        guard state.onboarding.startCaptureAfterDismissal else { return .none }
+        state.onboarding.startCaptureAfterDismissal = false
+        return .send(.capture(.selectRegionRequested))
+
+      case .onboarding:
+        return .none
+
       case .capture:
         return .none
+
+      case .settingsScreen(.grantScreenRecordingTapped),
+           .settingsScreen(.openScreenRecordingSettingsTapped),
+           .settingsScreen(.relaunchTapped):
+        if state.onboarding.isPresented { OnboardingFeature.prepareForExternalFlow(&state.onboarding) }
+        return .none
+
+      case .screenAccessChanged(let granted):
+        guard !granted, state.capture.overlayActive else { return .none }
+        return .send(.capture(.dismissOverlay))
 
       case .settingsScreen:
         return .none
 
       case .task:
         return .merge(
+          .run { [screenAccess] send in
+            for await _ in screenAccess.changes() { await send(.screenAccessChanged(screenAccess.isGranted())) }
+          },
+          .run { [
+            whatsNew,
+            existing = state.hasExistingConfiguration,
+            unfinished = state.onboarding.resumeRequested || (state.onboarding.hasStarted && !state.onboarding.completed)
+          ] _ in
+            await whatsNew.showIfNeeded(existing && !unfinished)
+          },
           .run { send in
             for await event in globalShortcuts.events() {
               switch event {
@@ -119,6 +155,9 @@ struct AppFeature {
       case .canCheckForUpdatesChanged(let value):
         state.canCheckForUpdates = value
         return .none
+
+      case .whatsNewTapped:
+        return .run { [whatsNew] _ in await whatsNew.show() }
 
       case .checkForUpdatesTapped:
         return .run { [updater] _ in updater.checkForUpdates() }

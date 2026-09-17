@@ -176,7 +176,7 @@ struct RegionCaptureFeature {
             state.overlayLines[index].showUnavailable()
           }
           state.isTranslating = state.overlayLines.contains(where: \.isPending)
-          state.lastError = "Translation returned empty text."
+          state.lastError = String(localized: "Translation returned empty text.")
           return .none
         }
         if
@@ -198,7 +198,7 @@ struct RegionCaptureFeature {
           state.overlayLines[index].showUnavailable()
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
-        state.lastError = message ?? "Translation did not return every requested line."
+        state.lastError = message ?? String(localized: "Translation did not return every requested line.")
         if message != nil {
           state.translationUnavailable = true
         }
@@ -404,6 +404,7 @@ private final class RegionResultWindowController {
   private func saveImage(_ data: Data, panel: NSWindow?) {
     Task { @MainActor in
       let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
       formatter.dateFormat = "yyyy-MM-dd-HHmmss"
       let name = "SwiftyCrow-\(formatter.string(from: now)).png"
       if await savePanel.savePNG(data, name) {

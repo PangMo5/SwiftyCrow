@@ -1,3 +1,7 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](THIRD_PARTY_NOTICES.md) · [한국어](docs/ko/THIRD_PARTY_NOTICES.md) · [日本語](docs/ja/THIRD_PARTY_NOTICES.md) · [简体中文](docs/zh-Hans/THIRD_PARTY_NOTICES.md) · [繁體中文](docs/zh-Hant/THIRD_PARTY_NOTICES.md)
+<!-- LANGUAGE-LINKS:END -->
+
 # Third-Party Notices
 
 SwiftyCrow incorporates the open-source components listed below. Swift package entries are pinned to the exact revisions recorded in `Tuist/Package.resolved`; web runtime entries are pinned by the versioned script URLs in `web/releases.html`. Every source link and license text corresponds to the recorded revision.

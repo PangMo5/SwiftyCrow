@@ -1,0 +1,35 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Heiti SC,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Heiti SC,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Heiti SC,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Heiti SC,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:13.92,Chapter,,0,0,0,,{\fad(100,100)}截图翻译
+Dialogue: 0,0:00:17.27,0:00:20.57,Chapter,,0,0,0,,{\fad(100,100)}截图翻译
+Dialogue: 0,0:00:00.00,0:00:02.46,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:02.46,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}想用中文阅读外语说明书时。
+Dialogue: 0,0:00:02.46,0:00:08.49,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:02.46,0:00:08.49,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}截取要翻译的说明书。
+Dialogue: 0,0:00:08.49,0:00:11.81,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:08.49,0:00:11.81,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}在截图中阅读译文。
+Dialogue: 1,0:00:08.49,0:00:11.81,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}同时查看图解说明和操作步骤。
+Dialogue: 0,0:00:11.81,0:00:17.27,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:11.81,0:00:17.27,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}复制翻译后的图片。
+Dialogue: 0,0:00:17.27,0:00:20.57,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:17.27,0:00:20.57,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}保存或分享翻译后的说明书。
+Dialogue: 1,0:00:17.27,0:00:20.57,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}在其他应用中也能同时查看图解和译文。
+Dialogue: 1,0:00:02.46,0:00:04.46,Keys,,0,0,0,,{\fad(100,100)}⇧⌘1
+Dialogue: 1,0:00:07.95,0:00:09.95,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:11.81,0:00:13.81,Keys,,0,0,0,,{\fad(100,100)}⌘C
+Dialogue: 1,0:00:13.92,0:00:15.92,Keys,,0,0,0,,{\fad(100,100)}⌘N

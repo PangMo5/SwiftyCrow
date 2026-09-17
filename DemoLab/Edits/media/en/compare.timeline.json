@@ -1,0 +1,52 @@
+{
+  "captureEpochUptimeNanoseconds" : 2534515493250,
+  "durationSeconds" : 28.866666666,
+  "events" : [
+    {
+      "end" : 28.866666666,
+      "id" : "compare.chapter",
+      "start" : 0,
+      "track" : "chapter"
+    },
+    {
+      "end" : 2.4326032079998186,
+      "id" : "compare.intro",
+      "start" : 0,
+      "track" : "caption"
+    },
+    {
+      "end" : 9.4405387910001082,
+      "id" : "compare.select",
+      "start" : 2.4326032079998186,
+      "track" : "caption"
+    },
+    {
+      "end" : 15.247938666000209,
+      "id" : "compare.separate",
+      "start" : 9.4405387910001082,
+      "track" : "caption"
+    },
+    {
+      "end" : 19.075213458000235,
+      "id" : "compare.next",
+      "start" : 15.247938666000209,
+      "track" : "caption"
+    },
+    {
+      "end" : 23.417500583000219,
+      "id" : "compare.hide",
+      "start" : 19.075213458000235,
+      "track" : "caption"
+    },
+    {
+      "end" : 28.866666666,
+      "id" : "compare.recall",
+      "start" : 23.417500583000219,
+      "track" : "caption"
+    }
+  ],
+  "film" : "compare",
+  "scenariosSHA256" : "598e8f2cc3ad963a91f03a86a82cf41d10912c1661ebcbed9659a0e28d651257",
+  "schemaVersion" : 1,
+  "uiLanguage" : "en"
+}

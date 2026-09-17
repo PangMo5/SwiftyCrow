@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/ja/layout-final-02/capture-demo.mov",
+  "cameraSHA256": "089724e72d8ff45c35efc6172791737cf3f9d6aaaa6413a607f9006e0e2db3d5",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "22.100000",
+    "height": 1200,
+    "nb_read_frames": "663",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "layout",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/ja/layout.mp4",
+  "movieSHA256": "1568dcc2d7a37f5e48b39d06bac7226f3498809c36df5fcfa019687cc26e5e2d",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "22.100000",
+    "height": 1200,
+    "nb_read_frames": "663",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/ja/layout.jpg",
+  "posterSHA256": "09e234e6306de18970d945fdc5b912528008c0fe1a5af2e81587d5a9b6fbc663",
+  "posterSeconds": 14,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/ja/layout.timeline.json",
+  "presentationTimelineSHA256": "f54b686e0cc4f85f430114fd854cb8f77dacebef77e1bab896daaa17342ae487",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 22.1,
+    "error": null,
+    "frames": 663,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 663,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/ja/layout-final-02/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "zh-Hant",
+  "subtitles": "DemoLab/Edits/media/ja/layout.ass",
+  "subtitlesSHA256": "125907bb1862d086fb87ba387337bf6a82a185865d34526a3b2c8de9e7004a74",
+  "translationLanguage": "ja-JP",
+  "uiLanguage": "ja",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "ja",
+    "film": "layout",
+    "source": "zh-Hant",
+    "target": "ja-JP",
+    "actualTranslationText": "週末の小さな旅行\n小さな町を散歩する\n川辺の古い書店は、静かに来訪者をお待ちしております。\n散歩ノート\n駅から川辺まで、ゆっくり歩いて十五分です。\n午後に小さな町の通りを歩いていると、古い書店の窓辺に灯りが灯っているのを見ました。 店主は熱いお茶をご用意になり、旅の途中での私のお話をお聞きください。 帰路の際、私は川辺の小さな橋を渡りました。 静かな水面が夕暮れの空を映し出す。 橋の向こう側にカフェがあります。 窓辺で地図を広げ、次の散歩のルートを決めます。 足をゆっくりにすれば、小さな町でも新たな発見をもたらすことができます。\n文字と写真：編集部",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/ja/layout-final-02/layout-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=中国語（台湾）",
+      "       AXPopUpButton AXValue=日本語"
+    ]
+  }
+}

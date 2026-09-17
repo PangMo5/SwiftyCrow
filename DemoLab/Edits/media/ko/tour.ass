@@ -1,0 +1,30 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1200
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Apple SD Gothic Neo,38,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionDetail,Apple SD Gothic Neo,26,&H00F7F5F5,&H00F7F5F5,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: CaptionPanel,Apple SD Gothic Neo,10,&H00141414,&H00141414,&H40141414,&H40141414,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: Chapter,Apple SD Gothic Neo,26,&H00FF9729,&H00FF9729,&H40141414,&H40141414,-1,0,0,0,100,100,0,0,3,10,0,7,32,700,54,1
+Style: Keys,Menlo,38,&H00FF9729,&H00FF9729,&H40141414,&H40141414,0,0,0,0,100,100,0,0,3,10,0,9,1300,32,54,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:20.90,Chapter,,0,0,0,,{\fad(100,100)}화면 번역, 이렇게 써요
+Dialogue: 0,0:00:00.00,0:00:02.42,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:00.00,0:00:02.42,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}복사할 수 없는 글도 번역할 수 있어요.
+Dialogue: 0,0:00:02.42,0:00:11.66,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1012 l 1680 1012 1680 1110 240 1110
+Dialogue: 1,0:00:02.42,0:00:11.66,Caption,,0,0,0,,{\an5\pos(960,1044)\fad(100,100)}읽고 싶은 부분을 드래그해요.
+Dialogue: 1,0:00:02.42,0:00:11.66,CaptionDetail,,0,0,0,,{\an5\pos(960,1086)\1a&H20&\fad(100,100)}이미지 속 외국어가 한국어로 바뀝니다.
+Dialogue: 0,0:00:11.66,0:00:14.07,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:11.66,0:00:14.07,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}필요한 번역문만 복사해요.
+Dialogue: 0,0:00:14.07,0:00:20.90,CaptionPanel,,0,0,0,,{\an7\pos(0,0)\p1\1a&H45&\fad(100,100)}m 240 1030 l 1680 1030 1680 1110 240 1110
+Dialogue: 1,0:00:14.07,0:00:20.90,Caption,,0,0,0,,{\an5\pos(960,1068)\fad(100,100)}메모에 붙여넣고 바로 활용하세요.
+Dialogue: 1,0:00:08.82,0:00:10.82,Keys,,0,0,0,,{\fad(100,100)}⌘0
+Dialogue: 1,0:00:11.66,0:00:13.66,Keys,,0,0,0,,{\fad(100,100)}⌘T
+Dialogue: 1,0:00:14.58,0:00:16.58,Keys,,0,0,0,,{\fad(100,100)}⌘V

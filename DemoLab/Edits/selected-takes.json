@@ -1,0 +1,755 @@
+{
+  "schemaVersion" : 1,
+  "takes" : [
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=영어",
+          "       AXPopUpButton AXValue=한국어"
+        ],
+        "actualTranslationText" : "방문을 계획하십시오\n등대는 정오에 열립니다.\n동쪽 부두에서 페리를 타세요.\n마지막 귀환 보트는 6시에 출발합니다.",
+        "evidenceFile" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/tour-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "2f6d33a70bd8ed979acbd5d32deb3738f82870434e786d62ef89cfbbef5db90b",
+        "film" : "tour",
+        "locale" : "ko",
+        "source" : "en-US",
+        "target" : "ko-KR",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/tour-final-01",
+      "film" : "tour",
+      "hashes" : {
+        "capture-demo.json" : "0464268d79a9a05fe9a69a597d7747b2d694ed222a9540492428dfc915718025",
+        "capture-demo.mov" : "8c58f488a346867242aa5c3c55712a433b76ee5aa80acba433d638fb10231aa1",
+        "capture-demo.ready.json" : "c54c237f0b07d7674ffabe6d8a26a3c0e7bfe835f03b61d1163b193e62705f6b",
+        "capture-translated-ax.txt" : "2f6d33a70bd8ed979acbd5d32deb3738f82870434e786d62ef89cfbbef5db90b",
+        "presentation.json" : "acc945c3f666d031db5a4f748341794609810af1d2e5e94cc992f30b054b51a2",
+        "scene.json" : "301ba7e269ace5f490e4453d0e4e53ad8ae84feca3af19a5ba6edcb2e2a15851"
+      },
+      "locale" : "ko",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/korean-2.10-review.md",
+      "reviewSHA256" : "8cb44a7f1fae044c2a1d6f386c7265f638b94d68e89f0461e128467a3f8bfb22"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=영어",
+          "       AXPopUpButton AXValue=한국어"
+        ],
+        "actualTranslationText" : "현장 카메라\n빠른 시작 / 03\n전원 버튼\n01 배터리를 삽입하십시오\n아래쪽에 있는 커버를 열어 주세요.\n배터리를 딸깍이 날 때까지 삽입하십시오.\n02 카메라를 켜세요\n전원 버튼을 2초간 눌러 주세요.\n배터리\n촬영할 때 렌즈 캡을 뜈 상태로 유지하십시오.\n주의\n불빛이 깜박일 때 배터리를 분리하지 마십시오.",
+        "evidenceFile" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/capture-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "551873cf520b4d348c1dffa97e907dce42c1327e9f49565b65db6c649e54e067",
+        "film" : "capture",
+        "locale" : "ko",
+        "source" : "en-US",
+        "target" : "ko-KR",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/capture-final-01",
+      "film" : "capture",
+      "hashes" : {
+        "capture-demo.json" : "965b51aea55fcc715f046bfee176598bb66e177a8daa7200f7d5234feec6829c",
+        "capture-demo.mov" : "ebbb68df09a546603ae25413d12434105b20f757e215f27c3582e5a6414023d8",
+        "capture-demo.ready.json" : "4a863a3f36706bcb74aca17f3698a67f272d5e292c799a3ebf703767cd93536b",
+        "capture-translated-ax.txt" : "551873cf520b4d348c1dffa97e907dce42c1327e9f49565b65db6c649e54e067",
+        "presentation.json" : "be87ea6946a31c543a90e83024232138a13e9512479a1672ef409d77d01d6a5d",
+        "scene.json" : "dacf146c8ed7d80599cc5a54fcc6cbfabe808678479ce74aef53a96d44be7c30"
+      },
+      "locale" : "ko",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/korean-2.10-review.md",
+      "reviewSHA256" : "8cb44a7f1fae044c2a1d6f386c7265f638b94d68e89f0461e128467a3f8bfb22"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=영어",
+          "       AXPopUpButton AXValue=한국어"
+        ],
+        "actualTranslationText" : "물체가 빛을 차단하면 그림자가 형성됩니다.",
+        "evidenceFile" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/live-final-01/live-translated-ax.txt",
+        "evidenceSHA256" : "ffb594f4360cbc9ba17aaba99985c54582f029c5e0ee7e371ccd71bddf6c7db7",
+        "film" : "live",
+        "locale" : "ko",
+        "source" : "en-US",
+        "target" : "ko-KR",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/live-final-01",
+      "film" : "live",
+      "hashes" : {
+        "capture-demo.json" : "38767999d6d766997f46b812336fdd71c67829525f0b72e3ac528e11e6499683",
+        "capture-demo.mov" : "a9a8c2e5a93ccb710ac220d601ef6a22f5223f242c2033247cdef463769533bb",
+        "capture-demo.ready.json" : "97e18ffae2343e09e8f72773dd04fbf238300048bf97c3326b079c4dc195c749",
+        "live-translated-ax.txt" : "ffb594f4360cbc9ba17aaba99985c54582f029c5e0ee7e371ccd71bddf6c7db7",
+        "presentation.json" : "96215ad546dea1e0a3dac2564c05330e227c481e989f62b921b2b093d450276c",
+        "scene.json" : "0af8a89ac0f57d5ab9675795a2dc382eece9cba5624e169f7eb0fde04e78a403"
+      },
+      "locale" : "ko",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/korean-2.10-review.md",
+      "reviewSHA256" : "8cb44a7f1fae044c2a1d6f386c7265f638b94d68e89f0461e128467a3f8bfb22"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=일본어",
+          "       AXPopUpButton AXValue=한국어"
+        ],
+        "actualTranslationText" : "마을을 걷다\n주말의 작은 여행\n강가에 남아 있는 오래된 서점이 있는 풍경.\n산책 메모\n역에서 강까지, 천천히 15분.\n비가 그친 마을을 걸을 때, 오래된 서점의 창문에 불빛이 보였습니다. 점주께서는 따뜻한 차를 준비해 주시고, 여행 이야기를 들어 주셨습니다. 돌아오는 길에 강가의 다리를 건넜습니다. 조용한 물 표면에 저녁 하늘이 비쳐 있었습니다. 다리 건너편에 작은 카페가 있습니다. 창가 자리에서 지도를 펼고, 다음에 걸을 길을 정했습니\n문과 사진: 편집부",
+        "evidenceFile" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/layout-final-01/layout-translated-ax.txt",
+        "evidenceSHA256" : "866dfca9dbada7cb12f49b4562d4bb39a35f5529d96479bc5282ad99fdf3cecb",
+        "film" : "layout",
+        "locale" : "ko",
+        "source" : "ja-JP",
+        "target" : "ko-KR",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/layout-final-01",
+      "film" : "layout",
+      "hashes" : {
+        "capture-demo.json" : "c8beef15bbdd269125cdc73779d04ffac3b62f33a461b7cc2cf62e6f03b5e202",
+        "capture-demo.mov" : "097b7e345da16a80acf7bd2fc64a29ffde75ea84e7868f8f0e72763b809fdb99",
+        "capture-demo.ready.json" : "c60d83f9a6f841167ff1612a3e35ef27b2a8559c88be871665bdba7218ebfdc3",
+        "layout-translated-ax.txt" : "866dfca9dbada7cb12f49b4562d4bb39a35f5529d96479bc5282ad99fdf3cecb",
+        "presentation.json" : "4fa4f071be0c0c05f892a924984336e3e2a9cb80af37adb1c8e226a8c1d61e8c",
+        "scene.json" : "b29298ac6a38773eee2c223fb111ab48e2036ca56e1d516883b26afd5519baef"
+      },
+      "locale" : "ko",
+      "posterSeconds" : 12,
+      "review" : "DemoLab/Edits/korean-2.10-review.md",
+      "reviewSHA256" : "8cb44a7f1fae044c2a1d6f386c7265f638b94d68e89f0461e128467a3f8bfb22"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=영어",
+          "       AXPopUpButton AXValue=한국어"
+        ],
+        "actualTranslationText" : "천문학자\n황동 열쇠가 필요합니다.\n오래된 망원경 옆에서 찾아보세요.",
+        "evidenceFile" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/compare-final-01/compare-restored-ax.txt",
+        "evidenceSHA256" : "ad65339f7377f409c29734213c6cfa381a422919d3fa9cb7795aa4105e15c14c",
+        "film" : "compare",
+        "locale" : "ko",
+        "source" : "en-US",
+        "target" : "ko-KR",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/korean-retake-20260915/ko/compare-final-01",
+      "film" : "compare",
+      "hashes" : {
+        "capture-demo.json" : "d50ebfbdcbbeafe2cad83e4e9a1d6f497df65b7045f3735f4581e423c8cae47e",
+        "capture-demo.mov" : "393aa12d97b96e7e05f4d180362f043a5c037acb57418904e8912645925b5e05",
+        "capture-demo.ready.json" : "c90b3a68831d3591d01299c4e0667759d8da33ada62a51235278076fea311ca9",
+        "compare-restored-ax.txt" : "ad65339f7377f409c29734213c6cfa381a422919d3fa9cb7795aa4105e15c14c",
+        "presentation.json" : "11e9f82ae1b9ac75e44a055ca929a3cf97a69f6dd836905abf6786d7715ebdf9",
+        "scene.json" : "cef6fcd3e5f51fbaacef1202b9063775c42c29df9b6ab4fa866f4bc7b688d747"
+      },
+      "locale" : "ko",
+      "posterSeconds" : 27,
+      "review" : "DemoLab/Edits/korean-2.10-review.md",
+      "reviewSHA256" : "8cb44a7f1fae044c2a1d6f386c7265f638b94d68e89f0461e128467a3f8bfb22"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=Korean",
+          "       AXPopUpButton AXValue=English"
+        ],
+        "actualTranslationText" : "Visit guide\nThe lighthouse opens at noon.\nTake a boat from the east pier.\nThe last ship departs at 6 p.m.",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/en/tour-final-02/capture-translated-ax.txt",
+        "evidenceSHA256" : "8ede16149019fd64c8f8973493c085921aa0cfd56afb47164f96a8718a4c3d42",
+        "film" : "tour",
+        "locale" : "en",
+        "source" : "ko-KR",
+        "target" : "en-US",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/tour-final-02",
+      "film" : "tour",
+      "hashes" : {
+        "capture-demo.json" : "731a4c03759dc0322cdeab74e3291e0c293c8d78a5b8cbd1889a020c25e12a8d",
+        "capture-demo.mov" : "93bf499008c692be794baa66e474064783465a835e6eba3b898ab6640a56a121",
+        "capture-demo.ready.json" : "6f41b6aaee1f77665a34339467455027058b2fccd95b12b321fda3f9d1997997",
+        "capture-translated-ax.txt" : "8ede16149019fd64c8f8973493c085921aa0cfd56afb47164f96a8718a4c3d42",
+        "presentation.json" : "55afc09b9d12efe3d9b62d6e044a9e411bd908a5f1ffa39c99b8a2dc8fe3b1cd",
+        "scene.json" : "9100508d563b3eb1f887ed4bdb9ab1c144bc6c267b74fe50027ce1b0f1cdb2a9"
+      },
+      "locale" : "en",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=Korean",
+          "       AXPopUpButton AXValue=English"
+        ],
+        "actualTranslationText" : "On-site camera\nQuick start / 03\nPower button\n01 Put in the battery\nOpen the bottom cover.\nInsert the battery until it clicks.\n02 Turn on the camera\nPress and hold the power button for 2 seconds.\nThe battery\nPeel off the lens cover when shooting.\nPrinciple\nDon't remove the battery when the indicator light flashes.",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/en/capture-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "2464c9e677026fc0dba3590da4394338afeb3f1d905f5cd32c2469d6c2367520",
+        "film" : "capture",
+        "locale" : "en",
+        "source" : "ko-KR",
+        "target" : "en-US",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/capture-final-01",
+      "film" : "capture",
+      "hashes" : {
+        "capture-demo.json" : "61c021c41cde1b633819b99a9bfc3bf79994882feed8c7975316da34d80194e0",
+        "capture-demo.mov" : "fe51407334e4d59d799da9622337f674a185e7d7896f0dc9607702e27ddf1b94",
+        "capture-demo.ready.json" : "246e46bae7bf63f344dcc0e894b267029910dae9a2e924cb8c01c32e17afc3f5",
+        "capture-translated-ax.txt" : "2464c9e677026fc0dba3590da4394338afeb3f1d905f5cd32c2469d6c2367520",
+        "presentation.json" : "2648044bb226d0a035de102b9796f6874ebc1181af47717ccc7497124e591b3f",
+        "scene.json" : "4f4a98ecba3dacc799037dad5be41c0d7f69527c70e0cd7a182a21fdbb57e605"
+      },
+      "locale" : "en",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=Korean",
+          "       AXPopUpButton AXValue=English"
+        ],
+        "actualTranslationText" : "When an object blocks the light, a shadow is created.",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/en/live-final-01/live-translated-ax.txt",
+        "evidenceSHA256" : "03f6711f366869acf7e6fdc162f4679413ac48d866ab65c011741e7197f77edc",
+        "film" : "live",
+        "locale" : "en",
+        "source" : "ko-KR",
+        "target" : "en-US",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/live-final-01",
+      "film" : "live",
+      "hashes" : {
+        "capture-demo.json" : "a11cae2583f00ffa7df0a17c261bd5a3b70a726f2281a13a19318bb7160098da",
+        "capture-demo.mov" : "c19db41ceb0ef1598bafda3542a2aee6a8f88795900081e42f41f049ee8c3439",
+        "capture-demo.ready.json" : "1b17e55caad6551dd088e1b42097eda518486b1b5301b5e9625538e5a431901a",
+        "live-translated-ax.txt" : "03f6711f366869acf7e6fdc162f4679413ac48d866ab65c011741e7197f77edc",
+        "presentation.json" : "684a2282189c6e6d7628b1bacbb353fccb8b5977b7c31e36e09f391cd886e660",
+        "scene.json" : "c59c53ee75cf7208db0b03b2147d479df9fafbf98049aec1cf32dc45255a3d4c"
+      },
+      "locale" : "en",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=Japanese",
+          "       AXPopUpButton AXValue=English"
+        ],
+        "actualTranslationText" : "Walk around the town\nA small weekend trip\nThe scenery of an old bookstore that remains along the river.\nMemo for a walk\nFrom the station to the river, fifteen minutes slowly.\nWhen I walked through the town after the rain, I saw a light in the window of an old bookstore. The owner prepared warm tea and listened to the story of the trip. On the way back, I crossed the bridge along the river. The evening sky was reflected on the quiet water. There is a small coffee shop across the bridge. I spread the map at the window seat and decided on the next way to walk. If you walk without rushing, there will be new discoveries in your usual town.\nText and photos: Editorial Department",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/en/layout-final-02/layout-translated-ax.txt",
+        "evidenceSHA256" : "8ee2f099f9d9cf2da27fa106fd756833cc0a16d2135b2b3eedaca939631943f6",
+        "film" : "layout",
+        "locale" : "en",
+        "source" : "ja-JP",
+        "target" : "en-US",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/layout-final-02",
+      "film" : "layout",
+      "hashes" : {
+        "capture-demo.json" : "cb8eea0dbbe2615817cb66ede64edf5e70391a65b7b57ed388690c7ceaa1417b",
+        "capture-demo.mov" : "05155a59dd7435e1cf736803f4a900f691a207f61f93093595b9cd3ad1216f29",
+        "capture-demo.ready.json" : "131325effa7afd3ea7f3fc85abac2f84a6f1fd8c32eeac4bbf4bb4dd5ee90409",
+        "layout-translated-ax.txt" : "8ee2f099f9d9cf2da27fa106fd756833cc0a16d2135b2b3eedaca939631943f6",
+        "presentation.json" : "c6acfe54f6241facb7b8130129d28940573e99920f01c337152e0a792a52b430",
+        "scene.json" : "b99367ebf477affac237a334fc95736376e2f9e67957e3c41ecad2c5409135d7"
+      },
+      "locale" : "en",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=Korean",
+          "       AXPopUpButton AXValue=English"
+        ],
+        "actualTranslationText" : "An astronomer\nI need a brass key.\nLook for it next to the old telescope.",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/en/compare-final-01/compare-restored-ax.txt",
+        "evidenceSHA256" : "09d7d0e2316a2f26ab0e07e7b0417d81c91695f74d4907d6bf4d9d394e568b9d",
+        "film" : "compare",
+        "locale" : "en",
+        "source" : "ko-KR",
+        "target" : "en-US",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/en/compare-final-01",
+      "film" : "compare",
+      "hashes" : {
+        "capture-demo.json" : "2def9f71edcece3bd0c2a06bd77dc469d48992d3df565e4894d820fbf468371f",
+        "capture-demo.mov" : "53155e561b7c97c55cb68e6aa4dcf8e17934bf0d7a3a9a68419bf56802f45c11",
+        "capture-demo.ready.json" : "f946f586b16226dc1c545a2aad8a32299171ae73c948b6703b6191c40670d0bc",
+        "compare-restored-ax.txt" : "09d7d0e2316a2f26ab0e07e7b0417d81c91695f74d4907d6bf4d9d394e568b9d",
+        "presentation.json" : "17b01592ab6269b5804f314e82e2619f7af0bc3527c6c80ccc493736ec975298",
+        "scene.json" : "1d8d3daf9ee26763a80f0ef98c367444f1be0bf64e36857bfe339587e9e7e03e"
+      },
+      "locale" : "en",
+      "posterSeconds" : 26.866666666,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英語",
+          "       AXPopUpButton AXValue=日本語"
+        ],
+        "actualTranslationText" : "ご訪問の計画を立ててください\n灯台は正午に開きます。\n東桟橋からフェリーに乗ってください。\n最後の帰還船は6時に出発します。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/ja/tour-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "0357dae265da34cdd5ce75721f98da536bb1b378c650f65713e6b58e48df0ca8",
+        "film" : "tour",
+        "locale" : "ja",
+        "source" : "en-US",
+        "target" : "ja-JP",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/tour-final-01",
+      "film" : "tour",
+      "hashes" : {
+        "capture-demo.json" : "276dcc9b7963fbec8b2d0f347a16f0842eeaac99064a0307aa141ef40f7258e7",
+        "capture-demo.mov" : "fbda1b0949a4b95a7e62b734c671f593b210a5f0079d1165a1c467266750395d",
+        "capture-demo.ready.json" : "20974c92ae5a46ce521ecedb5f75d9c956c216de4ce514ab8a6259494c246b6d",
+        "capture-translated-ax.txt" : "0357dae265da34cdd5ce75721f98da536bb1b378c650f65713e6b58e48df0ca8",
+        "presentation.json" : "f376fae5d36973490ffda479d0055473c137a71794564485496eb26f190bd3c7",
+        "scene.json" : "759f2eb456bd6f93438fc6c050897e4b43656cf3290d5cade9b10302857ca5ca"
+      },
+      "locale" : "ja",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英語",
+          "       AXPopUpButton AXValue=日本語"
+        ],
+        "actualTranslationText" : "フィールドカメラ\nクイックスタート / 03\n電源ボタン\n01 バッテリーを挿入してください\n下部のカバーを開いてください。\nバッテリーをカチッと音がするまで差し込んでください。\n02 カメラをオンにしてください\n電源ボタンを2秒間押し続けてください。\nバッテリー\n撮影中はレンズキャップを外したままにしてください。\n注意\nライトが点滅している間はバッテリーを取り外さないでください。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/ja/capture-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "33051b1009ed23f6b85f1346e5d198305b7a0e9f18f460b43185de06702be6ca",
+        "film" : "capture",
+        "locale" : "ja",
+        "source" : "en-US",
+        "target" : "ja-JP",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/capture-final-01",
+      "film" : "capture",
+      "hashes" : {
+        "capture-demo.json" : "046cf4af0dc81de4cf13a5be5ed2e27b1989c8896ed387914e4277b9936ad65b",
+        "capture-demo.mov" : "46b7b066dbd12c64e6bce638e99f3638dba6e848f296b53b70105700aa2ef35e",
+        "capture-demo.ready.json" : "8397fdcf4454c3fc6f3a1570ed013c9cd9cb251ece8201bda0d4d0c6a807c519",
+        "capture-translated-ax.txt" : "33051b1009ed23f6b85f1346e5d198305b7a0e9f18f460b43185de06702be6ca",
+        "presentation.json" : "2ab7742b5eae02df74a69156a71c6860b41925e69a30cdb8737fc9601d39c6eb",
+        "scene.json" : "5d0d9de64547a079d0bdeb12ac1e36cf6ab9cef0b9aa450568eede94a7153f00"
+      },
+      "locale" : "ja",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英語",
+          "       AXPopUpButton AXValue=日本語"
+        ],
+        "actualTranslationText" : "物体が光を遮ると、影が形成されます。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/ja/live-final-01/live-translated-ax.txt",
+        "evidenceSHA256" : "af74b59168a5332f6e89546f00fbf7ce9f099dad395d914d68b28e08994db483",
+        "film" : "live",
+        "locale" : "ja",
+        "source" : "en-US",
+        "target" : "ja-JP",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/live-final-01",
+      "film" : "live",
+      "hashes" : {
+        "capture-demo.json" : "8cec40ee3ca91993375e45bc83177f5b7c85cef1cb44393662e65bb9cdcc8d91",
+        "capture-demo.mov" : "d566233dadc22b3c9e38a3c197acb11d01b6194e502ad14d9e00f173e8d7429c",
+        "capture-demo.ready.json" : "39c45d40046bb48812911bb90829adf13280066eb2bc7969d9ccc01741e487b5",
+        "live-translated-ax.txt" : "af74b59168a5332f6e89546f00fbf7ce9f099dad395d914d68b28e08994db483",
+        "presentation.json" : "119b07a20176b1b7a2933cf7e4157e967baf3289f2b75b70eb7e305b6d71c289",
+        "scene.json" : "1a3e35de67539956ddd3d113cf27f7c2e699f8186e05862ea9bff7226889db77"
+      },
+      "locale" : "ja",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=中国語（台湾）",
+          "       AXPopUpButton AXValue=日本語"
+        ],
+        "actualTranslationText" : "週末の小さな旅行\n小さな町を散歩する\n川辺の古い書店は、静かに来訪者をお待ちしております。\n散歩ノート\n駅から川辺まで、ゆっくり歩いて十五分です。\n午後に小さな町の通りを歩いていると、古い書店の窓辺に灯りが灯っているのを見ました。 店主は熱いお茶をご用意になり、旅の途中での私のお話をお聞きください。 帰路の際、私は川辺の小さな橋を渡りました。 静かな水面が夕暮れの空を映し出す。 橋の向こう側にカフェがあります。 窓辺で地図を広げ、次の散歩のルートを決めます。 足をゆっくりにすれば、小さな町でも新たな発見をもたらすことができます。\n文字と写真：編集部",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/ja/layout-final-02/layout-translated-ax.txt",
+        "evidenceSHA256" : "d620e73090fcc48590626ad28d1ab0c5f021b07f835e44bc69dca7d07be99a42",
+        "film" : "layout",
+        "locale" : "ja",
+        "source" : "zh-Hant",
+        "target" : "ja-JP",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/layout-final-02",
+      "film" : "layout",
+      "hashes" : {
+        "capture-demo.json" : "0d4bdc089e0f348806e95597de010284724db7ae97dc2ea0d8be5a24408eb468",
+        "capture-demo.mov" : "089724e72d8ff45c35efc6172791737cf3f9d6aaaa6413a607f9006e0e2db3d5",
+        "capture-demo.ready.json" : "9712087b16ce089e786a3b2ba569871eb1dbc85c1e32e9d11f97204d02d9ad5d",
+        "layout-translated-ax.txt" : "d620e73090fcc48590626ad28d1ab0c5f021b07f835e44bc69dca7d07be99a42",
+        "presentation.json" : "f54b686e0cc4f85f430114fd854cb8f77dacebef77e1bab896daaa17342ae487",
+        "scene.json" : "3ef21104184a5258ea962c9dea5e54b4dffa8493b81b7559b0130f606d54e1b2"
+      },
+      "locale" : "ja",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英語",
+          "       AXPopUpButton AXValue=日本語"
+        ],
+        "actualTranslationText" : "天文学者\n真鍮の鍵が必要です。\n古い望遠鏡の横で探してください。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/ja/compare-final-01/compare-restored-ax.txt",
+        "evidenceSHA256" : "ed83a5e4019c92eceae6cfa3725bb13577276ded58ed269b456854215405f7dd",
+        "film" : "compare",
+        "locale" : "ja",
+        "source" : "en-US",
+        "target" : "ja-JP",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/ja/compare-final-01",
+      "film" : "compare",
+      "hashes" : {
+        "capture-demo.json" : "ba6a31ba7594eae321de760547cc5f02da5c2d4324f52cbda52bfad322d5368c",
+        "capture-demo.mov" : "dc0d9cdad995ae0edc2369d17b42bc8ae7c3183bc89987bca7066f53e22a7ae1",
+        "capture-demo.ready.json" : "9121fce72b94f3ef189c35b76aff7aee4708c954694b244471937ac8a2ef4ea3",
+        "compare-restored-ax.txt" : "ed83a5e4019c92eceae6cfa3725bb13577276ded58ed269b456854215405f7dd",
+        "presentation.json" : "a99c9a8324cae901c8169ccb42b5ba382d8095fa813e26efb052b917f4e9552e",
+        "scene.json" : "a7f3e98bf3d01be7e9c2abbdb4dd1d496a06bcc58672865965252264dab5f1f1"
+      },
+      "locale" : "ja",
+      "posterSeconds" : 27.2,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英语",
+          "       AXPopUpButton AXValue=中文"
+        ],
+        "actualTranslationText" : "计划你的访问\n灯塔在中午开放。\n从东码头乘坐渡轮。\n最后一艘回程船六点出发。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/tour-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "76d72a44fb7101b10fbd2d39682f46a02eef947f33821b3c2d86d6dc5247b8ad",
+        "film" : "tour",
+        "locale" : "zh-Hans",
+        "source" : "en-US",
+        "target" : "zh-Hans",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/tour-final-01",
+      "film" : "tour",
+      "hashes" : {
+        "capture-demo.json" : "450c9b95e94d2b190f789697ec44220bfffc3819790caaae95ee3b22477ee45e",
+        "capture-demo.mov" : "7666ec39185bbf1d0a1f5c22f52a7ab39f2fac4607fad16ef719d71b62c70e4a",
+        "capture-demo.ready.json" : "6498e86fc25e8072eb62fe74b9f018b33c4c34b5356b663a8a1153361650462d",
+        "capture-translated-ax.txt" : "76d72a44fb7101b10fbd2d39682f46a02eef947f33821b3c2d86d6dc5247b8ad",
+        "presentation.json" : "801d2acfa049ade5c0d0548fc9db70f438fad245dcf26872c93ec80d410a0607",
+        "scene.json" : "55f3ec66674cbd31a0e00b0a04afa6fd081437a2add8943f168dc4f3d94b99ff"
+      },
+      "locale" : "zh-Hans",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英语",
+          "       AXPopUpButton AXValue=中文"
+        ],
+        "actualTranslationText" : "野外相机\n快速启动/03\n电源按钮\n01 插入电池\n打开底部的盖子。\n将电池滑入，直到咔嗒一声。\n02 打开你的相机\n按住电源按钮两秒钟。\n电池\n拍摄时请取下镜头盖。\n谨慎\n灯闪烁时，不要拆下电池。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/capture-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "4eb74aa360665ff3417a1b65c7a8e55ac5977d9480d46cb764c96585fe25cb19",
+        "film" : "capture",
+        "locale" : "zh-Hans",
+        "source" : "en-US",
+        "target" : "zh-Hans",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/capture-final-01",
+      "film" : "capture",
+      "hashes" : {
+        "capture-demo.json" : "94997643f34f803933ce8c017dd262c810f736aae93afbc0f407c79a9a433619",
+        "capture-demo.mov" : "2058dc35e2a49f36f2aeda235c53fc74c2b09b0ed52efd5315c51724838c7d48",
+        "capture-demo.ready.json" : "f1ea698a6ed9f33141807604d0c8c5ca041bd1abc84fa7dfcd7d211205c25b02",
+        "capture-translated-ax.txt" : "4eb74aa360665ff3417a1b65c7a8e55ac5977d9480d46cb764c96585fe25cb19",
+        "presentation.json" : "4dac12d1849f8f355c166cb9bbc56fd8bd2edcf0d0229be9e66898319d55cdfe",
+        "scene.json" : "dc056e81176370332a94dfb34e9c127850aa1913db4bff159c12376eca7e3e2b"
+      },
+      "locale" : "zh-Hans",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英语",
+          "       AXPopUpButton AXValue=中文"
+        ],
+        "actualTranslationText" : "当物体挡住光线时，就形成了阴影。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/live-final-01/live-translated-ax.txt",
+        "evidenceSHA256" : "7bc369dd02a4d76e325af2249830119c647bbe00828c16b66c9c7340e85af0de",
+        "film" : "live",
+        "locale" : "zh-Hans",
+        "source" : "en-US",
+        "target" : "zh-Hans",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/live-final-01",
+      "film" : "live",
+      "hashes" : {
+        "capture-demo.json" : "68ee906e634e2861c01f0060db9dc9dcb077c4c24a8d506949416b83ca783abe",
+        "capture-demo.mov" : "283825a6ee8d177b05a00ee4af681a14add22a87ecfaa2dae64c65e38499707c",
+        "capture-demo.ready.json" : "0586ceca7ded5dcdbc2096f94141de35cf35656585664752f816b3b7726cf9aa",
+        "live-translated-ax.txt" : "7bc369dd02a4d76e325af2249830119c647bbe00828c16b66c9c7340e85af0de",
+        "presentation.json" : "0965a9a6dd22c452a905d8ce3b38e1d22b0febe94e720b46206666ad50df02d0",
+        "scene.json" : "a9ce19fde4a1800ec8b4c08b0b57685068da1a620a6f65570fc1982f56d2774d"
+      },
+      "locale" : "zh-Hans",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=日语",
+          "       AXPopUpButton AXValue=中文"
+        ],
+        "actualTranslationText" : "在街上散步\n周末的小旅行\n沿河残留着的旧书店的风景。\n散步的备忘录\n从车站到河边，慢慢的十五分钟。\n走在雨后的街道上，可以看到旧书店的窗户上的灯光。 店主准备了热茶，听了旅行的故事。 回去的路上过了河边的桥。 寂静的水面映照着傍晚的天空。 桥的对面有一家小咖啡店。 在靠窗的座位上展开地图，决定接下来要走的路。 不着急走的话，在平常的街道上也有新的发现。\n文章和照片：编辑部",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/layout-final-01/layout-translated-ax.txt",
+        "evidenceSHA256" : "74df77118ca8f83f8bbb44ec203cabf93ee249fb8e8c04be3f6d887162565f7a",
+        "film" : "layout",
+        "locale" : "zh-Hans",
+        "source" : "ja-JP",
+        "target" : "zh-Hans",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/layout-final-01",
+      "film" : "layout",
+      "hashes" : {
+        "capture-demo.json" : "813c3d7b35ca1ae530bffbe19f03053130ecdf96f27fb8a80356d8ff2be3c79d",
+        "capture-demo.mov" : "922489fc6a4619e7d5ea5c6ebf90f184d642c4377b8b21c80eb896a67ea73055",
+        "capture-demo.ready.json" : "6bcb32b39f1003397adbf314282886307e36c802d0d79462eead835dd736b4e4",
+        "layout-translated-ax.txt" : "74df77118ca8f83f8bbb44ec203cabf93ee249fb8e8c04be3f6d887162565f7a",
+        "presentation.json" : "ca329e7fe4761a629f62c338d8930a76370276af7a5cacade9063b5f9afe1eff",
+        "scene.json" : "fc7dcd3e6d00b24a75246272f7da132e0916ec7381a99956b0307513729a414b"
+      },
+      "locale" : "zh-Hans",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英语",
+          "       AXPopUpButton AXValue=中文"
+        ],
+        "actualTranslationText" : "天文学家\n你将需要黄铜钥匙。\n在旧望远镜旁边找它。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/compare-final-01/compare-restored-ax.txt",
+        "evidenceSHA256" : "27dc313e93edec90fc4c8eb349b86ce13fec3dd527e97055fc95637ac06d7b38",
+        "film" : "compare",
+        "locale" : "zh-Hans",
+        "source" : "en-US",
+        "target" : "zh-Hans",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hans/compare-final-01",
+      "film" : "compare",
+      "hashes" : {
+        "capture-demo.json" : "4c27f1483b9ad777944f4040779a06865c70a9721a763a9fd4dab283ee45ed07",
+        "capture-demo.mov" : "f31d5971753b78da515f5ac89fa6ada8bbe431a2309e7b65b157b9d9c1553863",
+        "capture-demo.ready.json" : "d80faf43985cfe94ba16bfbf20cb6e9c0fa0af8aafc3b3a754062c2d3cd828c4",
+        "compare-restored-ax.txt" : "27dc313e93edec90fc4c8eb349b86ce13fec3dd527e97055fc95637ac06d7b38",
+        "presentation.json" : "f20bcf0c9b36e2ce3e1f9b04ca56c51222c7b7a8aa9f340f3365ac2b2f44f0a2",
+        "scene.json" : "cd43bad55322dc1ba391a2f80b58c5c708f367d1f06b0a7650d95f3b7216b35c"
+      },
+      "locale" : "zh-Hans",
+      "posterSeconds" : 27.3,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英文",
+          "       AXPopUpButton AXValue=中文（台灣）"
+        ],
+        "actualTranslationText" : "計劃你的訪問\n燈塔在中午開放。\n從東碼頭乘坐渡輪。\n最後一艘回程船六點出發。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/tour-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "d292732d9d6de9504f4fc0d001d63229d1ca7417d7228f7d3ebcdd88b39e3d4b",
+        "film" : "tour",
+        "locale" : "zh-Hant",
+        "source" : "en-US",
+        "target" : "zh-Hant",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/tour-final-01",
+      "film" : "tour",
+      "hashes" : {
+        "capture-demo.json" : "b9d04e33bf417af9da15c15e6d094dab195c1e613e68dfe6318fa5fff1c79b4f",
+        "capture-demo.mov" : "49976e78983ff87bcf34dbc44d1bd19ab17a628da7ca5931b604632b5b96268c",
+        "capture-demo.ready.json" : "0011a360c617b9c35b1456ef91c3b119271f059d8fcf1c79456e2c29c08fce28",
+        "capture-translated-ax.txt" : "d292732d9d6de9504f4fc0d001d63229d1ca7417d7228f7d3ebcdd88b39e3d4b",
+        "presentation.json" : "b0be21addbb0d2d2d41896f2879d741ff8e48188f4bb173f274d07e4b631d4ec",
+        "scene.json" : "e7b3019d891ff43ed146bcdd844cb705970dfbee28f258b2fc927649bb6021e9"
+      },
+      "locale" : "zh-Hant",
+      "posterSeconds" : 10,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英文",
+          "       AXPopUpButton AXValue=中文（台灣）"
+        ],
+        "actualTranslationText" : "野戰相機\n快速啟動/03\n電源按鈕\n01 插入電池\n開啟底部的蓋子。\n將電池滑入，直到咔嗒一聲。\n02 開啟你的相機\n按住電源按鈕兩秒鐘。\n電池\n拍攝時請取下鏡頭蓋。\n謹慎\n燈閃爍時，不要拆下電池。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/capture-final-01/capture-translated-ax.txt",
+        "evidenceSHA256" : "f1f17218993eea5fdac73ad375dacceeb298af73d40a2729cfa7254c00c887e8",
+        "film" : "capture",
+        "locale" : "zh-Hant",
+        "source" : "en-US",
+        "target" : "zh-Hant",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/capture-final-01",
+      "film" : "capture",
+      "hashes" : {
+        "capture-demo.json" : "5cc47ad5fb8d29458a42dff07b5fb69c6fe4fd533b9b476c5c1e6f7b8b2f9e0c",
+        "capture-demo.mov" : "515d054750fd899533b28cd445e03979e6cca34249171c26feb910d8ba05d4e0",
+        "capture-demo.ready.json" : "36d8ccef39a1264a0509a83fd5931c5f5667ddec5a6853b3be5e6e129e319f80",
+        "capture-translated-ax.txt" : "f1f17218993eea5fdac73ad375dacceeb298af73d40a2729cfa7254c00c887e8",
+        "presentation.json" : "317f13902209c7f9270590486122f99b4967ebc53537d1df8a1a792d159f4736",
+        "scene.json" : "cd7665e35c8d4bc6895af199452152261fbc58ff60d06534a5d2673cd6091e6f"
+      },
+      "locale" : "zh-Hant",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英文",
+          "       AXPopUpButton AXValue=中文（台灣）"
+        ],
+        "actualTranslationText" : "當物體擋住光線時，就會形成陰影。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/live-final-01/live-translated-ax.txt",
+        "evidenceSHA256" : "9caeb4fac516abcf91f2a1bb657d8b111185ab5f61e1fe4afb8bfaa72c51731c",
+        "film" : "live",
+        "locale" : "zh-Hant",
+        "source" : "en-US",
+        "target" : "zh-Hant",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/live-final-01",
+      "film" : "live",
+      "hashes" : {
+        "capture-demo.json" : "cb6a231a5b4f93c0ef8a2ae89b704685120cec16b210918f6ca080015789ff67",
+        "capture-demo.mov" : "bd4e033e3049e00a1885e4607e1a5f347d715c91a56f7e4956808e2a9722e340",
+        "capture-demo.ready.json" : "d1f3cacf03115b76a782bb0d6ce4e1778dd2f7bdb4e9d3f0ce2b6eced79c720d",
+        "live-translated-ax.txt" : "9caeb4fac516abcf91f2a1bb657d8b111185ab5f61e1fe4afb8bfaa72c51731c",
+        "presentation.json" : "8f50ad6ab7e7a2d7fa8021d55801c3d0100ec182cdd79000c7b6dcdc23b7d3c1",
+        "scene.json" : "4fe43588854a83c02efdf00fa22f8a59ba81f3ba757721ae6243587432bab7cf"
+      },
+      "locale" : "zh-Hant",
+      "posterSeconds" : 18,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=日文",
+          "       AXPopUpButton AXValue=中文（台灣）"
+        ],
+        "actualTranslationText" : "在街上散步\n週末的小旅行\n河邊殘留著的舊書店的風景。\n散步的備忘錄\n從車站到河邊，悠閒地15分鐘。\n走在雨後的街道上，老書店的窗戶裡看到了燈光。 店主準備了熱茶，聽了旅行的故事。 回去的路上過了河邊的橋。 安靜的水面映照著傍晚的天空。 橋的對面有一家小咖啡店。 在靠窗的座位上展開地圖，決定接下來要走的路。 不著急走的話，平常的小鎮也有新的發現。\n文章和照片：編輯部",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/layout-final-01/layout-translated-ax.txt",
+        "evidenceSHA256" : "62d4b126a4d89f34cd2e75492bba3cca9720fae7fab9552f0f5f0a835830b77e",
+        "film" : "layout",
+        "locale" : "zh-Hant",
+        "source" : "ja-JP",
+        "target" : "zh-Hant",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/layout-final-01",
+      "film" : "layout",
+      "hashes" : {
+        "capture-demo.json" : "b2550ffb4c7d02a1286ac125cfb67440d2c6c096a816dce3753675f9db2b944e",
+        "capture-demo.mov" : "274fd2d3b89f3aa0a182b1cc4d56c2147256cd50f997850788602924c52a2357",
+        "capture-demo.ready.json" : "24189baceec52b00abb6ec4bbbb5707c10e95a8f7085f7352bd92d042e91909d",
+        "layout-translated-ax.txt" : "62d4b126a4d89f34cd2e75492bba3cca9720fae7fab9552f0f5f0a835830b77e",
+        "presentation.json" : "e0a95d8590d02e1e25742535af9f7c8a16e6ceeda90aca7dc8a011c1cd398fbb",
+        "scene.json" : "641ef82d852d10b4a94e4cde7aeb900641e91261e2274c0d440d084177e4deaf"
+      },
+      "locale" : "zh-Hant",
+      "posterSeconds" : 14,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    },
+    {
+      "actualLanguageEvidence" : {
+        "actualLanguagePickerValues" : [
+          "       AXPopUpButton AXValue=英文",
+          "       AXPopUpButton AXValue=中文（台灣）"
+        ],
+        "actualTranslationText" : "天文學家\n你將需要黃銅鑰匙。\n在舊望遠鏡旁邊找它。",
+        "evidenceFile" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/compare-final-01/compare-restored-ax.txt",
+        "evidenceSHA256" : "bf080a144da777225f7019cbbda0516a6d80d1fde986ffe4f5ce34292a20b865",
+        "film" : "compare",
+        "locale" : "zh-Hant",
+        "source" : "en-US",
+        "target" : "zh-Hant",
+        "targetMatchesUI" : true
+      },
+      "directory" : "DerivedData/QA/tart-share/locale-output-2.10/zh-Hant/compare-final-01",
+      "film" : "compare",
+      "hashes" : {
+        "capture-demo.json" : "e5b36de6504988866ba6597083e0bb2b896613d156922ffca12f1f86bd0bb403",
+        "capture-demo.mov" : "c645adcaca65108566ab24458733a3dc6a50c95278fe8f47947ab4f7dc864ccf",
+        "capture-demo.ready.json" : "757866bd7a373b6a6d6078917a5191afdab0cd17b99997a5072148406f3d82a3",
+        "compare-restored-ax.txt" : "bf080a144da777225f7019cbbda0516a6d80d1fde986ffe4f5ce34292a20b865",
+        "presentation.json" : "1c0fc25dcaff9a5f653509697f8ae1ff8804a415e511677bf69dbc1611ffd7d6",
+        "scene.json" : "f24e8b6dec0dd2a0962d39811b7465b72f36be2e79ef5d8259f3bba982497f21"
+      },
+      "locale" : "zh-Hant",
+      "posterSeconds" : 27.1,
+      "review" : "DemoLab/Edits/page-language-2.10-review.md",
+      "reviewSHA256" : "a07c8e9756d7376571a1bbb15a70f63f5cf3ebc06c883989ee22f665e82c717f"
+    }
+  ]
+}

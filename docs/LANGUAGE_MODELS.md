@@ -1,3 +1,7 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](LANGUAGE_MODELS.md) · [한국어](ko/LANGUAGE_MODELS.md) · [日本語](ja/LANGUAGE_MODELS.md) · [简体中文](zh-Hans/LANGUAGE_MODELS.md) · [繁體中文](zh-Hant/LANGUAGE_MODELS.md)
+<!-- LANGUAGE-LINKS:END -->
+
 <!--
 SPDX-FileCopyrightText: 2026 Dmitry Karasev and contributors
 SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
@@ -15,14 +19,14 @@ If translation is failing with "Unable to translate":
 2. Go to **General** → **Language & Region**
 3. Scroll to **Translation Languages…** near the bottom
 4. Click **Download** next to any language you want to translate
-5. Wait for the download to complete (1–5 minutes per language)
+5. Wait for the download to complete
 6. Relaunch SwiftyCrow and try translating again
 
 ## Understanding Translation Models
 
 - **What are they?** Language models are software files that teach your Mac how to translate text. Each language pair (e.g., English → Spanish) requires models to be installed.
 - **Where do they live?** On your Mac's disk, managed by macOS. Translation happens fully offline with no cloud services.
-- **How much space?** Each language model is 1–3 GB. The total depends on how many languages you install.
+- **How much space?** Download size depends on the language and model. Install the languages you use and remove unused downloads when you need disk space.
 - **Do I need both source and target?** Yes. If you translate English text to Spanish, you need both English and Spanish models installed.
 
 ## Step-by-Step Installation
@@ -95,12 +99,12 @@ To confirm a language model is installed:
 
 ### Out of disk space after installing models
 
-**Problem:** Language models take up 1–3 GB each. Multiple languages can use a lot of space.
+**Problem:** Downloaded language models use local storage. The total depends on the languages and models installed.
 
 **Solution:**
 1. Go to System Settings → General → Language & Region → Translation Languages…
 2. Click **Remove** next to languages you don't actively use
-3. This frees up disk space without affecting any other part of your Mac
+3. This removes the local translation download for that language
 4. You can always download them again later
 
 ### Slow translation, or Low Latency vs. High Fidelity

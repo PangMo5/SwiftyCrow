@@ -1,0 +1,76 @@
+{
+  "captureEpochUptimeNanoseconds" : 1988994336833,
+  "durationSeconds" : 20.066666666,
+  "events" : [
+    {
+      "end" : 13.481425958000045,
+      "id" : "capture.chapter",
+      "start" : 0,
+      "track" : "chapter"
+    },
+    {
+      "end" : 20.066666666,
+      "id" : "capture.chapter",
+      "start" : 16.794598041999961,
+      "track" : "chapter"
+    },
+    {
+      "end" : 2.4303835829998661,
+      "id" : "capture.intro",
+      "start" : 0,
+      "track" : "caption"
+    },
+    {
+      "end" : 8.0733965829999761,
+      "id" : "capture.select",
+      "start" : 2.4303835829998661,
+      "track" : "caption"
+    },
+    {
+      "end" : 11.382029916999954,
+      "id" : "capture.translated",
+      "start" : 8.0733965829999761,
+      "track" : "caption"
+    },
+    {
+      "end" : 16.794648124999867,
+      "id" : "capture.copy",
+      "start" : 11.382029916999954,
+      "track" : "caption"
+    },
+    {
+      "end" : 20.066666666,
+      "id" : "capture.pasted",
+      "start" : 16.794648124999867,
+      "track" : "caption"
+    },
+    {
+      "chord" : "shift + cmd - 1",
+      "end" : 4.4304326249998667,
+      "start" : 2.4304326249998667,
+      "track" : "keys"
+    },
+    {
+      "chord" : "cmd - 0",
+      "end" : 9.5406210829999054,
+      "start" : 7.5406210829999054,
+      "track" : "keys"
+    },
+    {
+      "chord" : "cmd - c",
+      "end" : 13.382513625000001,
+      "start" : 11.382513625000001,
+      "track" : "keys"
+    },
+    {
+      "chord" : "cmd - n",
+      "end" : 15.481484541999862,
+      "start" : 13.481484541999862,
+      "track" : "keys"
+    }
+  ],
+  "film" : "capture",
+  "scenariosSHA256" : "598e8f2cc3ad963a91f03a86a82cf41d10912c1661ebcbed9659a0e28d651257",
+  "schemaVersion" : 1,
+  "uiLanguage" : "en"
+}

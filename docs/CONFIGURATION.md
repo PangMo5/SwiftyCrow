@@ -1,4 +1,10 @@
+<!-- LANGUAGE-LINKS:START -->
+[English](CONFIGURATION.md) · [한국어](ko/CONFIGURATION.md) · [日本語](ja/CONFIGURATION.md) · [简体中文](zh-Hans/CONFIGURATION.md) · [繁體中文](zh-Hant/CONFIGURATION.md)
+<!-- LANGUAGE-LINKS:END -->
+
 # Configuration
+
+This reference follows `main`. For a released version, read this file in its matching [release tag](https://github.com/PangMo5/SwiftyCrow/tags).
 
 SwiftyCrow reads its configuration from:
 
@@ -8,9 +14,7 @@ SwiftyCrow reads its configuration from:
 
 The path is XDG-aware. If `$XDG_CONFIG_HOME` is set, the file lives at
 `$XDG_CONFIG_HOME/SwiftyCrow/config.toml`. The file is created on first launch
-and written back whenever you change something in the app. Hand edits are
-picked up on the next launch, so you can keep it in your dotfiles and edit it
-in your editor.
+and written back whenever you change something in the app. Changes made in your editor are also picked up while the app is running.
 
 Settings are grouped into tables that mirror the in-app Settings panes:
 
@@ -38,7 +42,7 @@ cmd + ctrl + shift + alt - z
 
 Modifiers: `cmd`, `ctrl`, `alt` (option), `shift`. Keys are letters, digits,
 `tab`, `return`, `space`, arrow keys (`left`/`right`/`up`/`down`), punctuation,
-etc. Omit a key to leave that action unbound.
+etc. Use an empty string to leave an action unbound.
 
 Live capture adapts automatically: it checks frequently while content changes
 and slows down when the screen is still. OCR runs only for changed pixels or
@@ -48,7 +52,7 @@ The former `[capture].interval` setting is ignored and omitted on the next save.
 ## `[languages]`
 
 A nested table per side, each holding a BCP-47 language `code`. The lists
-available in the app are the languages installed on your Mac.
+available in the app are supported by macOS; source languages must also support OCR. Models for your chosen pair need to be downloaded separately.
 
 ```toml
 [languages.source]
@@ -65,17 +69,9 @@ code = "ko-KR"
 
 ## `[overlay]`
 
-The overlay is no longer a persistent window you toggle on. You place it by
-selecting a region or window (menu bar → **Live overlay…**, or the `liveOverlay`
-shortcut), and it starts translating live right away. It always lets clicks pass
-through to the apps below. Use its built-in **LIVE** handle to pause or resume and
-the **×** button to close it.
+Click **Live translation** in the menu bar or use the `liveOverlay` shortcut to select a region or window. Clicking the button again chooses a new area. The translation area lets clicks pass through to the app below; controls, resize edges, and an open information popover receive input. Use **LIVE** to pause or resume and **×** to close it.
 
-Once you've placed it, the region is remembered. The `toggleLiveOverlay`
-shortcut (or menu bar → **Show on last region** / **Hide overlay**) flips the
-overlay on and off over that same region without dragging again. Hiding it stops
-all capture and translation. Showing it re-places on the remembered region and
-goes live. That's the "predefine an area, then translate it on demand" flow.
+The `toggleLiveOverlay` shortcut and the **Show overlay** switch show or hide translation in the selected area. Turning it off stops capture and translation. Turning it back on uses the remembered area. The switch is disabled until an area has been selected; the shortcut does nothing without a saved area.
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -84,8 +80,7 @@ goes live. That's the "predefine an area, then translate it on demand" flow.
 
 ## `[shortcuts]`
 
-All values are skhd-style shortcut strings (see above). Omit a global key to
-leave that action unbound (the default).
+All values are skhd-style shortcut strings (see above). Capture defaults to ⇧⌘1 and live area selection to ⇧⌘2, including when those keys are omitted from the configuration. Explicit custom bindings are preserved. An empty string clears any shortcut, including its default.
 
 **Global hotkeys:** Fire even when the app is in the background.
 

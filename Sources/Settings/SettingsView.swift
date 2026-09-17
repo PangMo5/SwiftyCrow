@@ -12,22 +12,24 @@ import SwiftUI
 /// form per pane on the right. Mirrors the sibling Tatami / Amado apps.
 struct SettingsView: View {
 
-  // MARK: Internal
-
   let store: StoreOf<SettingsFeature>
 
   var body: some View {
     NavigationSplitView {
       // `id: \.self` so the ForEach id type matches the optional selection
       // type — macOS only wires the selection gesture when they line up.
-      List(Pane.allCases, id: \.self, selection: $pane) { pane in
+      List(
+        SettingsPane.allCases,
+        id: \.self,
+        selection: Binding(get: { Optional(store.pane) }, set: { if let pane = $0 { store.send(.paneSelected(pane)) } })
+      ) { pane in
         Label(pane.title, systemImage: pane.icon)
       }
       .listStyle(.sidebar)
       .navigationSplitViewColumnWidth(min: 170, ideal: 190)
     } detail: {
       Form {
-        switch pane ?? .general {
+        switch store.pane {
         case .general: GeneralSection(store: store)
         case .languages: LanguagesSection(store: store)
         case .translation: TranslationSection()
@@ -38,55 +40,57 @@ struct SettingsView: View {
         }
       }
       .formStyle(.grouped)
-      .navigationTitle((pane ?? .general).title)
+      .navigationTitle(Text((store.pane).title))
     }
     .frame(minWidth: 640, minHeight: 460)
-    .task { store.send(.task) }
+    .task { await store.send(.task).finish() }
+    .onDisappear { store.send(.taskEnded) }
   }
 
   // MARK: Private
 
-  private enum Pane: String, CaseIterable, Identifiable {
-    case general
-    case languages
-    case translation
-    case overlay
-    case shortcuts
-    case updates
-    case about
+}
 
-    // MARK: Internal
+// MARK: - SettingsPane
 
-    var id: String {
-      rawValue
-    }
+enum SettingsPane: String, CaseIterable, Identifiable {
+  case general
+  case languages
+  case translation
+  case overlay
+  case shortcuts
+  case updates
+  case about
 
-    var title: String {
-      switch self {
-      case .general: "General"
-      case .languages: "Languages"
-      case .translation: "Translation"
-      case .overlay: "Overlay"
-      case .shortcuts: "Shortcuts"
-      case .updates: "Updates"
-      case .about: "About"
-      }
-    }
+  // MARK: Internal
 
-    var icon: String {
-      switch self {
-      case .general: "gearshape"
-      case .languages: "globe"
-      case .translation: "character.bubble"
-      case .overlay: "rectangle.dashed"
-      case .shortcuts: "command"
-      case .updates: "arrow.down.circle"
-      case .about: "info.circle"
-      }
+  var id: String {
+    rawValue
+  }
+
+  var title: LocalizedStringResource {
+    switch self {
+    case .general: "General"
+    case .languages: "Languages"
+    case .translation: "Translation"
+    case .overlay: "Overlay"
+    case .shortcuts: "Shortcuts"
+    case .updates: "Updates"
+    case .about: "About"
     }
   }
 
-  @State private var pane: Pane? = .general
+  var icon: String {
+    switch self {
+    case .general: "gearshape"
+    case .languages: "globe"
+    case .translation: "character.bubble"
+    case .overlay: "rectangle.dashed"
+    case .shortcuts: "command"
+    case .updates: "arrow.down.circle"
+    case .about: "info.circle"
+    }
+  }
 }
 
 // MARK: - GeneralSection
@@ -105,6 +109,17 @@ private struct GeneralSection: View {
       }
     } header: {
       Text("General")
+    }
+    Section("Permissions") {
+      ScreenRecordingPermissionRow(
+        granted: store.hasScreenRecording,
+        isRequesting: store.isRequestingAccess,
+        grant: { store.send(.grantScreenRecordingTapped) },
+        openSettings: { store.send(.openScreenRecordingSettingsTapped) }
+      )
+      if !store.hasScreenRecording {
+        PermissionRelaunchNotice(isRelaunching: store.isRelaunching, error: store.relaunchError) { store.send(.relaunchTapped) }
+      }
     }
   }
 }
@@ -147,6 +162,9 @@ private struct LanguagesSection: View {
 // MARK: - TranslationSection
 
 private struct TranslationSection: View {
+
+  // MARK: Internal
+
   var body: some View {
     Section {
       Picker("Preferred strategy", selection: Binding($settings.translation.strategy)) {
@@ -164,6 +182,8 @@ private struct TranslationSection: View {
       .foregroundStyle(.secondary)
     }
   }
+
+  // MARK: Private
 
   @Shared(.settings) private var settings
 
@@ -187,7 +207,7 @@ private struct OverlaySection: View {
       Text("Overlay")
     } footer: {
       Text(
-        "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The overlay always lets clicks pass through to the apps below."
+        "Start a live overlay from the menu bar or the Live overlay shortcut, then drag to select a region (press Space to pick a window). In-place draws the translation over the text; Window keeps the overlay a thin region frame and shows the translation in a separate window. The translation area lets clicks pass through; controls and an open information popover receive input."
       )
       .font(.caption)
       .foregroundStyle(.secondary)
@@ -204,15 +224,13 @@ private struct OverlaySection: View {
 
 private struct ShortcutsSection: View {
 
-  // MARK: Internal
-
   var body: some View {
     Section {
-      recorder("Capture region", \.selectRegion)
-      recorder("Live overlay (select a region)", \.liveOverlay)
-      recorder("Show / hide overlay (last region)", \.toggleLiveOverlay)
-      recorder("Pause / resume Live", \.toggleLive)
-      recorder("Switch display (In-place / Window)", \.toggleLiveMode)
+      ShortcutSettingRow("Capture region", \.selectRegion)
+      ShortcutSettingRow("Live overlay (select a region)", \.liveOverlay)
+      ShortcutSettingRow("Show / hide overlay (last region)", \.toggleLiveOverlay)
+      ShortcutSettingRow("Pause / resume Live", \.toggleLive)
+      ShortcutSettingRow("Switch display (In-place / Window)", \.toggleLiveMode)
     } header: {
       Text("Global Shortcuts")
     } footer: {
@@ -222,10 +240,10 @@ private struct ShortcutsSection: View {
     }
 
     Section {
-      recorder("Save image", \.regionSave)
-      recorder("Copy image", \.regionCopyImage)
-      recorder("Copy original text", \.regionCopyOriginal)
-      recorder("Copy translation", \.regionCopyTranslation)
+      ShortcutSettingRow("Save image", \.regionSave)
+      ShortcutSettingRow("Copy image", \.regionCopyImage)
+      ShortcutSettingRow("Copy original text", \.regionCopyOriginal)
+      ShortcutSettingRow("Copy translation", \.regionCopyTranslation)
     } header: {
       Text("Capture Window")
     } footer: {
@@ -235,11 +253,23 @@ private struct ShortcutsSection: View {
     }
   }
 
-  // MARK: Private
+}
 
-  /// Action name + key path for every recordable shortcut, used both to detect
-  /// conflicts and to name the offending action in the recorder.
-  private static let allShortcuts: [(title: String, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
+// MARK: - ShortcutSettingRow
+
+/// Shared by Settings and Quick Setup so recording, persistence, and conflicts agree.
+struct ShortcutSettingRow: View {
+
+  // MARK: Lifecycle
+
+  init(_ title: LocalizedStringResource, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) {
+    self.title = title
+    self.keyPath = keyPath
+  }
+
+  // MARK: Internal
+
+  static let allShortcuts: [(title: LocalizedStringResource, keyPath: WritableKeyPath<ShortcutSettings, HotKey?>)] = [
     ("Capture region", \.selectRegion),
     ("Live overlay", \.liveOverlay),
     ("Show / hide overlay", \.toggleLiveOverlay),
@@ -251,25 +281,28 @@ private struct ShortcutsSection: View {
     ("Copy translation", \.regionCopyTranslation),
   ]
 
-  @Shared(.settings) private var settings
+  let title: LocalizedStringResource
+  let keyPath: WritableKeyPath<ShortcutSettings, HotKey?>
 
-  private func recorder(_ title: String, _ keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> some View {
-    LabeledContent(title) {
-      ShortcutRecorder(
-        hotKey: settings.shortcuts[keyPath: keyPath],
-        conflict: { candidate in conflictTitle(for: candidate, excluding: keyPath) }
-      ) { hotKey in
+  var body: some View {
+    HStack(spacing: 16) {
+      Text(title)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+      ShortcutRecorder(hotKey: settings.shortcuts[keyPath: keyPath], accessibilityLabel: title, conflict: { candidate in
+        Self.allShortcuts.first { $0.keyPath != keyPath && settings.shortcuts[keyPath: $0.keyPath] == candidate }
+          .map { String(localized: $0.title) }
+      }) { hotKey in
         $settings.withLock { $0.shortcuts[keyPath: keyPath] = hotKey }
       }
+      .fixedSize()
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// The name of another action already bound to `candidate`, or nil if free.
-  private func conflictTitle(for candidate: HotKey, excluding keyPath: WritableKeyPath<ShortcutSettings, HotKey?>) -> String? {
-    Self.allShortcuts.first { entry in
-      entry.keyPath != keyPath && settings.shortcuts[keyPath: entry.keyPath] == candidate
-    }?.title
-  }
+  // MARK: Private
+
+  @Shared(.settings) private var settings
 
 }
 
@@ -326,7 +359,7 @@ private struct AboutSection: View {
         VStack(alignment: .leading, spacing: 2) {
           Text("SwiftyCrow")
             .font(.title2.weight(.semibold))
-          Text("On-device screen translator")
+          Text("Translate anything on your screen.\nEntirely on your Mac.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -340,7 +373,12 @@ private struct AboutSection: View {
         Link("PangMo5", destination: URL(string: "https://github.com/PangMo5")!)
       }
       Link("Source Code", destination: URL(string: "https://github.com/PangMo5/SwiftyCrow")!)
+      Button("View Changelog…") { showsChangelog = true }
+        .buttonStyle(.link)
+        .accessibilityIdentifier("about-changelog")
     }
+
+    .sheet(isPresented: $showsChangelog) { BundledDocumentView(document: .changelog) }
 
     Section("Legal") {
       LabeledContent("Copyright", value: "© 2021–2026 PangMo5 and contributors")
@@ -350,7 +388,7 @@ private struct AboutSection: View {
       .font(.caption)
       .foregroundStyle(.secondary)
 
-      ForEach(LegalDocument.allCases) { document in
+      ForEach([BundledDocument.license, .thirdPartyNotices]) { document in
         Button {
           presentedDocument = document
         } label: {
@@ -360,7 +398,7 @@ private struct AboutSection: View {
       }
     }
     .sheet(item: $presentedDocument) { document in
-      LegalDocumentView(document: document)
+      BundledDocumentView(document: document)
     }
 
     Section("Built with") {
@@ -384,118 +422,16 @@ private struct AboutSection: View {
   /// Marketing version + build number from the app bundle, e.g. "2.1.0 (42)".
   private static let appVersion: String = {
     let info = Bundle.main.infoDictionary
-    let short = info?["CFBundleShortVersionString"] as? String ?? "\u{2014}"
-    let build = info?["CFBundleVersion"] as? String ?? "\u{2014}"
+    let short = info?["CFBundleShortVersionString"] as? String ?? String(localized: "Unknown")
+    let build = info?["CFBundleVersion"] as? String ?? String(localized: "Unknown")
     return "\(short) (\(build))"
   }()
 
-  @State private var presentedDocument: LegalDocument?
+  @State private var presentedDocument: BundledDocument?
+  @State private var showsChangelog = false
 
   private func creditLink(_ title: String, _ urlString: String) -> some View {
     Link(title, destination: URL(string: urlString)!)
   }
-
-}
-
-// MARK: - LegalDocument
-
-/// A legal document shipped in the app bundle and presented without relying on
-/// Launch Services or an external text editor.
-private enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
-  case license
-  case thirdPartyNotices
-
-  // MARK: Internal
-
-  var id: Self {
-    self
-  }
-
-  var title: LocalizedStringResource {
-    switch self {
-    case .license: "License (AGPL-3.0-only)"
-    case .thirdPartyNotices: "Third-Party Notices"
-    }
-  }
-
-  func loadContents() async throws -> String {
-    let resource = resource
-    guard
-      let url = Bundle.main.url(
-        forResource: resource.name,
-        withExtension: resource.extension
-      )
-    else {
-      throw CocoaError(.fileNoSuchFile)
-    }
-
-    return try await Task.detached(priority: .userInitiated) {
-      try String(contentsOf: url, encoding: .utf8)
-    }.value
-  }
-
-  // MARK: Private
-
-  private var resource: (name: String, extension: String?) {
-    switch self {
-    case .license: ("LICENSE", nil)
-    case .thirdPartyNotices: ("THIRD_PARTY_NOTICES", "md")
-    }
-  }
-}
-
-// MARK: - LegalDocumentView
-
-private struct LegalDocumentView: View {
-
-  // MARK: Internal
-
-  let document: LegalDocument
-
-  var body: some View {
-    NavigationStack {
-      Group {
-        if let contents {
-          ScrollView {
-            Text(contents)
-              .font(.system(.body, design: .monospaced))
-              .textSelection(.enabled)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding()
-          }
-        } else if let loadErrorMessage {
-          ContentUnavailableView(
-            "Unable to Open Document",
-            systemImage: "doc.badge.exclamationmark",
-            description: Text(loadErrorMessage)
-          )
-        } else {
-          ProgressView("Loading document…")
-        }
-      }
-      .navigationTitle(Text(document.title))
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done") {
-            dismiss()
-          }
-        }
-      }
-    }
-    .frame(minWidth: 680, minHeight: 520)
-    .task(id: document.id) {
-      do {
-        contents = try await document.loadContents()
-      } catch {
-        loadErrorMessage = error.localizedDescription
-      }
-    }
-  }
-
-  // MARK: Private
-
-  @Environment(\.dismiss) private var dismiss
-  @State private var contents: String?
-  @State private var loadErrorMessage: String?
 
 }

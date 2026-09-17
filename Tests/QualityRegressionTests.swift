@@ -11,6 +11,48 @@ import Testing
 @Suite("Quality audit regressions")
 struct QualityRegressionTests {
   @Test
+  func resampledGlyphFringesDoNotBecomeBackgroundTexture() throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 180,
+      height: 80,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 0.98, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 180, height: 80))
+    for x in stride(from: 28, to: 155, by: 16) {
+      // Two gray edge pixels simulate enlarged, antialiased black glyphs.
+      context.setFillColor(CGColor(gray: 0.75, alpha: 1))
+      context.fill(CGRect(x: x - 2, y: 22, width: 12, height: 36))
+      context.setFillColor(CGColor(gray: 0.02, alpha: 1))
+      context.fill(CGRect(x: x, y: 24, width: 8, height: 32))
+    }
+    let appearance = OverlaySourceAppearance(
+      background: OverlayColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1),
+      foreground: OverlayColor(red: 0.02, green: 0.02, blue: 0.02, alpha: 1),
+      confidence: 1
+    )
+    let box = CGRect(x: 20.0 / 180, y: 0.25, width: 140.0 / 180, height: 0.5)
+    let line = OCRResult.Line(
+      boundingBoxNormalized: box,
+      text: "We still have time.",
+      appearance: appearance,
+      replacementPatches: [OverlaySourcePatch(box: box, appearance: appearance)]
+    )
+    let result = SourceRestorationBuilder.applying(
+      to: OCRResult(lines: [line]),
+      image: try #require(context.makeImage())
+    )
+    let patch = try #require(result.lines.first?.replacementPatches.first)
+    #expect(patch.restorationPNG == nil)
+    expectNoDifference(patch.appearance.background, appearance.background)
+    expectNoDifference(result.lines.first?.text, line.text)
+  }
+
+  @Test
   func ordinaryJapaneseInkDoesNotTriggerRubyCropping() {
     #expect(JapaneseRubyOCRCorrector.baseBandStart(rowInk: Array(repeating: 20, count: 36)) == nil)
     #expect(JapaneseRubyOCRCorrector.baseBandStart(rowInk: [0, 0, 10, 10, 0, 0] + Array(repeating: 20, count: 30)) == nil)

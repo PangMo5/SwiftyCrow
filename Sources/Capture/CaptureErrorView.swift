@@ -4,26 +4,12 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct CaptureView: View {
+struct CaptureErrorView: View {
 
   let store: StoreOf<CaptureFeature>
 
   var body: some View {
     VStack(spacing: 8) {
-      Button {
-        store.send(.selectRegionRequested)
-      } label: {
-        HStack(spacing: 8) {
-          Image(systemName: "viewfinder")
-          Text("Capture Region")
-        }
-        .font(.body.weight(.medium))
-        .frame(maxWidth: .infinity)
-      }
-      .buttonStyle(.glassProminent)
-      .controlSize(.large)
-      .keyboardShortcut(.defaultAction)
-
       if store.translationUnavailable {
         TranslationModelHint(message: store.lastError)
           .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -35,7 +21,6 @@ struct CaptureView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .transition(.opacity)
       }
-      CaptureStatusNote(lines: store.overlayLines)
     }
     .animation(.easeOut(duration: 0.15), value: store.lastError)
     .animation(.easeOut(duration: 0.15), value: store.translationUnavailable)

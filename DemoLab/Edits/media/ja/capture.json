@@ -1,0 +1,73 @@
+{
+  "cameraOriginal": "DerivedData/QA/tart-share/locale-output-2.10/ja/capture-final-01/capture-demo.mov",
+  "cameraSHA256": "46b7b066dbd12c64e6bce638e99f3638dba6e848f296b53b70105700aa2ef35e",
+  "encoderVersion": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg-full/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-libqrencode --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --enable-whisper --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+  "exportVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "h264",
+    "duration": "20.600000",
+    "height": 1200,
+    "nb_read_frames": "618",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "film": "capture",
+  "hostClockEvidence": null,
+  "movie": "DemoLab/Edits/media/ja/capture.mp4",
+  "movieSHA256": "3c14d9c97e9b5fb5814200b6adb5cb93197f72f5576fbd0a18c20ffe75db3dbf",
+  "narrationCatalogSHA256": "3589cdb9011f3ceea1ab85aaf618dde2dbb86941c6a263ec9a53eb7d5b5846a3",
+  "originalVideo": {
+    "avg_frame_rate": "30/1",
+    "codec_name": "hevc",
+    "duration": "20.600000",
+    "height": 1200,
+    "nb_read_frames": "618",
+    "pix_fmt": "yuv420p",
+    "width": 1920
+  },
+  "poster": "DemoLab/Edits/media/ja/capture.jpg",
+  "posterSHA256": "e6b71866e9974b91ae050f0b94068cfe800572635ee4998a0f7577eb9733cdac",
+  "posterSeconds": 18,
+  "presentation": "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels.",
+  "presentationTimeline": "DemoLab/Edits/media/ja/capture.timeline.json",
+  "presentationTimelineSHA256": "2ab7742b5eae02df74a69156a71c6860b41925e69a30cdb8737fc9601d39c6eb",
+  "recorder": {
+    "code": 0,
+    "dropped": 0,
+    "durationSeconds": 20.6,
+    "error": null,
+    "frames": 618,
+    "outputStatistics": {
+      "capture-demo.mov": {
+        "dropped": 0,
+        "frames": 618,
+        "height": 1200,
+        "width": 1920
+      }
+    },
+    "outputs": [
+      "/Users/admin/SwiftyCrowQA/locale-output-2.10/ja/capture-final-01/capture-demo.mov"
+    ],
+    "status": "ok",
+    "stopReason": "SIGINT"
+  },
+  "sourceLanguage": "en-US",
+  "subtitles": "DemoLab/Edits/media/ja/capture.ass",
+  "subtitlesSHA256": "dea04a92924170ffcbc1c82e3b2c1b9c390514ae5c1cf97a1e13c2cbe5cb73a7",
+  "translationLanguage": "ja-JP",
+  "uiLanguage": "ja",
+  "visualReviewEvidence": "DemoLab/Edits/page-language-2.10-review.md",
+  "actualLanguageEvidence": {
+    "locale": "ja",
+    "film": "capture",
+    "source": "en-US",
+    "target": "ja-JP",
+    "actualTranslationText": "フィールドカメラ\nクイックスタート / 03\n電源ボタン\n01 バッテリーを挿入してください\n下部のカバーを開いてください。\nバッテリーをカチッと音がするまで差し込んでください。\n02 カメラをオンにしてください\n電源ボタンを2秒間押し続けてください。\nバッテリー\n撮影中はレンズキャップを外したままにしてください。\n注意\nライトが点滅している間はバッテリーを取り外さないでください。",
+    "evidenceFile": "DerivedData/QA/tart-share/locale-output-2.10/ja/capture-final-01/capture-translated-ax.txt",
+    "targetMatchesUI": true,
+    "actualLanguagePickerValues": [
+      "       AXPopUpButton AXValue=英語",
+      "       AXPopUpButton AXValue=日本語"
+    ]
+  }
+}

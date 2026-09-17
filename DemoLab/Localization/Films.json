@@ -1,0 +1,200 @@
+{
+  "films": {
+    "capture": {
+      "caption": {
+        "en": "Capture the part of an instruction sheet or image you need. Translate its text, then copy an image containing both the diagram and translated instructions to keep or share.",
+        "ja": "説明書や画像の必要な部分をキャプチャ。文字を翻訳し、図と説明をまとめた画像としてコピーして、保存や共有に使えます。",
+        "ko": "설명서나 이미지에서 필요한 부분을 캡처하세요. 캡처한 이미지의 글을 번역하고, 그림과 설명이 함께 담긴 이미지를 복사해 보관하거나 공유할 수 있어요.",
+        "zh-Hans": "截取说明书或图片中需要的部分。翻译其中的文字，再复制包含图解和译文的图片，用于保存或分享。",
+        "zh-Hant": "擷取說明書或圖片中需要的部分。翻譯其中的文字，再複製包含圖解和譯文的圖片，用於儲存或分享。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "title": {
+        "en": "Save translated instructions as an image.",
+        "ja": "外国語の説明書を日本語の画像で残す。",
+        "ko": "외국어 설명서를 한국어 이미지로 보관해요.",
+        "zh-Hans": "将外语说明书保存为中文图片。",
+        "zh-Hant": "將外語說明書儲存為中文圖片。"
+      },
+      "languagePairs": {
+        "en": {
+          "sourceLanguage": "ko-KR",
+          "translationLanguage": "en-US"
+        },
+        "ko": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ko-KR"
+        },
+        "ja": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ja-JP"
+        },
+        "zh-Hans": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hans"
+        },
+        "zh-Hant": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hant"
+        }
+      }
+    },
+    "compare": {
+      "caption": {
+        "en": "Place translation in a separate window beside the game to see the artwork and dialogue together. Keep reading as the conversation changes, and hide translation when you do not need it.",
+        "ja": "ゲームの隣に別の翻訳ウインドウを表示し、絵と会話を一緒に楽しめます。次の会話も続けて読み、不要なときは翻訳を隠せます。",
+        "ko": "번역을 게임 옆의 별도 창에 띄워 그림과 대사를 함께 보세요. 다음 대화의 번역도 이어서 읽고, 필요 없을 때는 잠시 숨길 수 있어요.",
+        "zh-Hans": "在游戏旁的独立窗口中显示翻译，同时欣赏画面并阅读对话。新对话会继续翻译，不需要时可以暂时隐藏。",
+        "zh-Hant": "在遊戲旁的獨立視窗中顯示翻譯，同時欣賞畫面並閱讀對話。新對話會繼續翻譯，不需要時可以暫時隱藏。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "title": {
+        "en": "Read dialogue without covering the game.",
+        "ja": "ゲーム画面を隠さずに会話を読む。",
+        "ko": "게임 화면을 가리지 않고 대사를 읽어요.",
+        "zh-Hans": "阅读对话，不遮挡游戏画面。",
+        "zh-Hant": "閱讀對話，不遮擋遊戲畫面。"
+      },
+      "languagePairs": {
+        "en": {
+          "sourceLanguage": "ko-KR",
+          "translationLanguage": "en-US"
+        },
+        "ko": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ko-KR"
+        },
+        "ja": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ja-JP"
+        },
+        "zh-Hans": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hans"
+        },
+        "zh-Hant": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hant"
+        }
+      }
+    },
+    "layout": {
+      "caption": {
+        "en": "Translate a Japanese magazine mixing horizontal headings and vertical body text. Read the photo and its caption together, then copy any original text you need into notes in reading order.",
+        "ja": "横書きの見出しと縦書きの本文が混在する中国語の雑誌も翻訳できます。写真と説明を一緒に読み、必要な原文は読む順番でコピーしてメモに残せます。",
+        "ko": "가로 제목과 세로 본문이 섞인 일본어 잡지도 번역해요. 사진과 설명을 함께 읽고, 필요한 원문은 읽는 순서대로 복사해 메모에 남기세요.",
+        "zh-Hans": "横排标题与竖排正文混排的日文杂志也能翻译。结合照片和说明阅读，并按阅读顺序复制需要的原文，保存在笔记中。",
+        "zh-Hant": "橫排標題與直排內文混排的日文雜誌也能翻譯。結合照片和說明閱讀，並依閱讀順序複製需要的原文，保存在筆記中。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "title": {
+        "en": "Translate and read vertical-text magazines.",
+        "ja": "縦書きの雑誌も翻訳して読む。",
+        "ko": "세로쓰기 잡지도 번역해서 읽어요.",
+        "zh-Hans": "竖排杂志也能翻译阅读。",
+        "zh-Hant": "直排雜誌也能翻譯閱讀。"
+      },
+      "languagePairs": {
+        "en": {
+          "sourceLanguage": "ja-JP",
+          "translationLanguage": "en-US"
+        },
+        "ko": {
+          "sourceLanguage": "ja-JP",
+          "translationLanguage": "ko-KR"
+        },
+        "ja": {
+          "sourceLanguage": "zh-Hant",
+          "translationLanguage": "ja-JP"
+        },
+        "zh-Hans": {
+          "sourceLanguage": "ja-JP",
+          "translationLanguage": "zh-Hans"
+        },
+        "zh-Hant": {
+          "sourceLanguage": "ja-JP",
+          "translationLanguage": "zh-Hant"
+        }
+      }
+    },
+    "live": {
+      "caption": {
+        "en": "Choose the subtitle area once, and new subtitles keep translating as the video plays. You do not need to capture again for every sentence.",
+        "ja": "字幕の範囲を一度選ぶと、動画の再生中も新しい字幕を翻訳し続けます。文が変わるたびにキャプチャし直す必要はありません。",
+        "ko": "자막 영역을 한 번 지정하면, 영상이 재생되는 동안 새 자막을 계속 번역해요. 문장이 바뀔 때마다 다시 캡처할 필요가 없어요.",
+        "zh-Hans": "只需选定一次字幕区域，视频播放时就会持续翻译新字幕。无需每换一句就重新截图。",
+        "zh-Hant": "只需選定一次字幕區域，影片播放時就會持續翻譯新字幕。無須每換一句就重新擷取。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "title": {
+        "en": "Read translated subtitles without stopping the video.",
+        "ja": "動画を止めずに字幕を翻訳。",
+        "ko": "영상을 멈추지 않고 자막을 번역해요.",
+        "zh-Hans": "不暂停视频，也能阅读翻译字幕。",
+        "zh-Hant": "不暫停影片，也能閱讀翻譯字幕。"
+      },
+      "languagePairs": {
+        "en": {
+          "sourceLanguage": "ko-KR",
+          "translationLanguage": "en-US"
+        },
+        "ko": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ko-KR"
+        },
+        "ja": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ja-JP"
+        },
+        "zh-Hans": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hans"
+        },
+        "zh-Hant": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hant"
+        }
+      }
+    },
+    "tour": {
+      "caption": {
+        "en": "Drag over text you cannot copy, even inside an image. Read the translation, then paste the parts you need into notes or another app.",
+        "ja": "画像の中など、コピーできない文字もドラッグして翻訳できます。必要な訳文はメモやほかのアプリに貼り付けて活用できます。",
+        "ko": "복사할 수 없는 이미지 속 글도 드래그해서 번역하세요. 필요한 번역문은 메모나 다른 앱에 바로 붙여넣을 수 있어요.",
+        "zh-Hans": "图片中无法复制的文字，也可以拖动选取并翻译。需要的译文可直接粘贴到笔记或其他应用中。",
+        "zh-Hant": "圖片中無法複製的文字，也可以拖曳選取並翻譯。需要的譯文可直接貼到筆記或其他 App 中。"
+      },
+      "sourceFixture": "Fixtures/manifest.json",
+      "title": {
+        "en": "Translate foreign text right on your screen.",
+        "ja": "画面の外国語をそのまま翻訳。",
+        "ko": "화면의 외국어를 바로 번역해요.",
+        "zh-Hans": "直接翻译屏幕上的外语。",
+        "zh-Hant": "直接翻譯螢幕上的外語。"
+      },
+      "languagePairs": {
+        "en": {
+          "sourceLanguage": "ko-KR",
+          "translationLanguage": "en-US"
+        },
+        "ko": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ko-KR"
+        },
+        "ja": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "ja-JP"
+        },
+        "zh-Hans": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hans"
+        },
+        "zh-Hant": {
+          "sourceLanguage": "en-US",
+          "translationLanguage": "zh-Hant"
+        }
+      }
+    }
+  },
+  "sourceLanguage": "en"
+}

@@ -1,0 +1,39 @@
+name: Automation tools
+
+on:
+  push:
+    branches: ["pangmo5/release-*"]
+  pull_request:
+    paths:
+      - "Tools/**"
+      - "DemoLab/**"
+      - "Localization/**"
+      - "Resources/Localizable.xcstrings"
+      - "Resources/Marketing/**"
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "web/**"
+      - "Project.swift"
+      - ".github/workflows/tools.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-tools:
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install video metadata tools
+        run: apt-get update && apt-get install -y ffmpeg
+      - name: Test Swift automation and verify reviewed media
+        run: |
+          swift test --package-path Tools
+          swift run --package-path Tools swiftycrow-tools check
+          swift run --package-path Tools swiftycrow-tools docs --check
+          swift run --package-path Tools swiftycrow-tools verify-media --source DemoLab/Edits/review-bundle.json --portable
+          swift run --package-path Tools swiftycrow-tools check-release --allow-unreleased --version "$(sed -nE 's/^let appVersion = "([^"]+)"/\1/p' Project.swift)"
+          swift run --package-path Tools swiftycrow-tools site --output /tmp/swiftycrow-site
