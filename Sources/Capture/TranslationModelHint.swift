@@ -21,20 +21,19 @@ let translationModelHintDismissedKey = "hideTranslationModelHint"
 
 // MARK: - PreparingRecognitionNote
 
-/// Shown while Vision loads its document-recognition model. Cold, that costs tens
-/// of seconds, and it happens in the app's own process — so without saying so the
-/// overlay is an empty frame with a spinner, which reads as a hang. Non-interactive
-/// on purpose: it needs no buttons, so the overlay's pass-through stays untouched.
+/// An elapsed-time hint while recognition and layout analysis are in progress.
+/// Vision does not expose a separate model-loading phase. Non-interactive so
+/// the overlay's pass-through stays untouched.
 struct PreparingRecognitionNote: View {
   var body: some View {
     HStack(spacing: 10) {
       ProgressView()
         .controlSize(.small)
       VStack(alignment: .leading, spacing: 1) {
-        Text("Preparing text recognition")
+        Text("Processing screen text")
           .font(.caption)
           .fontWeight(.semibold)
-        Text("macOS is loading the recognition model. This only happens the first time, or after it has been unloaded.")
+        Text("Recognizing text and analyzing its layout. Processing time depends on the image.")
           .font(.caption2)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
@@ -115,20 +114,6 @@ struct CaptureStatusNote: View {
       Label("Some text may be misread. Compare the translation with the original.", systemImage: "text.magnifyingglass")
         .font(.caption2).foregroundStyle(.orange)
         .padding(8).frame(maxWidth: .infinity, alignment: .leading).background(.regularMaterial)
-    }
-    let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
-    if let first = notices.first {
-      Label(
-        notices.count == 1 ? first : String(localized: "Using installed models for \(notices.count) language pairs."),
-        systemImage: "info.circle"
-      )
-      .font(.caption2)
-      .foregroundStyle(.secondary)
-      .fixedSize(horizontal: false, vertical: true)
-      .help(notices.joined(separator: "\n"))
-      .padding(8)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.regularMaterial)
     }
   }
 }

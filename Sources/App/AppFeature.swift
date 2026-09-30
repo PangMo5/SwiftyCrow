@@ -118,6 +118,10 @@ struct AppFeature {
                 await send(.capture(.sourceInteractionBegan))
               case .sourceInteractionEnded:
                 await send(.capture(.sourceInteractionEnded))
+              case .sourceWindowGeometryChanged(let id, let frame):
+                await send(.capture(.sourceWindowGeometryChanged(id: id, frame: frame)))
+              case .sourceWindowClosed(let id):
+                await send(.capture(.sourceWindowClosed(id: id)))
               }
             }
           },

@@ -11,8 +11,57 @@ import Vision
 /// split emphatic lettering into words, or read across two connected balloons.
 /// Boundaries come from the image, never from a dictionary of expected dialogue.
 enum OCRBalloonRefiner {
+
+  // MARK: Internal
+
   static func refine(_ lines: [OCRResult.Line], in image: CGImage, language: Language) async throws -> [OCRResult.Line] {
-    guard qualifies(lines), let raster = BalloonRaster(image: image, longestSide: 1024) else { return lines }
+    let verticalColumns = lines.filter { $0.isVerticalBlock && $0.text.count >= 2 }
+    guard verticalColumns.count >= 3 || qualifies(lines) else { return lines }
+    let rasterSide = OCRGeometry.analysisRasterLongestSide(
+      for: verticalColumns.isEmpty ? lines : verticalColumns,
+      imageSize: CGSize(width: image.width, height: image.height)
+    )
+    guard let raster = BalloonRaster(image: image, longestSide: rasterSide) else { return lines }
+    if verticalColumns.count >= 3 {
+      // Printed vertical dialogue needs one physical owner before paragraph
+      // joining. Per-column flood-fill limits otherwise invent separate narrow
+      // containers inside the same balloon.
+      let regions = raster.textRegions(around: verticalColumns, minimumTextLines: 1)
+      let groupBase = (lines.compactMap(\.recognitionGroupID).max() ?? 0) + 1
+      var corrected = lines
+      for region in regions.prefix(12) {
+        let contained = lines.filter { region.contains($0.boundingBoxNormalized.center) }
+        guard
+          contained.contains(where: { $0.recognitionConfidence < 0.3 ||
+              ($0.isVerticalBlock && $0.text.unicodeScalars.contains(where: { $0.isASCII && CharacterSet.letters.contains($0) }))
+          }), let crop = raster.maskedCrop(of: image, region: region)
+        else { continue }
+        try Task.checkCancellation()
+        let hint = language.isAuto
+          ? LanguageDetectionClient.liveValue.detect(contained.map(\.text).joined(separator: " "), 0.65) ?? language
+          : language
+        let recognized = try await VisionTextRecognizer.document(in: crop, language: hint).lines
+        let candidates = OCRResult(lines: recognized).absorbingRubyAnnotations().lines.map {
+          mapped($0, from: region.pixelRect(in: image), imageSize: CGSize(width: image.width, height: image.height))
+        }
+        corrected = replacingVerticalHypotheses(corrected, with: candidates)
+      }
+      return corrected.map { source in
+        guard let index = regions.indices.first(where: { regions[$0].contains(source.boundingBoxNormalized.center) }) else {
+          return source
+        }
+        var line = source
+        let region = regions[index]
+        line.surface = OverlaySourceSurface(
+          box: region.interiorBox,
+          confidence: 1,
+          clippingBox: region.box,
+          clippingRows: region.spans
+        )
+        line.recognitionGroupID = groupBase + index
+        return line
+      }
+    }
     let started = ContinuousClock.now
     let regions = raster.textRegions(around: lines)
     guard regions.count >= 2 else { return lines }
@@ -37,6 +86,7 @@ enum OCRBalloonRefiner {
       } else {
         request.recognitionLanguages = [language.localeLanguage]
       }
+      try VisionTextRecognizer.configure(&request)
       let observations = try await request.perform(on: crop)
       let rows = observations.compactMap { observation -> (String, CGRect)? in
         guard let candidate = observation.topCandidates(1).first, candidate.confidence >= 0.3 else { return nil }
@@ -107,6 +157,76 @@ enum OCRBalloonRefiner {
       guard !result.isEmpty else { return row }
       return result + (result.hasSuffix("-") ? "" : " ") + row
     }
+  }
+
+  /// Better recognition inside an observed ink boundary may replace the same
+  /// column. It cannot replace a whole paragraph with a partial crop or move a
+  /// neighboring balloon's text into this one.
+  static func replacingVerticalHypotheses(_ original: [OCRResult.Line], with candidates: [OCRResult.Line]) -> [OCRResult.Line] {
+    var result = original
+    for candidate in candidates where candidate.isVerticalBlock {
+      let b = candidate.boundingBoxNormalized
+      let matches = result.indices.compactMap { index -> (Int, CGFloat)? in
+        let old = result[index]
+        let a = old.boundingBoxNormalized
+        let intersection = a.intersection(b)
+        guard
+          old.isVerticalBlock, !intersection.isNull, b.width > 0, b.height > 0,
+          intersection.width * intersection.height / (b.width * b.height) >= 0.7,
+          abs(a.midX - b.midX) <= max(a.width, b.width) * 0.55,
+          candidate.text.count >= max(1, old.text.count / 2),
+          candidate.text.count <= max(4, old.text.count * 2)
+        else { return nil }
+        return (index, intersection.width * intersection.height / max(a.width * a.height, b.width * b.height))
+      }
+      guard let index = matches.max(by: { $0.1 < $1.1 })?.0 else { continue }
+      let old = result[index]
+      guard candidate.recognitionConfidence >= old.recognitionConfidence + 0.08 else { continue }
+      var replacement = candidate
+      replacement.recognitionGroupID = old.recognitionGroupID
+      replacement.followingSeparator = old.followingSeparator
+      result[index] = replacement
+    }
+    return result
+  }
+
+  // MARK: Private
+
+  private static func mapped(_ line: OCRResult.Line, from rect: CGRect, imageSize: CGSize) -> OCRResult.Line {
+    let region = CGRect(
+      x: rect.minX / imageSize.width,
+      y: rect.minY / imageSize.height,
+      width: rect.width / imageSize.width,
+      height: rect.height / imageSize.height
+    )
+    func map(_ box: CGRect) -> CGRect {
+      CGRect(
+        x: region.minX + box.minX * region.width,
+        y: region.minY + box.minY * region.height,
+        width: box.width * region.width,
+        height: box.height * region.height
+      )
+    }
+    var line = line
+    line.boundingBoxNormalized = map(line.boundingBoxNormalized)
+    line.orientedBox = line.orientedBox.map(map)
+    line.verticalCharScale *= region.width
+    line.horizontalGlyphScale *= region.height
+    line.imageAspectRatio = imageSize.width / imageSize.height
+    line.styleRuns = line.styleRuns.map { var run = $0
+      run.box = map(run.box)
+      return run
+    }
+    line.spacingAnchors = line.spacingAnchors.map { var anchor = $0
+      anchor.box = map(anchor.box)
+      return anchor
+    }
+    line.replacementPatches = line.replacementPatches.map { var patch = $0
+      patch.box = map(patch.box)
+      patch.renderingBox = patch.renderingBox.map(map)
+      return patch
+    }
+    return line
   }
 }
 
@@ -188,12 +308,20 @@ struct BalloonRaster {
   let height: Int
   let paper: [Bool]
 
-  func textRegions(around lines: [OCRResult.Line]) -> [BalloonRegion] {
+  func textRegions(around lines: [OCRResult.Line], minimumTextLines: Int = 3) -> [BalloonRegion] {
+    guard !lines.isEmpty else { return [] }
     let components = Self.components(paper, width: width, height: height)
-    let glyphHeights = lines.map { $0.boundingBoxNormalized.height * CGFloat(height) / CGFloat(max(1, $0.rowCount)) }.sorted()
-    let radius = max(2, min(min(width, height) / 24, Int(glyphHeights[glyphHeights.count / 2] * 0.65)))
+    let glyphHeights = lines.map {
+      $0.isVerticalBlock
+        ? ($0.verticalCharScale > 0 ? $0.verticalCharScale : $0.boundingBoxNormalized.width) * CGFloat(width)
+        : $0.boundingBoxNormalized.height * CGFloat(height) / CGFloat(max(1, $0.rowCount))
+    }.sorted()
+    let glyph = glyphHeights[glyphHeights.count / 2]
+    let radius = max(2, min(min(width, height) / 24, Int(glyph * 0.65)))
+    let minimumArea = max(4, Int(ceil(glyph * glyph)))
+    let minimumCoreArea = max(4, Int(ceil(glyph * glyph * 0.65)))
     var result = [BalloonRegion]()
-    for component in components where component.count >= 600 {
+    for component in components where component.count >= minimumArea {
       if Task.isCancelled { break }
       let xs = component.map { $0 % width }
       let ys = component.map { $0 / width }
@@ -203,7 +331,7 @@ struct BalloonRaster {
       let y1 = ys.max()!
       guard x0 > 0, y0 > 0, x1 < width - 1, y1 < height - 1 else { continue }
       let box = normalized(x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1)
-      guard lines.count(where: { box.contains($0.boundingBoxNormalized.center) }) >= 3 else { continue }
+      guard lines.count(where: { box.contains($0.boundingBoxNormalized.center) }) >= minimumTextLines else { continue }
       let w = x1 - x0 + 3
       let h = y1 - y0 + 3
       var filled = [Bool](repeating: false, count: w * h)
@@ -236,7 +364,7 @@ struct BalloonRaster {
           distance[i] = min(distance[i], min(distance[i + 1], distance[i + w]) + 1)
         }
       }
-      let cores = Self.components(distance.map { $0 > radius }, width: w, height: h).filter { $0.count >= 400 }
+      let cores = Self.components(distance.map { $0 > radius }, width: w, height: h).filter { $0.count >= minimumCoreArea }
       var owners = [Int](repeating: -1, count: filled.count)
       var depth = [Int](repeating: 0, count: filled.count)
       queue = []
@@ -267,7 +395,7 @@ struct BalloonRaster {
         let bounds = spans.dropFirst().reduce(first) { $0.union($1) }
         let region = BalloonRegion(box: bounds, spans: spans)
         let contained = lines.filter { region.contains($0.boundingBoxNormalized.center) }
-        guard contained.count >= 3 else { continue }
+        guard contained.count >= minimumTextLines else { continue }
         let textBounds = contained.dropFirst().reduce(contained[0].boundingBoxNormalized) { $0.union($1.boundingBoxNormalized) }
         guard bounds.width * bounds.height < textBounds.width * textBounds.height * 6 else { continue }
         result.append(region)

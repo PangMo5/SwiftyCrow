@@ -45,6 +45,23 @@ struct OverlayRenderState: Equatable, Sendable {
   /// when cold — shows a "preparing" note so the empty overlay isn't a mystery.
   var isPreparingRecognition: Bool
   var lastError: String? = nil
+  var sourceWindowID: CGWindowID? = nil
+  var sourceWindowFrame: CGRect? = nil
+  var captureGeneration = 0
+
+  /// A queued old render must not repaint a source that the window controller
+  /// has already observed moving or disappearing, even before the reducer
+  /// receives that geometry event.
+  func validatingSourceWindow(id: CGWindowID?, frame: CGRect?, minimumGeneration: Int) -> Self {
+    guard let sourceWindowID else { return self }
+    guard sourceWindowID == id, let frame, sourceWindowFrame == frame, captureGeneration >= minimumGeneration else {
+      var result = self
+      result.lines = []
+      result.backdrop = nil
+      return result
+    }
+    return self
+  }
 }
 
 // MARK: - OverlayUserAction
@@ -56,6 +73,8 @@ enum OverlayUserAction: Sendable {
   case close
   case sourceInteractionBegan
   case sourceInteractionEnded
+  case sourceWindowGeometryChanged(id: CGWindowID, frame: CGRect?)
+  case sourceWindowClosed(id: CGWindowID)
 }
 
 // MARK: - OverlayClient

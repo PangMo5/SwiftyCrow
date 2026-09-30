@@ -23,9 +23,9 @@ struct RegionCaptureFeature {
     var imageSize = CGSize.zero
     var overlayLines = [OverlayLine]()
     var isTranslating = false
-    /// The capture is taking long enough that it needs explaining — practically
-    /// always Vision loading a cold document model, which takes tens of seconds.
-    /// Without this the window is an unlabelled spinner and reads as a hang.
+    var isRecognizing = false
+    /// Elapsed-time hint for capture plus the entire OCR pipeline. This does
+    /// not identify whether Vision is loading a model or already recognizing text.
     var isTakingLong = false
     var lastError: String?
     /// True when a translation failed — almost always because the language's
@@ -35,13 +35,27 @@ struct RegionCaptureFeature {
     /// Image save/copy renders the complete capture in the result view; the
     /// window controller handles delivery and closes the originating window.
     var finished = false
+    var isRestoring = false
+    var requestedSettings: AppSettings?
+    var startedAt: ContinuousClock.Instant?
+    var latency = [String: Double]()
 
     @Shared(.settings) var settings
+
+    mutating func recordLatency(_ milestone: String) {
+      guard let startedAt, latency[milestone] == nil else { return }
+      let duration = startedAt.duration(to: .now)
+      latency[milestone] = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
+      Log.capture.log("Capture \(milestone, privacy: .public): \(duration.loggedSeconds, privacy: .public)s since action")
+    }
+
   }
 
   enum Action {
     case task
     case captureIsTakingLong
+    case capturePreviewReady(Data?, CGSize)
+    case recognized(CapturedRegion, restorationPending: Bool = true)
     case captured(Result<CapturedRegion, any Error>)
     case translationResponse(id: UUID, translation: TranslatedText, target: Locale.Language)
     case translationUnavailable(lineIDs: Set<UUID>, message: String?)
@@ -61,31 +75,81 @@ struct RegionCaptureFeature {
     Reduce { state, action in
       switch action {
       case .task:
+        guard !state.isRecognizing, state.imageData == nil else { return .none }
+        state.isRecognizing = true
+        state.startedAt = .now
+        state.requestedSettings = state.settings
         let target = state.target
         return .merge(
           .run { [clock] send in
             try await clock.sleep(for: .seconds(2))
             await send(.captureIsTakingLong)
-          },
-          captureEffect(target: target, settings: state.$settings)
+          }.cancellable(id: CancelID.slowHint),
+          captureEffect(target: target, settings: state.settings)
         )
 
       case .captureIsTakingLong:
         // The capture may already have landed; the hint would be stale then.
-        guard state.imageData == nil, state.lastError == nil else { return .none }
+        guard state.isRecognizing, state.lastError == nil else { return .none }
         state.isTakingLong = true
         return .none
 
+      case .capturePreviewReady(let data, let size):
+        state.imageData = data
+        state.imageSize = size
+        state.recordLatency("preview")
+        return .none
+
       case .captured(.success(let captured)):
+        state.recordLatency("restored")
+        if state.isRestoring {
+          // Recognition IDs, text and capture boxes were finalized before translation.
+          // Restoration may refine styling and constrain where target ink can draw.
+          guard
+            captured.lines.count == state.overlayLines.count,
+            zip(captured.lines, state.overlayLines).allSatisfy({
+              $0.text == $1.source.text && $0.boundingBoxNormalized == $1.source.box
+            })
+          else {
+            state.isRestoring = false
+            state.isRecognizing = false
+            state.isTranslating = false
+            state.overlayLines = []
+            state.lastError = CocoaError(.coderInvalidValue).localizedDescription
+            return .cancel(id: CancelID.translation)
+          }
+          for index in captured.lines.indices {
+            let language = state.overlayLines[index].source.language
+            state.overlayLines[index].source = .init(recognized: captured.lines[index], language: language)
+            state.overlayLines[index].sourcePixelsAreCurrent = true
+          }
+          state.isRestoring = false
+          state.isRecognizing = false
+          state.isTakingLong = false
+          if
+            state.overlayLines
+              .contains(where: { $0.translatedText != nil }) { state.recordLatency("firstRenderableTranslation") }
+          if !state.isTranslating { state.recordLatency("complete") }
+          return .none
+        }
+        return .send(.recognized(captured, restorationPending: false))
+
+      case .recognized(let captured, let restorationPending):
+        // A cancelled/deadlined recognizer can finish its native request late.
+        // It must never resurrect a failed capture through the progress callback.
+        guard !restorationPending || state.isRecognizing else { return .none }
+        state.isRestoring = restorationPending
+        state.isRecognizing = false
         state.isTakingLong = false
-        state.imageData = captured.pngData
+        if let data = captured.pngData { state.imageData = data }
         state.imageSize = captured.size
-        let configured = state.settings.languages.source
-        let target = state.settings.languages.target.localeLanguage
-        let strategy = state.settings.translation.strategy
-        // Auto resolves a source per line (with a whole-capture fallback for
-        // short lines). Lines already in the target language show their source.
-        let lineSources = languageDetection.resolveSources(for: captured.lines.map(\.text), configured: configured)
+        let settings = state.requestedSettings ?? state.settings
+        let configured = settings.languages.source
+        let target = settings.languages.target.localeLanguage
+        let strategy = settings.translation.strategy
+        // Auto resolves a source per line, with short-label context limited to
+        // its independent input. Lines in the target language show their source.
+        let lineSources = languageDetection.resolveRecognizedSources(for: captured.lines, configured: configured)
         let sourceLines = captured.lines.indices.map {
           OverlayLine.Source(
             recognized: captured.lines[$0],
@@ -96,6 +160,7 @@ struct RegionCaptureFeature {
           OverlayTranslationPolicy.preservesSource(at: $0, in: sourceLines)
         }
 
+        let contextGroups = TranslationGroupContext.tableHeaders(in: sourceLines)
         var newLines = [OverlayLine]()
         // Lines to translate, grouped by source language (one session per group).
         var groups = [String: (source: Locale.Language, items: [TranslationLine])]()
@@ -104,11 +169,12 @@ struct RegionCaptureFeature {
           let sameLanguage = source.usesSameWritingSystem(as: target)
           let sourceLine = sourceLines[index]
           let needsTranslation = !sameLanguage && !preservesSource[index]
-          let overlayLine = OverlayLine(
+          var overlayLine = OverlayLine(
             id: uuid(),
             source: sourceLine,
             initialContent: needsTranslation ? .pending : .source
           )
+          overlayLine.sourcePixelsAreCurrent = !state.isRestoring
           newLines.append(overlayLine)
           if needsTranslation {
             groups[source.maximalIdentifier, default: (source, [])].items
@@ -116,19 +182,23 @@ struct RegionCaptureFeature {
                 id: overlayLine.id,
                 text: line.text,
                 attributedText: overlayLine.source.attributedTextForTranslation(),
-                trailingContext: OverlayTranslationPolicy.trailingContext(
-                  at: index,
-                  in: sourceLines
-                )
+                trailingContext: contextGroups[index] == nil
+                  ? OverlayTranslationPolicy.trailingContext(
+                    at: index,
+                    in: sourceLines
+                  )
+                  : nil,
+                groupContext: contextGroups[index]
               ))
           }
         }
         state.overlayLines = newLines
+        state.recordLatency("textReady")
 
-        guard !state.overlayLines.isEmpty, !groups.isEmpty else { return .none }
+        guard !state.overlayLines.isEmpty, !groups.isEmpty else { return .cancel(id: CancelID.slowHint) }
         state.isTranslating = true
         let batches = Array(groups.values)
-        return Effect<Action>.run { send in
+        return .merge(.cancel(id: CancelID.slowHint), Effect<Action>.run { send in
           await withTaskGroup(of: Void.self) { group in
             for batch in batches {
               group.addTask {
@@ -140,8 +210,7 @@ struct RegionCaptureFeature {
                       id: result.id,
                       translation: TranslatedText(
                         text: result.text,
-                        attributedText: result.attributedText,
-                        modelNotice: result.modelNotice
+                        attributedText: result.attributedText
                       ),
                       target: target
                     ))
@@ -162,14 +231,19 @@ struct RegionCaptureFeature {
               }
             }
           }
-        }
+        }.cancellable(id: CancelID.translation))
 
       case .captured(.failure(let error)):
+        state.isRestoring = false
+        state.isTranslating = false
+        state.overlayLines = []
+        state.isRecognizing = false
         state.isTakingLong = false
         state.lastError = error.localizedDescription
-        return .none
+        return .merge(.cancel(id: CancelID.slowHint), .cancel(id: CancelID.translation))
 
       case .translationResponse(let id, let translation, let target):
+        guard state.overlayLines.contains(where: { $0.id == id }) else { return .none }
         let text = translation.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
           if let index = state.overlayLines.firstIndex(where: { $0.id == id }) {
@@ -186,14 +260,20 @@ struct RegionCaptureFeature {
           state.overlayLines[index].showTranslation(
             text,
             attributedText: text == translation.text ? translation.attributedText : nil,
-            language: target,
-            modelNotice: translation.modelNotice
+            language: target
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
+        if !state.isRestoring {
+          if
+            state.overlayLines
+              .contains(where: { $0.translatedText != nil }) { state.recordLatency("firstRenderableTranslation") }
+          if !state.isTranslating { state.recordLatency("complete") }
+        }
         return .none
 
       case .translationUnavailable(let lineIDs, let message):
+        guard state.overlayLines.contains(where: { lineIDs.contains($0.id) }) else { return .none }
         for index in state.overlayLines.indices where lineIDs.contains(state.overlayLines[index].id) {
           state.overlayLines[index].showUnavailable()
         }
@@ -225,10 +305,18 @@ struct RegionCaptureFeature {
 
   // MARK: Private
 
-  private func captureEffect(target: CaptureTarget, settings: Shared<AppSettings>) -> Effect<Action> {
+  private enum CancelID { case slowHint, translation }
+
+  private static func encodePreview(_ image: CGImage, size: CGSize, send: Send<Action>) async -> Data? {
+    let data = image.pngData
+    await send(.capturePreviewReady(data, size))
+    return data
+  }
+
+  private func captureEffect(target: CaptureTarget, settings: AppSettings) -> Effect<Action> {
     .run { [clock, ocr, screenCapture] send in
       let captured = await Result {
-        let snapshot = settings.wrappedValue
+        let snapshot = settings
         // Both stages are bounded so a daemon that stops answering surfaces as an
         // error instead of an endlessly spinning window, and the message names
         // which stage it was.
@@ -251,12 +339,18 @@ struct RegionCaptureFeature {
             }
           return image
         }
+        let size = CGSize(width: image.width, height: image.height)
+        // Encoding is CPU work; it must neither occupy the main actor nor
+        // delay Vision. Both child tasks are scoped to this capture effect.
+        async let preview: Data? = Self.encodePreview(image, size: size, send: send)
         let result = try await withDeadline(CaptureDeadline.ocr, stage: .ocr, clock: clock) {
-          try await ocr.recognizeText(image, snapshot.languages.source)
+          try await ocr.recognizeCapture(image, snapshot.languages.source) { result in
+            await send(.recognized(CapturedRegion(pngData: nil, size: size, lines: result.lines)))
+          }
         }
         return CapturedRegion(
-          pngData: image.pngData,
-          size: CGSize(width: image.width, height: image.height),
+          pngData: await preview,
+          size: size,
           lines: result.lines
         )
       }
@@ -266,6 +360,7 @@ struct RegionCaptureFeature {
       await send(.captured(captured))
     }
   }
+
 }
 
 // MARK: - CapturedRegion

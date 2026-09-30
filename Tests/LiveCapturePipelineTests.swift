@@ -28,14 +28,14 @@ struct LiveCapturePipelineTests {
     let clock = TestClock()
     let store = TestStore(initialState: state()) { CaptureFeature() } withDependencies: {
       $0.continuousClock = clock
-      $0.ocr = OCRClient(recognizeText: { _, _ in
+      $0.ocr.recognizeText = { _, _ in
         calls.withValue { $0 += 1 }
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
           continuation.onTermination = { _ in cancellations.withValue { $0 += 1 } }
         }
         for try await result in stream { return result }
         throw CancellationError()
-      }, warmUp: { })
+      }
     }
     store.exhaustivity = .off
     let frame = store.state.overlayFrame
@@ -72,13 +72,13 @@ struct LiveCapturePipelineTests {
     let continuations = LockIsolated<[AsyncThrowingStream<OCRResult, any Error>.Continuation]>([])
     let store = TestStore(initialState: state()) { CaptureFeature() } withDependencies: {
       $0.continuousClock = TestClock()
-      $0.ocr = OCRClient(recognizeText: { _, _ in
+      $0.ocr.recognizeText = { _, _ in
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
           continuations.withValue { $0.append(continuation) }
         }
         for try await result in stream { return result }
         throw CancellationError()
-      }, warmUp: { })
+      }
     }
     store.exhaustivity = .off
     let frame = store.state.overlayFrame
@@ -130,7 +130,7 @@ struct LiveCapturePipelineTests {
     let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
       $0.continuousClock = TestClock()
       $0.uuid = .incrementing
-      $0.ocr = OCRClient(recognizeText: { image, _ in
+      $0.ocr.recognizeText = { image, _ in
         let signature = try LiveFrame(image: image).signature
         recognizedFrames.withValue { $0.append(signature) }
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
@@ -141,7 +141,7 @@ struct LiveCapturePipelineTests {
         }
         for try await result in stream { return result }
         throw CancellationError()
-      }, warmUp: { })
+      }
       $0.languageDetection = LanguageDetectionClient(detect: { _, _ in nil })
       $0.translation = TranslationClient(translateBatch: { items, _, _, _ in
         AsyncThrowingStream { continuation in
@@ -154,7 +154,8 @@ struct LiveCapturePipelineTests {
     let frame = initial.overlayFrame
     await store.send(.liveFrameResponse(generation: 0, frame: frame, result: .success(second)))
     for _ in 0..<100 where continuations.value.count < 1 { await Task.yield() }
-    expectNoDifference(store.state.overlayLines, [translated])
+    expectNoDifference(store.state.overlayLines.map(\.translatedText), ["안녕하세요"])
+    #expect(!store.state.overlayLines[0].sourcePixelsAreCurrent)
     #expect(!store.state.isCapturing)
     #expect(store.state.recognitionInFlight)
     await store.send(.liveFrameResponse(generation: 0, frame: frame, result: .success(third)))
@@ -172,6 +173,7 @@ struct LiveCapturePipelineTests {
     #expect(store.state.pendingRecognitionFrame == nil)
 
     expectNoDifference(store.state.overlayLines.map(\.translatedText), ["안녕하세요"])
+    #expect(!store.state.overlayLines[0].shouldReplaceSourcePixels)
     // Even a small source edit reaches OCR and replaces the previous text.
     // The earlier completed OCR is applied while a newer frame is pending.
     var changed = capture().result
@@ -186,6 +188,7 @@ struct LiveCapturePipelineTests {
     expectNoDifference(store.state.overlayLines.map(\.translatedText), ["번역: Goodbye"])
     expectNoDifference(cancellations.value, 0)
     #expect(!store.state.recognitionInFlight)
+    #expect(store.state.overlayLines[0].sourcePixelsAreCurrent)
     await store.send(.dismissOverlay)
     #expect(store.state.recognitionFrame == nil)
     #expect(store.state.pendingRecognitionFrame == nil)
@@ -242,12 +245,15 @@ struct LiveCapturePipelineTests {
       $0.screenCapture = ScreenCaptureClient(captureImage: { _, _, _ in
         captures.withValue { $0 += 1 }
         return pixels
-      }, captureWindow: { _ in pixels })
-      $0.ocr = OCRClient(recognizeText: { _, _ in
+      }, captureWindow: { _ in pixels }, captureWindowSnapshot: { _ in
+        Issue.record("A fixed region must not capture a window")
+        throw ScreenCaptureError.windowUnavailable
+      })
+      $0.ocr.recognizeText = { _, _ in
         recognitions.withValue { $0 += 1 }
         try await clock.sleep(for: .seconds(60))
         return OCRResult(lines: [])
-      }, warmUp: { })
+      }
     }
     store.exhaustivity = .off
     await store.send(.setLive(true))
@@ -301,10 +307,10 @@ struct LiveCapturePipelineTests {
     let clock = TestClock()
     let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
       $0.continuousClock = clock
-      $0.ocr = OCRClient(recognizeText: { _, _ in
+      $0.ocr.recognizeText = { _, _ in
         try await clock.sleep(for: .seconds(60))
         return OCRResult(lines: [])
-      }, warmUp: { })
+      }
     }
     store.exhaustivity = .off
     await store.send(.liveFrameResponse(
@@ -331,7 +337,7 @@ struct LiveCapturePipelineTests {
     let cancellations = LockIsolated(0)
     let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
       $0.continuousClock = TestClock()
-      $0.ocr = OCRClient(recognizeText: { _, _ in
+      $0.ocr.recognizeText = { _, _ in
         calls.withValue { $0 += 1 }
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
           continuation.onTermination = { reason in
@@ -340,7 +346,7 @@ struct LiveCapturePipelineTests {
         }
         for try await result in stream { return result }
         throw CancellationError()
-      }, warmUp: { })
+      }
     }
     store.exhaustivity = .off
     let frame = initial.overlayFrame
@@ -494,6 +500,117 @@ struct LiveCapturePipelineTests {
     let encoded = String(decoding: try TOMLEncoder().encode(settings), as: UTF8.self)
     #expect(!encoded.contains("[capture]"))
     #expect(!encoded.contains("interval"))
+  }
+
+  @Test
+  func liveWindowSelectionCapturesItsIdentityInsteadOfTheDisplayRectangle() async throws {
+    let pixels = try image(gray: 0.4)
+    let selected = CGRect(x: 40, y: 50, width: 320, height: 160)
+    let calls = LockIsolated<[CGWindowID]>([])
+    let store = TestStore(initialState: state()) { CaptureFeature() } withDependencies: {
+      $0.continuousClock = TestClock()
+      $0.regionSelector.selectRegion = { _ in .window(id: 42, frame: selected) }
+      $0.screenCapture.captureWindowSnapshot = { id in
+        calls.withValue { $0.append(id) }
+        return CapturedWindow(image: pixels, frame: selected)
+      }
+      $0.screenCapture.captureImage = { _, _, _ in
+        Issue.record("Window identity was discarded")
+        return pixels
+      }
+      $0.ocr.recognizeText = { _, _ in OCRResult(lines: []) }
+    }
+    store.exhaustivity = .off
+    await store.send(.liveSelectRequested)
+    await store.receive(\.liveTargetSelected)
+    await store.receive(\.setLive)
+    await store.receive(\.liveFrameResponse)
+    #expect(store.state.sourceWindowID == 42)
+    #expect(calls.value == [42])
+    #expect(store.state.overlayFrame.selectionKind == .window)
+    #expect(store.state.lastFrameSignature != nil)
+    #expect(store.state.overlayFrame.rect == selected)
+    await store.send(.dismissOverlay)
+    await store.finish()
+  }
+
+  @Test
+  func sourceWindowMovementRetiresOldFrameWorkWithoutChangingSelection() async throws {
+    var initial = state()
+    initial.isLive = false
+    initial.sourceWindowID = 42
+    initial.overlayLines = [line()]
+    let oldFrame = initial.overlayFrame
+    let oldGeneration = initial.captureGeneration
+    let snapshot = try LiveFrame(image: image(gray: 0.3))
+    let moved = CGRect(x: 300, y: 200, width: 600, height: 400)
+    let store = TestStore(initialState: initial) { CaptureFeature() }
+    store.exhaustivity = .off
+    await store.send(.sourceWindowGeometryChanged(id: 42, frame: moved))
+    #expect(store.state.overlayFrame.rect == moved)
+    #expect(store.state.sourceWindowID == 42)
+    #expect(store.state.overlayLines.isEmpty)
+    #expect(store.state.captureGeneration > oldGeneration)
+    #expect(store.state.recognitionGeneration > initial.recognitionGeneration)
+    #expect(store.state.translationGeneration > initial.translationGeneration)
+    await store.send(.liveFrameResponse(generation: oldGeneration, frame: oldFrame, result: .success(snapshot)))
+    #expect(store.state.recognitionFrame == nil)
+    await store.send(.sourceWindowGeometryChanged(id: 99, frame: .zero))
+    #expect(store.state.overlayFrame.rect == moved)
+    await store.send(.sourceWindowGeometryChanged(id: 42, frame: nil))
+    #expect(!store.state.sourceWindowAvailable)
+    #expect(!store.state.isLive)
+    await store.finish()
+  }
+
+  @Test
+  func unavailableWindowSuspendsCaptureUntilTheSameWindowReturns() async throws {
+    let clock = TestClock()
+    let pixels = try image(gray: 0.3)
+    let frame = CGRect(x: 10, y: 20, width: 320, height: 160)
+    let captures = LockIsolated(0)
+    var initial = state()
+    initial.sourceWindowID = 42
+    initial.$overlayFrame.withLock { $0 = OverlayFrame(rect: frame) }
+    let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
+      $0.continuousClock = clock
+      $0.screenCapture.captureWindowSnapshot = { _ in
+        captures.withValue { $0 += 1 }
+        return CapturedWindow(image: pixels, frame: frame)
+      }
+      $0.ocr.recognizeText = { _, _ in OCRResult(lines: []) }
+    }
+    store.exhaustivity = .off
+    await store.send(.sourceWindowGeometryChanged(id: 42, frame: nil))
+    #expect(store.state.isLive)
+    #expect(!store.state.sourceWindowAvailable)
+    await clock.advance(by: .seconds(10))
+    #expect(captures.value == 0)
+    await store.send(.sourceWindowGeometryChanged(id: 42, frame: frame))
+    await store.receive(\.liveFrameResponse)
+    #expect(captures.value == 1)
+    #expect(store.state.sourceWindowAvailable)
+    await store.send(.dismissOverlay)
+    await store.finish()
+  }
+
+  @Test
+  func closingTheSelectedWindowDoesNotRecallItsOldScreenRectangle() async {
+    var initial = state()
+    initial.sourceWindowID = 42
+    let store = TestStore(initialState: initial) { CaptureFeature() }
+    store.exhaustivity = .off
+    await store.send(.sourceWindowClosed(id: 99))
+    #expect(store.state.overlayActive)
+    await store.send(.sourceWindowClosed(id: 42))
+    await store.receive(\.dismissOverlay)
+    #expect(store.state.sourceWindowID == nil)
+    #expect(!store.state.overlayFrame.hasSelection)
+    #expect(!store.state.overlayActive)
+    #expect(!store.state.isLive)
+    await store.send(.toggleLiveOverlayRequested)
+    #expect(!store.state.overlayActive)
+    await store.finish()
   }
 
   // MARK: Private

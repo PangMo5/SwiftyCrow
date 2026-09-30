@@ -282,6 +282,42 @@
         }
       }
     },
+    "Arrow keys: Choose a window · Return: Capture · Space: Select an area · Esc: Cancel": {
+      "comment": "Capture selector guidance and accessible window identification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrow keys: Choose a window · Return: Capture · Space: Select an area · Esc: Cancel"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방향키: 창 선택 · Return: 캡처 · Space: 영역 선택 · Esc: 취소"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矢印キー：ウインドウ選択 · Return：キャプチャ · Space：領域選択 · Esc：キャンセル"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方向键：选择窗口 · Return：捕捉 · Space：选择区域 · Esc：取消"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方向鍵：選取視窗 · Return：擷取 · Space：選取區域 · Esc：取消"
+          }
+        }
+      }
+    },
     "Auto (detect)": {
       "extractionState": "manual",
       "localizations": {
@@ -383,6 +419,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "上一步"
+          }
+        }
+      }
+    },
+    "Better recognition, clearer translated layouts, and smoother capture and live translation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Better recognition, clearer translated layouts, and smoother capture and live translation."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글자 인식부터 번역 배치까지 다듬었어요. 캡처와 실시간 번역을 더 편하게 사용해 보세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字の読み取りから訳文の配置まで改善。キャプチャとライブ翻訳がさらに使いやすくなりました。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改善文字识别和译文布局，让截图与实时翻译更顺畅。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改善文字辨識與譯文配置，讓擷取與即時翻譯更順暢。"
           }
         }
       }
@@ -564,6 +635,41 @@
         }
       }
     },
+    "Capture, inspect, and reuse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture, inspect, and reuse"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처하고, 자세히 보고, 바로 활용"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャプチャして、詳しく見て、活用"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截图、仔细查看并使用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "擷取、仔細查看並使用"
+          }
+        }
+      }
+    },
     "Change translation languages in Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -634,6 +740,41 @@
         }
       }
     },
+    "Changes are saved immediately. You can change all shortcuts later in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes are saved immediately. You can change all shortcuts later in Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更はすぐに保存されます。すべてのショートカットは、あとから設定で変更できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경한 단축키는 바로 저장돼요. 나중에 설정에서 모든 단축키를 바꿀 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更改会立即保存。之后可在设置中修改所有快捷键。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "變更會立即儲存。之後可在設定中修改所有快捷鍵。"
+          }
+        }
+      }
+    },
     "Check": {
       "extractionState": "manual",
       "localizations": {
@@ -665,6 +806,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "檢查頻率"
+          }
+        }
+      }
+    },
+    "Check downloads again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check downloads again"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다운로드 상태 다시 확인"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード状況を再確認"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新检查下载状态"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新檢查下載狀態"
           }
         }
       }
@@ -739,6 +915,76 @@
         }
       }
     },
+    "Checking language downloads…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking language downloads…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어 다운로드 상태 확인 중…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "言語のダウンロード状況を確認中…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查语言下载状态…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在檢查語言下載狀態…"
+          }
+        }
+      }
+    },
+    "Choose a different source language to check downloads.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a different source language to check downloads."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다운로드 상태를 확인하려면 다른 원문 언어를 선택해 주세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード状況を確認するには、別の原文言語を選んでください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择不同的源语言以检查下载状态。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請選擇不同的來源語言以檢查下載狀態。"
+          }
+        }
+      }
+    },
     "Choose an area once. Keep translating the text inside as it changes.": {
       "extractionState": "manual",
       "localizations": {
@@ -805,6 +1051,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "清除快速鍵"
+          }
+        }
+      }
+    },
+    "Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットをクリックして、使いたいキーを押してください。Escでキャンセル、×で解除できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키를 클릭하고 원하는 키를 눌러보세요. Esc로 취소하거나 ×로 지울 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击快捷键后按下想使用的按键。按 Esc 取消，或点击 × 清除。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點選快捷鍵後按下想使用的按鍵。按 Esc 取消，或點選 × 清除。"
           }
         }
       }
@@ -1370,6 +1651,41 @@
         }
       }
     },
+    "Download these languages to start translating.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download these languages to start translating."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역하려면 선택한 언어를 다운로드해 주세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳するには、選んだ言語をダウンロードしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请下载所选语言以开始翻译。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請下載所選語言以開始翻譯。"
+          }
+        }
+      }
+    },
     "Drag to move overlay": {
       "extractionState": "manual",
       "localizations": {
@@ -1436,6 +1752,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "拖移即可調整翻譯區域的位置。"
+          }
+        }
+      }
+    },
+    "Drag to select an area.": {
+      "comment": "Capture selector guidance and accessible window identification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to select an area."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영역을 드래그해서 선택하세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドラッグして領域を選択してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动以选择区域。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖曳以選取區域。"
           }
         }
       }
@@ -1755,6 +2107,41 @@
         }
       }
     },
+    "Get started in your language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started in your language"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 언어로 더 쉽게 시작해요"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分の言語で、もっと簡単に"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用自己的语言轻松开始"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用自己的語言輕鬆開始"
+          }
+        }
+      }
+    },
     "Global Shortcuts": {
       "extractionState": "manual",
       "localizations": {
@@ -1930,6 +2317,76 @@
         }
       }
     },
+    "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "세로쓰기, 후리가나, 기울어진 글자와 말풍선 속 대사를 더 정확하게 인식해요. 불확실한 결과는 검토 표시로 알려드려요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "縦書き、ふりがな、傾いた文字、印刷された吹き出しの読み取りを改善。不確かな結果には確認の目印が付きます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改善竖排文字、注音小字、倾斜文字和印刷对话的识别，并标记不确定的结果以便检查。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改善直排文字、注音小字、傾斜文字與印刷對話的辨識，並標記不確定的結果以便檢查。"
+          }
+        }
+      }
+    },
+    "In use": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 중"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用中"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已占用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已佔用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In use"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
     "In-place": {
       "comment": "Live translation mode that draws over the original text.",
       "extractionState": "manual",
@@ -1966,6 +2423,76 @@
         }
       }
     },
+    "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문단, 목록, 짧은 안내 문구의 배치와 글자 스타일을 원문에 가깝게 유지해요. 세로 글도 번역할 언어에 맞는 방향으로 보여줘요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "段落、リスト、ラベルの配置や文字のスタイルを原文に近く保ちます。縦書きも翻訳先の言語に合った方向で表示します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "让段落、列表、标签的布局、文字样式和对齐更接近原文。竖排文字也会按译文语言适合的方向排列。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讓段落、清單、標籤的配置、文字樣式與對齊更接近原文。直排文字也會依譯文語言適合的方向排列。"
+          }
+        }
+      }
+    },
+    "Keep reading as the screen changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep reading as the screen changes"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면이 바뀌어도 이어서 읽어요"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面が変わっても読み続ける"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面变化时继续阅读"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "畫面變化時繼續閱讀"
+          }
+        }
+      }
+    },
     "LIVE": {
       "extractionState": "manual",
       "localizations": {
@@ -1997,6 +2524,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "即時"
+          }
+        }
+      }
+    },
+    "Language downloads have not been checked.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language downloads have not been checked."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어 다운로드 상태를 아직 확인하지 않았어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "言語のダウンロード状況は未確認です。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未检查语言下载状态。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未檢查語言下載狀態。"
           }
         }
       }
@@ -2316,6 +2878,41 @@
         }
       }
     },
+    "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 영역의 글이 바뀌면 실시간 번역도 따라 바뀌어요. 잠시 숨겼다가 같은 영역과 번역창 위치에서 다시 읽을 수 있어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選んだ範囲の文字が変わると翻訳も更新します。いったん隠しても、同じ範囲と翻訳ウインドウの位置で再開できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选区域的文字变化时，实时翻译也会更新。可暂时隐藏，再回到同一区域和翻译窗口位置继续阅读。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所選區域的文字變化時，即時翻譯也會更新。可暫時隱藏，再回到同一區域與翻譯視窗位置繼續閱讀。"
+          }
+        }
+      }
+    },
     "Live translation is paused": {
       "extractionState": "manual",
       "localizations": {
@@ -2596,6 +3193,41 @@
         }
       }
     },
+    "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 창을 옮기고 확대하거나 움직여 글을 자세히 보세요. 번역된 이미지 전체를 원래 해상도로 복사하거나 저장할 수 있어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャプチャウインドウを移動し、拡大やスクロールで文字を詳しく確認。翻訳画像全体を元の解像度でコピー・保存できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动截图窗口，缩放或平移以仔细查看文字。可按原始分辨率复制或保存完整的翻译图片。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動擷取視窗，縮放或平移以仔細查看文字。可依原始解析度複製或儲存完整的翻譯圖片。"
+          }
+        }
+      }
+    },
     "No account or API key needed.": {
       "extractionState": "manual",
       "localizations": {
@@ -2666,40 +3298,76 @@
         }
       }
     },
-    "No translation model is installed for %@ → %@. Download these languages in System Settings.": {
+    "No window selected": {
+      "comment": "Capture selector guidance and accessible window identification.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No translation model is installed for %@ → %@. Download these languages in System Settings."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ → %@ の翻訳モデルがインストールされていません。システム設定で必要な言語をダウンロードしてください。"
+            "value": "No window selected"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ → %@ 번역 모델이 설치되어 있지 않아요. 시스템 설정에서 해당 언어를 다운로드해 주세요."
+            "value": "선택한 창 없음"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウインドウが選択されていません"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "尚未安装 %@ → %@ 的翻译模型，请在系统设置中下载这些语言。"
+            "value": "未选择窗口"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "尚未安裝 %@ → %@ 的翻譯模型，請在系統設定中下載這些語言。"
+            "value": "未選取視窗"
           }
         }
       }
+    },
+    "None": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "없음"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なし"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      },
+      "extractionState": "manual"
     },
     "Open Language & Region…": {
       "extractionState": "manual",
@@ -3088,41 +3756,6 @@
         }
       }
     },
-    "Preparing text recognition": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparing text recognition"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文字認識を準備しています"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "글자 인식을 준비하고 있어요"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在准备文字识别"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在準備文字辨識"
-          }
-        }
-      }
-    },
     "Press shortcut…": {
       "extractionState": "manual",
       "localizations": {
@@ -3158,6 +3791,41 @@
         }
       }
     },
+    "Processing screen text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing screen text"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面の文字を処理しています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 글자를 처리하고 있어요"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理屏幕文字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在處理螢幕文字"
+          }
+        }
+      }
+    },
     "Quick Setup": {
       "extractionState": "manual",
       "localizations": {
@@ -3189,6 +3857,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "快速設定"
+          }
+        }
+      }
+    },
+    "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 시작에서 화면 기록 권한, 언어 다운로드와 ⇧⌘1·⇧⌘2 단축키를 준비하세요. 앱, 웹사이트와 안내 문서를 5개 언어로 사용할 수 있어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイック設定で画面へのアクセス、言語のダウンロード、⇧⌘1・⇧⌘2を準備。アプリ、サイト、ガイドが5言語に対応しました。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过快速设置准备屏幕访问权限、语言下载和 ⇧⌘1 / ⇧⌘2 快捷键。应用、网站和指南现支持五种语言。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透過快速設定準備螢幕存取權限、語言下載與 ⇧⌘1 / ⇧⌘2 快捷鍵。App、網站與指南現支援五種語言。"
           }
         }
       }
@@ -3262,6 +3965,146 @@
           }
         }
       }
+    },
+    "Read difficult text more clearly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read difficult text more clearly"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽기 어려운 글도 더 정확하게"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取りにくい文字も、より正確に"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更准确地识别难读文字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更準確地辨識難讀文字"
+          }
+        }
+      }
+    },
+    "Ready to translate this language pair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to translate this language pair."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 두 언어로 번역할 준비가 됐어요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選んだ言語の組み合わせで翻訳できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选语言组合已准备好，可以翻译。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所選語言組合已準備好，可以翻譯。"
+          }
+        }
+      }
+    },
+    "Recognizing text and analyzing its layout. Processing time depends on the image.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text and analyzing its layout. Processing time depends on the image."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字の認識とレイアウトの解析を行っています。処理時間は画像によって異なります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글자를 인식하고 배치를 분석하고 있어요. 이미지에 따라 처리 시간이 달라질 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在识别文字并分析布局。处理时间因图像而异。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在辨識文字並分析版面配置。處理時間依影像而異。"
+          }
+        }
+      }
+    },
+    "Recording": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 중"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録中"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在录制"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在記錄"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording"
+          }
+        }
+      },
+      "extractionState": "manual"
     },
     "Relaunch SwiftyCrow": {
       "extractionState": "manual",
@@ -4033,41 +4876,6 @@
         }
       }
     },
-    "Show translation information": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show translation information"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻訳情報を表示"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 정보 보기"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看翻译信息"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看翻譯資訊"
-          }
-        }
-      }
-    },
     "Software Update": {
       "extractionState": "manual",
       "localizations": {
@@ -4244,6 +5052,77 @@
         }
       }
     },
+    "Source language to check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source language to check"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "준비 상태를 확인할 원문 언어"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "準備状況を確認する原文の言語"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要检查准备状态的源语言"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要檢查準備狀態的來源語言"
+          }
+        }
+      }
+    },
+    "Space: Select a window · Esc: Cancel": {
+      "comment": "Capture selector guidance and accessible window identification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space: Select a window · Esc: Cancel"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space: 창 선택 · Esc: 취소"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space：ウインドウ選択 · Esc：キャンセル"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space：选择窗口 · Esc：取消"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space：選取視窗 · Esc：取消"
+          }
+        }
+      }
+    },
     "Start SwiftyCrow automatically when you log in.": {
       "extractionState": "manual",
       "localizations": {
@@ -4310,6 +5189,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "從選單列或快速鍵開始即時翻譯，再拖移選取區域；按 Space 可選取整個視窗。譯文可以顯示在原文上，也可以放在獨立視窗中。翻譯區域內的點按會傳遞給下方 App，控制項與開啟的資訊彈出式視窗會接收輸入。"
+          }
+        }
+      }
+    },
+    "Start a translation from any app without opening the menu bar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a translation from any app without opening the menu bar."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メニューバーを開かずに、どのアプリからでも翻訳を始められます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메뉴 막대를 열지 않아도, 사용 중인 앱에서 바로 번역을 시작할 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无需打开菜单栏，即可在任何应用中开始翻译。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不必開啟選單列，就能在任何 App 中開始翻譯。"
           }
         }
       }
@@ -4736,6 +5650,111 @@
         }
       }
     },
+    "The selected translation mode does not support %@ → %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected translation mode does not support %@ → %@."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 번역 방식은 %@ → %@ 번역을 지원하지 않아요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した翻訳方式は %@ → %@ の翻訳に対応していません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选翻译模式不支持 %@ → %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所選翻譯模式不支援 %@ → %@。"
+          }
+        }
+      }
+    },
+    "The selected translation mode does not support this language pair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected translation mode does not support this language pair."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 번역 방식은 이 언어 조합을 지원하지 않아요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した翻訳方式はこの言語の組み合わせに対応していません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选翻译模式不支持此语言组合。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所選翻譯模式不支援此語言組合。"
+          }
+        }
+      }
+    },
+    "The selected translation mode has no installed model for %@ → %@. Download these languages in System Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected translation mode has no installed model for %@ → %@. Download these languages in System Settings."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 번역 방식의 %@ → %@ 모델이 설치되지 않았어요. 시스템 설정에서 언어를 다운로드해 주세요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した翻訳方式の %@ → %@ モデルがインストールされていません。システム設定で言語をダウンロードしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未安装所选翻译模式的 %@ → %@ 模型。请在系统设置中下载这些语言。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未安裝所選翻譯模式的 %@ → %@ 模型。請在系統設定中下載這些語言。"
+          }
+        }
+      }
+    },
     "These hotkeys work even when the app is in the background, and are saved to config.toml.": {
       "extractionState": "manual",
       "localizations": {
@@ -4806,6 +5825,41 @@
         }
       }
     },
+    "This checks only this language pair. Your source-language setting stays unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This checks only this language pair. Your source-language setting stays unchanged."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 두 언어의 준비 상태만 확인해요. 앱의 원문 언어 설정은 바뀌지 않아요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選んだ言語の組み合わせだけを確認します。アプリの原文言語の設定は変わりません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅检查所选语言组合，应用的源语言设置不会更改。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "僅檢查所選語言組合，App 的來源語言設定不會變更。"
+          }
+        }
+      }
+    },
     "This program comes with no warranty. You may redistribute it under the GNU AGPL v3. Select License for details.": {
       "extractionState": "manual",
       "localizations": {
@@ -4841,6 +5895,42 @@
         }
       }
     },
+    "This shortcut is already used by %@.": {
+      "comment": "Shortcut recorder conflict. The variable is the action already using the shortcut.",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 단축키는 이미 %@에서 사용 중이에요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このショートカットはすでに%@で使用されています。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此快捷键已被%@使用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此快捷鍵已被%@使用。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shortcut is already used by %@."
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
     "Translate and copy text from your screen": {
       "extractionState": "manual",
       "localizations": {
@@ -4872,6 +5962,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "翻譯並複製螢幕上的文字"
+          }
+        }
+      }
+    },
+    "Translate anything on your screen.\nEntirely on your Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate anything on your screen.\nEntirely on your Mac."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 어떤 글이든 번역해요.\n모든 처리는 Mac 안에서."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面のどんな文章も翻訳。\nすべての処理をMacの中で。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译屏幕上的任何文字。\n所有处理都在 Mac 上完成。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯螢幕上的任何文字。\n所有處理都在 Mac 上完成。"
           }
         }
       }
@@ -4942,6 +6067,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "無須離開正在使用的 App，即可翻譯螢幕上的外語。"
+          }
+        }
+      }
+    },
+    "Translate with a shortcut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate with a shortcut."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットですぐに翻訳。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키로 바로 번역해요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用快捷键即刻翻译。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用快捷鍵立即翻譯。"
           }
         }
       }
@@ -5086,76 +6246,6 @@
         }
       }
     },
-    "Translation information": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Translation information"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻訳情報"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역 정보"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻译信息"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻譯資訊"
-          }
-        }
-      }
-    },
-    "Translation is not supported from %@ to %@.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Translation is not supported from %@ to %@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@から%@への翻訳には対応していません。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ → %@ 번역은 지원하지 않아요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不支持从 %@ 翻译为 %@。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不支援從 %@ 翻譯為 %@。"
-          }
-        }
-      }
-    },
     "Translation paused": {
       "extractionState": "manual",
       "localizations": {
@@ -5257,6 +6347,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "暫時無法翻譯"
+          }
+        }
+      }
+    },
+    "Translations that follow the page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translations that follow the page"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원문의 흐름을 살리는 번역"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原文の流れに沿った翻訳"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留原文结构的翻译"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留原文結構的翻譯"
           }
         }
       }
@@ -5366,6 +6491,42 @@
         }
       }
     },
+    "Untitled window": {
+      "comment": "Capture selector guidance and accessible window identification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled window"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목 없는 창"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称未設定のウインドウ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无标题窗口"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名視窗"
+          }
+        }
+      }
+    },
     "Updates": {
       "extractionState": "manual",
       "localizations": {
@@ -5401,41 +6562,6 @@
         }
       }
     },
-    "Using installed models for %lld language pairs.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Using installed models for %lld language pairs."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld組の言語でインストール済みのモデルを使っています。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld개 언어 조합에 설치된 모델을 사용하고 있어요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在为 %lld 组语言使用已安装的模型。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在為 %lld 組語言使用已安裝的模型。"
-          }
-        }
-      }
-    },
     "Version": {
       "extractionState": "manual",
       "localizations": {
@@ -5467,6 +6593,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "版本"
+          }
+        }
+      }
+    },
+    "View Changelog…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Changelog…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 내역 보기…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更履歴を見る…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看更新日志…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢視更新記錄…"
           }
         }
       }
@@ -5717,41 +6878,6 @@
         }
       }
     },
-    "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "優先する方式のモデルがインストールされていれば、そのモデルを使います。ない場合はインストール済みの別のモデルを使い、選んだ方式を表示します。品質優先は対応デバイスでApple Intelligenceを使います。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 방식의 모델이 설치되어 있으면 우선 사용해요. 없으면 설치된 다른 모델을 사용하고 알려드려요. 자연스럽게 번역하는 방식은 지원 기기에서 Apple Intelligence를 사용해요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "优先使用你选择的方式对应的已安装模型。如果尚未安装，会使用其他已安装的模型并显示所选方式。高质量方式在支持的设备上使用 Apple Intelligence。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "優先使用你選擇的方式所對應的已安裝模型。如果尚未安裝，會使用其他已安裝的模型並顯示所選方式。高品質方式會在支援的裝置上使用 Apple Intelligence。"
-          }
-        }
-      }
-    },
     "Zoom %@. Fit image": {
       "extractionState": "manual",
       "localizations": {
@@ -5927,1403 +7053,177 @@
         }
       }
     },
-    "macOS is loading the recognition model.\nThis only happens the first time, or after it has been unloaded.": {
+    "This device does not support Apple Intelligence. Select Low latency for translation.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS is loading the recognition model.\nThis only happens the first time, or after it has been unloaded."
+            "value": "This device does not support Apple Intelligence. Select Low latency for translation."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOSが文字認識モデルを読み込んでいます。\n初回やモデルがメモリから解放された後は、少しお待ちください。"
+            "value": "このデバイスはApple Intelligenceに対応していません。翻訳方式で速度優先を選択してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS가 글자 인식 모델을 불러오고 있어요.\n처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
+            "value": "이 기기는 Apple Intelligence를 지원하지 않아요. 번역 방식을 빠르게로 선택해 주세요."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 正在加载文字识别模型。\n首次使用或模型从内存卸载后需要稍等片刻。"
+            "value": "此设备不支持 Apple Intelligence。请选择快速翻译方式。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 正在載入文字辨識模型。\n首次使用或模型從記憶體卸載後需要稍候片刻。"
+            "value": "此裝置不支援 Apple Intelligence。請選擇快速翻譯方式。"
           }
         }
       }
     },
-    "macOS is loading the recognition model. This only happens the first time, or after it has been unloaded.": {
+    "Enable Apple Intelligence in System Settings to use High fidelity translation.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS is loading the recognition model. This only happens the first time, or after it has been unloaded."
+            "value": "Enable Apple Intelligence in System Settings to use High fidelity translation."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOSが文字認識モデルを読み込んでいます。初回やモデルがメモリから解放された後は、少しお待ちください。"
+            "value": "品質優先の翻訳を使うには、システム設定でApple Intelligenceを有効にしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS가 글자 인식 모델을 불러오고 있어요. 처음 사용하거나 모델이 메모리에서 해제된 뒤에만 잠시 기다려 주세요."
+            "value": "자연스럽게 번역하려면 시스템 설정에서 Apple Intelligence를 켜 주세요."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 正在加载文字识别模型。首次使用或模型从内存卸载后需要稍等片刻。"
+            "value": "要使用高质量翻译，请在系统设置中启用 Apple Intelligence。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 正在載入文字辨識模型。首次使用或模型從記憶體卸載後需要稍候片刻。"
+            "value": "若要使用高品質翻譯，請在系統設定中啟用 Apple Intelligence。"
           }
         }
       }
     },
-    "Using another installed model": {
+    "Apple Intelligence is preparing its model. Try High fidelity translation again when it is ready.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Using another installed model"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "설치된 다른 모델 사용"
+            "value": "Apple Intelligence is preparing its model. Try High fidelity translation again when it is ready."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "別のインストール済みモデルを使用"
+            "value": "Apple Intelligenceがモデルを準備しています。準備が完了したら品質優先の翻訳をもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence가 모델을 준비하고 있어요. 준비가 끝나면 자연스럽게 번역을 다시 시도해 주세요."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用其他已安装的模型"
+            "value": "Apple Intelligence 正在准备模型。准备完成后，请重试高质量翻译。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用其他已安裝的模型"
+            "value": "Apple Intelligence 正在準備模型。準備完成後，請重試高品質翻譯。"
           }
         }
       }
     },
-    "Language model settings…": {
+    "High fidelity translation is unavailable because Apple Intelligence is not ready.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Language model settings…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "언어 모델 설정…"
+            "value": "High fidelity translation is unavailable because Apple Intelligence is not ready."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "言語モデルの設定…"
+            "value": "Apple Intelligenceの準備ができていないため、品質優先の翻訳を利用できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence가 준비되지 않아 자연스럽게 번역을 사용할 수 없어요."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "语言模型设置…"
+            "value": "Apple Intelligence 尚未就绪，无法使用高质量翻译。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "語言模型設定…"
+            "value": "Apple Intelligence 尚未就緒，無法使用高品質翻譯。"
           }
         }
       }
     },
-    "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested strategy does not support this language pair.": {
+    "SwiftyCrow uses the strategy you select. High fidelity requires Apple Intelligence to be ready. If the selected model is unavailable, the app reports the problem without switching strategies.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested strategy does not support this language pair."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "요청한 방식: %@ · 이번 번역 방식: %@\n%@ → %@는 요청한 방식에서 지원하지 않아 다른 방식을 사용했어요."
+            "value": "SwiftyCrow uses the strategy you select. High fidelity requires Apple Intelligence to be ready. If the selected model is unavailable, the app reports the problem without switching strategies."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "指定した方式：%@。今回の翻訳方式：%@。\n%@ → %@は指定した方式でサポートされていないため、別の方式を使用しました。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请求的方式：%@。本次翻译使用：%@。\n%@ → %@ 不受请求的方式支持，因此使用了其他方式。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要求的方式：%@。本次翻譯使用：%@。\n%@ → %@ 不受要求的方式支援，因此使用了其他方式。"
-          }
-        }
-      }
-    },
-    "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested model is not installed.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Requested: %@. Selected for this translation: %@.\n%@ → %@: the requested model is not installed."
+            "value": "SwiftyCrowは選択した翻訳方式を使います。品質優先にはApple Intelligenceの準備が必要です。選択したモデルを利用できない場合は、方式を切り替えずに問題をお知らせします。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "요청한 방식: %@ · 이번 번역 방식: %@\n%@ → %@의 요청한 모델이 설치되어 있지 않아 다른 방식을 사용했어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "指定した方式：%@。今回の翻訳方式：%@。\n%@ → %@の指定モデルがインストールされていないため、別の方式を使用しました。"
+            "value": "SwiftyCrow는 선택한 번역 방식을 사용해요. 자연스럽게 번역하려면 Apple Intelligence가 준비되어 있어야 해요. 선택한 모델을 사용할 수 없으면 다른 방식으로 바꾸지 않고 문제를 알려줘요."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "请求的方式：%@。本次翻译使用：%@。\n%@ → %@ 所需的模型尚未安装，因此使用了其他方式。"
+            "value": "SwiftyCrow 使用您选择的翻译方式。高质量翻译需要 Apple Intelligence 就绪。如果所选模型不可用，应用会提示问题，而不会切换翻译方式。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "要求的方式：%@。本次翻譯使用：%@。\n%@ → %@ 所需的模型尚未安裝，因此使用了其他方式。"
-          }
-        }
-      }
-    },
-    "View Changelog…": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View Changelog…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "변경 내역 보기…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "変更履歴を見る…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看更新日志…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "檢視更新記錄…"
-          }
-        }
-      }
-    },
-    "Translate anything on your screen.\nEntirely on your Mac.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Translate anything on your screen.\nEntirely on your Mac."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면의 어떤 글이든 번역해요.\n모든 처리는 Mac 안에서."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面のどんな文章も翻訳。\nすべての処理をMacの中で。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻译屏幕上的任何文字。\n所有处理都在 Mac 上完成。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻譯螢幕上的任何文字。\n所有處理都在 Mac 上完成。"
-          }
-        }
-      }
-    },
-    "Changes are saved immediately. You can change all shortcuts later in Settings.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changes are saved immediately. You can change all shortcuts later in Settings."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "変更はすぐに保存されます。すべてのショートカットは、あとから設定で変更できます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "변경한 단축키는 바로 저장돼요. 나중에 설정에서 모든 단축키를 바꿀 수 있어요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更改会立即保存。之后可在设置中修改所有快捷键。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "變更會立即儲存。之後可在設定中修改所有快捷鍵。"
-          }
-        }
-      }
-    },
-    "Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカットをクリックして、使いたいキーを押してください。Escでキャンセル、×で解除できます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키를 클릭하고 원하는 키를 눌러보세요. Esc로 취소하거나 ×로 지울 수 있어요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "点击快捷键后按下想使用的按键。按 Esc 取消，或点击 × 清除。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "點選快捷鍵後按下想使用的按鍵。按 Esc 取消，或點選 × 清除。"
-          }
-        }
-      }
-    },
-    "Start a translation from any app without opening the menu bar.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start a translation from any app without opening the menu bar."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メニューバーを開かずに、どのアプリからでも翻訳を始められます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "메뉴 막대를 열지 않아도, 사용 중인 앱에서 바로 번역을 시작할 수 있어요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无需打开菜单栏，即可在任何应用中开始翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不必開啟選單列，就能在任何 App 中開始翻譯。"
-          }
-        }
-      }
-    },
-    "Translate with a shortcut.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Translate with a shortcut."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカットですぐに翻訳。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "단축키로 바로 번역해요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用快捷键即刻翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用快捷鍵立即翻譯。"
-          }
-        }
-      }
-    },
-    "Recording": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기록 중"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "記録中"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在录制"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在記錄"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recording"
-          }
-        }
-      },
-      "extractionState": "manual"
-    },
-    "None": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "없음"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "なし"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "None"
-          }
-        }
-      },
-      "extractionState": "manual"
-    },
-    "In use": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용 중"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用中"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已占用"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已佔用"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In use"
-          }
-        }
-      },
-      "extractionState": "manual"
-    },
-    "This shortcut is already used by %@.": {
-      "comment": "Shortcut recorder conflict. The variable is the action already using the shortcut.",
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 단축키는 이미 %@에서 사용 중이에요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このショートカットはすでに%@で使用されています。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此快捷键已被%@使用。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此快捷鍵已被%@使用。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This shortcut is already used by %@."
-          }
-        }
-      },
-      "extractionState": "manual"
-    },
-    "Better recognition, clearer translated layouts, and smoother capture and live translation.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Better recognition, clearer translated layouts, and smoother capture and live translation."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "글자 인식부터 번역 배치까지 다듬었어요. 캡처와 실시간 번역을 더 편하게 사용해 보세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文字の読み取りから訳文の配置まで改善。キャプチャとライブ翻訳がさらに使いやすくなりました。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "改善文字识别和译文布局，让截图与实时翻译更顺畅。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "改善文字辨識與譯文配置，讓擷取與即時翻譯更順暢。"
-          }
-        }
-      }
-    },
-    "Capture, inspect, and reuse": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture, inspect, and reuse"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처하고, 자세히 보고, 바로 활용"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キャプチャして、詳しく見て、活用"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截图、仔细查看并使用"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "擷取、仔細查看並使用"
-          }
-        }
-      }
-    },
-    "Check downloads again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check downloads again"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다운로드 상태 다시 확인"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダウンロード状況を再確認"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新检查下载状态"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新檢查下載狀態"
-          }
-        }
-      }
-    },
-    "Checking language downloads…": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checking language downloads…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "언어 다운로드 상태 확인 중…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "言語のダウンロード状況を確認中…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在检查语言下载状态…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在檢查語言下載狀態…"
-          }
-        }
-      }
-    },
-    "Choose a different source language to check downloads.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a different source language to check downloads."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다운로드 상태를 확인하려면 다른 원문 언어를 선택해 주세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダウンロード状況を確認するには、別の原文言語を選んでください。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请选择不同的源语言以检查下载状态。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請選擇不同的來源語言以檢查下載狀態。"
-          }
-        }
-      }
-    },
-    "Download these languages to start translating.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Download these languages to start translating."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "번역하려면 선택한 언어를 다운로드해 주세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻訳するには、選んだ言語をダウンロードしてください。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请下载所选语言以开始翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請下載所選語言以開始翻譯。"
-          }
-        }
-      }
-    },
-    "Get started in your language": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Get started in your language"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "내 언어로 더 쉽게 시작해요"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自分の言語で、もっと簡単に"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用自己的语言轻松开始"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用自己的語言輕鬆開始"
-          }
-        }
-      }
-    },
-    "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "세로쓰기, 후리가나, 기울어진 글자와 말풍선 속 대사를 더 정확하게 인식해요. 불확실한 결과는 검토 표시로 알려드려요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "縦書き、ふりがな、傾いた文字、印刷された吹き出しの読み取りを改善。不確かな結果には確認の目印が付きます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "改善竖排文字、注音小字、倾斜文字和印刷对话的识别，并标记不确定的结果以便检查。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "改善直排文字、注音小字、傾斜文字與印刷對話的辨識，並標記不確定的結果以便檢查。"
-          }
-        }
-      }
-    },
-    "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "문단, 목록, 짧은 안내 문구의 배치와 글자 스타일을 원문에 가깝게 유지해요. 세로 글도 번역할 언어에 맞는 방향으로 보여줘요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "段落、リスト、ラベルの配置や文字のスタイルを原文に近く保ちます。縦書きも翻訳先の言語に合った方向で表示します。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "让段落、列表、标签的布局、文字样式和对齐更接近原文。竖排文字也会按译文语言适合的方向排列。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "讓段落、清單、標籤的配置、文字樣式與對齊更接近原文。直排文字也會依譯文語言適合的方向排列。"
-          }
-        }
-      }
-    },
-    "Keep reading as the screen changes": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep reading as the screen changes"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면이 바뀌어도 이어서 읽어요"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面が変わっても読み続ける"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面变化时继续阅读"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "畫面變化時繼續閱讀"
-          }
-        }
-      }
-    },
-    "Language downloads have not been checked.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Language downloads have not been checked."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "언어 다운로드 상태를 아직 확인하지 않았어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "言語のダウンロード状況は未確認です。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "尚未检查语言下载状态。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "尚未檢查語言下載狀態。"
-          }
-        }
-      }
-    },
-    "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 영역의 글이 바뀌면 실시간 번역도 따라 바뀌어요. 잠시 숨겼다가 같은 영역과 번역창 위치에서 다시 읽을 수 있어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選んだ範囲の文字が変わると翻訳も更新します。いったん隠しても、同じ範囲と翻訳ウインドウの位置で再開できます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所选区域的文字变化时，实时翻译也会更新。可暂时隐藏，再回到同一区域和翻译窗口位置继续阅读。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所選區域的文字變化時，即時翻譯也會更新。可暫時隱藏，再回到同一區域與翻譯視窗位置繼續閱讀。"
-          }
-        }
-      }
-    },
-    "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "캡처 창을 옮기고 확대하거나 움직여 글을 자세히 보세요. 번역된 이미지 전체를 원래 해상도로 복사하거나 저장할 수 있어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キャプチャウインドウを移動し、拡大やスクロールで文字を詳しく確認。翻訳画像全体を元の解像度でコピー・保存できます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移动截图窗口，缩放或平移以仔细查看文字。可按原始分辨率复制或保存完整的翻译图片。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移動擷取視窗，縮放或平移以仔細查看文字。可依原始解析度複製或儲存完整的翻譯圖片。"
-          }
-        }
-      }
-    },
-    "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "빠른 시작에서 화면 기록 권한, 언어 다운로드와 ⇧⌘1·⇧⌘2 단축키를 준비하세요. 앱, 웹사이트와 안내 문서를 5개 언어로 사용할 수 있어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "クイック設定で画面へのアクセス、言語のダウンロード、⇧⌘1・⇧⌘2を準備。アプリ、サイト、ガイドが5言語に対応しました。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "通过快速设置准备屏幕访问权限、语言下载和 ⇧⌘1 / ⇧⌘2 快捷键。应用、网站和指南现支持五种语言。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "透過快速設定準備螢幕存取權限、語言下載與 ⇧⌘1 / ⇧⌘2 快捷鍵。App、網站與指南現支援五種語言。"
-          }
-        }
-      }
-    },
-    "Read difficult text more clearly": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read difficult text more clearly"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "읽기 어려운 글도 더 정확하게"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "読み取りにくい文字も、より正確に"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更准确地识别难读文字"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更準確地辨識難讀文字"
-          }
-        }
-      }
-    },
-    "Ready to translate this language pair.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready to translate this language pair."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 두 언어로 번역할 준비가 됐어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選んだ言語の組み合わせで翻訳できます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所选语言组合已准备好，可以翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所選語言組合已準備好，可以翻譯。"
-          }
-        }
-      }
-    },
-    "Source language to check": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source language to check"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "준비 상태를 확인할 원문 언어"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "準備状況を確認する原文の言語"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要检查准备状态的源语言"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要檢查準備狀態的來源語言"
-          }
-        }
-      }
-    },
-    "This checks only this language pair. Your source-language setting stays unchanged.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This checks only this language pair. Your source-language setting stays unchanged."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 두 언어의 준비 상태만 확인해요. 앱의 원문 언어 설정은 바뀌지 않아요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選んだ言語の組み合わせだけを確認します。アプリの原文言語の設定は変わりません。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "仅检查所选语言组合，应用的源语言设置不会更改。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "僅檢查所選語言組合，App 的來源語言設定不會變更。"
-          }
-        }
-      }
-    },
-    "This language pair is not supported. Choose another language.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This language pair is not supported. Choose another language."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지원하지 않는 언어 조합이에요. 다른 언어를 선택해 주세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この言語の組み合わせには対応していません。別の言語を選んでください。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不支持此语言组合，请选择其他语言。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不支援此語言組合，請選擇其他語言。"
-          }
-        }
-      }
-    },
-    "Translations that follow the page": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Translations that follow the page"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "원문의 흐름을 살리는 번역"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "原文の流れに沿った翻訳"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保留原文结构的翻译"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保留原文結構的翻譯"
-          }
-        }
-      }
-    },
-    "Download languages for the selected translation mode.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Download languages for the selected translation mode."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 번역 방식의 언어를 다운로드해 주세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選択した翻訳方式の言語をダウンロードしてください。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请下载所选翻译模式的语言。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請下載所選翻譯模式的語言。"
-          }
-        }
-      }
-    },
-    "You can translate now using another installed mode.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You can translate now using another installed mode."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지금은 설치된 다른 방식으로 번역할 수 있어요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今はインストール済みの別の方式で翻訳できます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "目前可使用另一种已安装的模式进行翻译。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "目前可使用另一種已安裝的模式進行翻譯。"
-          }
-        }
-      }
-    },
-    "The selected translation mode does not support this language pair.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The selected translation mode does not support this language pair."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "선택한 번역 방식은 이 언어 조합을 지원하지 않아요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選択した翻訳方式はこの言語の組み合わせに対応していません。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所选翻译模式不支持此语言组合。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所選翻譯模式不支援此語言組合。"
-          }
-        }
-      }
-    },
-    "Download the languages to use another translation mode.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Download the languages to use another translation mode."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다른 번역 방식을 사용하려면 언어를 다운로드해 주세요."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "別の翻訳方式を使うには、言語をダウンロードしてください。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请下载语言以使用另一种翻译模式。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請下載語言以使用另一種翻譯模式。"
+            "value": "SwiftyCrow 使用您選擇的翻譯方式。高品質翻譯需要 Apple Intelligence 就緒。如果所選模型無法使用，App 會提示問題，而不會切換翻譯方式。"
           }
         }
       }

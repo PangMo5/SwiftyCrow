@@ -96,8 +96,14 @@ private final class RegionSelectorController {
 
   /// A selector view reports a click in `.window` mode.
   func reportWindowClick() {
-    guard mode == .window, let hovered else { return }
-    finish(.window(id: hovered.id, frame: hovered.frame))
+    guard mode == .window, let selectedID = hovered?.id else { return }
+    refreshWindows()
+    guard let selected = windows.first(where: { $0.id == selectedID }) else {
+      hovered = nil
+      refreshSelectionDisplay()
+      return
+    }
+    finish(.window(id: selected.id, frame: selected.frame))
   }
 
   // MARK: Private
@@ -122,6 +128,7 @@ private final class RegionSelectorController {
         backing: .buffered,
         defer: false
       )
+      panel.title = String(localized: "Capture")
       panel.level = .screenSaver
       panel.isOpaque = false
       panel.backgroundColor = .clear
@@ -156,9 +163,8 @@ private final class RegionSelectorController {
       refreshWindows()
       refreshHover()
     }
-    for view in views { view.resetSelection()
-      view.needsDisplay = true
-    }
+    for view in views { view.resetSelection() }
+    refreshSelectionDisplay()
     for panel in panels { panel.invalidateCursorRects(for: panel.contentView!) }
   }
 
@@ -171,7 +177,21 @@ private final class RegionSelectorController {
     let next = windowUnderCursor(windows, at: NSEvent.mouseLocation)
     guard next != hovered else { return }
     hovered = next
-    for view in views { view.needsDisplay = true }
+    refreshSelectionDisplay()
+  }
+
+  private func cycleWindow(forward: Bool) {
+    guard mode == .window else { return }
+    refreshWindows()
+    hovered = cycledWindow(in: windows, after: hovered?.id, forward: forward)
+    refreshSelectionDisplay()
+  }
+
+  private func refreshSelectionDisplay() {
+    for view in views {
+      view.updateInstructions()
+      view.needsDisplay = true
+    }
   }
 
   private func startMonitors() {
@@ -192,6 +212,24 @@ private final class RegionSelectorController {
         switch keyCode {
         case 49: // Space
           self.toggleMode()
+          return true
+
+        case 123,
+             126: // Left / Up
+          guard self.mode == .window else { return false }
+          self.cycleWindow(forward: false)
+          return true
+
+        case 124,
+             125: // Right / Down
+          guard self.mode == .window else { return false }
+          self.cycleWindow(forward: true)
+          return true
+
+        case 36,
+             76: // Return / keypad Enter
+          guard self.mode == .window else { return false }
+          self.reportWindowClick()
           return true
 
         case 53: // Escape
@@ -247,6 +285,32 @@ private final class SelectionView: NSView {
     self.screen = screen
     self.controller = controller
     super.init(frame: .zero)
+    targetLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+    targetLabel.alignment = .center
+    targetLabel.lineBreakMode = .byTruncatingMiddle
+    targetLabel.setAccessibilityIdentifier("capture-selection-target")
+    instructions.font = .systemFont(ofSize: 12)
+    instructions.alignment = .center
+    instructions.maximumNumberOfLines = 2
+    instructions.preferredMaxLayoutWidth = min(680, screen.frame.width - 80)
+    instructions.setAccessibilityIdentifier("capture-selection-instructions")
+    guidance.orientation = .vertical
+    guidance.alignment = .centerX
+    guidance.spacing = 6
+    guidance.edgeInsets = NSEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+    guidance.addArrangedSubview(targetLabel)
+    guidance.addArrangedSubview(instructions)
+    guidance.wantsLayer = true
+    guidance.layer?.cornerRadius = 12
+    guidance.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(guidance)
+    NSLayoutConstraint.activate([
+      guidance.centerXAnchor.constraint(equalTo: centerXAnchor),
+      guidance.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
+      guidance.widthAnchor.constraint(lessThanOrEqualToConstant: min(720, screen.frame.width - 48)),
+    ])
+    updateInstructions()
+    updateGuidanceAppearance()
   }
 
   @available(*, unavailable)
@@ -258,6 +322,21 @@ private final class SelectionView: NSView {
 
   override var acceptsFirstResponder: Bool {
     true
+  }
+
+  func updateInstructions() {
+    targetLabel.stringValue = controller.mode == .region
+      ? String(localized: "Drag to select an area.")
+      : controller.hovered?.displayName ?? String(localized: "No window selected")
+    instructions.stringValue = controller.mode == .region
+      ? String(localized: "Space: Select a window · Esc: Cancel")
+      : String(localized: "Arrow keys: Choose a window · Return: Capture · Space: Select an area · Esc: Cancel")
+    NSAccessibility.post(element: targetLabel, notification: .valueChanged)
+  }
+
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    updateGuidanceAppearance()
   }
 
   func resetSelection() {
@@ -329,10 +408,18 @@ private final class SelectionView: NSView {
 
   // MARK: Private
 
+  private let guidance = NSStackView()
+  private let targetLabel = NSTextField(labelWithString: "")
+  private let instructions = NSTextField(wrappingLabelWithString: "")
+
   private let screen: NSScreen
   private unowned let controller: RegionSelectorController
   private var startPoint: CGPoint?
   private var selection = CGRect.zero
+
+  private func updateGuidanceAppearance() {
+    guidance.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95).cgColor
+  }
 
   private func drawRegionSelection() {
     guard selection.width > 0, selection.height > 0 else { return }

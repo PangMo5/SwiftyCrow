@@ -42,6 +42,388 @@ struct OverlayLayoutEngineTests {
     }
   }
 
+  @Test(arguments: [OverlayTextAlignment.leading, .trailing], [CGFloat(1), 2])
+  func aPreservedRowMarkerKeepsTheNativeLabelEdge(alignment: OverlayTextAlignment, scale: CGFloat) throws {
+    let size = CGSize(width: 400 * scale, height: 200 * scale)
+    func box(_ rect: CGRect) -> CGRect {
+      let rect = alignment == .leading ? rect : CGRect(x: 400 - rect.maxX, y: rect.minY, width: rect.width, height: rect.height)
+      return CGRect(x: rect.minX / 400, y: rect.minY / 200, width: rect.width / 400, height: rect.height / 200)
+    }
+    let language = Locale.Language(identifier: alignment == .leading ? "en" : "ar")
+    var label = OverlayLine(id: UUID(), source: .init(recognized: .init(
+      boundingBoxNormalized: box(CGRect(x: 45, y: 30, width: 15, height: 18)),
+      text: "Label",
+      imageAspectRatio: 2,
+      appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.07, fontWeight: .regular),
+      layoutBounds: CGRect(x: 0, y: 0.15, width: 1, height: 0.09),
+      alignment: alignment
+    ), language: language))
+    label.showTranslation("표시", language: .init(identifier: "ko"))
+    var marker = OverlayLine(id: UUID(), source: .init(recognized: .init(
+      boundingBoxNormalized: box(CGRect(x: 20, y: 30, width: 18, height: 18)),
+      text: "〇",
+      imageAspectRatio: 2,
+      preservesSource: true
+    ), language: language))
+    let peer = OverlayLine(id: UUID(), source: .init(recognized: .init(
+      boundingBoxNormalized: box(CGRect(x: 20, y: 60, width: 60, height: 20)),
+      text: "O next label",
+      imageAspectRatio: 2
+    ), language: language))
+    func placement() throws -> OverlayPlacement {
+      try #require(OverlayLayoutEngine.placements(for: [label, marker, peer], in: size).first)
+    }
+    #expect(try placement().alignment == alignment)
+    marker.source.recognitionContextID = 1
+    #expect(try placement().alignment == .center)
+    marker.source.recognitionContextID = nil
+    label.source.rotationRadians = .pi / 6
+    label.source.layoutBounds = nil
+    #expect(try placement().alignment == .center)
+    label.source.rotationRadians = 0
+    marker.source.rotationRadians = .pi / 6
+    #expect(try placement().alignment == .center)
+    marker.source.rotationRadians = 0
+    marker.source.preservesSource = false
+    #expect(try placement().alignment == .center)
+  }
+
+  @Test(arguments: [CGFloat(18), 20, 22, 24, 26, 28], [
+    ("ko", "1.2. 안녕하세요, 세계!"),
+    ("de", "1.2. Begrüßung der Welt"),
+    ("ar", "1.2. مرحبًا بالعالم!"),
+  ])
+  func singleRowLabelsUseVerifiedWidthDespiteOCRPadding(height: CGFloat, translation: (String, String)) throws {
+    let size = CGSize(width: 950, height: 760)
+    let preferred: CGFloat = 11.865585168
+    let box = CGRect(x: 22 / size.width, y: 214 / size.height, width: 92 / size.width, height: height / size.height)
+    var source = OCRResult.Line(
+      boundingBoxNormalized: box,
+      text: "1.2. Hello, World!",
+      imageAspectRatio: size.width / size.height,
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontSizeScale: preferred / size.height,
+        fontWeight: .regular
+      ),
+      layoutBounds: CGRect(x: 0, y: box.minY, width: 205 / size.width, height: max(26, height) / size.height)
+    )
+    func placement(_ row: OCRResult.Line) throws -> OverlayPlacement {
+      var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+      line.showTranslation(translation.1, language: .init(identifier: translation.0))
+      return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    }
+    let expanded = try placement(source)
+    #expect(expanded.fontSize >= preferred - 0.001)
+    #expect(HorizontalTextRenderer.plan(for: expanded).lines.count == 1)
+    #expect(expanded.frame.maxX <= 205.001)
+    #expect(expanded.isTextLayoutComplete)
+    // Without measured free space, padding cannot license a wider container.
+    source.layoutBounds = nil
+    let bounded = try placement(source)
+    #expect(bounded.frame.width <= 92.001)
+  }
+
+  @Test
+  func singleRowExpansionComparesTheFinalArtworkAvoidingLayout() throws {
+    let size = CGSize(width: 400, height: 160)
+    func box(_ rect: CGRect) -> CGRect {
+      CGRect(
+        x: rect.minX / size.width,
+        y: rect.minY / size.height,
+        width: rect.width / size.width,
+        height: rect.height / size.height
+      )
+    }
+    var source = OCRResult.Line(
+      boundingBoxNormalized: box(CGRect(x: 22, y: 30, width: 92, height: 24)),
+      text: "Hello world",
+      imageAspectRatio: size.width / size.height,
+      layoutExclusions: [box(CGRect(x: 115, y: 30, width: 267, height: 24))],
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontSizeScale: 12 / size.height,
+        fontWeight: .regular
+      )
+    )
+    func placement() throws -> OverlayPlacement {
+      var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
+      line.showTranslation("1.2. 안녕하세요, 세계!", language: .init(identifier: "ko"))
+      return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    }
+    let original = try placement()
+    source.layoutBounds = box(CGRect(x: 22, y: 30, width: 360, height: 34))
+    let expanded = try placement()
+    #expect(expanded.fontSize >= original.fontSize)
+    #expect(expanded.frame == original.frame)
+  }
+
+  @Test
+  func readableProseCanUseMoreRowsWithoutShrinkingToOneRow() throws {
+    let size = CGSize(width: 400, height: 200)
+    var source = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.05, y: 0.1, width: 0.425, height: 0.1),
+      text: "A prose notice",
+      imageAspectRatio: 2,
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontSizeScale: 0.07,
+        fontWeight: .regular
+      )
+    )
+    func placement() throws -> OverlayPlacement {
+      var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
+      line.showTranslation("이 문서는 인공 지능을 설명합니다. 다른 뜻은 별도 문서를 참고하세요.", language: .init(identifier: "ko"))
+      return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    }
+    let original = try placement()
+    source.layoutBounds = CGRect(x: 0.05, y: 0.1, width: 0.425, height: 0.4)
+    let expanded = try placement()
+    #expect(expanded.fontSize >= 13.999)
+    #expect(expanded.fontSize > original.fontSize)
+    #expect(HorizontalTextRenderer.plan(for: expanded).lines.count > HorizontalTextRenderer.plan(for: original).lines.count)
+  }
+
+  @Test
+  func establishedNameAndSubtitleKeepTheirMultilineComposition() throws {
+    let size = CGSize(width: 620, height: 820)
+    let preferred: CGFloat = 22.7809722948
+    var source = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 63 / size.width, y: 10 / size.height, width: 122 / size.width, height: 41 / size.height),
+      text: "ウィキペディアフリー百科事典",
+      imageAspectRatio: size.width / size.height,
+      rowCount: 2,
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontSizeScale: preferred / size.height,
+        fontWeight: .regular
+      )
+    )
+    func placement() throws -> OverlayPlacement {
+      var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "ja")))
+      line.showTranslation("위키피디아 무료 백과사전", language: .init(identifier: "ko"))
+      return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    }
+    let original = try placement()
+    #expect(original.fontSize >= preferred * 0.85)
+    #expect(HorizontalTextRenderer.plan(for: original).lines.count == 2)
+    source.layoutBounds = CGRect(x: 0, y: 10 / size.height, width: 343 / size.width, height: 61 / size.height)
+    let expanded = try placement()
+    #expect(expanded.frame == original.frame)
+    #expect(expanded.fontSize == original.fontSize)
+  }
+
+  @Test(arguments: [("ko", "번역된 제목"), ("de", "Neuer Titel"), ("ar", "عنوان مترجم")], [CGFloat(1), 2])
+  func nativeCellSpaceKeepsCompactHeadersReadable(_ target: (String, String), _ scale: CGFloat) throws {
+    let size = CGSize(width: 600 * scale, height: 300 * scale)
+    let rows = nativeTableRows()
+    let lines = rows.map { row in
+      var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+      line.showTranslation(target.1, language: .init(identifier: target.0))
+      return line
+    }
+    let placements = OverlayLayoutEngine.placements(for: lines, in: size)
+    #expect(placements.count == 2)
+    for placement in placements {
+      let cell = try #require(placement.line.source.tableCell)
+      let bounds = pixelRect(cell.box, canvas: size)
+      #expect(bounds.insetBy(dx: -0.001, dy: -0.001).contains(placement.frame))
+      #expect(placement.alignment == .center)
+      #expect(placement.fontSize >= 14.5 * scale)
+      #expect(HorizontalTextRenderer.plan(for: placement).lines.count == 1)
+    }
+    #expect(pairwiseNonOverlapping(placements.map(\.frame)))
+  }
+
+  @Test
+  func independentOwnersInsideOneCellCannotEachBorrowTheWholeCell() {
+    var rows = nativeTableRows()
+    rows[0].layoutBounds = nil
+    rows[1].layoutBounds = nil
+    rows[1].tableCell = rows[0].tableCell
+    rows[1].boundingBoxNormalized.origin.x = 0.30
+    let lines = rows.map { row in
+      var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+      line.showTranslation("가", language: .init(identifier: "ko"))
+      return line
+    }
+    let placements = OverlayLayoutEngine.placements(for: lines, in: CGSize(width: 600, height: 300))
+    #expect(placements.count == 2)
+    #expect(placements.allSatisfy { $0.frame.width <= $0.sourceFrame.width + 0.001 })
+    #expect(pairwiseNonOverlapping(placements.map(\.frame)))
+  }
+
+  @Test
+  func aWideOwnerCrossingOnlyPartOfACellStillPreventsBorrowing() throws {
+    var rows = nativeTableRows()
+    rows[0].layoutBounds = nil
+    rows[1].layoutBounds = nil
+    rows[1].tableCell = nil
+    rows[1].surface = nil
+    rows[1].boundingBoxNormalized = CGRect(x: 0, y: 0.26, width: 0.9, height: 0.03)
+    let cell = try #require(rows[0].tableCell)
+    let overlap = cell.box.intersection(rows[1].boundingBoxNormalized)
+    #expect(overlap.width * overlap.height < rows[1].boundingBoxNormalized.width * rows[1].boundingBoxNormalized.height / 2)
+    let lines = rows.map { row in
+      var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+      line.showTranslation("가", language: .init(identifier: "ko"))
+      return line
+    }
+    let placement = try #require(OverlayLayoutEngine.placements(for: lines, in: CGSize(width: 600, height: 300)).first)
+    #expect(placement.frame.width <= placement.sourceFrame.width + 0.001)
+  }
+
+  @Test
+  func aCellEstimateCannotShrinkVerifiedTitleSpace() throws {
+    var row = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.35, y: 0.2, width: 0.1, height: 0.06),
+      text: "Title",
+      imageAspectRatio: 2,
+      appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 25.0 / 300, fontWeight: .regular),
+      layoutBounds: CGRect(x: 0.35, y: 0.2, width: 0.45, height: 0.1)
+    )
+    func placement(_ row: OCRResult.Line) throws -> OverlayPlacement {
+      var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+      line.showTranslation("넓은 공간의 제목", language: .init(identifier: "ko"))
+      return try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 600, height: 300)).first)
+    }
+    let baseline = try placement(row)
+    row.tableCell = .init(table: 0, row: 0, column: 0, box: CGRect(x: 0.15, y: 0.19, width: 0.30, height: 0.10))
+    let result = try placement(row)
+    #expect(result.fontSize >= baseline.fontSize)
+    #expect(HorizontalTextRenderer.plan(for: result).lines.count <= HorizontalTextRenderer.plan(for: baseline).lines.count)
+  }
+
+  @Test
+  func aNativeCellThatSplitsItsOwnLabelIsNotLayoutEvidence() throws {
+    var rows = nativeTableRows()
+    rows[0].boundingBoxNormalized = CGRect(x: 0.18, y: 0.215, width: 0.16, height: 0.035)
+    rows[0].tableCell?.box = CGRect(x: 0.2, y: 0.2, width: 0.08, height: 0.08)
+    rows[0].layoutBounds = nil
+    var line = OverlayLine(id: UUID(), source: .init(recognized: rows[0], language: .init(identifier: "en")))
+    line.showTranslation("번역된 제목", language: .init(identifier: "ko"))
+    let result = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 600, height: 300)).first)
+    #expect(result.frame.width >= result.sourceFrame.width - 0.001)
+  }
+
+  @Test
+  func nativeCellLayoutSurvivesUnscaledComposition() {
+    let originalSize = CGSize(width: 600, height: 300)
+    let compositeSize = CGSize(width: 1600, height: 900)
+    let crop = CGRect(x: 700, y: 100, width: 600, height: 300)
+    let rows = nativeTableRows()
+    let mapped = OCRDocumentRegion.remap(
+      .init(lines: rows, containers: [], tableCells: rows.compactMap(\.tableCell)),
+      crop: crop,
+      imageSize: compositeSize
+    )
+    func placements(_ rows: [OCRResult.Line], size: CGSize) -> [OverlayPlacement] {
+      let lines = rows.map { row in
+        var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: .init(identifier: "en")))
+        line.showTranslation("번역된 제목", language: .init(identifier: "ko"))
+        return line
+      }
+      return OverlayLayoutEngine.placements(for: lines, in: size)
+    }
+    let original = placements(rows, size: originalSize)
+    let composite = placements(mapped.lines, size: compositeSize)
+    #expect(original.count == 2 && composite.count == 2)
+    for (a, b) in zip(original, composite) {
+      #expect(a.alignment == b.alignment)
+      #expect(abs(a.fontSize - b.fontSize) < 0.001)
+      let expected = a.frame.offsetBy(dx: crop.minX, dy: crop.minY)
+      #expect(abs(expected.minX - b.frame.minX) < 0.001)
+      #expect(abs(expected.minY - b.frame.minY) < 0.001)
+      #expect(abs(expected.width - b.frame.width) < 0.001)
+      #expect(abs(expected.height - b.frame.height) < 0.001)
+    }
+  }
+
+  @Test(arguments: [false, true], [CGSize(width: 2520, height: 900), CGSize(width: 5000, height: 1800)])
+  func embeddedContentRetainsItsPhysicalLayout(_ rightToLeft: Bool, _ canvas: CGSize) {
+    let size = CGSize(width: 1200, height: 820)
+    let offset = CGPoint(x: canvas.width - size.width - 40, y: 40)
+    let crop = CGRect(origin: offset, size: size)
+    let language = Locale.Language(identifier: rightToLeft ? "ar" : "en")
+    let boxes = [
+      CGRect(x: 0.001, y: 0.04, width: 0.12, height: 0.035),
+      CGRect(x: 0.49, y: 0.017, width: 0.3, height: 0.034),
+      CGRect(x: 0.1, y: 0.4, width: 0.3, height: 0.03),
+      CGRect(x: 0.13, y: 0.445, width: 0.12, height: 0.03),
+      CGRect(x: 0.1, y: 0.49, width: 0.3, height: 0.03),
+      CGRect(x: 0.9, y: 0.85, width: 0.099, height: 0.04),
+    ]
+    let rows = boxes.map { box in
+      OCRResult.Line(
+        boundingBoxNormalized: box,
+        text: "Source label",
+        imageAspectRatio: size.width / size.height,
+        horizontalGlyphScale: box.height,
+        appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.024),
+        recognitionContextID: 0,
+        recognitionContextBounds: CGRect(x: 0, y: 0, width: 1, height: 1)
+      )
+    }
+    func overlay(_ rows: [OCRResult.Line]) -> [OverlayLine] {
+      rows.map { row in
+        var line = OverlayLine(id: UUID(), source: .init(recognized: row, language: language))
+        line.showTranslation(rightToLeft ? "اختبار الترجمة" : "Translated label", language: language)
+        return line
+      }
+    }
+    let original = OverlayLayoutEngine.placements(for: overlay(rows), in: size)
+    let mapped = OCRDocumentRegion.remap(.init(lines: rows, containers: []), crop: crop, imageSize: canvas)
+    var embeddedLines = overlay(mapped.lines)
+    // Nearby unrelated content must not contribute alignment evidence.
+    var foreign = mapped.lines[3]
+    foreign.boundingBoxNormalized.origin.y -= foreign.boundingBoxNormalized.height * 1.8
+    foreign.boundingBoxNormalized.origin.x += foreign.boundingBoxNormalized.width * 0.3
+    foreign.recognitionContextID = 1
+    embeddedLines += overlay([foreign])
+    let embedded = OverlayLayoutEngine.placements(for: embeddedLines, in: canvas)
+    #expect(original.count == rows.count)
+    #expect(embedded.count == rows.count + 1)
+    for (before, after) in zip(original, embedded) {
+      #expect(before.alignment == after.alignment)
+      #expect(abs(before.fontSize - after.fontSize) < 1e-6)
+      let expected = before.frame.offsetBy(dx: offset.x, dy: offset.y)
+      #expect(abs(expected.minX - after.frame.minX) < 1e-6)
+      #expect(abs(expected.minY - after.frame.minY) < 1e-6)
+      #expect(abs(expected.width - after.frame.width) < 1e-6)
+      #expect(abs(expected.height - after.frame.height) < 1e-6)
+    }
+  }
+
+  @Test(arguments: [OverlayTextAlignment.leading, .trailing, .center])
+  func aMeasuredSingleRowAlignsToInkInsteadOfPaddedOCRBounds(_ alignment: OverlayTextAlignment) throws {
+    let box = CGRect(x: 0.2, y: 0.2, width: 0.4, height: 0.05)
+    let ink = CGRect(x: 0.23, y: 0.2, width: 0.35, height: 0.05)
+    var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
+      boundingBoxNormalized: box,
+      text: "Heading",
+      appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.04),
+      styleRuns: [.init(range: NSRange(location: 0, length: 7), box: box, inkBox: ink)],
+      alignment: alignment
+    ), language: .init(identifier: "en")))
+    line.showTranslation("Title", language: .init(identifier: "en"))
+    let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 1000, height: 600)).first)
+    #expect(placement.sourceFrame.minX == 200)
+    #expect(abs(placement.sourceFrame.maxX - 600) < 0.01)
+    switch alignment {
+    case .leading: #expect(abs(placement.frame.minX - 230) < 0.01)
+    case .trailing: #expect(abs(placement.frame.maxX - 580) < 0.01)
+    case .center: #expect(abs(placement.frame.midX - 405) < 0.01)
+    }
+  }
+
   @Test(arguments: [
     EdgeCase(name: "left", box: CGRect(x: 0.01, y: 0.2, width: 0.06, height: 0.3)),
     EdgeCase(name: "right", box: CGRect(x: 0.93, y: 0.2, width: 0.06, height: 0.3)),
@@ -106,20 +488,28 @@ struct OverlayLayoutEngineTests {
     ))
   }
 
-  @Test
-  func tinyHorizontalSourceShrinksTranslationInsteadOfGrowing() throws {
+  @Test(arguments: ["Translated text.", "Readable translated sentence."])
+  func tinyHorizontalSourceOnlyReplacesTextThatActuallyFits(_ text: String) throws {
     let canvas = CGSize(width: 1_024, height: 480)
     let box = CGRect(x: 0.1, y: 0.1, width: 0.03, height: 0.025)
     let line = translatedLine(
       box: box,
       sourceIsVertical: false,
-      text: "Readable translated sentence.",
+      text: text,
       target: "en-US"
     )
-    let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: canvas).first)
+    let placements = OverlayLayoutEngine.placements(for: [line], in: canvas)
+    if text == "Readable translated sentence." {
+      #expect(placements.isEmpty)
+      #expect(!OverlayLayoutEngine.protectedSourceFrames(for: [line], placements: placements, in: canvas, displayScale: 1)
+        .isEmpty)
+      return
+    }
+    let placement = try #require(placements.first)
     #expect(placement.frame == placement.sourceFrame)
     #expect(placement.fontSize <= 8)
-    #expect(placement.lineLimit ?? 0 >= 1)
+    #expect(placement.fontSize > 0)
+    #expect(HorizontalTextRenderer.plan(for: placement).fits(placement.frame.size))
   }
 
   @Test
@@ -456,13 +846,15 @@ struct OverlayLayoutEngineTests {
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: canvas).first)
 
     #expect(placement.fontSize > 72)
-    #expect(CoreTextTypesetter.fits(
+    #expect(HorizontalTextRenderer.plan(
       text: placement.line.displayedText,
       language: placement.line.displayedLanguage,
-      flow: placement.flow,
       fontSize: placement.fontSize,
-      in: placement.frame.size
-    ))
+      appearance: placement.line.source.appearance,
+      styles: placement.line.displayedStyleRuns,
+      width: placement.frame.width,
+      lineHeightMultiple: placement.lineHeightMultiple
+    ).fits(placement.frame.size))
   }
 
   @Test
@@ -924,22 +1316,30 @@ struct OverlayLayoutEngineTests {
       ).first
     )
     #expect(placement.flow == .horizontal(.leftToRight))
-    #expect(placement.lineLimit != nil)
+    #expect(placement.fontSize > 0)
   }
 
   @Test
-  func horizontalArabicUsesTrailingAlignment() throws {
-    let line = translatedLine(
+  func arabicGlyphDirectionKeepsTheHorizontalSourceReadingEdge() throws {
+    var line = translatedLine(
       box: CGRect(x: 0.2, y: 0.2, width: 0.4, height: 0.1),
       sourceIsVertical: false,
       text: "لدي شيء مهم لأخبرك به",
       target: "ar"
     )
+    // The source is Japanese horizontal text. RTL shaping does not move its
+    // physical leading edge; source alignment and target bidi are independent.
     let placement = try #require(
       OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 800, height: 400)).first
     )
     #expect(placement.line.textFlow == .horizontal(.rightToLeft))
-    #expect(placement.alignment == .trailing)
+    #expect(placement.alignment == .leading)
+    line.source.text = "لدي شيء مهم لأخبرك به"
+    line.source.language = Locale.Language(identifier: "ar")
+    line.showTranslation("알려드릴 중요한 이야기가 있습니다", language: Locale.Language(identifier: "ko"))
+    let reversed = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 800, height: 400)).first)
+    #expect(reversed.line.textFlow == .horizontal(.leftToRight))
+    #expect(reversed.alignment == .trailing)
   }
 
   @Test
@@ -1101,7 +1501,7 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test
-  func degenerateCanvasProducesFiniteContainedFrames() {
+  func degenerateCanvasDoesNotClaimUnrenderableText() {
     let line = translatedLine(
       box: CGRect(x: -2, y: 4, width: 10, height: 0),
       sourceIsVertical: false,
@@ -1110,10 +1510,48 @@ struct OverlayLayoutEngineTests {
     )
     let canvas = CGSize(width: 3, height: 2)
     let placements = OverlayLayoutEngine.placements(for: [line], in: canvas)
-    #expect(placements.count == 1)
-    #expect(placements[0].frame.minX.isFinite)
-    #expect(placements[0].frame.minY.isFinite)
-    #expect(CGRect(origin: .zero, size: canvas).contains(placements[0].frame))
+    #expect(placements.isEmpty, "A two-pixel canvas cannot contain complete text; its source must not be erased")
+  }
+
+  @Test
+  func verticalEmergencyWrappingReachesTheRenderer() throws {
+    let line = translatedLine(
+      box: CGRect(x: 0.2, y: 0.2, width: 0.3, height: 0.3),
+      sourceIsVertical: true,
+      text: "가나다라마바사아자차카타파하가나다라마바사아자차카타파하",
+      target: "ko"
+    )
+    let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 200, height: 300)).first)
+    #expect(placement.verticalWrapping == .characters)
+    #expect(placement.isTextLayoutComplete)
+    #expect(CaptureQualityMetrics.layoutIssues(
+      [placement],
+      canvas: CGSize(width: 200, height: 300),
+      minimumFontRatio: 0
+    ).isEmpty)
+    #expect(CoreTextTypesetter.verticalGlyphImage(
+      text: line.displayedText,
+      language: line.displayedLanguage,
+      fontSize: placement.fontSize,
+      size: placement.frame.size,
+      scale: 2,
+      progression: .rightToLeft,
+      wrapping: placement.verticalWrapping
+    ) != nil)
+  }
+
+  @Test
+  func impossibleVerticalTranslationRetainsItsSourceInsteadOfErasingIt() {
+    let line = translatedLine(
+      box: CGRect(x: 0.2, y: 0.2, width: 0.1, height: 0.1),
+      sourceIsVertical: true,
+      text: String(repeating: "가", count: 800),
+      target: "ko"
+    )
+    let size = CGSize(width: 200, height: 300)
+    let placements = OverlayLayoutEngine.placements(for: [line], in: size)
+    #expect(placements.isEmpty)
+    #expect(!OverlayLayoutEngine.protectedSourceFrames(for: [line], placements: placements, in: size, displayScale: 2).isEmpty)
   }
 
   // MARK: Private
@@ -1159,6 +1597,24 @@ struct OverlayLayoutEngineTests {
       ),
       initialContent: initialContent
     )
+  }
+
+  private func nativeTableRows() -> [OCRResult.Line] {
+    [CGFloat(0.2), 0.5].enumerated().map { column, x in
+      var row = OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: x + 0.06, y: 0.215, width: 0.04, height: 0.035),
+        text: column == 0 ? "Title" : "Next",
+        imageAspectRatio: 2,
+        appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.05, fontWeight: .regular),
+        layoutBounds: CGRect(x: 0, y: 0, width: 1, height: 1),
+        surface: .init(box: CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.08), confidence: 1),
+        tableCell: .init(table: 0, row: 0, column: column, box: CGRect(x: x, y: 0.2, width: 0.16, height: 0.08)),
+        recognitionContextID: 0,
+        recognitionContextBounds: CGRect(x: 0, y: 0, width: 1, height: 1)
+      )
+      row.horizontalGlyphScale = 0.035
+      return row
+    }
   }
 
   private func pixelRect(_ normalized: CGRect, canvas: CGSize) -> CGRect {

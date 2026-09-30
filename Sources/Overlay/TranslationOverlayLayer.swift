@@ -78,7 +78,7 @@ private struct OverlayCanvas: View, Equatable {
         ForEach(placement.line.source.replacementPatches.indices, id: \.self) { index in
           let patch = placement.line.source.replacementPatches[index]
           let sourceSurface = placement.line.source.surface.flatMap { surface in
-            surface.confidence >= 0.35 ? surface : nil
+            SourcePatchClipping.surface(for: patch, within: surface)
           }
           let frame = OverlayLayoutEngine.replacementFrame(
             for: patch,
@@ -113,7 +113,7 @@ private struct OverlayCanvas: View, Equatable {
           .help(Text(verbatim: placement.line.source.text))
           .frame(width: placement.frame.width, height: placement.frame.height)
           .clipped()
-          .rotationEffect(.radians(placement.line.source.rotationRadians))
+          .rotationEffect(.radians(placement.rotationRadians))
           .position(x: placement.frame.midX, y: placement.frame.midY)
       }
     }
@@ -123,7 +123,12 @@ private struct OverlayCanvas: View, Equatable {
       Canvas { context, _ in
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
         var protected = Path()
-        for frame in OverlayLayoutEngine.protectedSourceFrames(for: lines, in: size, displayScale: displayScale) {
+        for frame in OverlayLayoutEngine.protectedSourceFrames(
+          for: lines,
+          placements: placements,
+          in: size,
+          displayScale: displayScale
+        ) {
           protected.addRect(frame)
         }
         context.blendMode = .destinationOut
@@ -216,23 +221,18 @@ private struct SourceSurfaceClip: Shape {
 
 private struct ReplacementText: View, Equatable {
 
+  // MARK: Internal
+
   let placement: OverlayPlacement
 
   var body: some View {
     switch placement.flow {
-    case .horizontal(let direction):
-      HorizontalOverlayText(
-        text: placement.line.displayedText,
-        language: placement.line.displayedLanguage,
-        fontSize: placement.fontSize,
-        lineHeightMultiple: placement.lineHeightMultiple,
-        appearance: placement.line.source.appearance,
-        styleRuns: placement.line.displayedStyleRuns,
-        lineLimit: placement.lineLimit,
-        direction: direction,
-        alignment: placement.alignment,
-        sourceLayout: placement.line.source.layout
-      )
+    case .horizontal:
+      Group {
+        if let image = HorizontalTextRenderer.image(for: placement, scale: displayScale) {
+          Image(decorative: image, scale: displayScale)
+        }
+      }
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(verbatim: placement.line.displayedText))
 
@@ -243,105 +243,25 @@ private struct ReplacementText: View, Equatable {
         fontSize: placement.fontSize,
         fontWeight: placement.line.source.appearance.fontWeight,
         fontDesign: placement.line.source.appearance.fontDesign,
-        progression: progression
+        progression: progression,
+        wrapping: placement.verticalWrapping,
+        foreground: placement.line.source.appearance.foreground,
+        baseBackground: placement.line.source.appearance.background,
+        styles: placement.line.displayedStyleRuns,
+        isUnderlined: placement.line.source.appearance.isUnderlined
       )
-      .foregroundStyle(Color(placement.line.source.appearance.foreground))
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(verbatim: placement.line.displayedText))
     }
   }
-}
 
-// MARK: - HorizontalOverlayText
-
-private struct HorizontalOverlayText: View, Equatable {
-
-  // MARK: Internal
-
-  let text: String
-  let language: Locale.Language
-  let fontSize: CGFloat
-  let lineHeightMultiple: CGFloat
-  let appearance: OverlaySourceAppearance
-  let styleRuns: [OverlayTextStyleRun]
-  let lineLimit: Int?
-  let direction: OverlayInlineDirection
-  let alignment: OverlayTextAlignment
-  let sourceLayout: OverlaySourceLayout
-
-  var body: some View {
-    Text(styledText)
-      .font(.system(
-        size: fontSize,
-        weight: appearance.fontWeight.swiftUIWeight,
-        design: appearance.fontDesign.swiftUIFontDesign
-      ))
-      .foregroundStyle(Color(appearance.foreground))
-      .multilineTextAlignment(textAlignment)
-      .lineSpacing(CoreTextTypesetter.lineSpacing(
-        fontSize: fontSize,
-        language: language,
-        fontWeight: appearance.fontWeight,
-        fontDesign: appearance.fontDesign,
-        lineHeightMultiple: lineHeightMultiple
-      ))
-      .lineLimit(lineLimit)
-      .truncationMode(.tail)
-      .minimumScaleFactor(0.78)
-      .allowsTightening(true)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: frameAlignment)
-      .environment(\.locale, Locale(identifier: language.maximalIdentifier))
-      .environment(\.layoutDirection, direction == .rightToLeft ? .rightToLeft : .leftToRight)
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.placement == rhs.placement
   }
 
   // MARK: Private
 
-  private var styledText: AttributedString {
-    var attributed = AttributedString(text)
-    for run in styleRuns {
-      guard
-        let stringRange = Range(run.range, in: text),
-        let lowerBound = AttributedString.Index(stringRange.lowerBound, within: attributed),
-        let upperBound = AttributedString.Index(stringRange.upperBound, within: attributed)
-      else { continue }
-      let range = lowerBound ..< upperBound
-      attributed[range].font = .system(
-        size: fontSize,
-        weight: run.appearance.fontWeight.swiftUIWeight,
-        design: run.appearance.fontDesign.swiftUIFontDesign
-      )
-      attributed[range].foregroundColor = Color(run.appearance.foreground)
-      if run.appearance.background.distance(to: appearance.background) >= 0.025 {
-        attributed[range].backgroundColor = Color(run.appearance.background)
-      }
-      if run.appearance.isUnderlined {
-        attributed[range].underlineStyle = .single
-      }
-    }
-    return attributed
-  }
-
-  private var textAlignment: TextAlignment {
-    switch alignment {
-    case .leading: .leading
-    case .center: .center
-    case .trailing: .trailing
-    }
-  }
-
-  private var frameAlignment: Alignment {
-    switch (sourceLayout, alignment) {
-    // Vision includes ascenders, furigana, and line-leading in its source box.
-    // Centering on that original box keeps a shorter translation on the same
-    // visual baseline instead of pinning it against the top border.
-    case (.horizontal, .leading): .leading
-    case (.horizontal, .center): .center
-    case (.horizontal, .trailing): .trailing
-    case (.vertical, .leading): .leading
-    case (.vertical, .center): .center
-    case (.vertical, .trailing): .trailing
-    }
-  }
+  @Environment(\.displayScale) private var displayScale
 }
 
 // MARK: - VerticalOverlayText
@@ -356,6 +276,11 @@ private struct VerticalOverlayText: View {
   let fontWeight: OverlayFontWeight
   let fontDesign: OverlayFontDesign
   let progression: OverlayColumnProgression
+  let wrapping: CoreTextTypesetter.VerticalWrapping
+  let foreground: OverlayColor
+  let baseBackground: OverlayColor
+  let styles: [OverlayTextStyleRun]
+  let isUnderlined: Bool
 
   var body: some View {
     GeometryReader { proxy in
@@ -368,11 +293,16 @@ private struct VerticalOverlayText: View {
           fontDesign: fontDesign,
           size: proxy.size,
           scale: displayScale,
-          progression: progression
+          progression: progression,
+          wrapping: wrapping,
+          foreground: foreground,
+          baseBackground: baseBackground,
+          styles: styles,
+          isUnderlined: isUnderlined
         )
       {
         Image(decorative: image, scale: displayScale)
-          .renderingMode(.template)
+          .renderingMode(.original)
           .resizable()
           .frame(width: proxy.size.width, height: proxy.size.height)
       }
@@ -393,31 +323,5 @@ extension Color {
       blue: Double(color.blue),
       opacity: Double(color.alpha)
     )
-  }
-}
-
-extension OverlayFontWeight {
-  fileprivate var swiftUIWeight: Font.Weight {
-    switch self {
-    case .regular: .regular
-    case .medium: .medium
-    case .semibold: .semibold
-    case .bold: .bold
-    }
-  }
-}
-
-extension OverlayFontDesign {
-  fileprivate var swiftUIFontDesign: Font.Design {
-    switch self {
-    case .standard: .default
-    case .monospaced: .monospaced
-    }
-  }
-}
-
-extension OverlayColor {
-  fileprivate func distance(to other: OverlayColor) -> CGFloat {
-    max(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
   }
 }

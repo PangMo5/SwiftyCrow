@@ -25,6 +25,17 @@ struct ScreenCaptureClient {
   /// Captures a single window by id, independent of what's stacked on top of it
   /// (matches the macOS screenshot window mode).
   var captureWindow: @Sendable (_ windowID: CGWindowID) async throws -> CGImage
+
+  /// Window pixels and AppKit geometry from the same shareable-content snapshot.
+  var captureWindowSnapshot: @Sendable (_ windowID: CGWindowID) async throws -> CapturedWindow
+}
+
+// MARK: - CapturedWindow
+
+/// CGImage provides immutable pixel storage across the capture and main actors.
+struct CapturedWindow: @unchecked Sendable {
+  let image: CGImage
+  let frame: CGRect
 }
 
 // MARK: - ScreenCaptureError
@@ -57,6 +68,9 @@ enum ScreenCaptureError: Error, LocalizedError, Equatable {
 // MARK: - ScreenCaptureClient + DependencyKey
 
 extension ScreenCaptureClient: DependencyKey {
+
+  // MARK: Internal
+
   static let liveValue = ScreenCaptureClient(
     captureImage: { overlayFrame, displayID, excludingProcessID in
       do {
@@ -154,41 +168,54 @@ extension ScreenCaptureClient: DependencyKey {
         throw error
       }
     },
-    captureWindow: { windowID in
-      do {
-        try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
-        let content = try await SCShareableContent.excludingDesktopWindows(
-          false,
-          onScreenWindowsOnly: true
-        )
-        guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
-          throw ScreenCaptureError.windowUnavailable
-        }
-
-        // The window may live on a non-main display; match its display's backing
-        // scale so the screenshot keeps native resolution.
-        let display = content.displays.first { $0.frame.intersects(window.frame) }
-        let nsScreen = NSScreen.screens.first { screen in
-          let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
-          return number?.uint32Value == display?.displayID
-        }
-        let scale = nsScreen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
-
-        let configuration = SCStreamConfiguration()
-        configuration.pixelFormat = kCVPixelFormatType_32BGRA
-        configuration.showsCursor = false
-        configuration.width = max(1, Int(window.frame.width * scale))
-        configuration.height = max(1, Int(window.frame.height * scale))
-
-        let filter = SCContentFilter(desktopIndependentWindow: window)
-        return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
-      } catch {
-        await ScreenRecordingAccessState.shared.captureFailed(error)
-        if !(await ScreenRecordingAccessState.shared.isGranted()) { throw ScreenCaptureError.permissionRequired }
-        throw error
-      }
-    }
+    captureWindow: { try await captureSingleWindow($0).image },
+    captureWindowSnapshot: { try await captureSingleWindow($0) }
   )
+
+  // MARK: Private
+
+  private static func captureSingleWindow(_ windowID: CGWindowID) async throws -> CapturedWindow {
+    do {
+      try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
+      let content = try await SCShareableContent.excludingDesktopWindows(
+        false,
+        onScreenWindowsOnly: true
+      )
+      guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
+        throw ScreenCaptureError.windowUnavailable
+      }
+
+      // The window may live on a non-main display; match its display's backing
+      // scale so the screenshot keeps native resolution.
+      let display = content.displays.first { $0.frame.intersects(window.frame) }
+      let nsScreen = NSScreen.screens.first { screen in
+        let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        return number?.uint32Value == display?.displayID
+      }
+      let scale = nsScreen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+
+      let configuration = SCStreamConfiguration()
+      configuration.pixelFormat = kCVPixelFormatType_32BGRA
+      configuration.showsCursor = false
+      configuration.width = max(1, Int(window.frame.width * scale))
+      configuration.height = max(1, Int(window.frame.height * scale))
+
+      let filter = SCContentFilter(desktopIndependentWindow: window)
+      let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
+      let flipHeight = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
+        ?? NSScreen.main?.frame.height ?? 0
+      return CapturedWindow(image: image, frame: CGRect(
+        x: window.frame.minX,
+        y: flipHeight - window.frame.maxY,
+        width: window.frame.width,
+        height: window.frame.height
+      ))
+    } catch {
+      await ScreenRecordingAccessState.shared.captureFailed(error)
+      if !(await ScreenRecordingAccessState.shared.isGranted()) { throw ScreenCaptureError.permissionRequired }
+      throw error
+    }
+  }
 }
 
 extension DependencyValues {

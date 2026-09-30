@@ -118,7 +118,7 @@ toggleLiveMode = "cmd + shift - m"
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `strategy` | string | `"lowLatency"` | Preferred local strategy: `lowLatency` or `highFidelity` (macOS 26.4+). SwiftyCrow uses this strategy when its model is installed, otherwise an installed alternative and displays a notice. |
+| `strategy` | string | `"lowLatency"` | Selected local strategy: `lowLatency` or `highFidelity` (macOS 26.4+). The selected model must be installed; SwiftyCrow never switches to another strategy automatically. |
 
 ## `[updates]`
 

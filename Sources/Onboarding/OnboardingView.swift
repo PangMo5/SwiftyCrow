@@ -167,32 +167,11 @@ struct OnboardingView: View {
     case .installed:
       Label("Ready to translate this language pair.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
 
-    case .alternativeInstalled:
-      VStack(alignment: .leading, spacing: 6) {
-        Label("Download languages for the selected translation mode.", systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(.orange)
-        Text("You can translate now using another installed mode.").font(.callout).foregroundStyle(.secondary)
-      }
-
-    case .preferredUnsupported:
-      VStack(alignment: .leading, spacing: 6) {
-        Label("The selected translation mode does not support this language pair.", systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(.orange)
-        Text("You can translate now using another installed mode.").font(.callout).foregroundStyle(.secondary)
-      }
-
-    case .alternativeDownloadRequired:
-      VStack(alignment: .leading, spacing: 6) {
-        Label("The selected translation mode does not support this language pair.", systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(.orange)
-        Text("Download the languages to use another translation mode.").font(.callout).foregroundStyle(.secondary)
-      }
-
     case .downloadRequired:
       Label("Download these languages to start translating.", systemImage: "arrow.down.circle").foregroundStyle(.orange)
 
     case .unsupported:
-      Label("This language pair is not supported. Choose another language.", systemImage: "exclamationmark.circle")
+      Label("The selected translation mode does not support this language pair.", systemImage: "exclamationmark.circle")
         .foregroundStyle(.orange)
 
     case .sameLanguage:

@@ -14,6 +14,91 @@ struct OverlayWindowPlacementTests {
   // MARK: Internal
 
   @Test
+  func offscreenNativeWindowRetainsItsServerIdentity() {
+    let window = NSWindow(
+      contentRect: CGRect(x: 10, y: 10, width: 160, height: 100),
+      styleMask: [.titled],
+      backing: .buffered,
+      defer: false
+    )
+    window.isReleasedWhenClosed = false
+    defer { window.close() }
+    window.orderFront(nil)
+    let id = CGWindowID(window.windowNumber)
+    #expect(windowIsKnownToServer(id) == true)
+    window.orderOut(nil)
+    #expect(windowIsKnownToServer(id) == true, "A hidden window is not a closed window")
+  }
+
+  @Test
+  func teardownCannotRestoreAnInvalidatedSourceSelection() {
+    withDependencies {
+      $0.defaultFileStorage = .inMemory
+    } operation: {
+      @Shared(.overlayFrame) var frame
+      $frame.withLock { $0 = OverlayFrame(rect: CGRect(x: 50, y: 80, width: 300, height: 200), selectionKind: .window) }
+      let controller = OverlayWindowController()
+      var state = OverlayRenderState(
+        lines: [],
+        isVisible: true,
+        hideOnHover: false,
+        isTranslating: false,
+        isLive: true,
+        liveMode: .inPlace,
+        backdrop: nil,
+        imageSize: CGSize(width: 300, height: 200),
+        placementID: 1,
+        translationUnavailable: false,
+        isPreparingRecognition: false
+      )
+      controller.update(state)
+      // The reducer has invalidated a closed source before AppKit tears down.
+      $frame.withLock { $0.hasSelection = false }
+      state.isVisible = false
+      controller.update(state)
+      #expect(!frame.hasSelection, "Closing the native panel must not recall a closed source as an unrelated screen region")
+      #expect(frame.selectionKind == .window)
+    }
+  }
+
+  @Test
+  func queuedWindowRendersCannotReappearAfterGeometryChanges() {
+    let original = CGRect(x: 10, y: 20, width: 300, height: 200)
+    let moved = original.offsetBy(dx: 50, dy: 70)
+    let line = OverlayLine(id: UUID(), source: .init(
+      recognized: .init(boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1), text: "Source"),
+      language: Locale.Language(identifier: "en")
+    ))
+    var state = OverlayRenderState(
+      lines: [line],
+      isVisible: true,
+      hideOnHover: false,
+      isTranslating: false,
+      isLive: true,
+      liveMode: .inPlace,
+      backdrop: nil,
+      imageSize: original.size,
+      placementID: 1,
+      translationUnavailable: false,
+      isPreparingRecognition: false,
+      sourceWindowID: 42,
+      sourceWindowFrame: original,
+      captureGeneration: 5
+    )
+    #expect(state.validatingSourceWindow(id: 42, frame: original, minimumGeneration: 5).lines == [line])
+    #expect(state.validatingSourceWindow(id: 42, frame: moved, minimumGeneration: 6).lines.isEmpty)
+    #expect(state.validatingSourceWindow(id: 42, frame: nil, minimumGeneration: 6).lines.isEmpty)
+    // Returning to the same coordinates must not revive an older generation.
+    #expect(state.validatingSourceWindow(id: 42, frame: original, minimumGeneration: 6).lines.isEmpty)
+    #expect(state.validatingSourceWindow(id: 99, frame: original, minimumGeneration: 5).lines.isEmpty)
+    state.sourceWindowFrame = moved
+    state.captureGeneration = 6
+    #expect(state.validatingSourceWindow(id: 42, frame: moved, minimumGeneration: 6).lines == [line])
+    state.sourceWindowID = nil
+    #expect(state.validatingSourceWindow(id: nil, frame: nil, minimumGeneration: 100).lines == [line])
+  }
+
+  @Test
   func hidingReleasesTheWindowAndRecallRestoresUserGeometry() throws {
     try withDependencies {
       $0.defaultFileStorage = .inMemory

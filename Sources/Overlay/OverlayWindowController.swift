@@ -38,7 +38,12 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     // changes don't affect the overlay. Skip the identical ones outright.
     guard state != lastState else { return }
     lastState = state
-    assign(state)
+    assign(state.validatingSourceWindow(
+      id: trackedWindowID,
+      frame: trackedFrame,
+      minimumGeneration: minimumSourceGeneration
+    ))
+    configureSourceTracking(state.isVisible ? state.sourceWindowID : nil)
 
     if state.isVisible {
       let isNewWindow = window == nil
@@ -51,9 +56,10 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
           isPlacingWindow = true
           window.setFrame(overlayFrame.rect, display: true)
           isPlacingWindow = false
-          window.makeKeyAndOrderFront(nil)
+          if state.sourceWindowID == nil { window.makeKeyAndOrderFront(nil) }
         }
       }
+      if let id = state.sourceWindowID { refreshSourceWindow(id) }
       applyPassThrough()
     } else {
       stopResizeEdgeTracking()
@@ -63,7 +69,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 
     // In Window mode the translation lives in a detached panel; the overlay
     // above is just a thin region frame.
-    let showResult = state.isVisible && model.isWindowFrame && !state.lines.isEmpty
+    let showResult = state.isVisible && model.isWindowFrame && !model.lines.isEmpty
     updateResultWindow(visible: showResult)
   }
 
@@ -80,13 +86,13 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   func windowDidMove(_: Notification) {
-    guard !isPlacingWindow else { return }
+    guard !isPlacingWindow, !model.tracksSourceWindow else { return }
     scheduleFrameSave()
     markInteracting()
   }
 
   func windowDidResize(_: Notification) {
-    guard !isPlacingWindow else { return }
+    guard !isPlacingWindow, !model.tracksSourceWindow else { return }
     scheduleFrameSave()
   }
 
@@ -123,12 +129,18 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private var savedResultWindowFrame: CGRect?
   private var lastPlacementID = 0
   private var lastState: OverlayRenderState?
+  private var sourceTrackingTask: Task<Void, Never>?
+  private var trackedWindowID: CGWindowID?
+  private var trackedFrame: CGRect?
+  private var didResolveTrackedWindow = false
+  private var minimumSourceGeneration = 0
   private var eventHandler: (@Sendable (OverlayUserAction) -> Void)?
 
   /// Writes only what changed. `@Observable` notifies on every assignment, equal
   /// value or not, so blindly re-assigning `lines` or the backdrop on each
   /// render invalidated the whole overlay view tree at the live capture rate.
   private func assign(_ state: OverlayRenderState) {
+    if model.tracksSourceWindow != (state.sourceWindowID != nil) { model.tracksSourceWindow = state.sourceWindowID != nil }
     if model.lastError != state.lastError { model.lastError = state.lastError }
     if model.lines != state.lines { model.lines = state.lines }
     if model.hideOnHover != state.hideOnHover { model.hideOnHover = state.hideOnHover }
@@ -155,7 +167,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// model carries stale state into the next use. Both windows are cheap to
   /// rebuild on the next show, which also re-snaps them to the stored frame.
   private func teardownWindows() {
-    model.isPresentingInformation = false
+    configureSourceTracking(nil)
     pendingInteractionReset?.cancel()
     pendingInteractionReset = nil
     model.isInteracting = false
@@ -205,7 +217,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingFrameSaveTask = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .milliseconds(200))
       guard !Task.isCancelled, let self else { return }
-      $overlayFrame.withLock { $0 = OverlayFrame(rect: frame) }
+      $overlayFrame.withLock { $0.updateGeometry(frame) }
     }
   }
 
@@ -213,7 +225,72 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingFrameSaveTask?.cancel()
     pendingFrameSaveTask = nil
     guard let window else { return }
-    $overlayFrame.withLock { $0 = OverlayFrame(rect: window.frame) }
+    $overlayFrame.withLock { $0.updateGeometry(window.frame) }
+  }
+
+  /// Window-server ordering keeps the overlay immediately above its source,
+  /// below occluding windows. No Accessibility access or focus activation is
+  /// needed. Geometry polling is independent of OCR and adaptive image cadence.
+  private func configureSourceTracking(_ id: CGWindowID?) {
+    guard trackedWindowID != id else { return }
+    sourceTrackingTask?.cancel()
+    sourceTrackingTask = nil
+    trackedWindowID = id
+    trackedFrame = nil
+    didResolveTrackedWindow = false
+    minimumSourceGeneration = 0
+    guard let id else {
+      window?.level = .floating
+      window?.isFloatingPanel = true
+      return
+    }
+    sourceTrackingTask = Task { @MainActor [weak self] in
+      while !Task.isCancelled {
+        guard self != nil else { return }
+        self?.refreshSourceWindow(id)
+        do { try await Task.sleep(for: .milliseconds(100)) }
+        catch { return }
+      }
+    }
+  }
+
+  private func refreshSourceWindow(_ id: CGWindowID) {
+    guard trackedWindowID == id, let window else { return }
+    let source = onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier).first { $0.id == id }
+    let frame = source?.frame
+    if
+      source == nil,
+      windowIsKnownToServer(id) == false
+    {
+      model.lines = []
+      model.backdrop = nil
+      window.orderOut(nil)
+      configureSourceTracking(nil)
+      eventHandler?(.sourceWindowClosed(id: id))
+      return
+    }
+    if !didResolveTrackedWindow || trackedFrame != frame {
+      if didResolveTrackedWindow {
+        minimumSourceGeneration = max(minimumSourceGeneration, (lastState?.captureGeneration ?? 0) + 1)
+        model.lines = []
+        model.backdrop = nil
+      }
+      didResolveTrackedWindow = true
+      trackedFrame = frame
+      eventHandler?(.sourceWindowGeometryChanged(id: id, frame: frame))
+    }
+    guard let frame else {
+      window.orderOut(nil)
+      return
+    }
+    if window.frame != frame {
+      isPlacingWindow = true
+      window.setFrame(frame, display: true)
+      isPlacingWindow = false
+    }
+    window.level = .normal
+    window.isFloatingPanel = false
+    window.order(.above, relativeTo: Int(id))
   }
 
   private func showWindowIfNeeded() {
@@ -232,8 +309,8 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     panel.isOpaque = false
     panel.backgroundColor = .clear
     panel.hasShadow = false
-    panel.level = .floating
-    panel.isFloatingPanel = true
+    panel.level = model.tracksSourceWindow ? .normal : .floating
+    panel.isFloatingPanel = !model.tracksSourceWindow
     panel.becomesKeyOnlyIfNeeded = true
     panel.hidesOnDeactivate = false
     panel.worksWhenModal = true
@@ -244,12 +321,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       model: model,
       onToggleLive: { [weak self] in self?.eventHandler?(.toggleLive) },
       onClose: { [weak self] in self?.eventHandler?(.close) },
-      onCopy: { [weak self] in self?.copyTranslation() },
-      onInformationPresentedChange: { [weak self] presented in
-        guard let self, model.isPresentingInformation != presented else { return }
-        model.isPresentingInformation = presented
-        updatePassThroughForCursor()
-      }
+      onCopy: { [weak self] in self?.copyTranslation() }
     )
     let hosting = NSHostingView(rootView: rootView)
     hosting.frame = panel.contentLayoutRect
@@ -302,10 +374,16 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   private func sourceContentInteracted(_ event: NSEvent) {
     guard
       model.isLive,
-      !model.isPresentingInformation,
       event.type == .scrollWheel || event.type == .leftMouseDragged,
       window?.frame.contains(NSEvent.mouseLocation) == true
     else { return }
+    if let trackedWindowID {
+      // A selected source belongs to another process. Local scroll events
+      // belong to our controls/settings/result window, never that source.
+      guard event.window == nil else { return }
+      let windows = onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
+      guard windowUnderCursor(windows, at: NSEvent.mouseLocation)?.id == trackedWindowID else { return }
+    }
     // Includes trackpad momentum and scrollbar dragging. Coalesce the gesture
     // into one cancellation and one immediate capture after it settles.
     markInteracting()
@@ -327,14 +405,6 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     let inside = frame.contains(mouse)
     if model.cursorInside != inside { model.cursorInside = inside }
 
-    // A presented popover owns interaction until dismissal. Do not fade its
-    // anchor or send clicks/scrolling through to the captured app behind it.
-    if model.isPresentingInformation {
-      window.alphaValue = 1
-      window.ignoresMouseEvents = false
-      return
-    }
-
     // Top-left move handle: the ONLY region that drags the window. Its hit zone
     // is always live, even while the handle itself is faded out.
     let moveZone = CGRect(
@@ -343,7 +413,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       width: moveHandleSize.width,
       height: moveHandleSize.height
     )
-    if moveZone.contains(mouse) {
+    if !model.tracksSourceWindow, moveZone.contains(mouse) {
       window.alphaValue = 1
       window.ignoresMouseEvents = false
       return
@@ -378,7 +448,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     let withinY = mouse.y >= frame.minY - resizeMargin && mouse.y <= frame.maxY + resizeMargin
     let nearHorizontalEdge = min(abs(mouse.x - frame.minX), abs(mouse.x - frame.maxX)) < resizeMargin
     let nearVerticalEdge = min(abs(mouse.y - frame.minY), abs(mouse.y - frame.maxY)) < resizeMargin
-    if withinX, withinY, nearHorizontalEdge || nearVerticalEdge {
+    if !model.tracksSourceWindow, withinX, withinY, nearHorizontalEdge || nearVerticalEdge {
       window.alphaValue = 1
       window.ignoresMouseEvents = false
       return
@@ -453,11 +523,11 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
 final class OverlayWindowModel {
   var lines = [OverlayLine]()
   var hideOnHover = false
+  var tracksSourceWindow = false
   var isInteracting = false
   /// Whether the cursor is over the overlay — drives the move handle's
   /// hover-visibility (set from the controller's global cursor tracking).
   var cursorInside = false
-  var isPresentingInformation = false
   var isLive = false
   var isTranslating = false
   var liveMode = OverlayLiveMode.inPlace
@@ -483,7 +553,6 @@ private struct OverlayRootView: View {
   let onToggleLive: () -> Void
   let onClose: () -> Void
   let onCopy: () -> Void
-  let onInformationPresentedChange: (Bool) -> Void
 
   var body: some View {
     OverlayView(
@@ -495,12 +564,9 @@ private struct OverlayRootView: View {
       isPreparingRecognition: model.isPreparingRecognition,
       frameOnly: model.isWindowFrame,
       showMoveHandle: model.cursorInside,
+      allowsRepositioning: !model.tracksSourceWindow,
       onToggleLive: onToggleLive,
-      onClose: onClose,
-      isShowingInformation: Binding(
-        get: { model.isPresentingInformation },
-        set: onInformationPresentedChange
-      )
+      onClose: onClose
     )
     .background {
       // Hidden affordances: ⌘, opens Settings, ⌘C copies the translated text.

@@ -23,6 +23,10 @@ enum OverlayColumnProgression: Equatable, Sendable {
 enum OverlayTextFlow: Equatable, Sendable {
   case horizontal(OverlayInlineDirection)
   case vertical(OverlayColumnProgression)
+
+  var inlineDirection: OverlayInlineDirection? {
+    if case .horizontal(let direction) = self { direction } else { nil }
+  }
 }
 
 // MARK: - OverlayTextFlowResolver
@@ -72,8 +76,12 @@ enum OverlayTextFlowResolver {
   }
 
   static func horizontalFlow(text: String, language: Locale.Language) -> OverlayTextFlow {
+    .horizontal(horizontalDirection(text: text, language: language))
+  }
+
+  static func horizontalDirection(text: String, language: Locale.Language) -> OverlayInlineDirection {
     let script = scriptEvidence(in: text).dominantScript
-    return .horizontal(inlineDirection(for: language, dominantScript: script))
+    return inlineDirection(for: language, dominantScript: script)
   }
 
   static func columnProgression(for language: Locale.Language) -> OverlayColumnProgression {

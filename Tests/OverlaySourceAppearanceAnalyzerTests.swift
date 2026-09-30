@@ -12,6 +12,31 @@ struct OverlaySourceAppearanceAnalyzerTests {
   // MARK: Internal
 
   @Test
+  func denseWhiteGlyphsOnBlackAreNotAWhiteButtonSurface() async throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 140,
+      height: 70,
+      bitsPerComponent: 8,
+      bytesPerRow: 560,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 0, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 140, height: 70))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    for x in stride(from: 20, to: 120, by: 10) {
+      context.fill(CGRect(x: x, y: 28, width: 7, height: 14))
+    }
+    let box = CGRect(x: 20.0 / 140, y: 28.0 / 70, width: 97.0 / 140, height: 14.0 / 70)
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(to: OCRResult(lines: [
+      .init(boundingBoxNormalized: box, text: "Title", replacementPatches: [.init(box: box)])
+    ]), from: try #require(context.makeImage()))
+    #expect(analyzed.lines[0].appearance.background.red < 0.15)
+    #expect(analyzed.lines[0].appearance.foreground.red > 0.85)
+  }
+
+  @Test
   func findsLightBackgroundAndDarkForegroundAroundGlyphs() async throws {
     let image = try makeImage(
       background: CGColor(gray: 0.94, alpha: 1),

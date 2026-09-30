@@ -137,7 +137,6 @@ struct OnboardingTests {
     }
     let selections = LockIsolated(0)
     let store = TestStore(initialState: initial) { AppFeature() } withDependencies: {
-      $0.ocr.warmUp = { }
       $0.regionSelector.selectRegion = { _ in selections.withValue { $0 += 1 }
         return nil
       }
@@ -392,9 +391,6 @@ struct OnboardingTests {
 
   @Test(arguments: [
     LanguageReadiness.installed,
-    .alternativeInstalled,
-    .preferredUnsupported,
-    .alternativeDownloadRequired,
     .downloadRequired,
     .unsupported,
     .sameLanguage,
@@ -485,17 +481,12 @@ struct OnboardingTests {
   }
 
   @Test
-  func alternativeModesDistinguishMissingDownloadsFromUnsupportedPairs() {
-    #expect(LanguageReadiness.resolve(preferred: .installed, alternative: .installed) == .installed)
-    #expect(LanguageReadiness.resolve(preferred: .supported, alternative: .installed) == .alternativeInstalled)
-    #expect(LanguageReadiness.alternativeInstalled.needsLanguageDownload)
-    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .installed) == .preferredUnsupported)
-    #expect(!LanguageReadiness.preferredUnsupported.needsLanguageDownload)
-    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .supported) == .alternativeDownloadRequired)
-    #expect(LanguageReadiness.alternativeDownloadRequired.needsLanguageDownload)
-    #expect(LanguageReadiness.resolve(preferred: .unsupported, alternative: .unsupported) == .unsupported)
+  func readinessOnlyReflectsTheSelectedMode() {
+    #expect(LanguageReadiness.resolve(selected: .installed) == .installed)
+    #expect(LanguageReadiness.resolve(selected: .supported) == .downloadRequired)
+    #expect(LanguageReadiness.resolve(selected: .unsupported) == .unsupported)
+    #expect(LanguageReadiness.downloadRequired.needsLanguageDownload)
     #expect(!LanguageReadiness.unsupported.needsLanguageDownload)
-    #expect(LanguageReadiness.resolve(preferred: .supported, alternative: .unsupported) == .downloadRequired)
   }
 
   // MARK: Private

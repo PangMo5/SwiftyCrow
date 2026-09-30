@@ -10,6 +10,234 @@ struct OverlayAttributedStyleTests {
 
   // MARK: Internal
 
+  @Test(arguments: [": artificial", "artificial:", "(artificial)", "[artificial]"])
+  func punctuationCannotOverrideNeighboringLexicalWeight(_ text: String) throws {
+    let base = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
+    var word = base
+    word.fontWeight = .semibold
+    var punctuation = base
+    punctuation.fontWeight = .bold
+    let wordRange = (text as NSString).range(of: "artificial")
+    let length = (text as NSString).length
+    let ranges = [
+      NSRange(location: 0, length: wordRange.location),
+      wordRange,
+      NSRange(location: NSMaxRange(wordRange), length: length - NSMaxRange(wordRange)),
+    ].filter { $0.length > 0 }
+    let recognized = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.1),
+      text: text,
+      appearance: base,
+      styleRuns: ranges.map { range in
+        .init(
+          range: range,
+          box: CGRect(
+            x: Double(range.location) / Double(length),
+            y: 0.2,
+            width: Double(range.length) / Double(length),
+            height: 0.1
+          ),
+          appearance: range == wordRange ? word : punctuation
+        )
+      }
+    )
+    var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
+    let source = try #require(line.source.attributedTextForTranslation())
+    let wordRun = try #require(source.runs.first { String(source.characters[$0.range]).contains("artificial") })
+    #expect(String(source.characters[wordRun.range]) == "artificial")
+    var target = AttributedString("인공")
+    target.link = wordRun.link
+    line.showTranslation("인공", attributedText: target, language: .init(identifier: "ko"))
+    #expect(try #require(line.displayedStyleRuns.first).appearance.fontWeight == .semibold)
+  }
+
+  @Test(arguments: [
+    ("백채널 (언어학)", "위키피디아의 백채널(언어학)", "백채널(언어학)"),
+    ("Alpha(Beta)", "Alpha ( Beta ) value", "Alpha ( Beta )"),
+    ("Alpha  (Beta)", "Alpha(Beta)", "Alpha(Beta)"),
+  ])
+  func ordinaryStyleAlignmentAllowsBracketSpacing(_ sample: (String, String, String)) {
+    let link = URL(string: "swiftycrow-style://run/0")!
+    var source = AttributedString("Source phrase")
+    source.link = link
+    let result = TranslationStyleMapper.align(source: source, target: sample.1, alternatives: [link: sample.0])
+    #expect(result.unmatched.isEmpty)
+    #expect(String(result.target.characters) == sample.1)
+    #expect(result.target.runs.filter { $0.link != nil }.map { String(result.target.characters[$0.range]) } == [sample.2])
+  }
+
+  @Test(arguments: [("the rapist (term)", "therapist(term)"), ("Alpha (Beta)", "Alpha\n(Beta)")])
+  func bracketSpacingCannotJoinWordsOrParagraphs(_ sample: (String, String)) {
+    var source = AttributedString(sample.0)
+    source.link = URL(string: "swiftycrow-style://run/0")!
+    #expect(TranslationStyleMapper.align(source: source, target: sample.1).unmatched.count == 1)
+  }
+
+  @Test
+  func literalStylesStillRequireExactBracketSpacing() {
+    var source = AttributedString("a (b)")
+    source.link = URL(string: "swiftycrow-style://run/0")!
+    source.inlinePresentationIntent = .code
+    #expect(TranslationStyleMapper.align(source: source, target: "a(b)").unmatched.count == 1)
+  }
+
+  @Test
+  func restorationAndTranslationCompletionOrderProducesTheSameFinalStyles() throws {
+    let originalAppearance = OverlaySourceAppearance(
+      background: .init(red: 0.8, green: 0.7, blue: 0.6, alpha: 1),
+      foreground: .black,
+      confidence: 1,
+      fontWeight: .bold
+    )
+    let recognized = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
+      text: "Caption",
+      appearance: .fallback,
+      styleRuns: [.init(
+        range: NSRange(location: 0, length: 7),
+        box: CGRect(x: 0, y: 0, width: 1, height: 1),
+        appearance: originalAppearance
+      )]
+    )
+    let source = OverlayLine.Source(recognized: recognized, language: .init(identifier: "en"))
+    var restored = source
+    restored.styleRuns[0].appearance.background = .white
+    var attributed = AttributedString("캡션")
+    attributed.link = URL(string: "swiftycrow-style://run/0")!
+    var translationFirst = OverlayLine(id: UUID(), source: source)
+    translationFirst.showTranslation("캡션", attributedText: attributed, language: .init(identifier: "ko"))
+    translationFirst.source = restored
+    var restorationFirst = OverlayLine(id: UUID(), source: restored)
+    restorationFirst.showTranslation("캡션", attributedText: attributed, language: .init(identifier: "ko"))
+    #expect(translationFirst.displayedStyleRuns == restorationFirst.displayedStyleRuns)
+    #expect(try #require(translationFirst.displayedStyleRuns.first).appearance.background == .white)
+    #expect(translationFirst.translatedText == "캡션")
+  }
+
+  @Test
+  func refreshedStylesFollowSemanticRangesInsteadOfRunStorageOrder() throws {
+    let first = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
+    var second = first
+    second.fontWeight = .bold
+    let recognized = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
+      text: "Red Blue",
+      appearance: first,
+      styleRuns: [
+        .init(range: NSRange(location: 0, length: 3), box: CGRect(x: 0, y: 0, width: 0.4, height: 1), appearance: first),
+        .init(range: NSRange(location: 4, length: 4), box: CGRect(x: 0.5, y: 0, width: 0.5, height: 1), appearance: second),
+      ]
+    )
+    var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
+    var target = AttributedString("빨강 파랑")
+    target[target.range(of: "빨강")!].link = URL(string: "swiftycrow-style://run/0")!
+    target[target.range(of: "파랑")!].link = URL(string: "swiftycrow-style://run/1")!
+    line.showTranslation("빨강 파랑", attributedText: target, language: .init(identifier: "ko"))
+    line.source.styleRuns.reverse()
+    line.source.styleRuns[0].appearance.isUnderlined = true
+    let runs = line.displayedStyleRuns
+    #expect(try #require(runs.first(where: { $0.range.location == 0 })).appearance == first)
+    #expect(try #require(runs.first(where: { $0.range.location == 3 })).appearance.isUnderlined)
+  }
+
+  @Test
+  func oneBrokenContextMarkerDoesNotDropIndependentValidSpans() {
+    var source = AttributedString("Alpha Beta")
+    let first = URL(string: "swiftycrow-style://run/0")!
+    let second = URL(string: "swiftycrow-style://run/1")!
+    source[source.range(of: "Alpha")!].link = first
+    source[source.range(of: "Beta")!].link = second
+    let result = TranslationStyleMapper.alignContextual(
+      source: source,
+      target: "알파 베타",
+      response: "<s0>알파 <s1>베타</s1>"
+    )
+    #expect(result.target.runs.contains { $0.link == second })
+    #expect(result.unmatched.map(\.link) == [first])
+    #expect(String(result.target.characters) == "알파 베타")
+  }
+
+  @Test
+  func aWrappedColoredWordDoesNotSplitBecauseOneGlyphLooksHeavier() throws {
+    let blue = OverlayColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 1)
+    let regular = OverlaySourceAppearance(background: .white, foreground: blue, confidence: 1, fontWeight: .regular)
+    var heavy = regular
+    heavy.fontWeight = .bold
+    let text = "解决问题"
+    let line = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.6, height: 0.1),
+      text: text,
+      appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular),
+      styleRuns: [
+        .init(
+          range: NSRange(location: 0, length: 3),
+          box: CGRect(x: 0.6, y: 0.1, width: 0.09, height: 0.03),
+          appearance: regular
+        ),
+        .init(
+          range: NSRange(location: 3, length: 1),
+          box: CGRect(x: 0.1, y: 0.15, width: 0.03, height: 0.03),
+          appearance: heavy
+        ),
+      ]
+    )
+    let attributed = try #require(OverlayLine.Source(recognized: line, language: .init(identifier: "zh-Hans"))
+      .attributedTextForTranslation())
+    #expect(attributed.runs.count(where: { $0.link != nil }) == 1)
+  }
+
+  @Test
+  func contextualRefinementCannotDiscardAlreadyAlignedLexicalStyles() throws {
+    var source = AttributedString("Lernen und KI")
+    let first = URL(string: "swiftycrow-style://run/0")!
+    let second = URL(string: "swiftycrow-style://run/1")!
+    source[source.range(of: "Lernen")!].link = first
+    source[source.range(of: "KI")!].link = second
+    #expect(TranslationStyleMapper.contextualRequest(source: source, links: [second]) == "Lernen und <s1>KI</s1>")
+    let aligned = TranslationStyleMapper.alignContextual(
+      source: source,
+      target: "학습과 인공지능",
+      response: "유효하지 않은 전혀 다른 <s1>표현</s1>",
+      alternatives: [first: "학습"]
+    )
+    let retained = try #require(aligned.target.runs.first { $0.link == first })
+    #expect(String(aligned.target.characters[retained.range]) == "학습")
+    #expect(aligned.unmatched.map(\.link) == [second])
+  }
+
+  @Test
+  func contextualAlignmentRetainsInflectedStyleWithoutReplacingPlainWording() throws {
+    var source = AttributedString("人工智能包括学习和推理。")
+    let link = URL(string: "swiftycrow-style://run/0")!
+    source[source.range(of: "推理")!].link = link
+    #expect(TranslationStyleMapper.contextualRequest(source: source) == "人工智能包括学习和<s0>推理</s0>。")
+    let target = "인공지능에는 학습과 추론이 포함됩니다."
+    let alignment = TranslationStyleMapper.alignContextual(
+      source: source,
+      target: target,
+      response: "인공지능에는 학습과 <s0>추리</s0>가 포함됩니다."
+    )
+    #expect(String(alignment.target.characters) == target)
+    let styled = try #require(alignment.target.runs.first { $0.link == link })
+    #expect(String(alignment.target.characters[styled.range]) == "추론이")
+    #expect(alignment.unmatched.isEmpty)
+  }
+
+  @Test(arguments: [
+    "<s0>설정",
+    "<s9>설정</s9>",
+    "<s0>설정</s1>",
+    "<s0>설정</s0><s0>다시</s0>",
+    "전혀 다른 문장에 <s0>뜻밖의 표현</s0>이 들어 있습니다.",
+  ])
+  func invalidOrUnrelatedContextCannotAssignAStyle(_ response: String) {
+    var source = AttributedString("Choose settings")
+    source[source.range(of: "settings")!].link = URL(string: "swiftycrow-style://run/0")!
+    let alignment = TranslationStyleMapper.alignContextual(source: source, target: "환경설정을 선택하세요.", response: response)
+    #expect(String(alignment.target.characters) == "환경설정을 선택하세요.")
+    #expect(alignment.target.runs.allSatisfy { $0.link == nil })
+  }
+
   @Test
   func appleAlignedAttributesMapSourceStylesOntoTranslatedWords() throws {
     let sourceText = "Proposal #179. Agent Skills handles reusable capabilities."
@@ -197,8 +425,8 @@ struct OverlayAttributedStyleTests {
     #expect(spans == ["Two checks are pending.", "The"])
   }
 
-  @Test
-  func leadingEmphasisUsesTheTrailingBodyAsItsBaseStyle() throws {
+  @Test(arguments: [false, true])
+  func leadingEmphasisUsesTheTrailingBodyAsItsBaseStyle(_ colored: Bool) throws {
     let text = "Apple Translation supplies the"
     let regular = OverlaySourceAppearance(
       background: .white,
@@ -211,10 +439,15 @@ struct OverlayAttributedStyleTests {
     medium.fontWeight = .medium
     var semibold = regular
     semibold.fontWeight = .semibold
+    if colored {
+      let blue = OverlayColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 1)
+      medium.foreground = blue
+      semibold.foreground = blue
+    }
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.08),
       text: text,
-      appearance: medium,
+      appearance: colored ? semibold : medium,
       styleRuns: [
         OverlaySourceStyleRun(
           range: try range(of: "Apple", in: text),
@@ -249,6 +482,7 @@ struct OverlayAttributedStyleTests {
     }
 
     #expect(source.appearance.fontWeight == .regular)
+    #expect(source.appearance.foreground == regular.foreground)
     #expect(spans == ["Apple Translation"])
   }
 
@@ -325,6 +559,21 @@ struct OverlayAttributedStyleTests {
 
     #expect(alignment.unmatched.isEmpty)
     #expect(alignment.target.runs.compactMap(\.link) == [link])
+  }
+
+  @Test
+  func inlineCodePrefersExactSpellingOverACapitalizedProductName() throws {
+    var source = AttributedString("Quartz includes the quartz command.")
+    let link = URL(string: "swiftycrow-style://run/1")!
+    let range = try #require(source.range(of: "quartz"))
+    source[range].link = link
+    let alignment = TranslationStyleMapper.align(source: source, target: "Quartz: quartz 명령을 포함합니다.")
+    let styled = try #require(alignment.target.runs.first { $0.link == link })
+    #expect(String(alignment.target.characters[styled.range]) == "quartz")
+    source[range].inlinePresentationIntent = .code
+    let missing = TranslationStyleMapper.align(source: source, target: "Quartz는 명령을 포함합니다.")
+    #expect(missing.unmatched.count == 1)
+    #expect(missing.target.runs.allSatisfy { $0.link == nil })
   }
 
   @Test
@@ -443,6 +692,43 @@ struct OverlayAttributedStyleTests {
 
     #expect(source.isProtectedLiteral)
     #expect(spaced.isProtectedLiteral)
+  }
+
+  @Test
+  func fixedPitchValueDoesNotFreezeRowLabelsOrDistantNavigation() {
+    var appearance = OverlaySourceAppearance.fallback
+    appearance.fontDesign = .monospaced
+    let navigation = source(text: "Numeric Operations", box: CGRect(x: 0.08, y: 0.56, width: 0.12, height: 0.02))
+    let label = source(text: "Architecture-dependent", box: CGRect(x: 0.46, y: 0.56, width: 0.15, height: 0.02))
+    let token = source(text: "isize", box: CGRect(x: 0.65, y: 0.56, width: 0.04, height: 0.02), appearance: appearance)
+    let values = [navigation, label, token]
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: values))
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 1, in: values))
+    #expect(OverlayTranslationPolicy.preservesSource(at: 2, in: values))
+    let code = source(text: ".config/tool", box: CGRect(x: 0.65, y: 0.56, width: 0.15, height: 0.02), appearance: appearance)
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: [navigation, code]))
+  }
+
+  @Test
+  func aProtectedNumericCellDoesNotFreezeItsNaturalLanguageRowLabel() {
+    let label = source(text: "16-bit", box: CGRect(x: 0.2, y: 0.4, width: 0.1, height: 0.03))
+    var number = source(text: "116", box: CGRect(x: 0.32, y: 0.4, width: 0.04, height: 0.03))
+    number.preservesSource = true
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: [label, number]))
+    #expect(OverlayTranslationPolicy.preservesSource(at: 1, in: [label, number]))
+  }
+
+  @Test
+  func metadataGapsUsePhysicalGeometryInAWideCapture() {
+    var codeAppearance = OverlaySourceAppearance.fallback
+    codeAppearance.fontDesign = .monospaced
+    var label = source(text: "GitHub Copilot", box: CGRect(x: 0.05, y: 0.4, width: 0.15, height: 0.03))
+    var path = source(text: ".config/tool", box: CGRect(x: 0.3, y: 0.4, width: 0.15, height: 0.03), appearance: codeAppearance)
+    #expect(OverlayTranslationPolicy.preservesSource(at: 0, in: [label, path]))
+    label.imageAspectRatio = 4
+    path.imageAspectRatio = 4
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: [label, path]))
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: [label, path]) == nil)
   }
 
   @Test

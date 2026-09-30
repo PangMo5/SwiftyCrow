@@ -35,6 +35,40 @@ struct OCRResultTests {
   }
 
   @Test
+  func sameParagraphInkGeometryOutweighsNoisyFontCalibration() {
+    var first = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.05, y: 0.3125, width: 0.62, height: 0.05),
+      text: "변경 사항을 확인하세요. 업",
+      imageAspectRatio: 1.5,
+      horizontalGlyphScale: 0.05,
+      horizontalInkScale: 0.03,
+      recognitionGroupID: 1,
+      followingSeparator: "",
+      alignment: .leading
+    )
+    first.appearance.fontSizeScale = 0.052
+    var second = first
+    second.text = "데이트 중에는 기기를 분리하지 마세요."
+    second.boundingBoxNormalized = CGRect(x: 0.046, y: 0.35625, width: 0.375, height: 0.05)
+    second.appearance.fontSizeScale = 0.037
+    second.followingSeparator = nil
+    let result = OCRResult(lines: [first, second]).coalescingParagraphFragments()
+    #expect(result.lines.count == 1)
+    #expect(result.joinedText == "변경 사항을 확인하세요. 업데이트 중에는 기기를 분리하지 마세요.")
+  }
+
+  @Test(arguments: [
+    ("업데이트 중입니다.", ["업", "데이트 중입니다."], ""),
+    ("更新を確認してください。", ["更新を確", "認してください。"], ""),
+    ("请保留原始文件。", ["请保留原", "始文件。"], ""),
+    ("Review the changes before continuing.", ["Review the changes", "before continuing."], " "),
+    ("راجع التغييرات قبل المتابعة.", ["راجع التغييرات", "قبل المتابعة."], " "),
+  ])
+  func transcriptSeparatorsPreserveWordsAcrossScripts(_ item: (String, [String], String)) {
+    #expect(OCRParagraphLineGrouping.separators(paragraphTranscript: item.0, lineTranscripts: item.1).first! == item.2)
+  }
+
+  @Test
   func joinsObservedSplitBubbleRightToLeft() throws {
     let right = verticalLine(
       x: 0.453125,
@@ -650,6 +684,30 @@ struct OCRResultTests {
   }
 
   @Test
+  func verticalRubyUsesItsGlyphScaleInsteadOfPaddedColumnWidth() {
+    let base = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.50, y: 0.60, width: 0.06, height: 0.36),
+      text: "九回表、最後の攻撃を前に円陣を組んだ。",
+      rowCount: 5,
+      isVerticalBlock: true,
+      verticalCharScale: 0.0083
+    )
+    let ruby = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.5544, y: 0.626, width: 0.006, height: 0.075),
+      text: "きゅうかいえんじん",
+      isVerticalBlock: true,
+      verticalCharScale: 0.0033
+    )
+    let result = OCRResult(lines: [ruby, base]).absorbingRubyAnnotations()
+    #expect(result.lines.count == 1)
+    #expect(result.lines.first?.text == base.text)
+    #expect(result.lines.first?.replacementPatches.contains(where: \.isAnnotation) == true)
+    var fullSizeColumn = ruby
+    fullSizeColumn.verticalCharScale = 0.0083
+    #expect(OCRResult(lines: [fullSizeColumn, base]).absorbingRubyAnnotations().lines.count == 2)
+  }
+
+  @Test
   func absorbsSeparateJapaneseRubyIntoItsBaseRun() throws {
     let rubyBox = CGRect(x: 0.208, y: 0.836, width: 0.096, height: 0.014)
     let baseBox = CGRect(x: 0.202, y: 0.846, width: 0.110, height: 0.027)
@@ -805,6 +863,72 @@ struct OCRResultTests {
     #expect(merged.text.contains("Directional focus and MFF cross the seam"))
   }
 
+  @Test(arguments: [(0.004, 1), (0.03, 2)])
+  func completeSentencesInMeasuredBlocksRespectParagraphSpacing(_ sample: (Double, Int)) {
+    let appearance = OverlaySourceAppearance(
+      background: .white,
+      foreground: .black,
+      confidence: 0.8,
+      foregroundConfidence: 0.08,
+      fontSizeScale: 0.025,
+      fontWeight: .regular
+    )
+    let upper = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.4, height: 0.07),
+      text: "One complete sentence in two lines.",
+      rowCount: 2,
+      horizontalGlyphScale: 0.025,
+      recognitionGroupID: 1,
+      appearance: appearance
+    )
+    let lower = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.2, y: 0.27 + sample.0, width: 0.4, height: 0.07),
+      text: "Another complete sentence in two lines.",
+      rowCount: 2,
+      horizontalGlyphScale: 0.025,
+      recognitionGroupID: 2,
+      appearance: appearance
+    )
+    #expect(OCRResult(lines: [upper, lower]).coalescingParagraphFragments().lines.count == sample.1)
+  }
+
+  @Test(arguments: [
+    ["The paragraph continues across", "more than one visual row and", "finishes in a detached final row."],
+    ["تشمل التطبيقات التي تظهر في هذه الواجهة", "مجموعة من الأدوات التي تساعد", "على قراءة المحتوى بسهولة."],
+    ["この文章は画面に表示された内容について", "改行をまたいで説明を続けます", "最後まで一つの段落として読みます。"],
+  ])
+  func detachedLastRowContinuesEstablishedBody(_ texts: [String]) {
+    var rows = texts.enumerated().map { index, text in
+      OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: 0.2, y: 0.2 + Double(index) * 0.03, width: 0.4, height: 0.02),
+        text: text,
+        horizontalGlyphScale: 0.02,
+        recognitionGroupID: index < 2 ? 1 : 2,
+        appearance: .init(
+          background: .white,
+          foreground: .init(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),
+          confidence: 0.7,
+          foregroundConfidence: 0.08,
+          fontSizeScale: 0.022,
+          fontWeight: .regular
+        )
+      )
+    }
+    let joined = OCRResult(lines: rows).coalescingParagraphFragments()
+    #expect(joined.lines.count == 1)
+    #expect(joined.lines.first?.rowCount == 3)
+    var widening = rows
+    widening[1].recognitionGroupID = 2
+    widening[2].boundingBoxNormalized.origin.x -= 0.2
+    widening[2].boundingBoxNormalized.size.width += 0.2
+    #expect(OCRResult(lines: widening).coalescingParagraphFragments().lines.count == 1)
+    rows[1].text += "."
+    #expect(OCRResult(lines: rows).coalescingParagraphFragments().lines.count == 2)
+    rows[1].text = texts[1]
+    rows[2].boundingBoxNormalized.origin.y += 0.04
+    #expect(OCRResult(lines: rows).coalescingParagraphFragments().lines.count == 2)
+  }
+
   @Test(arguments: [
     BodyAppearanceCase(
       name: "foreground sampling jitter",
@@ -956,7 +1080,7 @@ struct OCRResultTests {
 
     let merged = try #require(OCRResult(lines: [first, second]).coalescingParagraphFragments().lines.first)
 
-    #expect(merged.text == "鍵は私が 持っています。")
+    #expect(merged.text == "鍵は私が持っています。")
   }
 
   @Test
@@ -1160,7 +1284,7 @@ struct OCRResultTests {
       text: "profile or workspace into another"
     )
 
-    let merged = OCRSupplementalMerger.addingUncovered(
+    let merged = OCRCandidateReconciler.adding(
       [title, duplicatedFirst, missing],
       to: [first, final]
     )

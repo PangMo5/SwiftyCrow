@@ -10,8 +10,121 @@ import Testing
 
 @Suite("Quality audit regressions")
 struct QualityRegressionTests {
+  @Test(arguments: ["こんにちは�世界", "안녕하세요�세계", "مرحبا�بالعالم", "שלום�עולם", "Bonjour�monde"])
+  @MainActor
+  func undecodableSourceTextIsFlaggedWithoutAnEnglishDictionary(_ text: String) {
+    let result = OCRQualityAssessment.markingUncertainText(in: .init(lines: [
+      .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.7, height: 0.1), text: text)
+    ]))
+    #expect(result.lines[0].needsReview)
+    #expect(result.lines[0].preservesSource)
+  }
+
   @Test
-  func resampledGlyphFringesDoNotBecomeBackgroundTexture() throws {
+  func restorationRemovesEverySourceTextColorOnOneSurface() async throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 200,
+      height: 60,
+      bitsPerComponent: 8,
+      bytesPerRow: 800,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 0.05, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 200, height: 60))
+    context.setFillColor(CGColor(gray: 0.95, alpha: 1))
+    context.fill(CGRect(x: 25, y: 20, width: 35, height: 18))
+    context.setFillColor(CGColor(red: 0.05, green: 0.5, blue: 1, alpha: 1))
+    context.fill(CGRect(x: 85, y: 20, width: 70, height: 18))
+    let white = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
+    var blue = white
+    blue.foreground = OverlayColor(red: 0.05, green: 0.5, blue: 1, alpha: 1)
+    let box = CGRect(x: 0.1, y: 0.3, width: 0.7, height: 0.4)
+    let source = OCRResult.Line(
+      boundingBoxNormalized: box,
+      text: "Apps 作者 رابط",
+      appearance: white,
+      replacementPatches: [.init(box: box, appearance: white)],
+      styleRuns: [.init(
+        range: NSRange(location: 5, length: 8),
+        box: CGRect(x: 0.4, y: 0.3, width: 0.4, height: 0.4),
+        appearance: blue
+      )],
+      surface: .init(box: box, confidence: 1)
+    )
+    let result = await SourceRestorationBuilder.applying(to: .init(lines: [source]), image: try #require(context.makeImage()))
+    let png = try #require(result.lines[0].replacementPatches.first?.restorationPNG)
+    let imageSource = try #require(CGImageSourceCreateWithData(png as CFData, nil))
+    let image = try #require(CGImageSourceCreateImageAtIndex(imageSource, 0, nil))
+    let rendered = try #require(CGContext(
+      data: nil,
+      width: image.width,
+      height: image.height,
+      bitsPerComponent: 8,
+      bytesPerRow: image.width * 4,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    rendered.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    let pixels = try #require(rendered.data).assumingMemoryBound(to: UInt8.self)
+    #expect((0..<image.width * image.height).allSatisfy { Int(pixels[$0 * 4 + 2]) - Int(pixels[$0 * 4]) < 80 })
+  }
+
+  @Test
+  func malformedModelOutputIsNotRenderedAsTranslation() {
+    #expect(!TranslationTextStructure.isUsableResponse("... 담요에서만 ��어���다..."))
+    #expect(!TranslationTextStructure.isUsableResponse(" \n "))
+    #expect(TranslationTextStructure.isUsableResponse("총알은 담요에 맞고 튕겨 나갔습니다."))
+    #expect(TranslationTextStructure.isUsableResponse("Symbols: ✓ → ★"))
+  }
+
+  @Test
+  @MainActor
+  func romanizedTermsInMixedScriptProseRemainTranslatable() {
+    let text = "The tsuchi changes to zuchi as an instance of rendaku （連濁）."
+    let result = OCRQualityAssessment.markingUncertainText(in: .init(lines: [
+      .init(boundingBoxNormalized: .zero, text: text, recognitionConfidence: 0.42)
+    ]), language: Language(code: "en"))
+    #expect(result.lines[0].text == text)
+    #expect(!result.lines[0].preservesSource)
+  }
+
+  @Test
+  @MainActor
+  func spellingUncertaintyDoesNotSilentlySuppressProseTranslation() {
+    let text = "Chiden under six travel tree. A tickch cannot be exchanged char exparture."
+    let result = OCRQualityAssessment.markingUncertainText(in: OCRResult(lines: [
+      .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.1), text: text, recognitionConfidence: 0.43),
+      .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.3, width: 0.8, height: 0.1), text: text, recognitionConfidence: 0.95),
+    ]), language: Language(code: "en"))
+    #expect(result.lines[0].needsReview)
+    #expect(!result.lines[0].preservesSource)
+    #expect(!result.lines[1].preservesSource)
+  }
+
+  @Test
+  @MainActor
+  func uncertainLabelRetainsReviewHintWithoutChangingItsTranslationOwnership() {
+    let result = OCRQualityAssessment.markingUncertainText(in: OCRResult(lines: [
+      .init(
+        boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.5, height: 0.1),
+        text: "More nolitics coverade",
+        recognitionConfidence: 0.49
+      ),
+      .init(
+        boundingBoxNormalized: CGRect(x: 0.1, y: 0.3, width: 0.5, height: 0.1),
+        text: "More politics coverage",
+        recognitionConfidence: 0.9
+      ),
+    ]), language: Language(code: "en"))
+    #expect(result.lines[0].needsReview)
+    #expect(!result.lines[0].preservesSource)
+    #expect(!result.lines[1].preservesSource)
+  }
+
+  @Test
+  func resampledGlyphFringesDoNotBecomeBackgroundTexture() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 180,
@@ -42,7 +155,7 @@ struct QualityRegressionTests {
       appearance: appearance,
       replacementPatches: [OverlaySourcePatch(box: box, appearance: appearance)]
     )
-    let result = SourceRestorationBuilder.applying(
+    let result = await SourceRestorationBuilder.applying(
       to: OCRResult(lines: [line]),
       image: try #require(context.makeImage())
     )
@@ -115,6 +228,74 @@ struct QualityRegressionTests {
     expectNoDifference(OverlayTranslationPolicy.trailingContext(at: 0, in: sources), "v3.2.1")
   }
 
+  @Test(arguments: ["①", "❷", "Ⅳ", "²", "½", "١٢"])
+  func numericSymbolsKeepTheirOriginalVisualForm(_ text: String) {
+    let source = OverlayLine.Source(
+      recognized: .init(boundingBoxNormalized: .zero, text: text),
+      language: Locale.Language(identifier: "ja")
+    )
+    #expect(OverlayTranslationPolicy.preservesSource(at: 0, in: [source]))
+  }
+
+  @Test(arguments: ["① Important", "四人", "一番", "One person"])
+  func numericSymbolsDoNotProtectSurroundingProse(_ text: String) {
+    let source = OverlayLine.Source(
+      recognized: .init(boundingBoxNormalized: .zero, text: text),
+      language: Locale.Language(identifier: "ja")
+    )
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: [source]))
+  }
+
+  @Test
+  func metadataAndTranslationContextStayWithinTheirDocument() {
+    var label = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.1, height: 0.03), text: "release")
+    label.recognitionContextID = 0
+    var value = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.22, y: 0.2, width: 0.1, height: 0.03), text: "v3.2.1")
+    value.recognitionContextID = 1
+    let sources = [label, value].map { OverlayLine.Source(recognized: $0, language: Locale.Language(identifier: "en")) }
+    #expect(!OverlayTranslationPolicy.preservesSource(at: 0, in: sources))
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: sources) == nil)
+  }
+
+  @Test
+  func aVerticalTitleDoesNotShareAVisualRowWithEveryOverlappingLabel() {
+    let title = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.8, y: 0.1, width: 0.05, height: 0.7),
+      text: "縦書きの題名",
+      isVerticalBlock: true,
+      verticalCharScale: 0.04
+    )
+    let peers = ["API", "Label", "Other"].enumerated().map { index, text in
+      OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.2, y: 0.2 + Double(index) * 0.15, width: 0.1, height: 0.03), text: text)
+    }
+    let sources = ([title] + peers).map { OverlayLine.Source(recognized: $0, language: Locale.Language(identifier: "ja")) }
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: sources) == nil)
+  }
+
+  @Test
+  func aVerticalLiteralDoesNotSupplyContextToAnAdjacentHorizontalLabel() {
+    let label = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.2, y: 0.4, width: 0.1, height: 0.03), text: "release")
+    let value = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.32, y: 0.1, width: 0.03, height: 0.7),
+      text: "v3.2.1",
+      isVerticalBlock: true
+    )
+    let sources = [label, value].map { OverlayLine.Source(recognized: $0, language: Locale.Language(identifier: "en")) }
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: sources) == nil)
+  }
+
+  @Test
+  func aWrappedHorizontalLabelKeepsItsTrailingValueContext() {
+    let label = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.1, height: 0.08),
+      text: "release",
+      rowCount: 2
+    )
+    let value = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.32, y: 0.22, width: 0.1, height: 0.03), text: "v3.2.1")
+    let sources = [label, value].map { OverlayLine.Source(recognized: $0, language: Locale.Language(identifier: "en")) }
+    #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: sources) == "v3.2.1")
+  }
+
   @Test
   func verticalGeometryOverridesMisleadingDirectionMetadata() {
     #expect(OCRGeometry.isVertical(
@@ -170,20 +351,6 @@ struct QualityRegressionTests {
   }
 
   @Test
-  func modelChoiceUsesInstalledModelsAndPreservesAnAvailablePreference() {
-    expectNoDifference(
-      TranslationModelResolver.choose(preferred: .lowLatency, preferredInstalled: true, alternativeInstalled: true),
-      .lowLatency
-    )
-    expectNoDifference(
-      TranslationModelResolver.choose(preferred: .lowLatency, preferredInstalled: false, alternativeInstalled: true),
-      .highFidelity
-    )
-    #expect(TranslationModelResolver
-      .choose(preferred: .highFidelity, preferredInstalled: false, alternativeInstalled: false) == nil)
-  }
-
-  @Test
   func latinCaptionDoesNotInheritArabicPageLanguage() {
     let client = LanguageDetectionClient(detect: { text, confidence in
       if text == "Platform 4 Departure 15:30" { return confidence > 0 ? nil : Language(code: "en") }
@@ -196,7 +363,7 @@ struct QualityRegressionTests {
   }
 
   @Test
-  func maskBoundsReachInkOutsideTheOCRBox() throws {
+  func maskBoundsReachInkOutsideTheOCRBox() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 100,
@@ -213,7 +380,7 @@ struct QualityRegressionTests {
     let image = try #require(context.makeImage())
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     let patch = OverlaySourcePatch(box: CGRect(x: 0.3, y: 22.0 / 60, width: 0.06, height: 16.0 / 60), appearance: appearance)
-    let result = SourceRestorationBuilder.applying(
+    let result = await SourceRestorationBuilder.applying(
       to: OCRResult(lines: [.init(
         boundingBoxNormalized: patch.box,
         text: "Sample",
@@ -223,8 +390,10 @@ struct QualityRegressionTests {
       image: image
     )
     let restored = try #require(result.lines.first?.replacementPatches.first)
-    #expect(restored.box.minY <= 20.0 / 60)
-    #expect(restored.box.maxY >= 40.0 / 60)
+    #expect(restored.box == patch.box)
+    let renderingBox = try #require(restored.renderingBox)
+    #expect(renderingBox.minY <= 20.0 / 60)
+    #expect(renderingBox.maxY >= 40.0 / 60)
   }
 
   @Test
@@ -250,14 +419,20 @@ struct QualityRegressionTests {
 
   @Test
   func eraserExclusionsProtectSeparatorsAndPendingNeighbors() {
-    let slash = OverlayLine(
+    var slash = OverlayLine(
       id: UUID(),
       source: .init(
         recognized: .init(boundingBoxNormalized: CGRect(x: 0.2, y: 0.3, width: 0.02, height: 0.05), text: "/"),
         language: Locale.Language(identifier: "en")
       )
     )
-    let frames = OverlayLayoutEngine.protectedSourceFrames(for: [slash], in: CGSize(width: 1000, height: 500), displayScale: 2)
+    slash.source.replacementPatches[0].renderingBox = CGRect(x: 0.15, y: 0.2, width: 0.1, height: 0.2)
+    let frames = OverlayLayoutEngine.protectedSourceFrames(
+      for: [slash],
+      placements: [],
+      in: CGSize(width: 1000, height: 500),
+      displayScale: 2
+    )
     expectNoDifference(frames, [CGRect(x: 199.5, y: 149.5, width: 21, height: 26)])
   }
 
@@ -313,7 +488,7 @@ struct QualityRegressionTests {
   }
 
   @Test
-  func textureRestorationRetainsMultipleBackgroundColors() throws {
+  func textureRestorationRetainsMultipleBackgroundColors() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 180,
@@ -343,7 +518,7 @@ struct QualityRegressionTests {
       appearance: appearance,
       replacementPatches: [OverlaySourcePatch(box: box, appearance: appearance)]
     )
-    let result = SourceRestorationBuilder.applying(to: OCRResult(lines: [line]), image: image)
+    let result = await SourceRestorationBuilder.applying(to: OCRResult(lines: [line]), image: image)
     let data = try #require(result.lines.first?.replacementPatches.first?.restorationPNG)
     let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
     let tile = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
