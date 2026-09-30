@@ -112,7 +112,7 @@ toggleLiveMode = "cmd + shift - m"
 
 |鍵|類型|預設值|說明|
 | --- | --- | --- | --- |
-|`strategy`|string|`"lowLatency"`|偏好的本機翻譯方式為 `lowLatency` 或 `highFidelity`（macOS 26.4 以上）。若對應模型已安裝則優先使用，否則使用其他已安裝模型並顯示提示。|
+|`strategy`|string|`"lowLatency"`|所選翻譯方式為 `lowLatency` 或 `highFidelity`（macOS 26.4 以上）。必須安裝對應模型，不會自動切換至其他方式。|
 
 <a id="updates"></a>
 ## `[updates]`

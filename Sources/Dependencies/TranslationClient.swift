@@ -14,10 +14,10 @@ struct TranslationLine: Equatable, Sendable {
   var id: UUID
   var text: String
   var attributedText: AttributedString? = nil
-  var modelNotice: String? = nil
   /// Neighboring compact value used only to disambiguate this label. It is
   /// never rendered as part of the label's translated output.
   var trailingContext: String? = nil
+  var groupContext: TranslationGroupContext.Member? = nil
 
   var requestText: String {
     guard let trailingContext else { return text }
@@ -30,7 +30,6 @@ struct TranslationLine: Equatable, Sendable {
 struct TranslatedText: Equatable, Sendable {
   var text: String
   var attributedText: AttributedString? = nil
-  var modelNotice: String? = nil
 }
 
 // MARK: - TranslationTextStructure
@@ -39,10 +38,23 @@ enum TranslationTextStructure {
 
   // MARK: Internal
 
+  /// A replacement character is evidence of a malformed model response, not
+  /// wording that should overwrite readable source pixels. A missing yield is
+  /// reported by the caller's incomplete-batch handling after other lines finish.
+  static func isUsableResponse(_ text: String) -> Bool {
+    !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && !text.contains("\u{FFFD}")
+  }
+
   /// Translation may promote one source line break into a paragraph break.
   /// Keep the target's wording, but cap consecutive newlines to the structure
   /// that OCR recovered from the source frame.
   static func matchingSourceBreaks(_ target: String, source: String) -> String {
+    // Keep a terminal footnote attached to its preceding word. The translation
+    // service can introduce a space that lets the mark wrap onto its own line.
+    let target = source.last.map { "*†‡".contains($0) } == true
+      ? target.replacingOccurrences(of: #"\s+([*†‡])$"#, with: "$1", options: .regularExpression)
+      : target
     let sourceLimit = maximumConsecutiveNewlines(in: source)
     guard sourceLimit > 0 else { return target }
 
@@ -67,8 +79,8 @@ enum TranslationTextStructure {
 
   /// Extracts the label from a contextual `label: value` translation. Apple
   /// Translation retains either the ASCII or full-width colon for supported
-  /// language pairs; returning nil keeps a malformed response visible instead
-  /// of silently guessing where the label ends.
+  /// language pairs; nil rejects a response whose context cannot be separated
+  /// from the label, rather than displaying neighboring content in its place.
   static func label(fromContextualTranslation target: String) -> String? {
     guard let separator = target.firstIndex(where: { $0 == ":" || $0 == "：" }) else {
       return nil
@@ -100,8 +112,8 @@ enum TranslationTextStructure {
 struct TranslationClient {
   /// Translates all `lines` in one source-language session, yielding each result
   /// as soon as it's ready (order isn't guaranteed; match by `id`). Translation
-  /// always comes from the plain batch response. Attributed source text is used
-  /// only to map visual style spans onto that translated string.
+  /// comes from the unchanged prose request with existing code literals restored.
+  /// Optional style alignment never changes that resulting prose.
   var translateBatch: @Sendable (
     _ lines: [TranslationLine],
     _ source: Locale.Language,
@@ -123,25 +135,42 @@ extension TranslationClient: DependencyKey {
       AsyncThrowingStream { continuation in
         let pair = "\(source.maximalIdentifier)->\(target.maximalIdentifier)"
         let linesByID = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0) })
-        let requests = lines.map {
-          TranslationSession.Request(sourceText: $0.requestText, clientIdentifier: $0.id.uuidString)
+        let literalPlans = Dictionary(uniqueKeysWithValues: lines.compactMap { line in
+          TranslationLiteralPlan(line.attributedText).map { (line.id, $0) }
+        })
+        let contextualLines = Dictionary(grouping: lines.filter { line in
+          guard
+            #available(macOS 26.4, *), literalPlans[line.id] == nil, line.trailingContext == nil,
+            let member = line.groupContext, member.context.labels.indices.contains(member.index),
+            member.context.labels[member.index] == line.text, member.context.attributedRequest != nil
+          else { return false }
+          return true
+        }) { $0.groupContext!.context }
+        let contextualIDs = Set(contextualLines.values.flatMap { $0.map(\.id) })
+        func requests(for items: [TranslationLine]) -> [TranslationSession.Request] {
+          items.map {
+            var request = $0
+            request.text = literalPlans[$0.id]?.requestText ?? $0.text
+            return TranslationSession.Request(sourceText: request.requestText, clientIdentifier: $0.id.uuidString)
+          }
         }
         let task = Task {
           let clock = ContinuousClock()
           let started = clock.now
           var receivedFirstResponse = false
           do {
-            let selection = try await TranslationModelResolver.resolve(source: source, target: target, preferred: strategy)
+            try await TranslationModelResolver.validateSelection(source: source, target: target, strategy: strategy)
             try Task.checkCancellation()
             let session =
               if #available(macOS 26.4, *) {
-                TranslationSession(installedSource: source, target: target, preferredStrategy: selection.strategy.sessionStrategy)
+                TranslationSession(installedSource: source, target: target, preferredStrategy: strategy.sessionStrategy)
               } else {
                 TranslationSession(installedSource: source, target: target)
               }
             try await withTaskCancellationHandler {
               var styledTargets = [UUID: String]()
-              for try await response in session.translate(batch: requests) {
+              var anchoredTargets = [UUID: AttributedString]()
+              func accept(_ responseText: String, id: UUID) throws {
                 try Task.checkCancellation()
                 if !receivedFirstResponse {
                   receivedFirstResponse = true
@@ -150,40 +179,84 @@ extension TranslationClient: DependencyKey {
                     "First response for \(pair, privacy: .public) arrived in \(elapsed.loggedSeconds, privacy: .public)s"
                   )
                 }
-                guard
-                  let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
-                  let sourceLine = linesByID[id]
-                else { continue }
+                guard let sourceLine = linesByID[id] else { return }
+                guard TranslationTextStructure.isUsableResponse(responseText) else {
+                  Log.translation.error("Rejected malformed translation response for \(pair, privacy: .public)")
+                  return
+                }
                 let translatedLabel = sourceLine.trailingContext == nil
-                  ? response.targetText
-                  : TranslationTextStructure.label(fromContextualTranslation: response.targetText)
-                    ?? response.targetText
-                let targetText = TranslationTextStructure.matchingSourceBreaks(
+                  ? responseText
+                  : TranslationTextStructure.label(fromContextualTranslation: responseText)
+                guard let translatedLabel else {
+                  Log.translation.error("Rejected translation with missing context separator for \(pair, privacy: .public)")
+                  return
+                }
+                let normalizedTarget = TranslationTextStructure.matchingSourceBreaks(
                   translatedLabel,
                   source: sourceLine.text
                 )
-                var attributedTarget: AttributedString?
-                if #available(macOS 26.4, *), let attributedSource = sourceLine.attributedText {
-                  let alignment = TranslationStyleMapper.align(source: attributedSource, target: targetText)
+                let restored: AttributedString
+                if let plan = literalPlans[id] {
+                  guard let decoded = plan.restoring(normalizedTarget) else {
+                    Log.translation
+                      .error("Rejected translation with invalid protected text markers for \(pair, privacy: .public)")
+                    return
+                  }
+                  restored = decoded
+                  anchoredTargets[id] = decoded
+                } else { restored = AttributedString(normalizedTarget) }
+                let targetText = String(restored.characters)
+                var attributedTarget = anchoredTargets[id]
+                var requiresSourceAlignment = false
+                if let attributedSource = sourceLine.attributedText {
+                  let alignment = TranslationStyleMapper.align(
+                    source: attributedSource,
+                    target: targetText,
+                    preserving: anchoredTargets[id]
+                  )
                   attributedTarget = alignment.target
+                  requiresSourceAlignment = alignment.hasUnmappedSourceFragments
+                  anchoredTargets[id] = alignment.target
                   if !alignment.unmatched.isEmpty { styledTargets[id] = targetText }
                 }
-                // Text is usable now. Optional style-snippet translation must
-                // never hold an entire paragraph behind the rest of the batch.
-                continuation.yield(TranslationLine(
-                  id: id,
-                  text: targetText,
-                  attributedText: attributedTarget,
-                  modelNotice: selection.notice
-                ))
+                // Optional styles do not delay prose. Captured pixels require
+                // complete target ownership before their source can be erased.
+                if !requiresSourceAlignment {
+                  continuation.yield(TranslationLine(id: id, text: targetText, attributedText: attributedTarget))
+                }
               }
-              if #available(macOS 26.4, *), !styledTargets.isEmpty {
+              let ordinary = lines.filter { !contextualIDs.contains($0.id) }
+              if !ordinary.isEmpty {
+                for try await response in session.translate(batch: requests(for: ordinary)) {
+                  guard let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)) else { continue }
+                  try accept(response.targetText, id: id)
+                }
+              }
+              if #available(macOS 26.4, *) {
+                for (context, members) in contextualLines {
+                  try Task.checkCancellation()
+                  let response = try await session.translate(context.attributedRequest!)
+                  try Task.checkCancellation()
+                  if let targets = context.targets(from: response.attributedTargetText) {
+                    for member in members { try accept(targets[member.groupContext!.index], id: member.id) }
+                  } else {
+                    // Some language pairs omit attributed ownership. Do not
+                    // guess item order or render the translated topic as a label.
+                    Log.translation.notice("Context group ownership unavailable; translating independent labels")
+                    for try await response in session.translate(batch: requests(for: members)) {
+                      guard let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)) else { continue }
+                      try accept(response.targetText, id: id)
+                    }
+                  }
+                }
+              }
+              if !styledTargets.isEmpty {
                 try await Self.yieldStyledTranslations(
                   styledTargets,
                   linesByID: linesByID,
                   session: session,
                   continuation: continuation,
-                  modelNotice: selection.notice
+                  preserving: anchoredTargets
                 )
               }
               let elapsed = clock.now - started
@@ -193,7 +266,7 @@ extension TranslationClient: DependencyKey {
               continuation.finish()
             } onCancel: { session.cancel() }
           } catch {
-            continuation.finish(throwing: error)
+            continuation.finish(throwing: TranslationModelResolver.explaining(error, source: source, target: target))
           }
         }
         // The translation service is launched on demand, and on the first use
@@ -217,65 +290,123 @@ extension TranslationClient: DependencyKey {
     }
   )
 
+  /// Native metadata is optional evidence. A failed lookup must not discard
+  /// other paragraphs' anchors or prevent lexical/contextual alignment.
+  static func aligningNativeSourceFragments(
+    _ targets: [UUID: String],
+    linesByID: [UUID: TranslationLine],
+    preserving: [UUID: AttributedString],
+    translate: (AttributedString) async throws -> AttributedString?
+  ) async throws -> [UUID: AttributedString] {
+    var anchors = preserving
+    for (id, target) in targets {
+      try Task.checkCancellation()
+      guard
+        let source = linesByID[id]?.attributedText,
+        TranslationStyleMapper.align(source: source, target: target, preserving: anchors[id]).hasUnmappedSourceFragments
+      else { continue }
+      do {
+        let literalPlan = TranslationLiteralPlan(source)
+        let response = try await translate(literalPlan?.requestAttributedText ?? source)
+        let native: AttributedString? =
+          if let literalPlan { response.flatMap { literalPlan.restoring($0) } }
+          else { response }
+        try Task.checkCancellation()
+        anchors[id] = TranslationStyleMapper.alignNativeSourceFragments(
+          source: source,
+          target: target,
+          native: native,
+          preserving: anchors[id]
+        ).target
+      } catch {
+        if error is CancellationError { throw error }
+        try Task.checkCancellation()
+        Log.translation.error("Optional native source-fragment alignment failed: \(String(describing: error), privacy: .public)")
+      }
+    }
+    return anchors
+  }
+
   // MARK: Private
 
-  @available(macOS 26.4, *)
   private static func yieldStyledTranslations(
     _ targets: [UUID: String],
     linesByID: [UUID: TranslationLine],
     session: TranslationSession,
     continuation: AsyncThrowingStream<TranslationLine, any Error>.Continuation,
-    modelNotice: String?
+    preserving: [UUID: AttributedString]
   ) async throws {
+    var anchors = preserving
+    if #available(macOS 26.4, *) {
+      anchors = try await aligningNativeSourceFragments(targets, linesByID: linesByID, preserving: anchors) {
+        try await session.translate($0).attributedTargetText
+      }
+    }
+    // Lexical matches and sentence-context matches are complementary evidence.
+    // Deduplicate repeated link labels across the batch before asking for them.
+    var owners = [String: [(id: UUID, link: URL)]]()
+    for (id, target) in targets {
+      guard let source = linesByID[id]?.attributedText else { continue }
+      for span in TranslationStyleMapper.align(source: source, target: target, preserving: anchors[id]).unmatched
+        where !span.isLiteral
+      {
+        owners[span.text, default: []].append((id, span.link))
+      }
+    }
+    let terms = owners.keys.sorted()
+    let lexicalRequests = terms.enumerated().map {
+      TranslationSession.Request(sourceText: $0.element, clientIdentifier: String($0.offset))
+    }
     var alternatives = [UUID: [URL: String]]()
-    var snippetOwners = [UUID: (lineID: UUID, link: URL)]()
-    var snippetRequests = [TranslationSession.Request]()
-
-    for (lineID, targetText) in targets {
-      guard let source = linesByID[lineID]?.attributedText else { continue }
-      let alignment = TranslationStyleMapper.align(source: source, target: targetText)
-      for span in alignment.unmatched {
-        let requestID = UUID()
-        snippetOwners[requestID] = (lineID, span.link)
-        snippetRequests.append(TranslationSession.Request(
-          sourceText: span.text,
-          clientIdentifier: requestID.uuidString
-        ))
-      }
-    }
-
-    if !snippetRequests.isEmpty {
-      for try await response in session.translate(batch: snippetRequests) {
+    if !lexicalRequests.isEmpty {
+      for try await response in session.translate(batch: lexicalRequests) {
         try Task.checkCancellation()
-        guard
-          let requestID = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
-          let owner = snippetOwners[requestID]
-        else { continue }
-        alternatives[owner.lineID, default: [:]][owner.link] = response.targetText
+        guard let index = response.clientIdentifier.flatMap(Int.init), terms.indices.contains(index) else { continue }
+        for owner in owners[terms[index]] ?? [] { alternatives[owner.id, default: [:]][owner.link] = response.targetText }
       }
     }
-
-    for (lineID, targetText) in targets {
-      guard
-        let sourceLine = linesByID[lineID],
-        let attributedSource = sourceLine.attributedText
-      else { continue }
+    let requests = targets.keys.compactMap { id -> TranslationSession.Request? in
+      guard let source = linesByID[id]?.attributedText, let target = targets[id] else { return nil }
       let alignment = TranslationStyleMapper.align(
-        source: attributedSource,
-        target: targetText,
-        alternatives: alternatives[lineID] ?? [:]
+        source: source,
+        target: target,
+        alternatives: alternatives[id] ?? [:],
+        preserving: anchors[id]
+      )
+      anchors[id] = alignment.target
+      if !alignment.hasUnmappedSourceFragments {
+        continuation.yield(TranslationLine(id: id, text: target, attributedText: alignment.target))
+      }
+      let unresolved = Set(alignment.unmatched
+        .filter { !$0.isLiteral && ($0.isSourceFragment || $0.text.contains(where: \.isLetter)) }.map(\.link))
+      guard
+        !unresolved.isEmpty,
+        let contextual = TranslationStyleMapper.contextualRequest(source: source, links: unresolved)
+      else { return nil }
+      return TranslationSession.Request(sourceText: contextual, clientIdentifier: id.uuidString)
+    }
+    guard !requests.isEmpty else { return }
+    for try await response in session.translate(batch: requests) {
+      try Task.checkCancellation()
+      guard
+        let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
+        let source = linesByID[id]?.attributedText, let target = targets[id]
+      else { continue }
+      let alignment = TranslationStyleMapper.alignContextual(
+        source: source,
+        target: target,
+        response: response.targetText,
+        alternatives: alternatives[id] ?? [:],
+        preserving: anchors[id]
       )
       if !alignment.unmatched.isEmpty {
-        Log.translation.debug(
-          "Dropping \(alignment.unmatched.count, privacy: .public) unaligned style runs while preserving the plain translation"
-        )
+        Log.translation.debug("Could not align \(alignment.unmatched.count, privacy: .public) contextual style runs")
       }
-      continuation.yield(TranslationLine(
-        id: lineID,
-        text: targetText,
-        attributedText: alignment.target,
-        modelNotice: modelNotice
-      ))
+      if !alignment.hasUnmappedSourceFragments {
+        continuation.yield(TranslationLine(id: id, text: target, attributedText: alignment.target))
+      } else {
+        Log.translation.error("Could not establish required source-fragment alignment")
+      }
     }
   }
 }

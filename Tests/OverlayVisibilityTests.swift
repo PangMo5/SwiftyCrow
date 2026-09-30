@@ -17,7 +17,6 @@ struct OverlayVisibilityTests {
     #expect(!initial.overlayFrame.hasSelection)
     let requests = LockIsolated(0)
     let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
-      $0.ocr.warmUp = { }
       $0.regionSelector.selectRegion = { _ in requests.withValue { $0 += 1 }
         return nil
       }
@@ -32,11 +31,83 @@ struct OverlayVisibilityTests {
     await store.send(.setOverlayVisible(false))
   }
 
+  @Test(arguments: [OverlayFrame.SelectionKind.region, .window], [false, true])
+  func geometryAndJSONPreserveSelectionIntent(_ kind: OverlayFrame.SelectionKind, _ selected: Bool) throws {
+    var frame = OverlayFrame(x: 20, y: 30, width: 500, height: 240, hasSelection: selected, selectionKind: kind)
+    let changed = CGRect(x: 75, y: 95, width: 720, height: 400)
+    frame.updateGeometry(changed)
+    let restored = try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(frame))
+    #expect(restored.rect == changed)
+    #expect(restored.hasSelection == selected)
+    #expect(restored.selectionKind == kind)
+  }
+
+  @Test
+  func cancellingWindowRecallAfterRestartNeverCapturesItsOldRectangle() async throws {
+    let saved = OverlayFrame(rect: CGRect(x: 20, y: 30, width: 500, height: 240), selectionKind: .window)
+    let decoded = try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(saved))
+    let initial = withDependencies { $0.defaultFileStorage = .inMemory } operation: { CaptureFeature.State() }
+    initial.$overlayFrame.withLock { $0 = decoded }
+    #expect(initial.sourceWindowID == nil)
+    let requests = LockIsolated(0)
+    let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
+      $0.regionSelector.selectRegion = { mode in
+        #expect(mode == .window)
+        requests.withValue { $0 += 1 }
+        return nil
+      }
+    }
+    await store.send(.setOverlayVisible(true))
+    await store.receive(\.toggleLiveOverlayRequested)
+    await store.finish()
+    #expect(requests.value == 1)
+    #expect(!store.state.overlayActive)
+    #expect(store.state.overlayFrame == decoded)
+  }
+
+  @Test(arguments: [OverlayFrame.SelectionKind.region, .window])
+  func recalledWindowRequiresANewExplicitTargetAfterRestart(_ choice: OverlayFrame.SelectionKind) async throws {
+    let saved = OverlayFrame(rect: CGRect(x: 20, y: 30, width: 500, height: 240), selectionKind: .window)
+    let decoded = try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(saved))
+    let selected = CGRect(x: 100, y: 200, width: 320, height: 180)
+    let initial = withDependencies { $0.defaultFileStorage = .inMemory } operation: { CaptureFeature.State() }
+    initial.$overlayFrame.withLock { $0 = decoded }
+    let calls = LockIsolated<[String]>([])
+    let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
+      $0.continuousClock = TestClock()
+      $0.regionSelector.selectRegion = { mode in
+        #expect(mode == .window)
+        return choice == .window ? .window(id: 99, frame: selected) : .region(selected)
+      }
+      $0.screenCapture.captureWindowSnapshot = { id in
+        calls.withValue { $0.append("window:\(id)") }
+        throw ScreenCaptureError.windowUnavailable
+      }
+      $0.screenCapture.captureImage = { frame, _, _ in
+        #expect(frame == selected)
+        calls.withValue { $0.append("region") }
+        throw ScreenCaptureError.emptyRegion
+      }
+    }
+    store.exhaustivity = .off
+    await store.send(.toggleLiveOverlayRequested)
+    await store.receive(\.liveTargetSelected)
+    await store.receive(\.setLive)
+    await store.receive(\.liveFrameResponse)
+    #expect(store.state.overlayFrame.rect == selected)
+    #expect(store.state.overlayFrame.selectionKind == choice)
+    #expect(store.state.sourceWindowID == (choice == .window ? 99 : nil))
+    #expect(calls.value == (choice == .window ? ["window:99"] : ["region"]))
+    await store.send(.dismissOverlay)
+    await store.finish()
+  }
+
   @Test
   func existingSavedRegionsRemainUsableAfterUpdating() throws {
     let legacy = Data(#"{"x":20,"y":30,"width":500,"height":240}"#.utf8)
     let frame = try JSONDecoder().decode(OverlayFrame.self, from: legacy)
     #expect(frame.hasSelection)
+    #expect(frame.selectionKind == .region)
     #expect(frame.rect == CGRect(x: 20, y: 30, width: 500, height: 240))
     #expect(try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(OverlayFrame.default)).hasSelection == false)
     #expect(OverlayFrame(rect: frame.rect).hasSelection)

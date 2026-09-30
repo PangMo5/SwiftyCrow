@@ -10,26 +10,122 @@ enum OverlaySourceAppearanceAnalyzer {
 
   // MARK: Internal
 
-  static func applyingAppearances(to result: OCRResult, from image: CGImage) async -> OCRResult {
-    let styleRaster = PixelRaster(image: image, longestSide: 1_024)
+  /// Preserve enough samples per source glyph even when a large window has
+  /// generous empty margins. A fixed whole-image cap erased small-font evidence.
+  /// The lower quartile resists isolated tiny OCR noise; allocation stays bounded.
+  static func appearanceRasterLongestSide(for result: OCRResult, imageSize: CGSize) -> Int {
+    OCRGeometry.analysisRasterLongestSide(for: result.lines.filter {
+      !$0.preservesSource && !OCRTextSemantics.isIdentifier($0.text) && !OCRTextSemantics.isCode($0.text)
+        && $0.text.contains(where: \.isLetter)
+    }, imageSize: imageSize)
+  }
+
+  static func applyingAppearances(
+    to result: OCRResult,
+    from image: CGImage,
+    tableCells: [OCRTableCell] = [],
+    didPrepareParagraphs: (@Sendable ([OCRResult.Line]) -> Void)? = nil
+  ) async -> OCRResult {
+    let styleRaster = PixelRaster(image: image, longestSide: appearanceRasterLongestSide(
+      for: result,
+      imageSize: CGSize(width: image.width, height: image.height)
+    ))
     let surfaceRaster = PixelRaster(image: image, longestSide: 384)
-    let styled = OCRResult(lines: await concurrentMap(result.lines) { line in
+    let styled = OCRResult(lines: await CaptureAnalysisExecutor.map(result.lines) { line in
+      // Literal pixels will not be replaced. Sampling every word and flood
+      // filling their surfaces adds work without contributing to the result.
+      if line.preservesSource || OCRTextSemantics.isIdentifier(line.text) || OCRTextSemantics.isCode(line.text) {
+        return line
+      }
       var line = line
-      let lineAppearance = styleRaster.map {
-        appearance(around: line.boundingBoxNormalized, raster: $0)
+      let originalBox = line.boundingBoxNormalized
+      let originalBackground = styleRaster.flatMap {
+        sampledSurroundingBackground(around: originalBox, raster: $0)
+      }
+      let ruleBand = styleRaster.flatMap { raster in
+        originalBackground.map { horizontalRuleSamplingBand(around: line, background: $0, raster: raster) }
+      } ?? CGRect(x: 0, y: 0, width: 1, height: 1)
+      let ownership = OCRSpatialOwnership.samplingRegion(for: line, among: result.lines)
+      let samplingBand = ownership.bounds.intersection(ruleBand)
+      let samplingRaster = styleRaster.map { raster in
+        ownership.isSlanted ? PixelRaster(raster: raster, ownership: ownership) : raster
+      }
+      // A divider extends beyond the text and is not owned by any of its
+      // words. Bound both measurement and erasure before later style splitting
+      // creates fresh patches from the range geometry.
+      if ruleBand.height < 1 {
+        line.boundingBoxNormalized = line.boundingBoxNormalized.intersection(ruleBand)
+        line.styleRuns = line.styleRuns.map { run in
+          var run = run
+          run.box = run.box.intersection(ruleBand)
+          return run
+        }.filter { !$0.box.isNull && !$0.box.isEmpty }
+        line.replacementPatches = line.replacementPatches.map { patch in
+          var patch = patch
+          patch.box = patch.box.intersection(ruleBand)
+          return patch
+        }.filter { !$0.box.isNull && !$0.box.isEmpty }
+      }
+      if let samplingRaster, let background = originalBackground {
+        line = SourceArtworkIsolation.refine(
+          line,
+          width: samplingRaster.width,
+          height: samplingRaster.height,
+          background: background,
+          sample: { x, y in samplingRaster.color(at: y * samplingRaster.width + x) }
+        )
+      }
+      let lineAppearance = samplingRaster.map {
+        appearance(around: line.boundingBoxNormalized, raster: $0, within: samplingBand)
       } ?? .fallback
-      let surroundingBackground = styleRaster.flatMap {
-        sampledSurroundingBackground(around: line.boundingBoxNormalized, raster: $0)
-      } ?? lineAppearance.background
-      line.styleRuns = line.styleRuns.map { run in
+      let surroundingBackground = (line.boundingBoxNormalized == originalBox ? originalBackground : nil) ?? samplingRaster
+        .flatMap {
+          sampledSurroundingBackground(around: line.boundingBoxNormalized, raster: $0)
+        } ?? lineAppearance.background
+      if let samplingRaster, !line.isVerticalBlock, !line.spacingAnchors.isEmpty {
+        line.styleRuns = splitChromaticRuns(
+          line.styleRuns,
+          anchors: line.spacingAnchors,
+          raster: samplingRaster,
+          band: samplingBand
+        )
+      }
+      let observedRuns = line.styleRuns
+      var sampledRuns = [(box: CGRect, appearance: OverlaySourceAppearance)]()
+      line.styleRuns = observedRuns.map { run in
         var run = run
-        if let styleRaster {
-          run.appearance = appearance(around: run.box, raster: styleRaster)
+        if let samplingRaster {
+          // Vision can give punctuation and its word the same indivisible
+          // rectangle. Calibrate against all text observed in that rectangle,
+          // never against a digit that incorrectly owns the whole word's ink.
+          if let sample = sampledRuns.first(where: { sameBox($0.box, run.box) }) {
+            run.appearance = sample.appearance
+          } else {
+            let sharedRange = observedRuns.filter { sameBox($0.box, run.box) }
+              .reduce(run.range) { NSUnionRange($0, $1.range) }
+            run.appearance = appearance(
+              around: run.box,
+              raster: samplingRaster,
+              text: text(in: sharedRange, source: line.text),
+              within: samplingBand
+            )
+            sampledRuns.append((run.box, run.appearance))
+          }
           run.appearance.fontDesign = fontDesign(
             for: text(in: run.range, source: line.text),
             appearance: run.appearance,
             surroundingBackground: surroundingBackground
           )
+          if
+            !line.isVerticalBlock, let ink = observedInkBox(
+              run.box,
+              appearance: run.appearance,
+              raster: samplingRaster,
+              within: samplingBand
+            )
+          {
+            run.inkBox = ink
+          }
         }
         return run
       }
@@ -61,16 +157,16 @@ enum OverlaySourceAppearanceAnalyzer {
             patch.appearance.background = surroundingBackground
             patch.erasesDistinctSurface = true
           }
-        } else if let styleRaster {
-          patch.appearance = appearance(around: patch.box, raster: styleRaster)
+        } else if let samplingRaster {
+          patch.appearance = appearance(around: patch.box, raster: samplingRaster, within: samplingBand)
         }
         return patch
       }
-      if let styleRaster, !inlineStyleRuns.isEmpty {
+      if let samplingRaster, !inlineStyleRuns.isEmpty {
         line.replacementPatches.append(contentsOf: inlineSurfaceErasers(
           for: inlineStyleRuns,
           parentBackground: surroundingBackground,
-          raster: styleRaster
+          raster: samplingRaster
         ))
       }
       let appearanceSamples: [WeightedAppearance]
@@ -98,9 +194,31 @@ enum OverlaySourceAppearanceAnalyzer {
         }
         appearanceSamples = samples
       }
-      line.appearance = combinedAppearance(appearanceSamples, fallback: lineAppearance)
+      let neutralSamples = appearanceSamples.filter {
+        $0.appearance.fontSizeScale > 0
+          && !$0.appearance.isUnderlined && !isChromatic($0.appearance.foreground)
+          && $0.appearance.background.distance(to: surroundingBackground) < 0.06
+      }
+      // A long URL must not turn the surrounding sentence into a blue link.
+      // The neutral prose supplies the base; mapped spans retain link styling.
+      let hasInlineLink = appearanceSamples.contains { $0.appearance.isUnderlined || isChromatic($0.appearance.foreground) }
+      line.appearance = combinedAppearance(
+        hasInlineLink && !neutralSamples.isEmpty ? neutralSamples : appearanceSamples,
+        fallback: lineAppearance
+      )
+      if line.isVerticalBlock, line.verticalCharScale > 0 {
+        // A vertical word's total height is not its font size. Calibrate from
+        // one physical glyph width before comparing neighboring columns.
+        let scale = line.verticalCharScale * CGFloat(image.width) / CGFloat(image.height)
+        line.appearance.fontSizeScale = scale
+        line.styleRuns = line.styleRuns.map { run in
+          var run = run
+          run.appearance.fontSizeScale = scale
+          return run
+        }
+      }
       if
-        !line.replacementPatches.contains(where: \.erasesDistinctSurface),
+        !line.replacementPatches.contains(where: { $0.erasesDistinctSurface || $0.isAnnotation }),
         shouldConsolidatePatches(
           line.replacementPatches,
           into: lineAppearance,
@@ -117,7 +235,7 @@ enum OverlaySourceAppearanceAnalyzer {
       }
       if
         !line.isVerticalBlock,
-        let styleRaster,
+        let samplingRaster,
         Self.isChromatic(line.appearance.foreground),
         Self.isLightNeutral(line.appearance.background)
       {
@@ -128,29 +246,35 @@ enum OverlaySourceAppearanceAnalyzer {
           appearance: restorationAppearance
         )
         line.replacementPatches = [patch]
-        if let rubyPatch = nearbyChromaticRubyPatch(above: patch, raster: styleRaster) {
+        if let rubyPatch = nearbyChromaticRubyPatch(above: patch, raster: samplingRaster) {
           line.replacementPatches.append(rubyPatch)
         }
       }
-      line.surface = (line.isReconstructedTextRegion ? line.surface : nil) ?? surfaceRaster.flatMap {
+      // Ruby belongs to the same logical translation, but can be printed on
+      // the paper outside a colored label. Infer that label's physical surface
+      // from its main glyph geometry rather than the ruby-expanded parent box.
+      let surfaceAnchor = physicalSurfaceAnchor(for: line)
+      let hasObservedInterior = line.surface.map { $0.confidence == 1 && !$0.clippingRows.isEmpty } ?? false
+      line.surface = (line.isReconstructedTextRegion || hasObservedInterior ? line.surface : nil) ?? surfaceRaster.flatMap {
         inferredSurface(
-          containing: line.boundingBoxNormalized,
+          containing: surfaceAnchor,
           appearance: line.appearance,
-          raster: $0
+          raster: $0,
+          limitingTo: OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines)
         )
       }
-      let hasDistinctCompactFill = !line.isVerticalBlock
-        && line.rowCount == 1
+      let hasDistinctCompactFill = line.rowCount == 1
         && line.appearance.background.distance(to: surroundingBackground) >= 0.18
-      if line.surface == nil, hasDistinctCompactFill, let styleRaster {
+      if line.surface == nil, hasDistinctCompactFill, let samplingRaster {
         // The low-resolution flood fill is normally enough for cards and
         // balloons. Densely lettered pills can leave only a one-pixel corridor
         // at that scale, though, so retry just those compact high-contrast
         // candidates with the style raster already held in memory.
         line.surface = inferredSurface(
-          containing: line.boundingBoxNormalized,
+          containing: surfaceAnchor,
           appearance: line.appearance,
-          raster: styleRaster,
+          raster: samplingRaster,
+          limitingTo: OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines),
           minimumConfidence: 0.30,
           acceptedConfidenceFloor: 0.35
         )
@@ -158,21 +282,21 @@ enum OverlaySourceAppearanceAnalyzer {
       if
         hasDistinctCompactFill,
         let surface = line.surface,
-        isCompactTextSurface(surface, around: line.boundingBoxNormalized)
+        isCompactTextSurface(surface, around: surfaceAnchor)
       {
         line.surface = applyingCompactTextInsets(to: surface)
       }
       if
         hasDistinctCompactFill,
         let surface = line.surface,
-        let styleRaster,
-        isCompactTextSurface(surface, around: line.boundingBoxNormalized),
+        let samplingRaster,
+        isCompactTextSurface(surface, around: surfaceAnchor),
         let refined = compactSurfaceAppearance(
-          for: line.boundingBoxNormalized,
+          for: surfaceAnchor,
           inside: surface,
           original: line.appearance,
           surroundingBackground: surroundingBackground,
-          raster: styleRaster
+          raster: samplingRaster
         )
       {
         let original = line.appearance
@@ -214,11 +338,45 @@ enum OverlaySourceAppearanceAnalyzer {
       if !line.isVerticalBlock, line.appearance.inkHeightScale > 0 {
         line.horizontalInkScale = line.appearance.inkHeightScale
       }
+      if ruleBand.height < 1 {
+        line.replacementPatches = line.replacementPatches.map { patch in
+          var patch = patch
+          patch.clippingBox = ruleBand
+          return patch
+        }
+      }
       return line
     })
-    let coalesced = styled.absorbingRubyAnnotations().coalescingParagraphFragments()
-    return OCRResult(lines: await concurrentMap(coalesced.lines) { line in
+    let assigned = OCRTableStructure.classifyingObservedCells(styled, cells: tableCells)
+    let separated = OCRVisualStructure.separatingStyleAccessories(assigned)
+    let spaced = styleRaster.map { raster in
+      OCRVisualSpacing.refining(
+        separated,
+        width: raster.width,
+        height: raster.height,
+        sample: { x, y in raster.color(at: y * raster.width + x) }
+      )
+    } ?? separated
+    let prepared = OCRVisualStructure.preservingIdentifierTags(spaced.removingNestedDuplicates()).absorbingRubyAnnotations()
+    didPrepareParagraphs?(prepared.lines)
+    let coalesced = prepared.coalescingParagraphFragments(clearVerticalExpansion: styleRaster.map { raster in
+      { lhs, rhs in
+        OCRVerticalParagraphGrouping.clearExpansion(from: lhs, to: rhs, width: raster.width, height: raster.height) {
+          raster.color(at: $1 * raster.width + $0)
+        }
+      }
+    })
+    let allocated = styleRaster.map { raster in
+      OCRLayoutRegionAllocator.allocating(
+        coalesced,
+        width: raster.width,
+        height: raster.height,
+        sample: { x, y in raster.color(at: y * raster.width + x) }
+      )
+    } ?? coalesced
+    return OCRResult(lines: await CaptureAnalysisExecutor.map(allocated.lines) { line in
       var line = line
+      let clippingBox = line.replacementPatches.compactMap(\.clippingBox).first
       if line.wasCoalesced, !line.isVerticalBlock, let styleRaster {
         let sampledUnion = appearance(around: line.boundingBoxNormalized, raster: styleRaster)
         let surroundingBackground = sampledSurroundingBackground(
@@ -235,7 +393,8 @@ enum OverlaySourceAppearanceAnalyzer {
           )
         }
         let neutralCandidates = parentCandidates.filter {
-          !$0.appearance.isUnderlined && !isChromatic($0.appearance.foreground)
+          $0.appearance.fontSizeScale > 0
+            && !$0.appearance.isUnderlined && !isChromatic($0.appearance.foreground)
         }
         let parentSamples = neutralCandidates.isEmpty ? parentCandidates : neutralCandidates
         var unionAppearance = combinedAppearance(parentSamples, fallback: sampledUnion)
@@ -248,7 +407,7 @@ enum OverlaySourceAppearanceAnalyzer {
         line.appearance = unionAppearance
       }
       if let surfaceRaster {
-        let sourceBox = line.boundingBoxNormalized.standardized
+        let sourceBox = physicalSurfaceAnchor(for: line).standardized
         let previousSurface = line.surface.flatMap { surface -> OverlaySourceSurface? in
           let bounds = (surface.clippingBox ?? surface.box).standardized
           let intersection = bounds.intersection(sourceBox)
@@ -305,8 +464,9 @@ enum OverlaySourceAppearanceAnalyzer {
           line.replacementPatches.append(contentsOf: erasers)
         }
       }
-      if line.isVerticalBlock, line.surface != nil {
+      if line.isVerticalBlock, let surface = line.surface {
         line.replacementPatches = line.replacementPatches.map { patch in
+          guard SourcePatchClipping.surface(for: patch, within: surface) != nil else { return patch }
           var patch = patch
           patch.appearance.background = line.appearance.background
           return patch
@@ -318,13 +478,21 @@ enum OverlaySourceAppearanceAnalyzer {
         let styleRaster,
         let surface = line.surface
       {
-        line.replacementPatches = line.replacementPatches.map {
-          extendingVerticalPatch(
-            $0,
+        line.replacementPatches = line.replacementPatches.map { patch in
+          guard SourcePatchClipping.surface(for: patch, within: surface) != nil else { return patch }
+          return extendingVerticalPatch(
+            patch,
             characterScale: line.verticalCharScale,
             inside: surface.box,
             raster: styleRaster
           )
+        }
+      }
+      if let clippingBox {
+        line.replacementPatches = line.replacementPatches.map { patch in
+          var patch = patch
+          patch.clippingBox = patch.clippingBox.map { $0.intersection(clippingBox) } ?? clippingBox
+          return patch
         }
       }
       return line
@@ -355,7 +523,9 @@ enum OverlaySourceAppearanceAnalyzer {
     var weight: CGFloat = 1
   }
 
-  private struct PixelRaster: Sendable {
+  /// Shared immutable ownership avoids copying/refcounting both pixel arrays
+  /// and the background index through every per-pixel sampling helper.
+  private final class PixelRaster: Sendable {
 
     // MARK: Lifecycle
 
@@ -389,6 +559,30 @@ enum OverlaySourceAppearanceAnalyzer {
       self.width = width
       self.height = height
       self.pixels = pixels
+      columnLimits = nil
+      usesOwnershipMask = false
+      edgeBackground = targetLongestSide <= 384
+        ? EdgeBackgroundIndex(pixels: pixels, width: width, height: height)
+        : nil
+    }
+
+    init(raster: PixelRaster, ownership: OCRSpatialOwnership.SamplingRegion) {
+      width = raster.width
+      height = raster.height
+      pixels = raster.pixels
+      edgeBackground = raster.edgeBackground
+      usesOwnershipMask = true
+      // Shared immutable pixels are not copied. Resolve the slanted corridor
+      // once per column; every later sample then needs only two integer checks.
+      columnLimits = (0..<raster.width).map { x in
+        guard let range = ownership.verticalRange(at: (CGFloat(x) + 0.5) / CGFloat(raster.width)) else {
+          return (raster.height, -1)
+        }
+        return (
+          max(0, Int(ceil(range.lowerBound * CGFloat(raster.height) - 0.5))),
+          min(raster.height - 1, Int(floor(range.upperBound * CGFloat(raster.height) - 0.5)))
+        )
+      }
     }
 
     // MARK: Internal
@@ -396,16 +590,29 @@ enum OverlaySourceAppearanceAnalyzer {
     let width: Int
     let height: Int
     let pixels: [UInt8]
+    let edgeBackground: EdgeBackgroundIndex?
+    let usesOwnershipMask: Bool
+
+    func owns(x: Int, y: Int) -> Bool {
+      guard let columnLimits else { return true }
+      guard columnLimits.indices.contains(x) else { return false }
+      return y >= columnLimits[x].minimum && y <= columnLimits[x].maximum
+    }
 
     func color(at index: Int) -> OverlayColor? {
-      let offset = index * 4
-      guard offset >= 0, offset + 3 < pixels.count, pixels[offset + 3] > 127 else { return nil }
-      return OverlayColor(
-        red: CGFloat(pixels[offset]) / 255,
-        green: CGFloat(pixels[offset + 1]) / 255,
-        blue: CGFloat(pixels[offset + 2]) / 255,
-        alpha: 1
-      )
+      if usesOwnershipMask, !owns(x: index % width, y: index / width) { return nil }
+      // Borrow once for all channels. Repeated Array property reads otherwise
+      // contend on the shared storage's reference count in Debug captures.
+      return pixels.withUnsafeBufferPointer { bytes in
+        let offset = index * 4
+        guard offset >= 0, offset + 3 < bytes.count, bytes[offset + 3] > 127 else { return nil }
+        return OverlayColor(
+          red: CGFloat(bytes[offset]) / 255,
+          green: CGFloat(bytes[offset + 1]) / 255,
+          blue: CGFloat(bytes[offset + 2]) / 255,
+          alpha: 1
+        )
+      }
     }
 
     func matchesBackground(
@@ -416,26 +623,144 @@ enum OverlaySourceAppearanceAnalyzer {
       guard let sample = self.color(at: index) else { return false }
       return sample.distance(to: color) <= tolerance
     }
+
+    // MARK: Private
+
+    private let columnLimits: [(minimum: Int, maximum: Int)]?
+
   }
 
-  /// Appearance sampling is independent per OCR line. Structured child tasks
-  /// let the executor use available cores while the indexed merge keeps Vision's
-  /// stable source order intact for paragraph reconstruction.
-  private static func concurrentMap<Element: Sendable, Output: Sendable>(
-    _ elements: [Element],
-    transform: @escaping @Sendable (Element) -> Output
-  ) async -> [Output] {
-    guard elements.count > 1 else { return elements.map(transform) }
-    return await withTaskGroup(of: (Int, Output).self) { group in
-      for (index, element) in elements.enumerated() {
-        group.addTask { (index, transform(element)) }
+  private static func splitChromaticRuns(
+    _ runs: [OverlaySourceStyleRun],
+    anchors: [OCRTextAnchor],
+    raster: PixelRaster,
+    band: CGRect
+  ) -> [OverlaySourceStyleRun] {
+    runs.flatMap { run -> [OverlaySourceStyleRun] in
+      let glyphs = anchors.filter { NSIntersectionRange($0.range, run.range).length == $0.range.length }
+        .sorted { $0.range.location < $1.range.location }
+      guard
+        glyphs.count >= 2, glyphs.first?.range.location == run.range.location,
+        glyphs.last.map({ NSMaxRange($0.range) }) == NSMaxRange(run.range),
+        zip(glyphs, glyphs.dropFirst()).allSatisfy({ a, b in
+          let intersection = a.box.intersection(b.box)
+          return intersection.isNull || intersection.width * intersection.height
+            < min(a.box.width * a.box.height, b.box.width * b.box.height) * 0.3
+        })
+      else { return [run] }
+      var groups = [OverlaySourceStyleRun]()
+      for glyph in glyphs {
+        let sample = appearance(around: glyph.box, raster: raster, within: band)
+        if
+          let previous = groups.last,
+          sameInkColor(previous.appearance, sample),
+          previous.appearance.background.distance(to: sample.background) < 0.08
+        {
+          groups[groups.count - 1].range = NSUnionRange(previous.range, glyph.range)
+          groups[groups.count - 1].box = previous.box.union(glyph.box)
+        } else {
+          groups.append(.init(range: glyph.range, box: glyph.box, appearance: sample))
+        }
       }
-      var ordered = [Output?](repeating: nil, count: elements.count)
-      for await (index, output) in group {
-        ordered[index] = output
-      }
-      return ordered.compactMap { $0 }
+      return groups.count > 1 ? groups : [run]
     }
+  }
+
+  private static func sameInkColor(_ a: OverlaySourceAppearance, _ b: OverlaySourceAppearance) -> Bool {
+    let left = a.foreground
+    let right = b.foreground
+    let leftChroma = max(left.red, left.green, left.blue) - min(left.red, left.green, left.blue)
+    let rightChroma = max(right.red, right.green, right.blue) - min(right.red, right.green, right.blue)
+    // Thin neutral glyphs (i/l/punctuation) have lighter antialiasing, not a
+    // different style. Compare chromatic ink after removing that opacity bias.
+    if leftChroma < 0.12, rightChroma < 0.12 { return true }
+    func direction(_ appearance: OverlaySourceAppearance) -> [CGFloat] {
+      let delta = [
+        appearance.background.red - appearance.foreground.red,
+        appearance.background.green - appearance.foreground.green,
+        appearance.background.blue - appearance.foreground.blue,
+      ]
+      let scale = max(0.01, delta.map { abs($0) }.max() ?? 0)
+      return delta.map { $0 / scale }
+    }
+    return zip(direction(a), direction(b)).allSatisfy { abs($0 - $1) < 0.15 }
+  }
+
+  /// A continuous horizontal stroke that crosses the whole observation and
+  /// extends well beyond it is a layout rule, not an ascender or underline.
+  /// Require a blank gap above it; do not trim a glyph's own horizontal stroke.
+  private static func horizontalRuleSamplingBand(
+    around line: OCRResult.Line,
+    background: OverlayColor,
+    raster: PixelRaster
+  ) -> CGRect {
+    let canvas = CGRect(x: 0, y: 0, width: 1, height: 1)
+    guard !line.isVerticalBlock, line.rowCount == 1, abs(line.rotationRadians) < 0.1 else { return canvas }
+    let box = pixelRect(for: line.boundingBoxNormalized, raster: raster).integral
+      .intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
+    guard box.width >= box.height * 3, box.height >= 8 else { return canvas }
+    let left = Int(box.minX)
+    let right = Int(box.maxX)
+    let extensionWidth = max(12, Int(box.height * 2))
+    func uniform(_ range: Range<Int>, y: Int, color: OverlayColor, threshold: CGFloat) -> Bool {
+      guard
+        !range.isEmpty, range.lowerBound >= 0, range.upperBound <= raster.width, y >= 0,
+        y < raster.height
+      else { return false }
+      return range.count(where: { x in
+        raster.color(at: y * raster.width + x).map { $0.distance(to: color) <= threshold } == true
+      }) >= Int(ceil(Double(range.count) * 0.95))
+    }
+    for y in Int(box.minY + box.height * 0.6)..<Int(box.maxY) {
+      guard
+        let color = raster.color(at: y * raster.width + (left + right) / 2),
+        color.distance(to: background) > 0.08,
+        uniform(left..<right, y: y, color: color, threshold: 0.04),
+        uniform(left..<right, y: y - 1, color: background, threshold: 0.04),
+        uniform(left..<right, y: y - 2, color: background, threshold: 0.04),
+        uniform(right..<right + extensionWidth, y: y, color: color, threshold: 0.04)
+        || uniform(left - extensionWidth..<left, y: y, color: color, threshold: 0.04)
+      else { continue }
+      return CGRect(x: 0, y: 0, width: 1, height: CGFloat(y) / CGFloat(raster.height))
+    }
+    return canvas
+  }
+
+  private static func observedInkBox(
+    _ box: CGRect,
+    appearance: OverlaySourceAppearance,
+    raster: PixelRaster,
+    within band: CGRect
+  ) -> CGRect? {
+    let pixels = pixelRect(for: box, raster: raster).integral
+      .intersection(pixelRect(for: band, raster: raster))
+      .intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
+    guard !pixels.isNull, !pixels.isEmpty else { return nil }
+    let threshold = max(0.08, appearance.foreground.distance(to: appearance.background) * 0.4)
+    var ink = CGRect.null
+    for y in Int(pixels.minY)..<Int(pixels.maxY) {
+      for x in Int(pixels.minX)..<Int(pixels.maxX) {
+        if let color = raster.color(at: y * raster.width + x), color.distance(to: appearance.background) > threshold {
+          ink = ink.union(CGRect(x: x, y: y, width: 1, height: 1))
+        }
+      }
+    }
+    guard !ink.isNull, ink.height >= 2 else { return nil }
+    return CGRect(
+      x: ink.minX / CGFloat(raster.width),
+      y: ink.minY / CGFloat(raster.height),
+      width: ink.width / CGFloat(raster.width),
+      height: ink.height / CGFloat(raster.height)
+    )
+  }
+
+  private static func physicalSurfaceAnchor(for line: OCRResult.Line) -> CGRect {
+    guard line.isVerticalBlock, line.rowCount == 1, abs(line.rotationRadians) < 0.025 else {
+      return line.boundingBoxNormalized
+    }
+    let mainRunBounds = line.styleRuns.reduce(CGRect.null) { $0.union($1.box) }
+    if !mainRunBounds.isNull, coversVisibleSource(line.styleRuns, in: line.text) { return mainRunBounds }
+    return line.orientedBox ?? line.boundingBoxNormalized
   }
 
   private static func extendingVerticalPatch(
@@ -634,30 +959,58 @@ enum OverlaySourceAppearanceAnalyzer {
     var seed: Int?
     var seedScore = -CGFloat.infinity
     let center = CGPoint(x: source.midX, y: source.midY)
-    for y in Int(search.minY) ..< Int(search.maxY) {
-      for x in Int(search.minX) ..< Int(search.maxX) {
-        let index = y * raster.width + x
-        guard raster.matchesBackground(at: index, color: appearance.background, tolerance: tolerance) else {
-          continue
-        }
-        var matchingNeighbors = 0
-        for neighborY in max(0, y - 1) ... min(raster.height - 1, y + 1) {
-          for neighborX in max(0, x - 1) ... min(raster.width - 1, x + 1) {
-            let neighbor = neighborY * raster.width + neighborX
-            if raster.matchesBackground(at: neighbor, color: appearance.background, tolerance: tolerance) {
-              matchingNeighbors += 1
-            }
+    // Nine matching neighbors is the maximum possible score. A nearest such
+    // seed within four pixels always beats every lower-degree candidate and
+    // every farther seed, so most flat text rows need only a tiny local search.
+    let local = CGRect(x: center.x - 4, y: center.y - 4, width: 9, height: 9).integral.intersection(search)
+    for y in Int(local.minY) ..< Int(local.maxY) {
+      for x in Int(local.minX) ..< Int(local.maxX) {
+        guard x > 0, y > 0, x + 1 < raster.width, y + 1 < raster.height else { continue }
+        let distance = hypot(CGFloat(x) - center.x, CGFloat(y) - center.y)
+        guard distance <= 4 else { continue }
+        let fullySurrounded = (y - 1 ... y + 1).allSatisfy { row in
+          (x - 1 ... x + 1).allSatisfy { column in
+            raster.matchesBackground(at: row * raster.width + column, color: appearance.background, tolerance: tolerance)
           }
         }
-        let distance = hypot(CGFloat(x) - center.x, CGFloat(y) - center.y)
-        let score = CGFloat(matchingNeighbors) * 100 - distance
-        if score > seedScore {
-          seed = index
+        let score = 900 - distance
+        if fullySurrounded, score > seedScore { seed = y * raster.width + x
           seedScore = score
         }
       }
     }
+    if seed == nil {
+      for y in Int(search.minY) ..< Int(search.maxY) {
+        for x in Int(search.minX) ..< Int(search.maxX) {
+          let index = y * raster.width + x
+          guard raster.matchesBackground(at: index, color: appearance.background, tolerance: tolerance) else {
+            continue
+          }
+          var matchingNeighbors = 0
+          for neighborY in max(0, y - 1) ... min(raster.height - 1, y + 1) {
+            for neighborX in max(0, x - 1) ... min(raster.width - 1, x + 1) {
+              let neighbor = neighborY * raster.width + neighborX
+              if raster.matchesBackground(at: neighbor, color: appearance.background, tolerance: tolerance) {
+                matchingNeighbors += 1
+              }
+            }
+          }
+          let distance = hypot(CGFloat(x) - center.x, CGFloat(y) - center.y)
+          let score = CGFloat(matchingNeighbors) * 100 - distance
+          if score > seedScore {
+            seed = index
+            seedScore = score
+          }
+        }
+      }
+    }
     guard let seed else { return nil }
+    if
+      allowedBounds == rasterBounds, let background = raster.edgeBackground,
+      background.connected[seed], background.color.distance(to: appearance.background) <= tolerance
+    {
+      return nil
+    }
 
     var visited = [Bool](repeating: false, count: raster.width * raster.height)
     var queue = [seed]
@@ -792,11 +1145,13 @@ enum OverlaySourceAppearanceAnalyzer {
 
   private static func appearance(
     around normalizedBox: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
+    text: String? = nil,
+    within samplingBand: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)
   ) -> OverlaySourceAppearance {
-    let source = pixelRect(for: normalizedBox, raster: raster)
+    let rasterBounds = pixelRect(for: samplingBand, raster: raster)
+    let source = pixelRect(for: normalizedBox, raster: raster).intersection(rasterBounds)
     guard !source.isNull, !source.isEmpty else { return .fallback }
-    let rasterBounds = CGRect(x: 0, y: 0, width: raster.width, height: raster.height)
     // Include the glyph box itself and only a narrow local ring. The dominant
     // color inside a word box is still its background, while a width-relative
     // ring escapes long inline-code pills and incorrectly samples the table or
@@ -818,11 +1173,23 @@ enum OverlaySourceAppearanceAnalyzer {
       // interior cluster is glyph ink unless it forms a continuous edge band,
       // which identifies a high-contrast pill or button fill.
       let interiorDistance = interior.color.distance(to: exterior.color)
-      let interiorFormsSurface = edgeMatchRatio(
+      let innerEdgeCoverage = edgeMatchRatio(
         color: interior.color,
         in: source,
         raster: raster
-      ) >= 0.55
+      )
+      let outerEdgeCoverage = edgeMatchRatio(
+        color: interior.color,
+        in: source.insetBy(dx: -2, dy: -2).intersection(rasterBounds),
+        raster: raster
+      )
+      let interiorFormsSurface = innerEdgeCoverage >= 0.95
+        || (innerEdgeCoverage >= 0.55 && outerEdgeCoverage >= 0.55)
+        || hasOpposingBackgroundEdges(
+          color: interior.color,
+          in: source.insetBy(dx: -2, dy: -2).intersection(rasterBounds),
+          raster: raster
+        )
       hasHighContrastSurface = interiorDistance > 0.25 && interiorFormsSurface
       dominant = interior.confidence >= 0.32
         && (interiorDistance <= 0.25 || interiorFormsSurface)
@@ -857,6 +1224,12 @@ enum OverlaySourceAppearanceAnalyzer {
     var foregroundMinimumY = Int.max
     var foregroundMaximumY = Int.min
     var inkSampleCount = 0
+    var inkMinimumX = Int.max
+    var inkMaximumX = Int.min
+    var inkMinimumY = Int.max
+    var inkMaximumY = Int.min
+    var integratedInk: CGFloat = 0
+    var inkColumns = [CGFloat](repeating: 0, count: text == nil ? 0 : Int(source.width))
     for y in Int(source.minY) ..< Int(source.maxY) {
       for x in Int(source.minX) ..< Int(source.maxX) {
         guard let color = raster.color(at: y * raster.width + x) else { continue }
@@ -871,7 +1244,15 @@ enum OverlaySourceAppearanceAnalyzer {
         }
         if distance >= inkThreshold {
           inkSampleCount += 1
+          inkMinimumX = min(inkMinimumX, x)
+          inkMaximumX = max(inkMaximumX, x)
+          inkMinimumY = min(inkMinimumY, y)
+          inkMaximumY = max(inkMaximumY, y)
         }
+        if !inkColumns.isEmpty {
+          inkColumns[x - Int(source.minX)] = max(inkColumns[x - Int(source.minX)], distance)
+        }
+        integratedInk += min(1, distance / max(0.001, maximumDistance))
       }
     }
     let foreground: OverlayColor =
@@ -922,6 +1303,15 @@ enum OverlaySourceAppearanceAnalyzer {
     let isUnderlined = canContainUnderline && underlineRuns.contains { y, longestRun in
       y >= underlineStart && longestRun >= underlineThreshold
     }
+    let inkWidth = inkSampleCount > 0 ? inkMaximumX - inkMinimumX + 1 : 0
+    let inkHeight = inkSampleCount > 0 ? inkMaximumY - inkMinimumY + 1 : 0
+    let typography = text.flatMap {
+      SourceTypography.measure(
+        text: $0,
+        inkSize: CGSize(width: inkWidth, height: inkHeight),
+        coverage: integratedInk / CGFloat(max(1, inkWidth * inkHeight))
+      )
+    }
     return OverlaySourceAppearance(
       background: background,
       foreground: foreground,
@@ -929,7 +1319,9 @@ enum OverlaySourceAppearanceAnalyzer {
       foregroundConfidence: foregroundConfidence,
       inkCoverage: inkCoverage,
       inkHeightScale: inkHeightScale,
-      fontWeight: fontWeight(for: inkCoverage, source: source, raster: raster),
+      fontSizeScale: (typography?.pointSize ?? 0) / CGFloat(raster.height),
+      fontWeight: typography?.weight ?? fontWeight(for: inkCoverage, source: source, raster: raster),
+      fontDesign: text.map { SourceTypography.isMonospaced(text: $0, inkColumns: inkColumns) } == true ? .monospaced : .standard,
       isUnderlined: isUnderlined
     )
   }
@@ -977,6 +1369,10 @@ enum OverlaySourceAppearanceAnalyzer {
       $0 + $1.appearance.inkCoverage * $1.weight
     } / max(1, totalSemanticWeight)
     let inkHeight = weightedInkHeight(dominant)
+    let fontSamples = samples.filter { $0.appearance.fontSizeScale > 0 }.sorted {
+      $0.appearance.fontSizeScale < $1.appearance.fontSizeScale
+    }
+    let fontSize = fontSamples.isEmpty ? 0 : fontSamples[fontSamples.count / 2].appearance.fontSizeScale
     return OverlaySourceAppearance(
       background: background,
       foreground: foreground,
@@ -991,6 +1387,7 @@ enum OverlaySourceAppearanceAnalyzer {
       ),
       inkCoverage: coverage,
       inkHeightScale: inkHeight,
+      fontSizeScale: fontSize,
       fontWeight: combinedFontWeight(dominant),
       fontDesign: dominant.filter { $0.appearance.fontDesign == .monospaced }.reduce(0) {
         $0 + $1.weight
@@ -1014,32 +1411,74 @@ enum OverlaySourceAppearanceAnalyzer {
     var buckets = [Bucket](repeating: Bucket(), count: 4_096)
     var occupiedKeys = [Int]()
     var total = 0
-    for y in Int(bounds.minY) ..< Int(bounds.maxY) {
-      for x in Int(bounds.minX) ..< Int(bounds.maxX) {
-        let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
-        if excluded?.contains(point) == true { continue }
-        guard let color = raster.color(at: y * raster.width + x) else { continue }
-        let red = Int((color.red * 255).rounded())
-        let green = Int((color.green * 255).rounded())
-        let blue = Int((color.blue * 255).rounded())
-        let key = (red >> 4) << 8 | (green >> 4) << 4 | (blue >> 4)
-        if buckets[key].count == 0 {
-          occupiedKeys.append(key)
+    let usesOwnershipMask = raster.usesOwnershipMask
+    raster.pixels.withUnsafeBufferPointer { pixels in
+      for y in Int(bounds.minY) ..< Int(bounds.maxY) {
+        for x in Int(bounds.minX) ..< Int(bounds.maxX) {
+          let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
+          if excluded?.contains(point) == true { continue }
+          if usesOwnershipMask, !raster.owns(x: x, y: y) { continue }
+          let offset = (y * raster.width + x) * 4
+          guard offset >= 0, offset + 3 < pixels.count, pixels[offset + 3] > 127 else { continue }
+          let red = Int(pixels[offset])
+          let green = Int(pixels[offset + 1])
+          let blue = Int(pixels[offset + 2])
+          let key = (red >> 4) << 8 | (green >> 4) << 4 | (blue >> 4)
+          if buckets[key].count == 0 {
+            occupiedKeys.append(key)
+          }
+          buckets[key].count += 1
+          buckets[key].red += red
+          buckets[key].green += green
+          buckets[key].blue += blue
+          total += 1
         }
-        buckets[key].count += 1
-        buckets[key].red += red
-        buckets[key].green += green
-        buckets[key].blue += blue
-        total += 1
       }
     }
-    guard
-      total > 0,
-      let dominantKey = occupiedKeys.max(by: { buckets[$0].count < buckets[$1].count })
-    else {
-      return nil
+    guard total > 0 else { return nil }
+    // Quantization is an index, not evidence of distinct physical surfaces.
+    // JPEG noise and gradients split one fill across adjacent color buckets.
+    // Compare a bounded set of likely centers so one unsplit glyph-color
+    // bucket cannot beat a surface dispersed across several nearby buckets.
+    func neighborhoodCount(around dominant: Bucket) -> Int {
+      occupiedKeys.reduce(0) { count, key in
+        let sample = buckets[key]
+        let divisor = max(1, sample.count)
+        let distance = max(
+          abs(sample.red / divisor - dominant.red / dominant.count),
+          abs(sample.green / divisor - dominant.green / dominant.count),
+          abs(sample.blue / divisor - dominant.blue / dominant.count)
+        )
+        return count + (distance <= 20 ? sample.count : 0)
+      }
     }
-    let dominant = buckets[dominantKey]
+    let candidates = occupiedKeys.sorted { buckets[$0].count > buckets[$1].count }.prefix(8)
+    guard
+      let selected = candidates.map({ key in
+        (bucket: buckets[key], count: neighborhoodCount(around: buckets[key]))
+      }).max(by: { $0.count < $1.count })
+    else { return nil }
+    // Use the modal color within the winning neighborhood, not a sparse
+    // antialiasing bucket whose wider reach merely collected more samples.
+    // Otherwise a flat dark surface drifts toward gray and inflates measured
+    // glyph coverage/font weight.
+    let center = selected.bucket
+    let neighborhood = occupiedKeys.map { buckets[$0] }.filter { sample in
+      max(
+        abs(sample.red / sample.count - center.red / center.count),
+        abs(sample.green / sample.count - center.green / center.count),
+        abs(sample.blue / sample.count - center.blue / center.count)
+      ) <= 20
+    }
+    let mode = neighborhood.max(by: { $0.count < $1.count }) ?? center
+    // A coherent flat fill has one majority bucket. A gradient has no such
+    // mode; use its neighborhood mean so later connected-surface inference
+    // can follow both sides of the gradient rather than only its light end.
+    let dominant = mode.count * 2 >= selected.count
+      ? mode
+      : neighborhood.reduce(Bucket()) { sum, item in
+        Bucket(count: sum.count + item.count, red: sum.red + item.red, green: sum.green + item.green, blue: sum.blue + item.blue)
+      }
     let divisor = CGFloat(dominant.count * 255)
     return DominantSample(
       color: OverlayColor(
@@ -1048,9 +1487,35 @@ enum OverlaySourceAppearanceAnalyzer {
         blue: CGFloat(dominant.blue) / divisor,
         alpha: 1
       ),
-      count: dominant.count,
+      count: selected.count,
       total: total
     )
+  }
+
+  /// A speech balloon can meet artwork above and below the text while its
+  /// actual background continues on both sides. Conversely dense glyphs have
+  /// no such continuation outside their tight OCR box. Require evidence on
+  /// opposing edges rather than taking the color of unrelated nearby artwork.
+  private static func hasOpposingBackgroundEdges(
+    color: OverlayColor,
+    in bounds: CGRect,
+    raster: PixelRaster
+  ) -> Bool {
+    guard bounds.width >= 3, bounds.height >= 3 else { return false }
+    let x0 = Int(bounds.minX)
+    let x1 = Int(bounds.maxX) - 1
+    let y0 = Int(bounds.minY)
+    let y1 = Int(bounds.maxY) - 1
+    func matches(_ x: Int, _ y: Int) -> Bool {
+      raster.color(at: y * raster.width + x).map { $0.distance(to: color) <= 0.12 } ?? false
+    }
+    let horizontal = CGFloat(max(1, x1 - x0 + 1))
+    let vertical = CGFloat(max(1, y1 - y0 + 1))
+    let top = CGFloat((x0...x1).count { matches($0, y0) }) / horizontal
+    let bottom = CGFloat((x0...x1).count { matches($0, y1) }) / horizontal
+    let left = CGFloat((y0...y1).count { matches(x0, $0) }) / vertical
+    let right = CGFloat((y0...y1).count { matches(x1, $0) }) / vertical
+    return min(top, bottom) >= 0.25 || min(left, right) >= 0.25
   }
 
   private static func edgeMatchRatio(
@@ -1086,7 +1551,14 @@ enum OverlaySourceAppearanceAnalyzer {
     appearance: OverlaySourceAppearance,
     surroundingBackground: OverlayColor
   ) -> OverlayFontDesign {
-    let strongCodePunctuation = CharacterSet(charactersIn: "*_`{}[]<>\\=")
+    // Punctuation at the edge of a control is not evidence of a code font.
+    // Whole code-only rows are already protected before appearance analysis.
+    guard text.contains(where: { $0.isLetter || $0.isNumber }) else { return .standard }
+    if appearance.fontDesign == .monospaced || OCRTextSemantics.isCode(text) { return .monospaced }
+    // Footnotes and bracketed edit links do not turn surrounding prose into
+    // code. Syntax heuristics apply only to compact literals, never a paragraph.
+    guard text.split(whereSeparator: \.isWhitespace).count <= 1 else { return .standard }
+    let strongCodePunctuation = CharacterSet(charactersIn: "_`{}<>\\=")
     if
       text.count > 1 && text.hasPrefix(".")
       || text.unicodeScalars.contains(where: strongCodePunctuation.contains)
@@ -1095,8 +1567,8 @@ enum OverlaySourceAppearanceAnalyzer {
     }
     let sitsOnDistinctSurface = appearance.background.distance(to: surroundingBackground) >= 0.025
     guard sitsOnDistinctSurface else { return .standard }
-    let codePunctuation = CharacterSet(charactersIn: "/:")
-    return text.unicodeScalars.contains(where: codePunctuation.contains)
+    let codePunctuation = CharacterSet(charactersIn: "/:*")
+    return text.unicodeScalars.contains(where: codePunctuation.contains) || OCRTextSemantics.isIndexedIdentifier(text)
       ? .monospaced
       : .standard
   }
@@ -1411,11 +1883,5 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func isLightNeutral(_ color: OverlayColor) -> Bool {
     min(color.red, color.green, color.blue) >= 0.8
       && max(color.red, color.green, color.blue) - min(color.red, color.green, color.blue) <= 0.08
-  }
-}
-
-extension OverlayColor {
-  fileprivate func distance(to other: OverlayColor) -> CGFloat {
-    max(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
   }
 }

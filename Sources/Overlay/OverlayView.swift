@@ -22,17 +22,16 @@ struct OverlayView: View {
   /// hint banner along the bottom.
   var translationUnavailable = false
   var lastError: String? = nil
-  /// Vision is still loading its document model (tens of seconds when cold).
+  /// Recognition or subsequent layout analysis has exceeded the hint delay.
   var isPreparingRecognition = false
   /// Window live mode: the overlay is a thin region frame; the translation
   /// shows in a detached window.
   var frameOnly = false
   /// Whether the cursor is over the overlay — fades the move handle in/out.
   var showMoveHandle = false
+  var allowsRepositioning = true
   let onToggleLive: () -> Void
   let onClose: () -> Void
-
-  @Binding var isShowingInformation: Bool
 
   var body: some View {
     bodyContent
@@ -49,17 +48,19 @@ struct OverlayView: View {
       .overlay(alignment: .topLeading) {
         // Drag handle: the only way to move the overlay. Use SwiftUI's native
         // window gesture so dragging remains reliable inside NSHostingView.
-        MoveHandle()
-          .opacity(showsControls ? 1 : 0)
-          .animation(.easeOut(duration: 0.15), value: showsControls)
-          .padding(8)
-          .frame(
-            width: OverlayChromeMetrics.moveHandleSize.width,
-            height: OverlayChromeMetrics.moveHandleSize.height,
-            alignment: .topLeading
-          )
-          .contentShape(.rect)
-          .gesture(WindowDragGesture())
+        if allowsRepositioning {
+          MoveHandle()
+            .opacity(showsControls ? 1 : 0)
+            .animation(.easeOut(duration: 0.15), value: showsControls)
+            .padding(8)
+            .frame(
+              width: OverlayChromeMetrics.moveHandleSize.width,
+              height: OverlayChromeMetrics.moveHandleSize.height,
+              alignment: .topLeading
+            )
+            .contentShape(.rect)
+            .gesture(WindowDragGesture())
+        }
       }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
@@ -67,40 +68,6 @@ struct OverlayView: View {
             Image(systemName: "exclamationmark.triangle")
               .foregroundStyle(.orange)
               .help("Some text may be misread. Compare with the original.")
-          }
-          if showsControls {
-            let notices = Array(Set(lines.compactMap(\.modelNotice))).sorted()
-            if !notices.isEmpty || isShowingInformation {
-              Button {
-                if isShowingInformation {
-                  isShowingInformation = false
-                } else {
-                  informationMessages = notices
-                  isShowingInformation = true
-                }
-              } label: {
-                Image(systemName: "info.circle")
-                  .frame(width: 26, height: 26)
-                  .contentShape(Rectangle())
-              }
-              .buttonStyle(.plain)
-              .accessibilityLabel("Translation information")
-              .help("Show translation information")
-              .popover(isPresented: $isShowingInformation, arrowEdge: .bottom) {
-                VStack(alignment: .leading, spacing: 12) {
-                  Text("Translation information")
-                    .font(.headline)
-                  ForEach(informationMessages, id: \.self) { message in
-                    Text(verbatim: message)
-                      .font(.callout)
-                      .fixedSize(horizontal: false, vertical: true)
-                  }
-                }
-                .textSelection(.enabled)
-                .padding(16)
-                .frame(width: 320, alignment: .leading)
-              }
-            }
           }
           // A small spinner while the overlay is busy (capturing / OCR or
           // translating); nothing otherwise.
@@ -141,16 +108,12 @@ struct OverlayView: View {
       .animation(.easeOut(duration: 0.15), value: frameOnly)
       .animation(.easeOut(duration: 0.15), value: translationUnavailable)
       .animation(.easeOut(duration: 0.15), value: isPreparingRecognition)
-      .onDisappear { isShowingInformation = false }
   }
 
   // MARK: Private
 
-  /// Keep the opened explanation stable while live OCR/translation updates.
-  @State private var informationMessages = [String]()
-
   private var showsControls: Bool {
-    showMoveHandle || isShowingInformation
+    showMoveHandle
   }
 
   @ViewBuilder
@@ -200,6 +163,7 @@ private struct LiveHandle: View {
     .buttonStyle(.plain)
     .onAppear { pulse = true }
     .help(isLive ? "Live translation on — click to pause" : "Live translation off — click to resume")
+    .accessibilityLabel(isLive ? "Pause translation" : "Resume translation")
   }
 
   // MARK: Private
@@ -239,5 +203,6 @@ private struct CloseHandle: View {
     }
     .buttonStyle(.plain)
     .help("Close overlay")
+    .accessibilityLabel("Close overlay")
   }
 }

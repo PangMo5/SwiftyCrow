@@ -32,20 +32,10 @@ extension LanguageCatalogClient: DependencyKey {
       if #available(macOS 26.4, *) {
         let status = await LanguageAvailability(preferredStrategy: strategy.sessionStrategy)
           .status(from: source.localeLanguage, to: target.localeLanguage)
-        if status == .installed { return .installed }
-        guard !Task.isCancelled else { return .unchecked }
-        let alternative: TranslationStrategy = strategy == .lowLatency ? .highFidelity : .lowLatency
-        let other = await LanguageAvailability(preferredStrategy: alternative.sessionStrategy)
-          .status(from: source.localeLanguage, to: target.localeLanguage)
-        return LanguageReadiness.resolve(preferred: status, alternative: other)
+        return LanguageReadiness.resolve(selected: status)
       }
       let status = await LanguageAvailability().status(from: source.localeLanguage, to: target.localeLanguage)
-      switch status {
-      case .installed: return .installed
-      case .supported: return .downloadRequired
-      case .unsupported: return .unsupported
-      @unknown default: return .unchecked
-      }
+      return LanguageReadiness.resolve(selected: status)
     }
   )
 }
@@ -64,9 +54,6 @@ enum LanguageReadiness: Equatable, Sendable {
   case unchecked
   case checking
   case installed
-  case alternativeInstalled
-  case preferredUnsupported
-  case alternativeDownloadRequired
   case downloadRequired
   case unsupported
   case sameLanguage
@@ -74,26 +61,15 @@ enum LanguageReadiness: Equatable, Sendable {
   // MARK: Internal
 
   var needsLanguageDownload: Bool {
-    switch self {
-    case .downloadRequired,
-         .alternativeInstalled,
-         .alternativeDownloadRequired: true
-    default: false
-    }
+    self == .downloadRequired
   }
 
-  /// An installed fallback is usable but is not readiness of the selected mode.
-  static func resolve(preferred: LanguageAvailability.Status, alternative: LanguageAvailability.Status) -> Self {
-    switch (preferred, alternative) {
-    case (.installed, _): .installed
-    case (.supported, .installed): .alternativeInstalled
-    case (.unsupported, .installed): .preferredUnsupported
-    case (.unsupported, .supported): .alternativeDownloadRequired
-    case (.supported, .supported),
-         (.supported, .unsupported): .downloadRequired
-    case (.unsupported, .unsupported): .unsupported
-    default: .unchecked
+  static func resolve(selected: LanguageAvailability.Status) -> Self {
+    switch selected {
+    case .installed: .installed
+    case .supported: .downloadRequired
+    case .unsupported: .unsupported
+    @unknown default: .unchecked
     }
   }
-
 }

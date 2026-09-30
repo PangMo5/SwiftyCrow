@@ -14,6 +14,23 @@ struct CaptureFeatureTests {
   // MARK: Internal
 
   @Test
+  func keyboardWindowSelectionWrapsAndRecoversFromClosedWindows() {
+    let windows = [
+      PickableWindow(id: 11, frame: .zero, ownerName: "Preview", title: "Example.png"),
+      PickableWindow(id: 22, frame: .zero, ownerName: "Finder", title: "Documents"),
+    ]
+    #expect(cycledWindow(in: windows, after: nil, forward: true)?.id == 11)
+    #expect(cycledWindow(in: windows, after: nil, forward: false)?.id == 22)
+    #expect(cycledWindow(in: windows, after: 11, forward: true)?.id == 22)
+    #expect(cycledWindow(in: windows, after: 22, forward: true)?.id == 11)
+    #expect(cycledWindow(in: windows, after: 11, forward: false)?.id == 22)
+    #expect(cycledWindow(in: windows, after: 99, forward: true)?.id == 11)
+    #expect(cycledWindow(in: [], after: 11, forward: true) == nil)
+    #expect(windows[0].displayName == "Preview — Example.png")
+    #expect(PickableWindow(id: 33, frame: .zero, ownerName: "Preview").displayName == "Preview")
+  }
+
+  @Test
   func lateResponseFromCancelledGenerationIsIgnored() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()

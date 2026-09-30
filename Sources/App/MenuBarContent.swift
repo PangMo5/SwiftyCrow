@@ -230,35 +230,5 @@ private struct MenuTranslationNotice: View {
         .font(.caption).foregroundStyle(.orange)
         .fixedSize(horizontal: false, vertical: true)
     }
-    if !modelNotices.isEmpty {
-      DisclosureGroup(isExpanded: $expanded) {
-        VStack(alignment: .leading, spacing: 8) {
-          ForEach(modelNotices, id: \.self) { notice in
-            Text(notice)
-              .fixedSize(horizontal: false, vertical: true)
-          }
-          Button("Language model settings…") { openLanguageSettings() }
-            .buttonStyle(.link)
-        }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 6)
-      } label: {
-        Label("Using another installed model", systemImage: "info.circle")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
-      .accessibilityIdentifier("live-model-details")
-    }
   }
-
-  // MARK: Private
-
-  @State private var expanded = false
-
-  private var modelNotices: [String] {
-    Array(Set(lines.compactMap(\.modelNotice))).sorted()
-  }
-
 }

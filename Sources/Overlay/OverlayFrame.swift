@@ -8,20 +8,29 @@ struct OverlayFrame: Codable, Equatable, Sendable {
 
   // MARK: Lifecycle
 
-  init(x: Double, y: Double, width: Double, height: Double, hasSelection: Bool = true) {
+  init(
+    x: Double,
+    y: Double,
+    width: Double,
+    height: Double,
+    hasSelection: Bool = true,
+    selectionKind: SelectionKind = .region
+  ) {
     self.x = x
     self.y = y
     self.width = width
     self.height = height
     self.hasSelection = hasSelection
+    self.selectionKind = selectionKind
   }
 
-  init(rect: CGRect) {
+  init(rect: CGRect, selectionKind: SelectionKind = .region) {
     self.init(
       x: rect.origin.x,
       y: rect.origin.y,
       width: rect.size.width,
-      height: rect.size.height
+      height: rect.size.height,
+      selectionKind: selectionKind
     )
   }
 
@@ -33,9 +42,16 @@ struct OverlayFrame: Codable, Equatable, Sendable {
     height = try values.decode(Double.self, forKey: .height)
     // Older saved frames came from the already placed overlay.
     hasSelection = try values.decodeIfPresent(Bool.self, forKey: .hasSelection) ?? true
+    // Before window tracking existed, persisted selections were fixed regions.
+    selectionKind = try values.decodeIfPresent(SelectionKind.self, forKey: .selectionKind) ?? .region
   }
 
   // MARK: Internal
+
+  enum SelectionKind: String, Codable, Sendable {
+    case region
+    case window
+  }
 
   static var `default`: OverlayFrame {
     if let screen = NSScreen.main {
@@ -54,9 +70,17 @@ struct OverlayFrame: Codable, Equatable, Sendable {
   var width: Double
   var height: Double
   var hasSelection: Bool
+  var selectionKind: SelectionKind
 
   var rect: CGRect {
     CGRect(x: x, y: y, width: width, height: height)
   }
 
+  /// Moving/resizing a panel must never create a selection or change its kind.
+  mutating func updateGeometry(_ rect: CGRect) {
+    x = rect.origin.x
+    y = rect.origin.y
+    width = rect.size.width
+    height = rect.size.height
+  }
 }

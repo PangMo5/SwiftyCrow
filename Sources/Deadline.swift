@@ -12,14 +12,9 @@ import Foundation
 /// service aren't running and have to be launched (and a translation model may
 /// have to be paged back in); the budgets leave room for that and nothing more.
 enum CaptureDeadline {
-  /// Warm recognition takes ~0.25s, but the first request after Vision's shared
-  /// model cache goes cold takes ~40s (measured). This has to clear the cold
-  /// case: a tighter bound killed the load partway and every retry restarted it,
-  /// so recognition could never finish at all. `VisionWarmUp` is what keeps this
-  /// budget from being reached in practice.
-  /// Deliberately generous: too short and recognition never completes at all,
-  /// too long and a genuine stall takes a while to report while the UI says it's
-  /// preparing. The first is unrecoverable, the second is an explained wait.
+  /// Bounds the complete OCR pipeline, including system recognition, region
+  /// refinement, appearance analysis, and source restoration. This is not a
+  /// model-loading measurement or an expected duration for ordinary captures.
   static let ocr = Duration.seconds(120)
   static let screenCapture = Duration.seconds(6)
   /// A batch streams its responses, so this bounds the whole batch rather than

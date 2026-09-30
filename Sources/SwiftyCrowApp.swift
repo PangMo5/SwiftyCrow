@@ -53,6 +53,7 @@ struct SwiftyCrowApp: App {
       CommandGroup(replacing: .appSettings) {
         OpenSettingsCommandButton()
       }
+      CaptureCommands(store: store.scope(state: \.capture, action: \.capture))
     }
   }
 
@@ -68,6 +69,29 @@ struct SwiftyCrowApp: App {
 
 }
 
+// MARK: - CaptureCommands
+
+/// Session controls stay reachable by keyboard and assistive technologies even
+/// while the overlay's pointer-driven chrome is hidden.
+private struct CaptureCommands: Commands {
+  let store: StoreOf<CaptureFeature>
+
+  var body: some Commands {
+    CommandGroup(after: .newItem) {
+      Button("Capture translation") { store.send(.selectRegionRequested) }
+      Button("Live translation") { store.send(.liveSelectRequested) }
+      Divider()
+      Button { store.send(.toggleLiveRequested) } label: {
+        if store.isLive { Text("Pause translation") }
+        else { Text("Resume translation") }
+      }
+      .disabled(!store.overlayActive)
+      Button("Close overlay") { store.send(.dismissOverlay) }
+        .disabled(!store.overlayActive)
+    }
+  }
+}
+
 // MARK: - AppDelegate
 
 @MainActor
@@ -79,37 +103,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     guard !ProcessInfo.processInfo.isRunningUnitTests else { return }
 
     didFinishLaunching = true
+    Task { await OCRPreparation.shared.start() }
     startOnboardingIfReady()
 
     // Start Sparkle's background check schedule by reading the dependency.
     _ = updater
+  }
 
-    // Vision's document-recognition model is cold at launch and goes cold again
-    // across sleep, and loading it costs ~40s of this process's own time (see
-    // VisionWarmUp). Pay it here, where nobody is waiting, rather than on the
-    // first capture — at utility priority, since the app is usually launched at
-    // login and the user may not capture anything for hours.
-    warmUpTask = Task(priority: .utility) { [ocr] in await ocr.warmUp() }
-    wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
-      forName: NSWorkspace.didWakeNotification,
-      object: nil,
-      queue: .main
-    ) { [ocr] _ in
-      Task { await ocr.warmUp() }
-    }
+  func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows: Bool) -> Bool {
+    guard !hasVisibleWindows else { return true }
+    // Reopening a menu-bar app from Finder/Spotlight must expose a usable
+    // surface even when the status item is hidden by other menu-bar items.
+    NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
+    return false
   }
 
   func applicationWillTerminate(_: Notification) {
+    Task { await OCRPreparation.shared.cancel() }
     UserDefaults.standard.synchronize()
     lifetimeTask?.cancel()
     overlayObservation = nil
     onboardingObservation = nil
     renderStates?.finish()
     renderTask?.cancel()
-    warmUpTask?.cancel()
-    if let wakeObserver {
-      NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
-    }
   }
 
   /// Receives the App-owned store once and wires up app-lifetime work.
@@ -154,7 +170,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   // MARK: Private
 
-  @Dependency(\.ocr) private var ocr
   @Dependency(\.overlay) private var overlay
   @Dependency(\.updater) private var updater
 
@@ -166,8 +181,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var overlayObservation: ObserveToken?
   private var renderStates: AsyncStream<OverlayRenderState>.Continuation?
   private var renderTask: Task<Void, Never>?
-  private var warmUpTask: Task<Void, Never>?
-  private var wakeObserver: (any NSObjectProtocol)?
 
   private func startOnboardingIfReady() {
     guard didFinishLaunching, let store else { return }
@@ -193,7 +206,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       placementID: store.capture.overlayPlacementID,
       translationUnavailable: store.capture.translationUnavailable,
       isPreparingRecognition: store.capture.isPreparingRecognition,
-      lastError: store.capture.lastError
+      lastError: store.capture.lastError,
+      sourceWindowID: store.capture.sourceWindowID,
+      sourceWindowFrame: store.capture.sourceWindowID == nil ? nil : store.capture.overlayFrame.rect,
+      captureGeneration: store.capture.captureGeneration
     )
   }
 

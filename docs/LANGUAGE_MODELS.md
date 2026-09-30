@@ -113,11 +113,11 @@ SwiftyCrow has a **Preferred strategy** setting in Settings → Translation:
 - **Low Latency (default):** Faster and lighter, making it a good fit for casual reading.
 - **High Fidelity:** Uses Apple Intelligence on supported devices running macOS 26.4 or later. It can improve fluency, but does not guarantee better wording for every passage.
 
-> **The Strategy setting only takes effect on macOS 26.4+.** On macOS 26.0–26.3 SwiftyCrow uses the Translation framework's own default and the choice has no effect, so switching modes there won't change speed or accuracy.
+> **High Fidelity requires macOS 26.4 or later and ready Apple Intelligence.** On macOS 26.0–26.3, Low Latency uses the Translation framework's default model; High Fidelity is reported as unsupported.
 
-Model availability is checked for the selected strategy and language pair. If the preferred model is missing but another local strategy is installed, SwiftyCrow uses the installed model before submitting the request. The capture status (or the live overlay's information icon) explains the choice. This does not change your preference or download models automatically.
+SwiftyCrow uses only the translation strategy you select. If its model is missing or the language pair is unsupported, the app reports the problem instead of switching strategies. Install the selected model or change the strategy yourself in Settings.
 
-If neither strategy has an installed model, the error names the language pair. An installed Apple Intelligence model does not imply that the corresponding Low Latency model is installed.
+An installed Apple Intelligence model does not imply that the Low Latency model is installed. Availability is checked separately for the selected strategy and language pair.
 
 If translation feels slow:
 1. On macOS 26.4+, try **Low Latency** mode (Settings → Translation)

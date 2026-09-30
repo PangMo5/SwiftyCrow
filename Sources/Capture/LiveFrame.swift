@@ -23,10 +23,13 @@ struct LiveFrame: Equatable, Sendable {
       throw ScreenCaptureError.unreadableImage
     }
     var hasher = SHA256()
-    for row in 0..<image.height {
-      let start = row * image.bytesPerRow
-      hasher.update(data: bytes[start..<(start + rowLength)])
+    bytes.withUnsafeBytes { buffer in
+      for row in 0..<image.height {
+        let start = row * image.bytesPerRow
+        hasher.update(bufferPointer: UnsafeRawBufferPointer(rebasing: buffer[start..<(start + rowLength)]))
+      }
     }
+    pixelData = bytes
     signature = Signature(
       digest: Data(hasher.finalize()),
       width: image.width,
@@ -61,6 +64,15 @@ struct LiveFrame: Equatable, Sendable {
     var mode: OverlayLiveMode
   }
 
+  struct Witness: Equatable, Sendable {
+    var bounds: CGRect
+    var digest: Data
+    var width: Int
+    var height: Int
+    var bitsPerPixel: Int
+    var bitmapInfo: UInt32
+  }
+
   let backdrop: OverlayBackdrop
   let signature: Signature
 
@@ -71,5 +83,66 @@ struct LiveFrame: Equatable, Sendable {
   static func ==(lhs: Self, rhs: Self) -> Bool {
     lhs.signature == rhs.signature
   }
+
+  func witness(for source: OverlayLine.Source) -> Witness? {
+    var bounds = (source.layoutBounds ?? source.box).union(source.box)
+    for patch in source.replacementPatches {
+      let frame = OverlayLayoutEngine.replacementFrame(
+        for: patch,
+        sourceLayout: source.layout,
+        sourceSurface: source.surface,
+        in: imageSize,
+        displayScale: 1
+      )
+      bounds = bounds.union(CGRect(
+        x: frame.minX / imageSize.width,
+        y: frame.minY / imageSize.height,
+        width: frame.width / imageSize.width,
+        height: frame.height / imageSize.height
+      ))
+    }
+    if let surface = source.surface { bounds = bounds.union(surface.clippingBox ?? surface.box) }
+    return witness(for: bounds)
+  }
+
+  /// Exact pixels for the region we may erase or occupy. A witness belongs to
+  /// the recognition frame, never to a later frame with coincidentally equal text.
+  func witness(for bounds: CGRect) -> Witness? {
+    guard signature.bitsPerPixel % 8 == 0 else { return nil }
+    let rect = CGRect(
+      x: bounds.minX * imageSize.width,
+      y: bounds.minY * imageSize.height,
+      width: bounds.width * imageSize.width,
+      height: bounds.height * imageSize.height
+    )
+    .insetBy(dx: -2, dy: -2).integral.intersection(CGRect(origin: .zero, size: imageSize))
+    guard !rect.isNull, !rect.isEmpty else { return nil }
+    let bytesPerPixel = signature.bitsPerPixel / 8
+    let rowBytes = backdrop.image.bytesPerRow
+    var hasher = SHA256()
+    pixelData.withUnsafeBytes { buffer in
+      for y in Int(rect.minY)..<Int(rect.maxY) {
+        let start = y * rowBytes + Int(rect.minX) * bytesPerPixel
+        let end = start + Int(rect.width) * bytesPerPixel
+        hasher.update(bufferPointer: UnsafeRawBufferPointer(rebasing: buffer[start..<end]))
+      }
+    }
+    return Witness(
+      bounds: bounds,
+      digest: Data(hasher.finalize()),
+      width: signature.width,
+      height: signature.height,
+      bitsPerPixel: signature.bitsPerPixel,
+      bitmapInfo: signature.bitmapInfo
+    )
+  }
+
+  func matches(_ witness: Witness) -> Bool {
+    self.witness(for: witness.bounds) == witness
+  }
+
+  // MARK: Private
+
+  private let pixelData: Data
 
 }

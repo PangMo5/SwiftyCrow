@@ -38,6 +38,14 @@ struct RegionResultView: View {
           .padding(.horizontal, 14)
       }
       CaptureStatusNote(lines: store.overlayLines)
+      if store.isRecognizing, store.imageData != nil {
+        Text("Processing screen text")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 14)
+          .padding(.vertical, 8)
+      }
       content
       Divider().opacity(0.4)
       HStack {
@@ -51,7 +59,7 @@ struct RegionResultView: View {
     .frame(minWidth: 360, minHeight: 280)
     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    .task { store.send(.task) }
+    .task { await store.send(.task).finish() }
     .onAppear(perform: installMonitor)
     .onDisappear(perform: removeMonitor)
     .onChange(of: store.finished) { _, finished in
@@ -74,7 +82,7 @@ struct RegionResultView: View {
           .font(.headline)
           .foregroundStyle(hoveredHelp == nil ? .primary : .secondary)
           .animation(.easeOut(duration: 0.12), value: hoveredHelp)
-        if store.isTranslating {
+        if store.isTranslating || store.isRecognizing || store.isRestoring {
           ProgressView().controlSize(.small)
         }
         Spacer(minLength: 0)
@@ -92,6 +100,7 @@ struct RegionResultView: View {
       toolbarButton("text.quote", help: helpText("Copy original text", shortcuts.regionCopyOriginal)) {
         store.send(.copyOriginalRequested)
       }
+      .disabled(store.isRecognizing || store.overlayLines.isEmpty)
       toolbarButton("character.bubble", help: helpText("Copy translation", shortcuts.regionCopyTranslation)) {
         store.send(.copyTranslationRequested)
       }
@@ -119,13 +128,10 @@ struct RegionResultView: View {
       VStack(spacing: 12) {
         ProgressView()
         if store.isTakingLong {
-          // Practically always Vision loading a cold document-recognition model,
-          // which takes tens of seconds. Saying so is the difference between a
-          // wait and an apparent hang.
           VStack(spacing: 4) {
-            Text("Preparing text recognition")
+            Text("Processing screen text")
               .font(.callout.weight(.semibold))
-            Text("macOS is loading the recognition model.\nThis only happens the first time, or after it has been unloaded.")
+            Text("Recognizing text and analyzing its layout. Processing time depends on the image.")
               .font(.caption)
               .foregroundStyle(.secondary)
           }

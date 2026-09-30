@@ -16,10 +16,84 @@ enum JapaneseRubyOCRCorrector {
 
   // MARK: Internal
 
+  static func verticalCorrectionCrop(for line: OCRResult.Line, among lines: [OCRResult.Line], imageSize: CGSize) -> CGRect {
+    let b = line.boundingBoxNormalized
+    let nextColumn = lines.filter { candidate in
+      let other = candidate.boundingBoxNormalized
+      // OCR boxes can touch or overlap by a fraction of a pixel. Column
+      // centers establish reading order; requiring a positive edge gap can
+      // skip the nearest column and crop directly through its glyphs.
+      return candidate.isVerticalBlock && candidate.verticalCharScale >= line.verticalCharScale * 0.8
+        && other.midX - b.midX > min(line.verticalCharScale, candidate.verticalCharScale) * 0.5
+        && other.intersects(CGRect(x: 0, y: b.minY, width: 1, height: b.height))
+    }.map(\.boundingBoxNormalized.minX).min() ?? 1
+    let rubyMargin = min(line.verticalCharScale * 0.7, max(0, nextColumn - b.maxX) * 0.6)
+    if line.text.count > 3 {
+      // Long columns need their complete outer context. Preserve the outward
+      // enclosure rather than treating a paragraph as a compact glyph sample.
+      return CGRect(
+        x: b.minX * imageSize.width,
+        y: b.minY * imageSize.height,
+        width: (b.width + rubyMargin) * imageSize.width,
+        height: b.height * imageSize.height
+      ).insetBy(dx: -2, dy: -2).integral.intersection(CGRect(origin: .zero, size: imageSize))
+    }
+    // Normalize onto the image's pixel grid before adding context. Tiny
+    // coordinate noise must not add an arbitrary row/column to a small input.
+    // Two pixels of padding still enclose the original subpixel glyph bounds.
+    let left = (b.minX * imageSize.width).rounded()
+    let top = (b.minY * imageSize.height).rounded()
+    let right = ((b.maxX + rubyMargin) * imageSize.width).rounded()
+    let bottom = (b.maxY * imageSize.height).rounded()
+    return CGRect(
+      x: left,
+      y: top,
+      width: right - left,
+      height: bottom - top
+    ).insetBy(dx: -2, dy: -2).intersection(CGRect(origin: .zero, size: imageSize))
+  }
+
+  static func preferredVerticalCorrection(
+    original: String,
+    candidates: [OCRResult.Line]
+  ) -> (candidate: OCRResult.Line, text: String)? {
+    candidates.compactMap { candidate -> (candidate: OCRResult.Line, text: String)? in
+      let corrected = candidate.text == original
+        ? original
+        : preferredCorrection(
+          original: original,
+          candidate: candidate.text,
+          confidence: candidate.recognitionConfidence
+        )
+      return corrected.map { (candidate, $0) }
+    }.max {
+      if $0.text.count != $1.text.count { return $0.text.count < $1.text.count }
+      return $0.candidate.recognitionConfidence < $1.candidate.recognitionConfidence
+    }
+  }
+
+  static func applyingVerticalCorrection(
+    _ correction: (candidate: OCRResult.Line, text: String),
+    to source: OCRResult.Line
+  ) -> OCRResult.Line {
+    let candidate = correction.candidate
+    var result = source
+    result.text = correction.text
+    result.styleRuns = remappedStyleRuns(candidate.styleRuns, from: candidate.text, to: correction.text)
+    result.spacingAnchors = correction.text == candidate.text ? candidate.spacingAnchors : []
+    result.replacementPatches = candidate.replacementPatches
+    result.recognitionConfidence = correction.text == source.text
+      ? max(source.recognitionConfidence, candidate.recognitionConfidence)
+      : candidate.recognitionConfidence
+    if !candidate.recognitionLanguages.isEmpty { result.recognitionLanguages = candidate.recognitionLanguages }
+    return result
+  }
+
   static func correcting(
     _ lines: [OCRResult.Line],
     in image: CGImage
   ) async throws -> [OCRResult.Line] {
+    let lines = try await correctingVerticalColumns(lines, in: image)
     let inputs = lines.indices.compactMap { index in
       input(for: lines[index], index: index, image: image)
     }
@@ -69,17 +143,21 @@ enum JapaneseRubyOCRCorrector {
   static func preferredCorrection(
     original: String,
     candidate: String,
-    confidence: Float
+    confidence: Float,
+    independentlyConfirmed: Bool = false
   ) -> String? {
     let original = original.trimmingCharacters(in: .whitespacesAndNewlines)
     let candidate = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !original.isEmpty, !candidate.isEmpty, original != candidate else { return nil }
+    let originalLetters = original.unicodeScalars.filter(CharacterSet.alphanumerics.contains)
+    let candidateLetters = candidate.unicodeScalars.filter(CharacterSet.alphanumerics.contains)
+    guard !originalLetters.elementsEqual(candidateLetters) else { return nil }
     let acceptsCompactHanCorrection = confidence >= 0.3
       && original.count <= 4
       && candidate.count == original.count
       && containsHan(original)
       && containsHan(candidate)
-    guard confidence >= 0.45 || acceptsCompactHanCorrection else { return nil }
+    guard confidence >= 0.45 || acceptsCompactHanCorrection || independentlyConfirmed else { return nil }
     guard containsHan(original) || confidence >= 0.9 && containsHan(candidate) else {
       return nil
     }
@@ -199,6 +277,88 @@ enum JapaneseRubyOCRCorrector {
   private static let imageScale = 3
   private static let padding = 64
 
+  private static func correctingVerticalColumns(_ lines: [OCRResult.Line], in image: CGImage) async throws -> [OCRResult.Line] {
+    let hasKana = lines.contains { $0.text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) } }
+    guard hasKana else { return lines }
+    var result = lines
+    var confirmationBudget = 4
+    let indices = lines.indices.filter { index in
+      let line = lines[index]
+      return line.isVerticalBlock && line.text.count >= 2 && containsHan(line.text)
+        && line.verticalCharScale > 0
+        && (line.text.count <= 3 || line.boundingBoxNormalized.width / line.verticalCharScale >= 1.15)
+    }
+    for index in indices.prefix(12) {
+      try Task.checkCancellation()
+      let line = lines[index]
+      let b = line.boundingBoxNormalized
+      let crop = verticalCorrectionCrop(for: line, among: lines, imageSize: CGSize(width: image.width, height: image.height))
+      let recognized = try await VisionTextRecognizer.additionalText(
+        in: image,
+        language: .init(code: "ja"),
+        crop: crop,
+        minimumGlyphHeight: line
+          .verticalCharScale * CGFloat(image.width),
+        preferredScale: 2
+      )
+      let observations = OCRResult(lines: recognized).absorbingRubyAnnotations().lines
+      let fragments = OCRVerticalColumnRecovery.fragments(for: line, candidates: observations)
+      if !fragments.isEmpty {
+        let combined = try await OCRVerticalColumnRecovery.confirmedColumn(fragments) { fragment in
+          guard confirmationBudget > 0 else { return nil }
+          confirmationBudget -= 1
+          let b = fragment.boundingBoxNormalized
+          let crop = CGRect(
+            x: b.minX * CGFloat(image.width),
+            y: b.minY * CGFloat(image.height),
+            width: b.width * CGFloat(image.width),
+            height: b.height * CGFloat(image.height)
+          )
+          .insetBy(dx: -2, dy: -2).integral.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
+          let fresh = try await VisionTextRecognizer.additionalText(
+            in: image,
+            language: .init(code: "ja"),
+            crop: crop,
+            minimumGlyphHeight: line
+              .verticalCharScale * CGFloat(image.width),
+            preferredScale: 2
+          )
+          return OCRResult(lines: fresh).absorbingRubyAnnotations().lines.first { $0.text == fragment.text }
+        }
+        guard let combined else {
+          result[index].needsReview = true
+          continue
+        }
+        let corrected = combined.text == line.text
+          ? line.text
+          : preferredCorrection(
+            original: line.text,
+            candidate: combined.text,
+            confidence: combined.recognitionConfidence,
+            independentlyConfirmed: true
+          )
+        guard let corrected else {
+          result[index].needsReview = true
+          continue
+        }
+        result[index] = applyingVerticalCorrection((combined, corrected), to: line)
+        continue
+      }
+      let candidates = observations.filter {
+        let intersection = b.intersection($0.boundingBoxNormalized)
+        let area = $0.boundingBoxNormalized.width * $0.boundingBoxNormalized.height
+        return !intersection.isNull && area > 0 && intersection.width * intersection.height / area >= 0.55
+          && $0.text.count >= line.text.count / 2
+          && $0.recognitionConfidence >= ($0.text == line.text ? 0.45 : max(0.45, line.recognitionConfidence))
+      }
+      guard let correction = preferredVerticalCorrection(original: line.text, candidates: candidates) else { continue }
+      // The reread includes small pronunciation columns that the first document
+      // pass may have omitted. Erase them with their base, never translate them.
+      result[index] = applyingVerticalCorrection(correction, to: line)
+    }
+    return result
+  }
+
   private static func input(
     for line: OCRResult.Line,
     index: Int,
@@ -277,6 +437,7 @@ enum JapaneseRubyOCRCorrector {
     request.recognitionLevel = .accurate
     request.recognitionLanguages = [Locale.Language(identifier: "ja-JP")]
     request.usesLanguageCorrection = true
+    try VisionTextRecognizer.configure(&request)
     let observations = try await request.perform(on: sheet.image)
 
     var candidates = [Int: [Candidate]]()

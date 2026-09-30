@@ -12,6 +12,13 @@ import CoreGraphics
 struct PickableWindow: Equatable, Sendable {
   var id: CGWindowID
   var frame: CGRect
+  var ownerName = ""
+  var title = ""
+
+  var displayName: String {
+    let parts = [ownerName, title].filter { !$0.isEmpty }
+    return parts.isEmpty ? String(localized: "Untitled window") : parts.joined(separator: " — ")
+  }
 }
 
 // MARK: - Enumeration
@@ -47,14 +54,34 @@ func onScreenWindows(excludingPID pid: pid_t) -> [PickableWindow] {
       width: cgBounds.width,
       height: cgBounds.height
     )
-    return PickableWindow(id: number, frame: frame)
+    return PickableWindow(
+      id: number,
+      frame: frame,
+      ownerName: entry[kCGWindowOwnerName] as? String ?? "",
+      title: entry[kCGWindowName] as? String ?? ""
+    )
   }
+}
+
+/// Offscreen/minimized windows still own their identity. A missing onscreen
+/// record alone cannot prove closure. nil means the server query failed.
+func windowIsKnownToServer(_ id: CGWindowID) -> Bool? {
+  guard let records = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID) as? [[CFString: Any]] else { return nil }
+  return records.contains { $0[kCGWindowNumber] as? CGWindowID == id }
 }
 
 /// The front-most window under `point` (AppKit-global coordinates). `windows`
 /// must be in front-to-back order, as `onScreenWindows` returns them.
 func windowUnderCursor(_ windows: [PickableWindow], at point: CGPoint) -> PickableWindow? {
   windows.first { $0.frame.contains(point) }
+}
+
+/// Keyboard traversal preserves window identity and wraps in front-to-back order.
+/// A disappeared/unknown selection starts at the appropriate end of the new list.
+func cycledWindow(in windows: [PickableWindow], after id: CGWindowID?, forward: Bool) -> PickableWindow? {
+  guard !windows.isEmpty else { return nil }
+  guard let index = windows.firstIndex(where: { $0.id == id }) else { return forward ? windows.first : windows.last }
+  return windows[(index + (forward ? 1 : windows.count - 1)) % windows.count]
 }
 
 // MARK: - Coordinate flip

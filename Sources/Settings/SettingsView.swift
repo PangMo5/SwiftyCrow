@@ -176,7 +176,7 @@ private struct TranslationSection: View {
       Text("Translation")
     } footer: {
       Text(
-        "Your preferred strategy is used when its model is installed. Otherwise, SwiftyCrow uses an installed model and shows which strategy it selected. High fidelity uses Apple Intelligence on supported devices."
+        "SwiftyCrow uses the strategy you select. High fidelity requires Apple Intelligence to be ready. If the selected model is unavailable, the app reports the problem without switching strategies."
       )
       .font(.caption)
       .foregroundStyle(.secondary)

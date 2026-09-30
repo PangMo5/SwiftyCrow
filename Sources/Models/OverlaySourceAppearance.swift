@@ -15,6 +15,11 @@ struct OverlayColor: Equatable, Hashable, Sendable {
   var blue: CGFloat
   var alpha: CGFloat
 
+  /// Maximum encoded RGB-channel difference, used for source surface matching.
+  func distance(to other: OverlayColor) -> CGFloat {
+    max(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
+  }
+
 }
 
 // MARK: - OverlayFontWeight
@@ -54,6 +59,9 @@ struct OverlaySourceAppearance: Equatable, Hashable, Sendable {
   /// Height of the high-contrast source ink, normalized to the image. Unlike a
   /// Vision line/word box this excludes surrounding icon and control padding.
   var inkHeightScale: CGFloat = 0
+  /// Estimated point size relative to image height, calibrated against the
+  /// recognized glyphs rather than Vision's padded observation rectangle.
+  var fontSizeScale: CGFloat = 0
   var fontWeight = OverlayFontWeight.semibold
   var fontDesign = OverlayFontDesign.standard
   var isUnderlined = false
@@ -63,19 +71,24 @@ struct OverlaySourceAppearance: Equatable, Hashable, Sendable {
 // MARK: - OverlaySourceStyleRun
 
 /// Appearance and geometry for one source word. The UTF-16 range is retained
-/// so Apple Translation can align the style with its translated counterpart.
+/// so the translation pipeline can align the style with its translated counterpart.
 struct OverlaySourceStyleRun: Equatable, Hashable, Sendable {
   var range: NSRange
   var box: CGRect
   var appearance = OverlaySourceAppearance.fallback
+  /// Visible ink for typography/accessory classification. Keep the original
+  /// range box for background sampling, restoration and lexical spacing.
+  var inkBox: CGRect? = nil
+  var sourceFragment: OverlayInlineSourceFragment? = nil
 }
 
 // MARK: - OverlayTextStyleRun
 
-/// A source style mapped onto a translated UTF-16 range by Apple Translation.
+/// A source style mapped onto a translated UTF-16 range.
 struct OverlayTextStyleRun: Equatable, Hashable, Sendable {
   var range: NSRange
   var appearance: OverlaySourceAppearance
+  var sourceFragment: OverlayInlineSourceFragment? = nil
 }
 
 // MARK: - OverlaySourcePatch
@@ -84,13 +97,23 @@ struct OverlayTextStyleRun: Equatable, Hashable, Sendable {
 /// Keeping these regions separate from the paragraph bounds avoids painting
 /// over nearby speech-bubble borders and artwork.
 struct OverlaySourcePatch: Equatable, Hashable, Sendable {
+  /// Observed source ownership. Restoration sampling must not enlarge this.
   var box: CGRect
   var appearance = OverlaySourceAppearance.fallback
+  /// Hard source ownership boundary, including any raster/antialiasing bleed.
+  var clippingBox: CGRect? = nil
   /// True when this patch removes a compact styled surface embedded inside a
   /// larger sentence, such as the old position of an inline-code pill. These
   /// patches must survive flat-row consolidation.
   var erasesDistinctSurface = false
+  /// Pronunciation ink shares semantic ownership with its base, but may be
+  /// printed on the paper outside the base's colored container.
+  var isAnnotation = false
   var restorationPNG: Data? = nil
+  /// Actual erasure/bitmap bounds after raster analysis. Before analysis the
+  /// observed box is also the rendering box. Never use this to protect an
+  /// untranslated neighbor: its padding can contain another owner's glyphs.
+  var renderingBox: CGRect? = nil
 }
 
 // MARK: - OverlaySourceSurface
@@ -111,4 +134,19 @@ struct OverlaySourceSurface: Equatable, Hashable, Sendable {
   var cornerRadiusFraction: CGFloat = 0
   /// Image-bounded interiors for irregular printed text regions.
   var clippingRows = [CGRect]()
+}
+
+// MARK: - SourcePatchClipping
+
+/// A ruby annotation can share semantic ownership with a label while lying on
+/// another physical surface. Only patches belonging to the label's actual
+/// container inherit its clipping shape; paper annotations retain their own
+/// sampled restoration surface.
+enum SourcePatchClipping {
+  static func surface(for patch: OverlaySourcePatch, within surface: OverlaySourceSurface) -> OverlaySourceSurface? {
+    guard surface.confidence >= 0.35 else { return nil }
+    let bounds = surface.clippingBox ?? surface.box
+    guard bounds.contains(CGPoint(x: patch.box.midX, y: patch.box.midY)) else { return nil }
+    return surface
+  }
 }

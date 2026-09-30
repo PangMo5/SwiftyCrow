@@ -6,6 +6,11 @@ import Testing
 
 @Suite("OCR text tokenization")
 struct OCRTextTokenizationTests {
+  @Test(arguments: ["सेटिंग गोपनीयता", "اَلْعَرَبِيَّة اللُّغَة", "cafe\u{301} re\u{301}sume\u{301}"])
+  func combiningMarksRemainInsideTheirWords(_ text: String) {
+    let tokens = OCRTextTokenization.ranges(in: text).map { String(text[$0]) }
+    #expect(tokens == text.split(separator: " ").map(String.init))
+  }
 
   @Test
   func separatesEnclosingPunctuationFromCJKTitle() {
