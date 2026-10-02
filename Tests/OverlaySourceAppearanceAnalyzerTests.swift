@@ -12,6 +12,97 @@ struct OverlaySourceAppearanceAnalyzerTests {
   // MARK: Internal
 
   @Test
+  func neighboringLabelSearchLimitsCannotManufactureAClosedSurface() async throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 640,
+      height: 220,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.translateBy(x: 0, y: 220)
+    context.scaleBy(x: 1, y: -1)
+    context.setFillColor(CGColor(gray: 0.08, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 640, height: 220))
+    context.setFillColor(CGColor(gray: 0.30, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 640, height: 65))
+    context.setFillColor(CGColor(gray: 0.45, alpha: 1))
+    context.fill(CGRect(x: 0, y: 160, width: 640, height: 2))
+    context.setFillColor(CGColor(gray: 0.9, alpha: 1))
+    let lines = [(40, 70, "Projects"), (134, 54, "Search"), (212, 93, "Preferences")].map { x, width, text in
+      for position in stride(from: x, to: x + width - 4, by: 8) {
+        context.fill(CGRect(x: position, y: 100, width: 4, height: 14))
+      }
+      return OCRResult.Line(
+        boundingBoxNormalized: CGRect(
+          x: CGFloat(x) / 640,
+          y: 98.0 / 220,
+          width: CGFloat(width) / 640,
+          height: 20.0 / 220
+        ),
+        text: text,
+        imageAspectRatio: 640.0 / 220
+      )
+    }
+    let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
+      to: .init(lines: lines),
+      from: try #require(context.makeImage())
+    )
+    #expect(analyzed.lines.allSatisfy { $0.surface == nil })
+  }
+
+  @Test(arguments: [false, true], [false, true])
+  func thinControlOutlineEstablishesCenterOnlyWhenClosed(_ dark: Bool, _ closed: Bool) async throws {
+    let size = CGSize(width: 1200, height: 800)
+    let context = try #require(CGContext(
+      data: nil,
+      width: 1200,
+      height: 800,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.translateBy(x: 0, y: size.height)
+    context.scaleBy(x: 1, y: -1)
+    context.setFillColor(CGColor(gray: dark ? 0.12 : 0.94, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    let control = CGRect(x: 860, y: 20, width: 64, height: 30)
+    context.setStrokeColor(CGColor(gray: dark ? 0.42 : 0.64, alpha: 1))
+    context.setLineWidth(1)
+    if closed {
+      context.addPath(CGPath(roundedRect: control, cornerWidth: 6, cornerHeight: 6, transform: nil))
+      context.strokePath()
+    } else {
+      context.move(to: CGPoint(x: control.minX, y: control.minY))
+      context.addLine(to: CGPoint(x: control.maxX, y: control.minY))
+      context.strokePath()
+    }
+    context.setFillColor(CGColor(gray: dark ? 0.95 : 0.05, alpha: 1))
+    for x in stride(from: 875, to: 909, by: 7) {
+      context.fill(CGRect(x: x, y: 28, width: 4, height: 14))
+    }
+    let box = CGRect(x: 875 / size.width, y: 26 / size.height, width: 34 / size.width, height: 18 / size.height)
+    let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(to: .init(lines: [
+      .init(boundingBoxNormalized: box, text: "Share", imageAspectRatio: size.width / size.height)
+    ]), from: try #require(context.makeImage()))
+    let source = try #require(result.lines.first)
+    if closed {
+      let surface = try #require(source.surface)
+      #expect(abs(surface.box.midX * size.width - control.midX) <= 2)
+      var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
+      line.showTranslation("공유하다", language: .init(identifier: "ko"))
+      let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+      #expect(placement.alignment == .center)
+      #expect(abs(placement.frame.midX - control.midX) <= 2)
+    } else {
+      #expect(source.surface == nil)
+    }
+  }
+
+  @Test
   func denseWhiteGlyphsOnBlackAreNotAWhiteButtonSurface() async throws {
     let context = try #require(CGContext(
       data: nil,

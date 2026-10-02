@@ -218,7 +218,7 @@ enum TranslationStyleMapper {
 
   /// Use native links only when their response is the same primary text.
   /// Disjoint ownership is not flattened across intervening prose.
-  static func alignNativeSourceFragments(
+  static func alignNativeStyles(
     source: AttributedString,
     target: String,
     native: AttributedString?,
@@ -226,7 +226,7 @@ enum TranslationStyleMapper {
   ) -> Alignment {
     var result = align(source: source, target: target, preserving: preserving)
     guard let native, String(native.characters) == target else { return result }
-    for span in result.unmatched where span.isSourceFragment {
+    for span in result.unmatched where !span.isLiteral {
       var ranges = [Range<String.Index>]()
       for run in native.runs where run.link == span.link {
         let start = native.characters.distance(from: native.startIndex, to: run.range.lowerBound)

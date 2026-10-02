@@ -7,6 +7,59 @@ import Testing
 @testable import SwiftyCrow
 
 struct AppearanceRowOwnershipTests {
+  @Test(arguments: [false, true])
+  func aLargeShortMarkerDoesNotResizeTheSurroundingLabel(_ reversed: Bool) async throws {
+    let size = CGSize(width: 500, height: 140)
+    let context = try #require(CGContext(
+      data: nil,
+      width: 500,
+      height: 140,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    func draw(_ text: String, pointSize: CGFloat, x: CGFloat) -> CGRect {
+      let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: [
+        .font: NSFont.systemFont(ofSize: pointSize),
+        .foregroundColor: NSColor.black,
+      ]))
+      context.textPosition = CGPoint(x: x, y: 45)
+      CTLineDraw(line, context)
+      let ink = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds])
+      return CGRect(
+        x: (x + ink.minX - 2) / size.width,
+        y: (size.height - 45 - ink.maxY - 2) / size.height,
+        width: (ink.width + 4) / size.width,
+        height: (ink.height + 4) / size.height
+      )
+    }
+    let marker = draw("2", pointSize: 30, x: reversed ? 130 : 40)
+    let label = draw("Settings", pointSize: 20, x: reversed ? 40 : 70)
+    let text = reversed ? "Settings 2" : "2 Settings"
+    let line = OCRResult.Line(
+      boundingBoxNormalized: marker.union(label),
+      text: text,
+      imageAspectRatio: size.width / size.height,
+      preventsJoining: true,
+      styleRuns: [
+        .init(range: (text as NSString).range(of: "2"), box: marker),
+        .init(range: (text as NSString).range(of: "Settings"), box: label),
+      ]
+    )
+    let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
+      to: .init(lines: [line]),
+      from: try #require(context.makeImage())
+    )
+    let recognized = try #require(result.lines.first)
+    #expect(result.lines.count == 1)
+    #expect((17...24).contains(recognized.appearance.fontSizeScale * size.height))
+    let markerStyle = try #require(recognized.styleRuns.first { $0.range == (text as NSString).range(of: "2") })
+    #expect(markerStyle.appearance.fontSizeScale > recognized.appearance.fontSizeScale * 1.35)
+  }
+
   @Test
   func aSlantedObservationCannotSampleAdjacentHorizontalBaselines() {
     let upper = OCRResult.Line(

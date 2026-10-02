@@ -12,7 +12,9 @@ enum OCRTableRecovery {
   // MARK: Internal
 
   static func requiresReferenceEvidence(_ lines: [OCRResult.Line]) -> Bool {
-    let symbols = lines.filter { OCRTableStructure.isSymbolColumnValue($0, among: lines) }
+    let symbols = lines.filter {
+      OCRTextSemantics.isAlphanumericIdentifier($0.text) && OCRTableStructure.isSymbolColumnValue($0, among: lines)
+    }
     guard !symbols.isEmpty else { return false }
     let knownColumns = Set(symbols.compactMap(\.tableCell?.column))
     let columns = Dictionary(grouping: lines.filter {

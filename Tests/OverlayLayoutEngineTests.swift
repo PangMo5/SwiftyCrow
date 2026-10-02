@@ -42,6 +42,35 @@ struct OverlayLayoutEngineTests {
     }
   }
 
+  @Test(arguments: [false, true])
+  func isolatedCenteredHeadingRequiresMeasuredHierarchy(_ heading: Bool) throws {
+    var title = translatedLine(
+      id: lineID(1),
+      box: .init(x: 0.35, y: 0.1, width: 0.3, height: 0.05),
+      sourceIsVertical: false,
+      text: "작업 공간 개요",
+      target: "ko"
+    )
+    title.source.appearance.fontSizeScale = heading ? 0.05 : 0.03
+    title.source.appearance.fontWeight = .semibold
+    title.source.appearance.confidence = 1
+    title.source.imageAspectRatio = 1
+    let peers = [0.05, 0.55].enumerated().map { index, x in
+      var peer = translatedLine(
+        id: lineID(index + 2),
+        box: .init(x: x, y: 0.22, width: 0.3, height: 0.03),
+        sourceIsVertical: false,
+        text: "프로젝트",
+        target: "ko"
+      )
+      peer.source.appearance.fontSizeScale = 0.03
+      return peer
+    }
+    let placement = try #require(OverlayLayoutEngine.placements(for: [title] + peers, in: CGSize(width: 600, height: 600))
+      .first { $0.line.id == title.id })
+    #expect(placement.alignment == (heading ? .center : .leading))
+  }
+
   @Test(arguments: [OverlayTextAlignment.leading, .trailing], [CGFloat(1), 2])
   func aPreservedRowMarkerKeepsTheNativeLabelEdge(alignment: OverlayTextAlignment, scale: CGFloat) throws {
     let size = CGSize(width: 400 * scale, height: 200 * scale)
@@ -93,7 +122,7 @@ struct OverlayLayoutEngineTests {
     ("de", "1.2. Begrüßung der Welt"),
     ("ar", "1.2. مرحبًا بالعالم!"),
   ])
-  func singleRowLabelsUseVerifiedWidthDespiteOCRPadding(height: CGFloat, translation: (String, String)) throws {
+  func singleRowLabelsCannotBorrowVerifiedWhitespace(height: CGFloat, translation: (String, String)) throws {
     let size = CGSize(width: 950, height: 760)
     let preferred: CGFloat = 11.865585168
     let box = CGRect(x: 22 / size.width, y: 214 / size.height, width: 92 / size.width, height: height / size.height)
@@ -116,14 +145,14 @@ struct OverlayLayoutEngineTests {
       return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
     }
     let expanded = try placement(source)
-    #expect(expanded.fontSize >= preferred - 0.001)
-    #expect(HorizontalTextRenderer.plan(for: expanded).lines.count == 1)
-    #expect(expanded.frame.maxX <= 205.001)
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([expanded], canvas: size).isEmpty)
+    #expect(expanded.frame.maxX <= 114.001)
     #expect(expanded.isTextLayoutComplete)
-    // Without measured free space, padding cannot license a wider container.
+    // Whitespace availability cannot change the original text boundary.
     source.layoutBounds = nil
     let bounded = try placement(source)
-    #expect(bounded.frame.width <= 92.001)
+    #expect(bounded.frame == expanded.frame)
+    #expect(bounded.fontSize == expanded.fontSize)
   }
 
   @Test
@@ -163,7 +192,7 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test
-  func readableProseCanUseMoreRowsWithoutShrinkingToOneRow() throws {
+  func proseCannotBorrowExtraRowsOutsideItsTextBox() throws {
     let size = CGSize(width: 400, height: 200)
     var source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.05, y: 0.1, width: 0.425, height: 0.1),
@@ -185,9 +214,9 @@ struct OverlayLayoutEngineTests {
     let original = try placement()
     source.layoutBounds = CGRect(x: 0.05, y: 0.1, width: 0.425, height: 0.4)
     let expanded = try placement()
-    #expect(expanded.fontSize >= 13.999)
-    #expect(expanded.fontSize > original.fontSize)
-    #expect(HorizontalTextRenderer.plan(for: expanded).lines.count > HorizontalTextRenderer.plan(for: original).lines.count)
+    #expect(expanded.frame == original.frame)
+    #expect(expanded.fontSize == original.fontSize)
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([expanded], canvas: size).isEmpty)
   }
 
   @Test
@@ -222,7 +251,7 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test(arguments: [("ko", "번역된 제목"), ("de", "Neuer Titel"), ("ar", "عنوان مترجم")], [CGFloat(1), 2])
-  func nativeCellSpaceKeepsCompactHeadersReadable(_ target: (String, String), _ scale: CGFloat) throws {
+  func nativeCellsCannotEnlargeHeaderTextBoxes(_ target: (String, String), _ scale: CGFloat) throws {
     let size = CGSize(width: 600 * scale, height: 300 * scale)
     let rows = nativeTableRows()
     let lines = rows.map { row in
@@ -237,10 +266,48 @@ struct OverlayLayoutEngineTests {
       let bounds = pixelRect(cell.box, canvas: size)
       #expect(bounds.insetBy(dx: -0.001, dy: -0.001).contains(placement.frame))
       #expect(placement.alignment == .center)
-      #expect(placement.fontSize >= 14.5 * scale)
-      #expect(HorizontalTextRenderer.plan(for: placement).lines.count == 1)
+      #expect(placement.sourceFrame.contains(placement.frame))
+      #expect(CaptureQualityMetrics.sourceBoundaryIssues([placement], canvas: size).isEmpty)
     }
     #expect(pairwiseNonOverlapping(placements.map(\.frame)))
+  }
+
+  @Test(arguments: [OverlayTextAlignment.leading, .center, .trailing], [CGFloat(1), 2])
+  func unequalTableLabelsKeepTheirObservedColumnAnchor(_ alignment: OverlayTextAlignment, _ scale: CGFloat) {
+    let canvas = CGSize(width: 600 * scale, height: 300 * scale)
+    let lines = [CGFloat(0.06), 0.10, 0.15].enumerated().map { row, width in
+      let x: CGFloat =
+        switch alignment {
+        case .leading: 0.205
+        case .center: 0.30 - width / 2
+        case .trailing: 0.395 - width
+        }
+      let recognized = OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: x, y: 0.2 + CGFloat(row) * 0.1, width: width, height: 0.045),
+        text: ["Name", "Document", "Architecture"][row],
+        imageAspectRatio: 2,
+        appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.05),
+        tableCell: .init(
+          table: 0,
+          row: row,
+          column: 0,
+          box: CGRect(x: 0.2, y: 0.19 + CGFloat(row) * 0.1, width: 0.2, height: 0.08)
+        )
+      )
+      var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
+      line.showTranslation("이름", language: .init(identifier: "ko"))
+      return line
+    }
+    let placements = OverlayLayoutEngine.placements(for: lines, in: canvas)
+    #expect(placements.count == 3)
+    for placement in placements {
+      #expect(placement.alignment == alignment)
+      switch alignment {
+      case .leading: #expect(abs(placement.frame.minX - placement.sourceFrame.minX) < 0.01)
+      case .trailing: #expect(abs(placement.frame.maxX - placement.sourceFrame.maxX) < 0.01)
+      case .center: #expect(abs(placement.frame.midX - placement.sourceFrame.midX) < 0.01)
+      }
+    }
   }
 
   @Test
@@ -528,7 +595,7 @@ struct OverlayLayoutEngineTests {
   }
 
   @Test
-  func compactHorizontalControlUsesItsDetectedSurface() throws {
+  func compactControlCannotEnlargeItsSourceTextBox() throws {
     let canvas = CGSize(width: 1_000, height: 600)
     var line = translatedLine(
       box: CGRect(x: 0.40, y: 0.40, width: 0.10, height: 0.03),
@@ -543,8 +610,8 @@ struct OverlayLayoutEngineTests {
 
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: canvas).first)
 
-    #expect(placement.frame.width > placement.sourceFrame.width)
-    #expect(placement.frame.height > placement.sourceFrame.height)
+    #expect(placement.sourceFrame.contains(placement.frame))
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([placement], canvas: canvas).isEmpty)
     #expect(placement.frame.contains(
       CGPoint(x: placement.sourceFrame.midX, y: placement.sourceFrame.midY)
     ))
@@ -577,8 +644,9 @@ struct OverlayLayoutEngineTests {
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: canvas).first)
 
     #expect(placement.alignment == .center)
-    #expect(abs(placement.frame.midX - surfaceFrame.midX) < 0.01)
-    #expect(placement.frame.height > placement.sourceFrame.height)
+    #expect(abs(placement.frame.midX - placement.sourceFrame.midX) < 0.01)
+    #expect(placement.sourceFrame.contains(placement.frame))
+    #expect(surfaceFrame.contains(placement.frame))
   }
 
   @Test
@@ -607,7 +675,7 @@ struct OverlayLayoutEngineTests {
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: canvas).first)
 
     #expect(placement.alignment == .leading)
-    #expect(placement.frame.minX > placement.sourceFrame.minX)
+    #expect(placement.frame.minX == placement.sourceFrame.minX)
   }
 
   @Test(arguments: [

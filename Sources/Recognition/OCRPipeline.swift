@@ -21,6 +21,11 @@ enum OCRPipeline {
     language: Language,
     textReady: @Sendable (OCRResult) async -> Void = { _ in }
   ) async throws -> OCRResult {
+    #if DEBUG
+    if let captured = try await NativeCaptureTrace.capture(image, language: language, textReady: textReady) {
+      return captured
+    }
+    #endif
     let clock = ContinuousClock()
     let started = clock.now
     var timings = [String: Double]()
@@ -305,7 +310,8 @@ enum OCRPipeline {
     let glyphStarted = clock.now
     let glyphCorrected = try await OCRInlineGlyphRecovery.recover(styled, image: image, language: language)
     logStage("Inline optical glyph recovery", since: glyphStarted)
-    let result = OCRTableStructure.protectingInlineSymbols(glyphCorrected)
+    let supported = OCRGlyphRasterSupport.rejectingUnsupportedSymbols(glyphCorrected, image: image)
+    let result = OCRTableStructure.protectingInlineSymbols(supported)
     try traceObserver?("appearance", result.lines)
     try Task.checkCancellation()
     logStage("Appearance and paragraph analysis", since: appearanceStarted)

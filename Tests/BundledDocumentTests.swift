@@ -42,7 +42,9 @@ struct BundledDocumentTests {
 
   @Test
   func documentLoaderKeepsTheFullOriginalAfterTheLocalizedOverview() async throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("SwiftyCrow-docs-\(UUID().uuidString).bundle")
+    let temporary = ProcessInfo.processInfo.environment["SWIFTYCROW_TEST_TEMP_ROOT"].map { URL(fileURLWithPath: $0) }
+      ?? FileManager.default.temporaryDirectory
+    let root = temporary.appendingPathComponent("SwiftyCrow-docs-\(UUID().uuidString).bundle")
     defer { try? FileManager.default.removeItem(at: root) }
     let resources = root.appendingPathComponent("Contents/Resources")
     try FileManager.default.createDirectory(at: resources.appendingPathComponent("ko"), withIntermediateDirectories: true)

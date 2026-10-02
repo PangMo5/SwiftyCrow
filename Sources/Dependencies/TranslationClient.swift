@@ -292,7 +292,7 @@ extension TranslationClient: DependencyKey {
 
   /// Native metadata is optional evidence. A failed lookup must not discard
   /// other paragraphs' anchors or prevent lexical/contextual alignment.
-  static func aligningNativeSourceFragments(
+  static func aligningNativeStyles(
     _ targets: [UUID: String],
     linesByID: [UUID: TranslationLine],
     preserving: [UUID: AttributedString],
@@ -303,7 +303,7 @@ extension TranslationClient: DependencyKey {
       try Task.checkCancellation()
       guard
         let source = linesByID[id]?.attributedText,
-        TranslationStyleMapper.align(source: source, target: target, preserving: anchors[id]).hasUnmappedSourceFragments
+        !TranslationStyleMapper.align(source: source, target: target, preserving: anchors[id]).unmatched.isEmpty
       else { continue }
       do {
         let literalPlan = TranslationLiteralPlan(source)
@@ -312,7 +312,7 @@ extension TranslationClient: DependencyKey {
           if let literalPlan { response.flatMap { literalPlan.restoring($0) } }
           else { response }
         try Task.checkCancellation()
-        anchors[id] = TranslationStyleMapper.alignNativeSourceFragments(
+        anchors[id] = TranslationStyleMapper.alignNativeStyles(
           source: source,
           target: target,
           native: native,
@@ -321,7 +321,7 @@ extension TranslationClient: DependencyKey {
       } catch {
         if error is CancellationError { throw error }
         try Task.checkCancellation()
-        Log.translation.error("Optional native source-fragment alignment failed: \(String(describing: error), privacy: .public)")
+        Log.translation.error("Optional native style alignment failed: \(String(describing: error), privacy: .public)")
       }
     }
     return anchors
@@ -338,7 +338,7 @@ extension TranslationClient: DependencyKey {
   ) async throws {
     var anchors = preserving
     if #available(macOS 26.4, *) {
-      anchors = try await aligningNativeSourceFragments(targets, linesByID: linesByID, preserving: anchors) {
+      anchors = try await aligningNativeStyles(targets, linesByID: linesByID, preserving: anchors) {
         try await session.translate($0).attributedTargetText
       }
     }

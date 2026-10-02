@@ -18,12 +18,18 @@ struct SidewaysLabelTests {
     let line = Self.label(target, progression: progression)
     let source = line.source
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: Self.canvas).first)
-    #expect(placement.fontSize >= 20)
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([placement], canvas: Self.canvas).isEmpty)
     #expect(placement.rotationRadians == (progression == .rightToLeft ? .pi / 2 : -.pi / 2))
     #expect(placement.line.source == source)
     #expect(placement.line.displayedText == target.1)
     #expect(placement.flow == .horizontal(target.0 == "de" ? .leftToRight : .rightToLeft))
-    let physical = CGRect(x: 98, y: 63, width: 44, height: 144)
+    let box = source.box
+    let physical = CGRect(
+      x: box.minX * Self.canvas.width,
+      y: box.minY * Self.canvas.height,
+      width: box.width * Self.canvas.width,
+      height: box.height * Self.canvas.height
+    )
     #expect(abs(placement.visualFrame.minX - physical.minX) < 1e-6)
     #expect(abs(placement.visualFrame.minY - physical.minY) < 1e-6)
     #expect(abs(placement.visualFrame.width - physical.width) < 1e-6)
@@ -45,7 +51,10 @@ struct SidewaysLabelTests {
     // SF Arabic uses automatic optical sizing: its normalized advances change
     // with point size. Require readable scale and real ink fit, not an invalid
     // assumption that native font-point values must scale linearly.
-    #expect(large.fontSize / CGFloat(scale) >= 20)
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([large], canvas: CGSize(
+      width: Self.canvas.width * CGFloat(scale),
+      height: Self.canvas.height * CGFloat(scale)
+    )).isEmpty)
     let plan = HorizontalTextRenderer.plan(for: large)
     #expect(plan.lines.count == 1)
     #expect(plan.fits(large.frame.size))

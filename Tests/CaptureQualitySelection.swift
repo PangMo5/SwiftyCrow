@@ -31,6 +31,8 @@ struct CaptureQualityCase: Decodable {
   var requiredRestoredBackgrounds: [CaptureBackgroundExpectation]?
   var maximumReviewLines: Int?
   var requiredSourceFragments: [CaptureSourceFragmentExpectation]?
+  var requiredSourceOccurrences: [String: Int]?
+  var forbiddenSourceText: [String]?
 }
 
 // MARK: - CaptureSourceFragmentExpectation
@@ -70,6 +72,7 @@ struct CaptureFontExpectation: Decodable {
   var source: String
   var minimum: CGFloat
   var maximum: CGFloat
+  var sourceIsExact: Bool?
 }
 
 // MARK: - CaptureAlignmentExpectation
@@ -85,6 +88,7 @@ struct CaptureStyleExpectation: Decodable {
   var source: String
   var target: String
   var kind: String
+  var sourceIsExact: Bool?
 }
 
 // MARK: - CaptureQualitySelection
@@ -113,6 +117,15 @@ enum CaptureQualitySelection {
       })
     else { throw SelectionError.invalidID }
     guard Set(cases.map(\.id)).count == cases.count else { throw SelectionError.duplicateIDs }
+    guard
+      cases.allSatisfy({ item in
+        (item.requiredSourceOccurrences ?? [:]).allSatisfy { !$0.key.isEmpty && $0.value > 0 }
+          && (item.forbiddenSourceText ?? []).allSatisfy { !$0.isEmpty }
+          && (item.requiredStyles ?? []).allSatisfy {
+            ["color", "weight", "plain", "italic", "upright"].contains($0.kind)
+          }
+      })
+    else { throw CocoaError(.coderInvalidValue) }
     let filters: [(String, (CaptureQualityCase) -> String?)] = [
       ("SWIFTYCROW_QUALITY_CASE", { $0.id }),
       ("SWIFTYCROW_QUALITY_STRUCTURE", { $0.structure }),

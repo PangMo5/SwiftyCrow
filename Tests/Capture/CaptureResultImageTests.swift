@@ -8,6 +8,60 @@ import Testing
 @Suite("Capture image export")
 @MainActor
 struct CaptureResultImageTests {
+  @Test(arguments: [1, 2, 3])
+  func anOverlappingRestorationCannotErasePreservedSourcePixels(_ duplicates: Int) throws {
+    let size = CGSize(width: 200, height: 120)
+    let context = try #require(CGContext(
+      data: nil,
+      width: 200,
+      height: 120,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    context.setFillColor(CGColor(red: 0, green: 0.2, blue: 1, alpha: 1))
+    context.fill(CGRect(x: 20, y: 60, width: 40, height: 20))
+    let box = CGRect(x: 0.1, y: 1.0 / 3, width: 0.2, height: 1.0 / 6)
+    let literal = OverlayLine(
+      id: UUID(),
+      source: .init(
+        recognized: .init(
+          boundingBoxNormalized: box,
+          text: "i8",
+          preservesSource: true,
+          replacementPatches: Array(repeating: .init(box: box), count: duplicates)
+        ),
+        language: .init(identifier: "en")
+      )
+    )
+    var neighbor = OverlayLine(
+      id: UUID(),
+      source: .init(
+        recognized: .init(
+          boundingBoxNormalized: .init(x: 0.6, y: 1.0 / 3, width: 0.3, height: 1.0 / 6),
+          text: "Ready",
+          replacementPatches: [.init(box: .init(
+            x: 0,
+            y: 1.0 / 3,
+            width: 1,
+            height: 1.0 / 6
+          ))]
+        ),
+        language: .init(identifier: "en")
+      )
+    )
+    neighbor.showTranslation("준비됨", language: .init(identifier: "ko"))
+    let source = try #require(context.makeImage()?.pngData)
+    let output = try #require(CaptureResultImage.png(imageData: source, imageSize: size, lines: [literal, neighbor]))
+    let bitmap = try #require(NSBitmapImageRep(data: output))
+    let color = try #require(bitmap.colorAt(x: 40, y: 50)?.usingColorSpace(.deviceRGB))
+    #expect(color.blueComponent > 0.9)
+    #expect(color.redComponent < 0.1)
+  }
+
   @Test
   func exportsAllCornersAtSourceResolutionWithoutAWindow() throws {
     let size = CGSize(width: 1800, height: 1200)

@@ -10,6 +10,49 @@ struct OverlayAttributedStyleTests {
 
   // MARK: Internal
 
+  @Test(arguments: [
+    "Open report.pdf and budget.xlsx to review.",
+    "資料.pdfを開いてください。",
+    "افتح report.pdf الآن.",
+    "Review report.v2.pdf.",
+  ])
+  func inlineFileOwnershipDoesNotDependOnFontStyle(_ text: String) throws {
+    let source = OverlayLine.Source(
+      recognized: .init(boundingBoxNormalized: .zero, text: text),
+      language: .init(identifier: "en")
+    )
+    let attributed = try #require(source.attributedTextForTranslation())
+    let literals = attributed.runs.filter { $0.inlinePresentationIntent?.contains(.code) == true }
+      .map { String(attributed.characters[$0.range]) }
+    #expect(literals == OCRTextSemantics.fileNameRanges(in: text).map { String(text[$0]) })
+    let plan = try #require(TranslationLiteralPlan(attributed))
+    #expect(String(try #require(plan.restoring(plan.requestText)).characters) == text)
+    #expect(!source.isProtectedLiteral)
+  }
+
+  @Test
+  func nativeStyleOwnershipMapsInflectionWithoutChangingPrimaryText() {
+    let link = URL(string: "swiftycrow-style://run/0")!
+    var source = AttributedString("Signed")
+    source.link = link
+    source.inlinePresentationIntent = .emphasized
+    source += AttributedString(" numbers may be negative.")
+    let target = "부호가 있는 숫자는 음수일 수 있습니다."
+    var native = AttributedString(target)
+    native[native.range(of: "부호가 있는")!].link = link
+    let result = TranslationStyleMapper.alignNativeStyles(source: source, target: target, native: native, preserving: nil)
+    #expect(result.unmatched.isEmpty)
+    #expect(String(result.target.characters) == target)
+    #expect(result.target.runs.filter { $0.link == link }.map { String(result.target.characters[$0.range]) } == ["부호가 있는"])
+    let different = AttributedString("서명된 숫자는 음수일 수 있습니다.")
+    #expect(!TranslationStyleMapper.alignNativeStyles(
+      source: source,
+      target: target,
+      native: different,
+      preserving: nil
+    ).unmatched.isEmpty)
+  }
+
   @Test(arguments: [": artificial", "artificial:", "(artificial)", "[artificial]"])
   func punctuationCannotOverrideNeighboringLexicalWeight(_ text: String) throws {
     let base = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)

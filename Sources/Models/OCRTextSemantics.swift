@@ -2,10 +2,50 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import Foundation
+import NaturalLanguage
+import Synchronization
+import UniformTypeIdentifiers
 
 /// Syntax is independent of sampled font appearance. OCR can misclassify a
 /// monospace font, but that must never make executable source into prose.
 enum OCRTextSemantics {
+
+  // MARK: Internal
+
+  /// The platform's registered file types establish extensions, including
+  /// formats installed by other apps. Unknown dotted prose is not a file name.
+  static func isFileName(_ text: String) -> Bool {
+    guard
+      !text.isEmpty, text.count <= 120, !text.contains(where: \.isNewline),
+      let dot = text.lastIndex(of: "."), dot != text.startIndex,
+      !text[..<dot].contains(where: { "!?。！？:;|".contains($0) }),
+      text[..<dot].contains(where: { $0.isLetter || $0.isNumber }),
+      text[..<dot].split(separator: ".", omittingEmptySubsequences: false).allSatisfy({ component in
+        !component.isEmpty && component.first?.isWhitespace == false && component.last?.isWhitespace == false
+      })
+    else { return false }
+    return isFileExtension(String(text[text.index(after: dot)...]))
+  }
+
+  /// Inline prose owns its surrounding words; only the exact filename token
+  /// is literal. Standalone labels may also contain spaces in their name.
+  static func fileNameRanges(in text: String) -> [Range<String.Index>] {
+    fileTokens.matches(in: text, range: NSRange(text.startIndex..<text.endIndex, in: text)).compactMap { match in
+      guard let range = Range(match.range, in: text), isFileName(String(text[range])) else { return nil }
+      return range
+    }
+  }
+
+  /// A filename suffix does not turn a visible instruction into reference data.
+  /// Use the platform's lexical evidence rather than a list of action words.
+  static func fileNameStartsWithVerb(_ text: String) -> Bool {
+    guard let dot = text.lastIndex(of: "."), text[..<dot].contains(where: \.isWhitespace) else { return false }
+    let stem = String(text[..<dot])
+    let tagger = NLTagger(tagSchemes: [.lexicalClass])
+    tagger.string = stem
+    return tagger.tag(at: stem.startIndex, unit: .word, scheme: .lexicalClass).0 == .verb
+  }
+
   /// A compact ASCII identifier mixing letters and digits on a code-like
   /// surface (for example a type or symbol), not a unit value beginning in digits.
   static func isAlphanumericIdentifier(_ text: String) -> Bool {
@@ -48,6 +88,7 @@ enum OCRTextSemantics {
 
   static func isIdentifier(_ text: String) -> Bool {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !text.contains(where: \.isWhitespace), isFileName(text) { return true }
     if isPhoneticReference(text) { return true }
     if
       !text.isEmpty, text.count <= 10,
@@ -122,5 +163,21 @@ enum OCRTextSemantics {
       #"^(?:git|swift|cargo|npm|pnpm|yarn|pip|python\d*|curl|wget|brew|tuist|xcodebuild)\s+\S+"#,
     ]
     return patterns.contains { text.range(of: $0, options: .regularExpression) != nil }
+  }
+
+  // MARK: Private
+
+  private static let fileTokens = try! NSRegularExpression(
+    pattern: #"(?<![\p{L}\p{N}_.])[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*\.[A-Za-z0-9]+(?![A-Za-z0-9_])"#
+  )
+  private static let fileExtensions = Mutex<[String: Bool]>([:])
+
+  private static func isFileExtension(_ text: String) -> Bool {
+    guard (1...16).contains(text.count), text.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return false }
+    let key = text.lowercased()
+    if let known = fileExtensions.withLock({ $0[key] }) { return known }
+    let known = UTType(filenameExtension: key).map { !$0.isDynamic } ?? false
+    fileExtensions.withLock { if $0.count < 128 { $0[key] = known } }
+    return known
   }
 }

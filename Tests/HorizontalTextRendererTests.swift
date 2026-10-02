@@ -422,7 +422,6 @@ struct HorizontalTextRendererTests {
     )
     line.showTranslation("열기", language: Locale.Language(identifier: "ko"))
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 500, height: 200)).first)
-    #expect(!placement.expandsVertically)
     let image = try #require(HorizontalTextRenderer.image(for: placement, scale: 1))
     let context = try #require(CGContext(
       data: nil,

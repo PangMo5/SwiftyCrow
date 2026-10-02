@@ -1,0 +1,93 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Independent reading workspace</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #20242c; font: 18px/1.45 Arial, sans-serif; }
+  body.dark { background: #161b25; color: #eef2f8; }
+  header { display: flex; align-items: center; gap: 24px; padding: 18px 28px; background: #eef0f4; }
+  .dark header { background: #293244; }
+  header svg { width: 20px; height: 20px; flex-shrink: 0; }
+  header strong { flex: 1; font-size: 16px; }
+  button { font: inherit; font-size: 16px; color: inherit; background: transparent; border: 1px solid #99a2b2; border-radius: 7px; padding: 5px 14px; }
+  main { max-width: 1100px; padding: 20px 30px 30px; margin: auto; }
+  h1 { font-size: 30px; text-align: center; margin: 10px 0 20px; }
+  h2 { font-size: 23px; margin: 0 0 12px; }
+  p { margin: 0 0 14px; }
+  nav { display: flex; gap: 32px; margin-bottom: 22px; font-size: 17px; }
+  nav a { color: #145eb4; }
+  .dark nav a { color: #97c9ff; }
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .card { border: 1px solid #99a2b2; border-radius: 12px; padding: 20px; margin-bottom: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 20px; font-size: 17px; }
+  td, th { text-align: left; padding: 8px 5px; border-bottom: 1px solid #99a2b2; }
+  code { font: 16px/1.5 Menlo, monospace; background: #e6e9ef; color: #323946; padding: 1px 4px; border-radius: 3px; }
+  .dark code { background: #364158; color: #fff; }
+  .emphasis { font-style: italic; font-size: 20px; }
+  .arabic { font: 22px/1.7 Arial, sans-serif; direction: rtl; text-align: right; }
+  .vertical { writing-mode: vertical-rl; height: 235px; font: 21px/1.8 sans-serif; margin-left: auto; }
+  .art { display: flex; justify-content: center; margin: 14px 0; }
+  .art svg { width: 120px; height: 65px; }
+  @media (max-width: 720px) {
+    main { padding: 18px 24px; }
+    .columns { grid-template-columns: 1fr; gap: 0; }
+    .card { padding: 16px; margin-bottom: 16px; }
+    .vertical { height: 160px; }
+    header { gap: 12px; padding: 14px 20px; }
+    nav { gap: 23px; }
+  }
+</style>
+<body class="{{THEME}}">
+<header>
+  <svg data-protected viewBox="0 0 20 20"><path d="M3 3h14v14H3zM7 3v14" fill="none" stroke="#8691a6" stroke-width="2"/></svg>
+  <strong>Financial report.v2.pdf</strong>
+  <button>Print</button><button>Share</button>
+</header>
+<main>
+  <h1>Workspace overview</h1>
+  <nav><a>Overview</a><a>Documents</a><a>Export</a><a>Settings</a></nav>
+  <div class="columns">
+    <section class="card">
+      <h2>Project documents</h2>
+      <p>The report shows each project and its remaining budget. Select a document to review the details.</p>
+      <table>
+        <tr><th>File</th><th>Status</th></tr>
+        <tr><td>proposal.pdf</td><td>Ready</td></tr>
+        <tr><td>budget.xlsx</td><td>Ready</td></tr>
+        <tr><td>photo.JPEG</td><td>Ready</td></tr>
+      </table>
+      <p>Run <code>scripts/export.sh</code> to create a copy. Keep <code>report.v2.pdf</code> in the project folder.</p>
+      <p class="emphasis">Important instructions: keep the original document available.</p>
+    </section>
+    <section class="card">
+      <h2>Integer reference</h2>
+      <p>Values may be positive or negative. The number of bits determines the range.</p>
+      <table>
+        <tr><th>Length</th><th>Signed</th><th>Unsigned</th></tr>
+        <tr><td>8-bit</td><td><code>i8</code></td><td><code>u8</code></td></tr>
+        <tr><td>16-bit</td><td><code>i16</code></td><td><code>u16</code></td></tr>
+        <tr><td>32-bit</td><td><code>i32</code></td><td><code>u32</code></td></tr>
+        <tr><td>64-bit</td><td><code>i64</code></td><td><code>u64</code></td></tr>
+        <tr><td>Architecture</td><td><code>isize</code></td><td><code>usize</code></td></tr>
+      </table>
+      <div class="art"><svg data-protected viewBox="0 0 120 65"><circle cx="28" cy="30" r="20" fill="#ee9358"/><path d="M55 50L80 10l25 40z" fill="#568bce"/><path d="M4 60h112" stroke="#8794a8" stroke-width="2"/></svg></div>
+    </section>
+  </div>
+  <div class="columns">
+    <section class="card">
+      <h2>Reading direction</h2>
+      <p class="arabic" lang="ar">اختر مستندًا لمراجعة التفاصيل. يبقى الملف الأصلي متاحًا في مجلد المشروع.</p>
+      <p class="arabic" lang="ar">يمكن أن تكون الأرقام موجبة أو سالبة.</p>
+    </section>
+    <section class="card">
+      <h2>Vertical reading</h2>
+      <p class="vertical" lang="ja">新しい資料を読んで、<br>大切な情報を確認する。<br>元の文書は保存されている。</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

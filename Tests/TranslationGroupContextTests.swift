@@ -7,6 +7,83 @@ import Testing
 
 @Suite("Contextual label ownership")
 struct TranslationGroupContextTests {
+
+  // MARK: Internal
+
+  @Test(arguments: [false, true], [false, true])
+  func alignedNavigationUsesANearbyHeadingAndKeepsIndependentFrames(_ mirrored: Bool, _ nativeTable: Bool) throws {
+    var sources = [label("Project Documents", x: 0.27, y: 0.18, width: 0.3, size: 0.035, weight: .bold)]
+    sources += ["Overview", "Documents", "Export", "Settings"].enumerated().map {
+      label($0.element, x: 0.02, y: 0.18 + Double($0.offset) * 0.055, width: 0.09, size: 0.022)
+    }
+    if nativeTable {
+      for index in sources.indices.dropFirst() {
+        sources[index].tableCell = .init(table: 0, row: index - 1, column: 0, box: sources[index].box)
+      }
+    }
+    if mirrored { for index in sources.indices { sources[index].box.origin.x = 1 - sources[index].box.maxX } }
+    let groups = TranslationGroupContext.associations(in: sources)
+    #expect(groups.count == 4)
+    #expect(groups[0] == nil)
+    let group = try #require(groups[1]?.context)
+    #expect(group.topic == "Project Documents")
+    #expect(group.labels == ["Overview", "Documents", "Export", "Settings"])
+    #expect(sources.indices.dropFirst().map { groups[$0]?.index } == [0, 1, 2, 3])
+    var foreign = sources
+    foreign[0].recognitionContextID = 1
+    let local = try #require(TranslationGroupContext.associations(in: foreign)[1]?.context)
+    #expect(local.topic == "Overview, Documents, Export, Settings")
+  }
+
+  @Test
+  func separateSurfacesAndScriptContextsDoNotBecomeOneLabelGroup() {
+    var sources = ["First", "Second", "Third"].enumerated().map {
+      label($0.element, x: 0.1, y: 0.2 + Double($0.offset) * 0.055, width: 0.1, size: 0.022)
+    }
+    for index in sources.indices {
+      sources[index].surface = .init(box: sources[index].box.insetBy(dx: -0.01, dy: -0.01), confidence: 1)
+    }
+    #expect(TranslationGroupContext.alignedLabels(in: sources).isEmpty)
+    sources = sources.map { var source = $0
+      source.surface = nil
+      return source
+    }
+    sources[1].language = .init(identifier: "ja")
+    #expect(TranslationGroupContext.alignedLabels(in: sources).isEmpty)
+  }
+
+  @Test
+  func columnValuesUseTheirHeaderAndRetainRepeatedOwnership() throws {
+    var sources = [label("Status", x: 0.7, y: 0.4, width: 0.08, size: 0.022, weight: .bold)]
+    sources += (1...3).map { label("Ready", x: 0.7, y: 0.4 + Double($0) * 0.055, width: 0.08, size: 0.022) }
+    for index in sources.indices {
+      sources[index].tableCell = .init(table: 0, row: index, column: 1, box: sources[index].box)
+    }
+    let groups = TranslationGroupContext.tableColumnValues(in: sources)
+    #expect(groups.count == 3)
+    #expect(groups[0] == nil)
+    let context = try #require(groups[1]?.context)
+    #expect(context.topic == "Status")
+    #expect(context.labels == ["Ready", "Ready", "Ready"])
+    #expect(try #require(context.attributedRequest).runs.compactMap(\.link).count == 3)
+    sources[1].text = "budget.xlsx"
+    #expect(TranslationGroupContext.tableColumnValues(in: sources).count == 2)
+    sources[2].recognitionContextID = 1
+    #expect(TranslationGroupContext.tableColumnValues(in: sources).isEmpty)
+  }
+
+  @Test
+  func measuredColumnHeadingSuppliesContextWithoutANativeTable() {
+    var sources = [label("Status", x: 0.7, y: 0.4, width: 0.08, size: 0.022, weight: .bold)]
+    sources += (1...3).map { label("Ready", x: 0.7, y: 0.4 + Double($0) * 0.055, width: 0.08, size: 0.022) }
+    let groups = TranslationGroupContext.associations(in: sources)
+    #expect(groups.count == 3)
+    #expect(groups[1]?.context.topic == "Status")
+    #expect(groups[3]?.index == 2)
+    sources[0].appearance.fontWeight = .regular
+    #expect(TranslationGroupContext.associations(in: sources).isEmpty)
+  }
+
   @Test
   func tableContextsUseOnlyTheirOwnCaptionAndCompleteGrid() {
     func source(_ text: String, x: CGFloat, y: CGFloat, row: Int?, column: Int, context: Int) -> OverlayLine.Source {
@@ -124,4 +201,31 @@ struct TranslationGroupContextTests {
     #expect(TranslationGroupContext(topic: "Topic", labels: ["one; two", "three"]).attributedRequest == nil)
     #expect(TranslationGroupContext(topic: "Topic\nOther", labels: ["one", "two"]).attributedRequest == nil)
   }
+
+  // MARK: Private
+
+  private func label(
+    _ text: String,
+    x: CGFloat,
+    y: CGFloat,
+    width: CGFloat,
+    size: CGFloat,
+    weight: OverlayFontWeight = .regular
+  ) -> OverlayLine.Source {
+    var line = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: x, y: y, width: width, height: 0.02),
+      text: text,
+      imageAspectRatio: 1.2,
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontSizeScale: size,
+        fontWeight: weight
+      )
+    )
+    line.recognitionContextID = 0
+    return .init(recognized: line, language: .init(identifier: "en"))
+  }
+
 }

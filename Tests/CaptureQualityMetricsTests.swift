@@ -8,6 +8,69 @@ import Testing
 
 struct CaptureQualityMetricsTests {
   @Test
+  func paragraphOwnersPreferCompleteTitlesOverIncidentalMentions() {
+    let source = ["From the free encyclopedia, Wikia.", "Wikia", "The free encyclopedia"]
+    #expect(CaptureQualityMetrics.paragraphIssues(texts: source, expected: source).isEmpty)
+    #expect(!CaptureQualityMetrics.paragraphIssues(
+      texts: ["Wikia. The free encyclopedia"],
+      expected: ["Wikia", "The free encyclopedia"]
+    ).isEmpty)
+  }
+
+  @Test
+  func exactFontOwnersExcludeOtherMentionsOfTheHeading() {
+    func placement(_ text: String, size: CGFloat) -> OverlayPlacement {
+      let line = OverlayLine(id: UUID(), source: .init(
+        recognized: .init(boundingBoxNormalized: .zero, text: text),
+        language: .init(identifier: "en")
+      ))
+      let frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+      return .init(
+        line: line,
+        flow: .horizontal(.leftToRight),
+        sourceFrame: frame,
+        frame: frame,
+        placementBounds: frame,
+        fontSize: size,
+        lineHeightMultiple: 1,
+        alignment: .leading
+      )
+    }
+    let placements = [placement("Search Heading", size: 12), placement("Heading", size: 28)]
+    #expect(CaptureQualityMetrics.fontScaleIssues(placements, canvas: CGSize(width: 100, height: 100), expected: [
+      .init(source: "Heading", minimum: 0.25, maximum: 0.3, sourceIsExact: true)
+    ]).isEmpty)
+  }
+
+  @Test
+  func exactStyleOwnersDoNotBorrowAnEmphasizedParagraph() {
+    func line(_ source: String, italic: Bool) -> OverlayLine {
+      var recognized = OCRResult.Line(boundingBoxNormalized: .zero, text: source)
+      recognized.appearance.isItalic = italic
+      var value = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
+      value.showTranslation("부호", language: .init(identifier: "ko"))
+      return value
+    }
+    let lines = [line("Signed numbers are integers.", italic: true), line("Signed", italic: false)]
+    #expect(CaptureQualityMetrics.styleIssues(lines: lines, expected: [
+      .init(source: "Signed", target: "부호", kind: "upright", sourceIsExact: true),
+      .init(source: "Signed numbers", target: "부호", kind: "italic"),
+    ]).isEmpty)
+    #expect(CaptureQualityMetrics.styleIssues(lines: lines, expected: [
+      .init(source: "Signed", target: "부호", kind: "italic", sourceIsExact: true)
+    ]).count == 1)
+  }
+
+  @Test
+  func repeatedSourceGlyphsRequireExactCoverageWithoutDuplicatedOwners() {
+    #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン", "トン"], expected: ["トン": 2], forbidden: []).isEmpty)
+    #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン"], expected: ["トン": 2], forbidden: []).count == 1)
+    #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン", "トン", "トン"], expected: ["トン": 2], forbidden: []).count == 1)
+    #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["a", "bc"], expected: ["abc": 1], forbidden: []).count == 1)
+    #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["mistaken glyph"], expected: [:], forbidden: ["mistaken"]).count == 1)
+  }
+
+  @Test
   func backgroundGateDetectsBrightRemnantsAndRejectsInvalidRegions() throws {
     let context = try #require(CGContext(
       data: nil,

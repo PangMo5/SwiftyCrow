@@ -12,6 +12,33 @@ struct OCRRecoveryTests {
 
   // MARK: Internal
 
+  @Test(arguments: ["proposal.pdf", "photo.JPEG", "report.v2.pdf"])
+  func registeredFileSyntaxDoesNotTriggerASpellingRetry(_ text: String) {
+    let line = OCRResult.Line(
+      boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.3, height: 0.02),
+      text: text,
+      recognitionConfidence: 0.4
+    )
+    #expect(!OCRLineRefiner.needsRefinement(line))
+  }
+
+  @Test(arguments: ["proposal.paf", "budget.xisx"])
+  func weakReferenceSpellingIsRereadWithoutDictionaryCorrection(_ text: String) async throws {
+    let line = OCRResult.Line(
+      boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.5, height: 0.04),
+      text: text,
+      recognitionConfidence: 0.3
+    )
+    #expect(OCRLineRefiner.needsRefinement(line))
+    let result = try await OCRLineRefiner
+      .refine([line], in: try #require(rowImage().makeImage()), language: .auto) { _, request in
+        #expect(!request.usesLanguageCorrection)
+        return ["reference.pdf"]
+      }
+    #expect(result[0].text == "reference.pdf")
+    #expect(result[0].boundingBoxNormalized == line.boundingBoxNormalized)
+  }
+
   @Test
   func paddedOCRBoxesDoNotHideTheEstablishedRowAdvance() throws {
     let lines = repeatedRows(trailing: false).map { source in

@@ -51,7 +51,7 @@ struct CaptureFeature {
       imageSize: CGSize,
       groupContexts: [Int: TranslationGroupContext.Member]? = nil
     ) -> Bool {
-      let currentGroups = groupContexts ?? TranslationGroupContext.tableHeaders(in: sources)
+      let currentGroups = groupContexts ?? TranslationGroupContext.associations(in: sources)
       guard self.imageSize == imageSize, self.sources.count == sources.count else { return false }
       return sources.indices.allSatisfy { index in
         guard let id = previous[index]?.id, let requested = self.sources[id] else { return false }
@@ -494,7 +494,7 @@ struct CaptureFeature {
       guard let previous = previousMatches[index] else { return rawSources[index] }
       return rawSources[index].stabilized(relativeTo: previous.source, imageSize: capture.imageSize)
     }
-    let contextGroups = TranslationGroupContext.tableHeaders(in: stableSources)
+    let contextGroups = TranslationGroupContext.associations(in: stableSources)
     let preservesSource = stableSources.indices.map {
       OverlayTranslationPolicy.preservesSource(at: $0, in: stableSources)
     }

@@ -84,6 +84,7 @@ enum HorizontalTextRenderer {
       language: language,
       fontWeight: appearance.fontWeight,
       fontDesign: appearance.fontDesign,
+      isItalic: appearance.isItalic,
       lineHeightMultiple: lineHeightMultiple
     )
     attributed.addAttribute(.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: attributed.length))
@@ -271,7 +272,7 @@ enum HorizontalTextRenderer {
     let size = placement.frame.size
     let yOffset: CGFloat =
       if plan.usesContainerCoordinates { 0 }
-      else if case .horizontal(let rows) = placement.line.source.layout, rows > 1 || placement.expandsVertically {
+      else if case .horizontal(let rows) = placement.line.source.layout, rows > 1 {
         size.height - plan.inkBounds.maxY
       } else {
         (size.height - plan.inkBounds.height) / 2 - plan.inkBounds.minY
@@ -519,9 +520,12 @@ enum HorizontalTextRenderer {
     fontSize: CGFloat,
     language: Locale.Language
   ) -> [NSAttributedString.Key: Any] {
-    let font: NSFont = appearance.fontDesign == .monospaced
-      ? .monospacedSystemFont(ofSize: fontSize, weight: appearance.fontWeight.nsFontWeight)
-      : .systemFont(ofSize: fontSize, weight: appearance.fontWeight.nsFontWeight)
+    let font = OverlayTypography.font(
+      size: fontSize,
+      weight: appearance.fontWeight,
+      design: appearance.fontDesign,
+      isItalic: appearance.isItalic
+    )
     return [
       .font: font,
       NSAttributedString.Key(kCTForegroundColorAttributeName as String): cgColor(appearance.foreground),
