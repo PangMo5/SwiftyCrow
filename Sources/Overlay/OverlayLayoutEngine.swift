@@ -30,9 +30,6 @@ struct OverlayPlacement: Equatable, Identifiable, Sendable {
   var isTextLayoutComplete = true
   /// Additional target orientation; source geometry/erasure remain unchanged.
   var targetRotationRadians: CGFloat = 0
-  /// Whitespace allocation extended the original container downward.
-  /// Ordinary button padding must continue to center its text vertically.
-  var expandsVertically = false
   /// Local top-left coordinates, already clipped to the chosen frame.
   var textFlowRegions = [CGRect]()
 
@@ -56,11 +53,8 @@ struct OverlayPlacement: Equatable, Identifiable, Sendable {
 
 // MARK: - OverlayLayoutEngine
 
-/// Keeps every translation inside its original visual container. Horizontal
-/// source text uses its OCR frame; a horizontal translation replacing vertical
-/// source text may use the detected speech bubble or panel. If the translated
-/// string needs more room, Core Text reduces its font instead of moving or
-/// expanding into neighboring content.
+/// Fits every target inside its own original text region. Surrounding
+/// whitespace, control surfaces and table cells never expand that boundary.
 enum OverlayLayoutEngine {
 
   // MARK: Internal
@@ -72,49 +66,7 @@ enum OverlayLayoutEngine {
   ) -> [OverlayPlacement] {
     guard canvasSize.width > 0, canvasSize.height > 0 else { return [] }
     return lines.compactMap { line in
-      guard line.shouldReplaceSourcePixels else { return nil }
-      guard let cell = exclusiveTableCell(for: line, among: lines) else {
-        return proposal(for: line, among: lines, in: canvasSize, prefersHorizontalTextLayout: prefersHorizontalTextLayout)
-      }
-      let singleLine = proposal(
-        for: line,
-        among: lines,
-        in: canvasSize,
-        prefersHorizontalTextLayout: prefersHorizontalTextLayout,
-        tableCell: cell,
-        maximumLineCount: 1
-      )
-      if let singleLine, singleLine.isTextLayoutComplete, case .horizontal = singleLine.flow {
-        let plan = HorizontalTextRenderer.plan(for: singleLine)
-        let preferred = preferredFontSize(for: line, sourceFrame: singleLine.sourceFrame, canvasSize: canvasSize)
-        // Preferred-size, single-line text already reaches both fitting bounds.
-        // Avoid fitting the baseline again for the common compact-cell case.
-        if singleLine.fontSize >= preferred - 0.001, plan.lines.count == 1, plan.fits(singleLine.frame.size) { return singleLine }
-      }
-      let baseline = proposal(for: line, among: lines, in: canvasSize, prefersHorizontalTextLayout: prefersHorizontalTextLayout)
-      let lineLimit: Int? =
-        if let baseline, case .horizontal = baseline.flow {
-          HorizontalTextRenderer.plan(for: baseline).lines.count
-        } else { nil }
-      let cellCandidate = lineLimit == 1
-        ? singleLine
-        : proposal(
-          for: line,
-          among: lines,
-          in: canvasSize,
-          prefersHorizontalTextLayout: prefersHorizontalTextLayout,
-          tableCell: cell,
-          maximumLineCount: lineLimit
-        )
-      guard let candidate = cellCandidate, candidate.isTextLayoutComplete else { return baseline }
-      // Cell structure is an additional geometry hypothesis. It must not
-      // replace pixel-verified space with a smaller font or extra line breaks.
-      if let baseline, candidate.fontSize < baseline.fontSize - 0.001 { return baseline }
-      if case .horizontal = candidate.flow {
-        let plan = HorizontalTextRenderer.plan(for: candidate)
-        guard plan.fits(candidate.frame.size), lineLimit.map({ plan.lines.count <= $0 }) ?? true else { return baseline }
-      }
-      return candidate
+      proposal(for: line, among: lines, in: canvasSize, prefersHorizontalTextLayout: prefersHorizontalTextLayout)
     }.filter(\.isTextLayoutComplete)
   }
 
@@ -126,7 +78,8 @@ enum OverlayLayoutEngine {
     in size: CGSize,
     displayScale: CGFloat
   ) -> [CGRect] {
-    let halo = 1 / max(1, displayScale)
+    let scale = max(1, displayScale)
+    let halo = 1 / scale
     let replaced = Set(placements.map(\.id))
     return lines.filter { !replaced.contains($0.id) }.flatMap { line in
       line.source.replacementPatches.map { patch in
@@ -136,8 +89,19 @@ enum OverlayLayoutEngine {
           width: patch.box.width * size.width,
           height: patch.box.height * size.height
         ).insetBy(dx: -halo, dy: -halo)
+          .applying(CGAffineTransform(scaleX: scale, y: scale)).integral
+          .applying(CGAffineTransform(scaleX: 1 / scale, y: 1 / scale))
       }
     }
+  }
+
+  /// Vector subtraction unions overlapping owners without a Canvas blend buffer.
+  static func sourceProtectionPath(frames: [CGRect], in size: CGSize) -> CGPath {
+    let canvas = CGPath(rect: CGRect(origin: .zero, size: size), transform: nil)
+    guard !frames.isEmpty else { return canvas }
+    let protected = CGMutablePath()
+    protected.addRects(frames)
+    return canvas.subtracting(protected, using: .winding)
   }
 
   static func replacementFrame(
@@ -249,149 +213,125 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     among lines: [OverlayLine],
     in canvasSize: CGSize,
-    prefersHorizontalTextLayout: Bool,
-    tableCell: OCRTableCell? = nil,
-    maximumLineCount: Int? = nil
+    prefersHorizontalTextLayout: Bool
   ) -> OverlayPlacement? {
-    let canvas = CGRect(origin: .zero, size: canvasSize)
-    // Pending, same-language, unavailable, and deliberately preserved metadata
-    // stay as untouched source pixels.
     guard line.shouldReplaceSourcePixels else { return nil }
+    let canvas = CGRect(origin: .zero, size: canvasSize)
     let context = contextBounds(of: line.source)
-    let contentFrame = CGRect(
-      x: context.minX * canvas.width,
-      y: context.minY * canvas.height,
-      width: context.width * canvas.width,
-      height: context.height * canvas.height
-    ).intersection(canvas)
-    let safeBounds = contentFrame.width > 8 && contentFrame.height > 8
-      ? contentFrame.insetBy(dx: 4, dy: 4)
-      : contentFrame
-    let sourceFrame = sourceFrame(
-      for: line.source.orientedBox ?? line.source.box,
-      canvas: canvas,
-      safeBounds: safeBounds
-    )
+    let contextFrame = sourceFrame(for: context, canvas: canvas, safeBounds: canvas)
+    let boundary = sourceFrame(for: line.source.box, canvas: canvas, safeBounds: contextFrame)
+    guard !boundary.isNull, !boundary.isEmpty else { return nil }
+    let source = sourceFrame(for: line.source.orientedBox ?? line.source.box, canvas: canvas, safeBounds: boundary)
+    guard !source.isNull, !source.isEmpty else { return nil }
     let flow = line.textFlow(prefersHorizontalTextLayout: prefersHorizontalTextLayout)
     let alignment = resolvedAlignment(
       for: line,
       flow: flow,
-      sourceFrame: sourceFrame,
-      tableCell: tableCell,
+      sourceFrame: source,
+      tableCell: exclusiveTableCell(for: line, among: lines),
       canvas: canvas,
-      safeBounds: safeBounds,
+      safeBounds: contextFrame,
       among: lines
     )
-    let containerFrame = originalContainerFrame(
-      for: line,
-      flow: flow,
-      alignment: alignment,
-      sourceFrame: sourceFrame,
-      tableCell: tableCell,
-      canvas: canvas,
-      safeBounds: safeBounds,
-      among: lines
-    )
-    let frame = inkAlignedFrame(
-      for: line,
-      alignment: alignment,
-      sourceFrame: sourceFrame,
-      containerFrame: containerFrame,
-      canvas: canvas
-    ) ?? containerFrame
-    let preferred = preferredFontSize(for: line, sourceFrame: sourceFrame, canvasSize: canvasSize)
+    var frame = inkAlignedFrame(for: line, alignment: alignment, sourceFrame: source, canvas: canvas) ?? source
+    if line.source.isReconstructedTextRegion, let surface = exclusiveSurface(for: line, among: lines) {
+      let interior = sourceFrame(for: surface.box, canvas: canvas, safeBounds: source)
+      if !interior.isNull, !interior.isEmpty { frame = interior }
+    }
+    let preferred = preferredFontSize(for: line, sourceFrame: source, canvasSize: canvasSize)
     let original = makePlacement(
       line: line,
       flow: flow,
-      sourceFrame: sourceFrame,
+      sourceFrame: source,
       frame: frame,
-      alignment: alignment,
-      preferredFontSize: preferred,
-      canvasWidth: canvasSize.width,
-      canvasHeight: canvasSize.height,
-      maximumLineCount: maximumLineCount
-    )
-    if
-      !prefersHorizontalTextLayout,
-      let sideways = sidewaysLabel(original, preferred: preferred, canvasSize: canvasSize, among: lines)
-    {
-      return sideways
-    }
-    if tableCell != nil {
-      return avoidingRetainedContent(original, canvasSize: canvasSize)
-    }
-    guard
-      case .horizontal = flow, case .horizontal(let sourceRows) = line.source.layout,
-      let available = line.source.layoutBounds
-    else { return avoidingRetainedContent(original, canvasSize: canvasSize) }
-    // This is verified space, not an OCR box that may be repositioned to fit
-    // the canvas. Clipping must not move its far edge into unverified pixels.
-    let limit = CGRect(
-      x: available.minX * canvas.width,
-      y: available.minY * canvas.height,
-      width: available.width * canvas.width,
-      height: available.height * canvas.height
-    )
-    .intersection(safeBounds)
-    guard !limit.isNull, !limit.isEmpty else { return avoidingRetainedContent(original, canvasSize: canvasSize) }
-    let expandedHeight = max(frame.height, limit.maxY - frame.minY)
-    let expandedFrame: CGRect
-    switch alignment {
-    case .leading:
-      expandedFrame = CGRect(
-        x: frame.minX,
-        y: frame.minY,
-        width: max(frame.width, limit.maxX - frame.minX),
-        height: expandedHeight
-      )
-
-    case .trailing:
-      expandedFrame = CGRect(
-        x: min(frame.minX, limit.minX),
-        y: frame.minY,
-        width: frame.maxX - min(frame.minX, limit.minX),
-        height: expandedHeight
-      )
-
-    case .center:
-      let half = max(frame.width / 2, min(frame.midX - limit.minX, limit.maxX - frame.midX))
-      expandedFrame = CGRect(x: frame.midX - half, y: frame.minY, width: half * 2, height: expandedHeight)
-    }
-    // A single source row can use verified space before reducing its type size.
-    // Keep established multiline composition unless it needs a material size
-    // recovery; names and subtitles must not flatten for a small font gain.
-    let needsLargerFont = original.fontSize < (sourceRows == 1 ? preferred - 0.001 : preferred * 0.85)
-    let wrappedLineCount = sourceRows == 1 && !needsLargerFont
-      && expandedFrame.width > frame.width + 0.001
-      ? HorizontalTextRenderer.plan(for: original).lines.count
-      : 0
-    guard expandedFrame != frame, needsLargerFont || wrappedLineCount > 1 else {
-      return avoidingRetainedContent(original, canvasSize: canvasSize)
-    }
-    var expanded = makePlacement(
-      line: line,
-      flow: flow,
-      sourceFrame: sourceFrame,
-      frame: expandedFrame,
       alignment: alignment,
       preferredFontSize: preferred,
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height
     )
-    expanded.expandsVertically = expandedFrame.height > frame.height * 1.1
-    let baseline = avoidingRetainedContent(original, canvasSize: canvasSize)
-    guard let candidate = avoidingRetainedContent(expanded, canvasSize: canvasSize), candidate.isTextLayoutComplete else {
-      return baseline
+    if
+      !prefersHorizontalTextLayout,
+      let sideways = sidewaysLabel(original, preferred: preferred, canvasSize: canvasSize, among: lines)
+    {
+      return enforcingSourceBoundary(sideways, canvasSize: canvasSize)
     }
-    let plan = HorizontalTextRenderer.plan(for: candidate)
-    guard plan.fits(candidate.frame.size) else { return baseline }
-    guard let baseline else { return candidate }
-    guard candidate.fontSize >= baseline.fontSize else { return baseline }
-    let baselineCount = sourceRows == 1 ? HorizontalTextRenderer.plan(for: baseline).lines.count : nil
-    // A readable larger font may legitimately need another row (for example a
-    // translated prose notice). Fewer rows win only at comparable font size.
-    let fewerLines = baselineCount.map { plan.lines.count < $0 } ?? false
-    return candidate.fontSize > baseline.fontSize || fewerLines ? candidate : baseline
+    return avoidingRetainedContent(original, canvasSize: canvasSize).map {
+      enforcingSourceBoundary($0, canvasSize: canvasSize)
+    }
+  }
+
+  private static func enforcingSourceBoundary(_ placement: OverlayPlacement, canvasSize: CGSize) -> OverlayPlacement {
+    func contained(_ result: OverlayPlacement) -> OverlayPlacement? {
+      guard result.isTextLayoutComplete else { return nil }
+      let ink: [CGRect] =
+        if case .horizontal = result.flow {
+          HorizontalTextRenderer.paintedBounds(for: result).map { $0.applying(result.transform) }
+        } else { [result.visualFrame] }
+      guard !ink.isEmpty else { return nil }
+      let boundary = result.placementBounds
+      if ink.allSatisfy({ boundary.insetBy(dx: -0.00001, dy: -0.00001).contains($0) }) { return result }
+      let footprint = ink.reduce(CGRect.null) { $0.union($1) }
+      guard
+        result.textFlowRegions.isEmpty, !footprint.isNull,
+        footprint.width <= boundary.width, footprint.height <= boundary.height
+      else { return nil }
+      let dx = min(max(0, boundary.minX - footprint.minX), boundary.maxX - footprint.maxX)
+      let dy = min(max(0, boundary.minY - footprint.minY), boundary.maxY - footprint.maxY)
+      let moved = footprint.offsetBy(dx: dx, dy: dy)
+      let obstacles = result.line.source.layoutExclusions.map {
+        CGRect(
+          x: $0.minX * canvasSize.width,
+          y: $0.minY * canvasSize.height,
+          width: $0.width * canvasSize.width,
+          height: $0.height * canvasSize.height
+        )
+      }
+      guard !obstacles.contains(where: moved.intersects) else { return nil }
+      return OverlayPlacement(
+        line: result.line,
+        flow: result.flow,
+        sourceFrame: result.sourceFrame,
+        frame: result.frame.offsetBy(dx: dx, dy: dy),
+        placementBounds: boundary,
+        fontSize: result.fontSize,
+        lineHeightMultiple: result.lineHeightMultiple,
+        alignment: result.alignment,
+        verticalWrapping: result.verticalWrapping,
+        isTextLayoutComplete: true,
+        targetRotationRadians: result.targetRotationRadians,
+        textFlowRegions: result.textFlowRegions
+      )
+    }
+    if let original = contained(placement) { return original }
+    func refitted(_ font: CGFloat) -> OverlayPlacement {
+      var result = makePlacement(
+        line: placement.line,
+        flow: placement.flow,
+        sourceFrame: placement.sourceFrame,
+        frame: placement.frame,
+        alignment: placement.alignment,
+        preferredFontSize: font,
+        canvasWidth: canvasSize.width,
+        canvasHeight: canvasSize.height,
+        regionsOverride: placement.textFlowRegions
+      )
+      result.targetRotationRadians = placement.targetRotationRadians
+      return result
+    }
+    var lower = minimumFontSize
+    var upper = placement.fontSize
+    guard lower <= upper, var best = contained(refitted(lower)) else {
+      var failed = placement
+      failed.isTextLayoutComplete = false
+      return failed
+    }
+    for _ in 0..<12 {
+      let middle = (lower + upper) / 2
+      if let candidate = contained(refitted(middle)) { best = candidate
+        lower = middle
+      } else { upper = middle }
+    }
+    return best
   }
 
   /// A short, independently enclosed vertical label is not a paragraph. When
@@ -493,12 +433,11 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     alignment: OverlayTextAlignment,
     sourceFrame: CGRect,
-    containerFrame: CGRect,
     canvas: CGRect
   ) -> CGRect? {
     guard
       case .horizontal(rows: 1) = line.source.layout,
-      containerFrame == sourceFrame, !line.source.isReconstructedTextRegion,
+      !line.source.isReconstructedTextRegion,
       abs(line.source.rotationRadians) <= 0.025, !line.source.styleRuns.isEmpty
     else { return nil }
     let text = line.source.text as NSString
@@ -525,67 +464,6 @@ enum OverlayLayoutEngine {
     let minimumX = alignment == .trailing ? sourceFrame.minX : left
     let maximumX = alignment == .leading ? sourceFrame.maxX : right
     return CGRect(x: minimumX, y: sourceFrame.minY, width: maximumX - minimumX, height: sourceFrame.height)
-  }
-
-  private static func originalContainerFrame(
-    for line: OverlayLine,
-    flow: OverlayTextFlow,
-    alignment: OverlayTextAlignment,
-    sourceFrame: CGRect,
-    tableCell: OCRTableCell?,
-    canvas: CGRect,
-    safeBounds: CGRect,
-    among lines: [OverlayLine]
-  ) -> CGRect {
-    if abs(line.source.rotationRadians) > 0.025 { return sourceFrame }
-    if let cell = tableCell {
-      let bounds = self.sourceFrame(for: cell.box, canvas: canvas, safeBounds: safeBounds)
-      // Keep neighboring translated cells visually separate even when both
-      // strings use most of their columns. Padding scales with the local row.
-      let padding = min(bounds.height * 0.15, bounds.width * 0.08)
-      let halfHeight = min(sourceFrame.midY - bounds.minY, bounds.maxY - sourceFrame.midY)
-      let anchored = CGRect(
-        x: bounds.minX + padding,
-        y: sourceFrame.midY - halfHeight,
-        width: bounds.width - padding * 2,
-        height: halfHeight * 2
-      )
-      return compactFrame(inside: anchored, anchoredTo: sourceFrame, alignment: alignment)
-    }
-    guard let surface = exclusiveSurface(for: line, among: lines) else {
-      return sourceFrame
-    }
-    // A table cell/background is not exclusive layout space for every label
-    // inside it. Keep each independent owner at its own source frame; sampled
-    // whitespace allocation below can still safely extend that frame.
-    let surfaceFrame = self.sourceFrame(
-      for: surface.box,
-      canvas: canvas,
-      safeBounds: safeBounds
-    )
-    if line.source.isReconstructedTextRegion || (surface.confidence == 1 && !surface.clippingRows.isEmpty) { return surfaceFrame }
-    guard surfaceFrame.contains(CGPoint(x: sourceFrame.midX, y: sourceFrame.midY)) else {
-      return sourceFrame
-    }
-    switch (line.source.layout, flow) {
-    case (.vertical, .horizontal):
-      return surfaceFrame
-
-    case (.horizontal(let rows), .horizontal) where rows == 1:
-      // Pills and buttons are compact text containers rather than whole cards.
-      // Use their detected interior so longer translations retain source scale,
-      // but preserve the source text's leading/trailing anchor. Starting at the
-      // surface edge shifts short badge labels into their original padding.
-      guard isCompactSurface(surfaceFrame, around: sourceFrame) else { return sourceFrame }
-      return compactFrame(
-        inside: surfaceFrame,
-        anchoredTo: sourceFrame,
-        alignment: alignment
-      )
-
-    default:
-      return sourceFrame
-    }
   }
 
   private static func avoidingRetainedContent(_ placement: OverlayPlacement, canvasSize: CGSize) -> OverlayPlacement? {
@@ -636,7 +514,6 @@ enum OverlayLayoutEngine {
       canvasHeight: canvasSize.height,
       regionsOverride: []
     )
-    result.expandsVertically = placement.expandsVertically
     result.targetRotationRadians = placement.targetRotationRadians
     return result
   }
@@ -681,7 +558,8 @@ enum OverlayLayoutEngine {
           preferred: preferredFontSize,
           minimum: minimumFontSize,
           fontWeight: line.source.appearance.fontWeight,
-          fontDesign: line.source.appearance.fontDesign
+          fontDesign: line.source.appearance.fontDesign,
+          isItalic: line.source.appearance.isItalic
         )
 
       case .vertical:
@@ -706,6 +584,7 @@ enum OverlayLayoutEngine {
           flow: flow,
           fontWeight: line.source.appearance.fontWeight,
           fontDesign: line.source.appearance.fontDesign,
+          isItalic: line.source.appearance.isItalic,
           constrainedTo: frame.size,
           preferred: fittedPreferred,
           minimum: minimumFontSize,
@@ -720,7 +599,11 @@ enum OverlayLayoutEngine {
       flow: flow,
       sourceFrame: sourceFrame,
       frame: frame,
-      placementBounds: frame,
+      placementBounds: Self.sourceFrame(
+        for: line.source.box,
+        canvas: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight),
+        safeBounds: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight)
+      ),
       fontSize: fitted.fontSize,
       lineHeightMultiple: lineHeightMultiple,
       alignment: alignment,
@@ -748,7 +631,8 @@ enum OverlayLayoutEngine {
       fontSize: preferredFontSize,
       language: line.displayedLanguage,
       fontWeight: line.source.appearance.fontWeight,
-      fontDesign: line.source.appearance.fontDesign
+      fontDesign: line.source.appearance.fontDesign,
+      isItalic: line.source.appearance.isItalic
     )
     guard naturalLineHeight > 0 else { return 1 }
     let sourceLineAdvance = line.source.horizontalLineAdvanceScale * canvasHeight
@@ -781,44 +665,6 @@ enum OverlayLayoutEngine {
     let context = contextBounds(of: line.source)
     let canvasRelativeMaximum = max(72, min(canvasSize.width * context.width, canvasSize.height * context.height) * 0.22)
     return max(8, min(canvasRelativeMaximum, raw))
-  }
-
-  private static func compactFrame(
-    inside surfaceFrame: CGRect,
-    anchoredTo sourceFrame: CGRect,
-    alignment: OverlayTextAlignment
-  ) -> CGRect {
-    let surface = surfaceFrame.standardized
-    let source = sourceFrame.standardized
-    let contentInset = min(surface.height * 0.22, surface.width * 0.12)
-    switch alignment {
-    case .leading:
-      let minimumX = min(
-        max(source.minX, surface.minX + contentInset),
-        surface.maxX - 1
-      )
-      return CGRect(
-        x: minimumX,
-        y: surface.minY,
-        width: surface.maxX - minimumX,
-        height: surface.height
-      )
-
-    case .trailing:
-      let maximumX = max(
-        min(source.maxX, surface.maxX - contentInset),
-        surface.minX + 1
-      )
-      return CGRect(
-        x: surface.minX,
-        y: surface.minY,
-        width: maximumX - surface.minX,
-        height: surface.height
-      )
-
-    case .center:
-      return surface
-    }
   }
 
   private static func resolvedAlignment(
@@ -866,7 +712,10 @@ enum OverlayLayoutEngine {
         return neighboring == .center ? fallback : neighboring ?? fallback
       }
 
+      if tableCell == nil, isIsolatedCenteredHeading(line, among: lines) { return .center }
+
       if let cell = tableCell {
+        if let alignment = tableColumnAlignment(for: line, cell: cell, among: lines, canvas: canvas) { return alignment }
         let bounds = self.sourceFrame(for: cell.box, canvas: canvas, safeBounds: safeBounds)
         if geometricAlignment(of: sourceFrame, inside: bounds) == .center { return .center }
       }
@@ -896,6 +745,31 @@ enum OverlayLayoutEngine {
         safeBounds: safeBounds,
         canvasWidth: canvas.width * contextBounds(of: line.source).width
       ) ?? fallback
+    }
+  }
+
+  /// One large isolated heading supplies hierarchy evidence as well as equal
+  /// physical margins. A merely centered OCR rectangle is insufficient.
+  private static func isIsolatedCenteredHeading(_ line: OverlayLine, among lines: [OverlayLine]) -> Bool {
+    let source = line.source
+    let context = contextBounds(of: source)
+    let size = source.appearance.fontSizeScale
+    guard
+      size > 0, source.appearance.confidence >= 0.35,
+      source.appearance.fontWeight.rawValue >= OverlayFontWeight.semibold.rawValue,
+      source.alignment == nil || source.alignment == .center,
+      abs(source.rotationRadians) < 0.025,
+      source.box.width < context.width * 0.7,
+      abs(source.box.midX - context.midX) * source.imageAspectRatio <= size * 0.4
+    else { return false }
+    let neighbors = lines.filter { other in
+      other.id != line.id && other.source.recognitionContextID == source.recognitionContextID
+        && other.source.appearance.fontSizeScale > 0 && !other.source.isProtectedLiteral
+        && abs(other.source.box.midY - source.box.midY) <= source.box.height * 5
+    }
+    return neighbors.count >= 2 && neighbors.allSatisfy { other in
+      abs(other.source.box.midY - source.box.midY) >= source.box.height
+        && other.source.appearance.fontSizeScale * 1.15 <= size
     }
   }
 
@@ -1068,6 +942,35 @@ enum OverlayLayoutEngine {
     )
   }
 
+  /// Native cell estimates do not establish text alignment. Unequal-width
+  /// labels in the same observed column supply the physical reading edge.
+  private static func tableColumnAlignment(
+    for line: OverlayLine,
+    cell: OCRTableCell,
+    among lines: [OverlayLine],
+    canvas: CGRect
+  ) -> OverlayTextAlignment? {
+    let peers = lines.filter {
+      guard let owner = $0.source.tableCell, case .horizontal(rows: 1) = $0.source.layout else { return false }
+      return owner.table == cell.table && owner.column == cell.column && owner.columnSpan == 1
+        && owner.rowSpan == 1 && abs($0.source.rotationRadians) < 0.025
+    }
+    guard Set(peers.compactMap(\.source.tableCell?.row)).count >= 3 else { return nil }
+    let boxes = peers.map { sourceFrame(for: $0.source.box, canvas: canvas, safeBounds: canvas) }
+    let tolerance = max(2, line.source.box.height * canvas.height * 0.35)
+    func spread(_ values: [CGFloat]) -> CGFloat {
+      (values.max() ?? 0) - (values.min() ?? 0)
+    }
+    guard spread(boxes.map(\.width)) > tolerance * 2 else { return nil }
+    let scores: [(OverlayTextAlignment, CGFloat)] = [
+      (.leading, spread(boxes.map(\.minX))),
+      (.center, spread(boxes.map(\.midX))),
+      (.trailing, spread(boxes.map(\.maxX))),
+    ].sorted { $0.1 < $1.1 }
+    guard scores[0].1 <= tolerance, scores[1].1 - scores[0].1 >= tolerance * 0.5 else { return nil }
+    return scores[0].0
+  }
+
   private static func geometricAlignment(
     of sourceFrame: CGRect,
     inside containerFrame: CGRect
@@ -1192,14 +1095,7 @@ enum OverlayLayoutEngine {
       width: max(1, box.width * canvas.width),
       height: max(1, box.height * canvas.height)
     )
-    return containedFrame(raw, in: safeBounds)
+    return raw.intersection(safeBounds).intersection(canvas)
   }
 
-  private static func containedFrame(_ frame: CGRect, in bounds: CGRect) -> CGRect {
-    let width = min(max(1, frame.width), max(1, bounds.width))
-    let height = min(max(1, frame.height), max(1, bounds.height))
-    let x = min(max(frame.minX, bounds.minX), bounds.maxX - width)
-    let y = min(max(frame.minY, bounds.minY), bounds.maxY - height)
-    return CGRect(x: x, y: y, width: width, height: height)
-  }
 }

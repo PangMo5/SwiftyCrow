@@ -936,6 +936,10 @@ struct OCRResult: Equatable, Sendable {
     // one oversized paragraph. The unmarked continuation is still free to join
     // the item above it.
     guard !OCRTextSemantics.beginsListItem(lowerLine.text) else { return false }
+    // A native paragraph id is semantic evidence, not permission to flatten a
+    // heading and subtitle. Require calibrated size and actual ink to agree on
+    // the size step so short-glyph calibration noise still permits body reflow.
+    if !continuesSentence, hasObservedFontSizeBreak(lhs, rhs) { return false }
     let crossesVisionParagraphBoundary = lhs.recognitionGroupID != nil
       && rhs.recognitionGroupID != nil
       && lhs.recognitionGroupID != rhs.recognitionGroupID
@@ -1164,6 +1168,14 @@ struct OCRResult: Equatable, Sendable {
     return weightDifference >= 1
       && max(lhsAppearance.foregroundConfidence, rhsAppearance.foregroundConfidence) >= 0.45
       && abs(lhsAppearance.foregroundConfidence - rhsAppearance.foregroundConfidence) >= 0.25
+  }
+
+  private static func hasObservedFontSizeBreak(_ lhs: Line, _ rhs: Line) -> Bool {
+    let fonts = [lhs.appearance.fontSizeScale, rhs.appearance.fontSizeScale]
+    let ink = [lhs.horizontalInkScale, rhs.horizontalInkScale]
+    guard fonts.min()! > 0, ink.min()! > 0 else { return false }
+    return fonts.max()! / fonts.min()! > 1.24 && ink.max()! / ink.min()! > 1.24
+      && (fonts[0] > fonts[1]) == (ink[0] > ink[1])
   }
 
   private static func isLowContrastBodyWeightNoise(_ lhs: Line, _ rhs: Line) -> Bool {

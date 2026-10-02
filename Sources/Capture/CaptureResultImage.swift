@@ -72,20 +72,19 @@ struct CaptureResultImage: View, Equatable {
     prefersHorizontalTextLayout: Bool? = nil
   ) -> CGImage? {
     guard
-      let imageData, let source = NSImage(data: imageData),
+      let imageData, let source = OverlayRasterRenderer.image(imageData),
       imageSize.width.isFinite, imageSize.height.isFinite,
       imageSize.width > 0, imageSize.height > 0
     else { return nil }
-    let renderer = ImageRenderer(content:
-      ZStack {
-        Image(nsImage: source).resizable()
-        TranslationOverlayLayer(lines: lines, prefersHorizontalTextLayout: prefersHorizontalTextLayout)
-      }
-      .frame(width: imageSize.width, height: imageSize.height)
-      .environment(\.displayScale, 1)
+    #if DEBUG
+    NativeCaptureTrace.renderInput(imageData: imageData, lines: lines, size: imageSize)
+    #endif
+    return OverlayRasterRenderer.render(
+      source: source,
+      lines: lines,
+      size: imageSize,
+      prefersHorizontalTextLayout: prefersHorizontalTextLayout ?? AccessibilitySettings.prefersHorizontalTextLayout
     )
-    renderer.scale = 1
-    return renderer.cgImage
   }
 
   @MainActor

@@ -87,6 +87,12 @@ enum OCRLineRefiner {
           .localeLanguage { hints.append(preceding) }
       hints += Locale.preferredLanguages.map { Locale.Language(identifier: $0) }
       if let inferred = LanguageDetectionClient.liveValue.detect(lines[index].text, 0)?.localeLanguage { hints.append(inferred) }
+      if
+        literal != nil, !lines[index].text.unicodeScalars.allSatisfy(\.isASCII),
+        let inferred = LanguageDetectionClient.liveValue.detect(lines[index].text, 0.65)?.localeLanguage
+      {
+        hints.insert(inferred, at: 0)
+      }
       let supported = request.supportedRecognitionLanguages
       var resolved = [Locale.Language]()
       for hint in hints {
@@ -94,7 +100,7 @@ enum OCRLineRefiner {
           let match = supported.first(where: { $0.usesSameWritingSystem(as: hint) }),
           !resolved.contains(match) { resolved.append(match) }
       }
-      request.recognitionLanguages = syntaxSensitive
+      request.recognitionLanguages = syntaxSensitive && lines[index].text.unicodeScalars.allSatisfy(\.isASCII)
         ? supported.filter { $0.languageCode?.identifier == "en" }
         : resolved
       try VisionTextRecognizer.configure(&request)
@@ -104,7 +110,7 @@ enum OCRLineRefiner {
       let rows = try await recognize(enlarged, request)
       var text = rows.joined(separator: " ")
       if let literal {
-        guard OCRVisualStructure.isPath(text) else { continue }
+        guard OCRVisualStructure.isPath(text) || OCRTextSemantics.isFileName(text) else { continue }
         text = (lines[index].text as NSString).replacingCharacters(in: literal.range, with: text)
       }
       guard text.count >= lines[index].text.count / 2, !text.isEmpty else { continue }
@@ -199,6 +205,15 @@ enum OCRLineRefiner {
   /// Re-read only the literal, without changing the sentence around it or
   /// feeding an extremely wide paragraph crop to the recognition model.
   private static func inlinePath(in line: OCRResult.Line) -> (range: NSRange, box: CGRect)? {
+    if
+      line.rowCount == 1, !line.isVerticalBlock, line.text.count <= 120,
+      !line.text.contains(where: \.isWhitespace), line.text.contains("."),
+      OCRTextSemantics.isIdentifier(line.text),
+      line.recognitionConfidence < 0.25 || !OCRTextSemantics.isFileName(line.text)
+      || !line.text.unicodeScalars.allSatisfy(\.isASCII)
+    {
+      return (NSRange(line.text.startIndex..<line.text.endIndex, in: line.text), line.boundingBoxNormalized)
+    }
     guard
       !OCRTextSemantics.isCode(line.text),
       let range = line.text.range(of: #"(?<!\S)/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+"#, options: .regularExpression)

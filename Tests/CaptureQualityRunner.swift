@@ -120,6 +120,11 @@ final class CaptureQualityRunner {
       requiredWords: item.requiredWords ?? [],
       language: item.originalLanguage ?? "en"
     )
+    let occurrenceIssues = CaptureQualityMetrics.sourceOccurrenceIssues(
+      ocr.lines.map(\.text),
+      expected: item.requiredSourceOccurrences ?? [:],
+      forbidden: item.forbiddenSourceText ?? []
+    )
     // Isolate app-owned image analysis from Vision's asynchronous model
     // compilation when collecting a CPU sample for a specific capture.
     if let count = ProcessInfo.processInfo.environment["SWIFTYCROW_QUALITY_APPEARANCE_REPEATS"].flatMap(Int.init) {
@@ -154,6 +159,7 @@ final class CaptureQualityRunner {
         "orientedBox": line.orientedBox.map(box) ?? [],
         "background": [line.appearance.background.red, line.appearance.background.green, line.appearance.background.blue],
         "weight": line.appearance.fontWeight.rawValue,
+        "italic": line.appearance.isItalic,
         "glyph": line.horizontalGlyphScale,
         "ink": line.horizontalInkScale,
         "surface": line.surface.map { box($0.box) } ?? [],
@@ -174,6 +180,7 @@ final class CaptureQualityRunner {
           "fontScale": $0.appearance.fontSizeScale,
           "design": String(describing: $0.appearance.fontDesign),
           "weight": $0.appearance.fontWeight.rawValue,
+          "italic": $0.appearance.isItalic,
           "background": [$0.appearance.background.red, $0.appearance.background.green, $0.appearance.background.blue],
           "foreground": [$0.appearance.foreground.red, $0.appearance.foreground.green, $0.appearance.foreground.blue],
         ] },
@@ -197,7 +204,8 @@ final class CaptureQualityRunner {
           .isUnavailable ||
           (line.translatedText != nil && line.translatedText != line.source.text && !line.shouldReplaceSourcePixels))
     }.map { "Required source-fragment mapping unavailable: \($0.source.text)" }
-    var layoutIssues = missingPlacements + missingFragments
+    var layoutIssues = occurrenceIssues + missingPlacements + missingFragments
+      + CaptureQualityMetrics.sourceBoundaryIssues(placements, canvas: size)
       + CaptureQualityMetrics.sourceFragmentIssues(lines: final.overlayLines, expected: item.requiredSourceFragments ?? [])
       + (item.requiredTranslatedText ?? [])
       .compactMap { required -> String? in
@@ -241,6 +249,7 @@ final class CaptureQualityRunner {
           "background": [$0.appearance.background.red, $0.appearance.background.green, $0.appearance.background.blue],
           "foreground": [$0.appearance.foreground.red, $0.appearance.foreground.green, $0.appearance.foreground.blue],
           "weight": $0.appearance.fontWeight.rawValue,
+          "italic": $0.appearance.isItalic,
         ] },
         "frame": placement.map { box($0.frame) } ?? [],
         "rotation": placement?.rotationRadians ?? 0,
@@ -261,6 +270,20 @@ final class CaptureQualityRunner {
     }
     let renderedSource = try required(CGImageSourceCreateWithData(png as CFData, nil))
     let rendered = try required(CGImageSourceCreateImageAtIndex(renderedSource, 0, nil))
+    let retainedFrames = OverlayLayoutEngine.protectedSourceFrames(
+      for: final.overlayLines,
+      placements: placements,
+      in: size,
+      displayScale: 1
+    ).map {
+      CGRect(x: $0.minX / size.width, y: $0.minY / size.height, width: $0.width / size.width, height: $0.height / size.height)
+    }
+    let retainedPixelChanges = CaptureQualityMetrics.protectedPixelChanges(
+      original: image,
+      rendered: rendered,
+      rectangles: retainedFrames
+    )
+    if retainedPixelChanges > 0 { layoutIssues.append("Retained source pixels changed: \(retainedPixelChanges)") }
     let protectedRects = (item.protectedRectangles ?? []).filter { $0.count == 4 }.map { CGRect(
       x: $0[0],
       y: $0[1],
@@ -335,6 +358,7 @@ final class CaptureQualityRunner {
       "missingText": missingText,
       "reviewLineCount": ocr.lines.count(where: \.needsReview),
       "protectedPixelChanges": protectedChanges,
+      "retainedSourcePixelChanges": retainedPixelChanges,
     ], to: output.appendingPathComponent("\(index)-metrics.json"))
     return CaptureQualityReport(
       missingText: missingText,
@@ -378,6 +402,7 @@ final class CaptureQualityRunner {
         "wraps": line.continuesToNextLine as Any? ?? NSNull(),
         "fontScale": line.appearance.fontSizeScale,
         "weight": line.appearance.fontWeight.rawValue,
+        "italic": line.appearance.isItalic,
         "foregroundConfidence": line.appearance.foregroundConfidence,
         "backgroundConfidence": line.appearance.confidence,
         "background": [line.appearance.background.red, line.appearance.background.green, line.appearance.background.blue],

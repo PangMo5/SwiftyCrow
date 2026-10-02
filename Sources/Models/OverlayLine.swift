@@ -218,7 +218,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     /// words. Private links carry only a style-run index;
     /// they are removed before rendering and are never exposed as real links.
     func attributedTextForTranslation() -> AttributedString? {
-      guard !text.isEmpty, !styleRuns.isEmpty else { return nil }
+      guard !text.isEmpty else { return nil }
       var attributed = AttributedString(text)
       var spans = [AttributedStyleSpan]()
       for (index, run) in styleRuns.enumerated() {
@@ -293,11 +293,24 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
               : "?source=pixels"))
         else { continue }
         attributed[lowerBound ..< upperBound].link = link
+        if span.appearance.isItalic {
+          attributed[lowerBound ..< upperBound].inlinePresentationIntent = .emphasized
+        }
         if span.isLiteral {
-          attributed[lowerBound ..< upperBound].inlinePresentationIntent = .code
+          attributed[lowerBound ..< upperBound].inlinePresentationIntent = span.appearance.isItalic ? [.code, .emphasized] : .code
         }
       }
-      return spans.isEmpty ? nil : attributed
+      let files = OCRTextSemantics.fileNameRanges(in: text)
+      for range in files {
+        guard
+          let lower = AttributedString.Index(range.lowerBound, within: attributed),
+          let upper = AttributedString.Index(range.upperBound, within: attributed)
+        else { continue }
+        var intent = attributed[lower..<upper].inlinePresentationIntent ?? []
+        intent.insert(.code)
+        attributed[lower..<upper].inlinePresentationIntent = intent
+      }
+      return spans.isEmpty && files.isEmpty ? nil : attributed
     }
 
     // MARK: Fileprivate
@@ -494,6 +507,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let wrapsSameColoredSpan = separator.isEmpty && sharedDistinctForeground
         && abs(lhs.box.midY - rhs.box.midY) > min(lhs.box.height, rhs.box.height) * 0.7
       return colorDistance(lhs.appearance.background, rhs.appearance.background) <= 0.04
+        && lhs.appearance.isItalic == rhs.appearance.isItalic
         && colorDistance(lhs.appearance.foreground, rhs.appearance.foreground) <= foregroundTolerance
         && (abs(lhs.appearance.fontWeight.rawValue - rhs.appearance.fontWeight.rawValue) <= 1 || wrapsSameColoredSpan)
         && (underlineMatches || sharedDistinctForeground)
@@ -527,6 +541,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       colorDistance(candidate.foreground, base.foreground) >= 0.1
         || colorDistance(candidate.background, base.background) >= 0.025
         || candidate.fontDesign != base.fontDesign
+        || candidate.isItalic != base.isItalic
         || candidate.isUnderlined != base.isUnderlined
         || candidate.fontWeight.rawValue - base.fontWeight.rawValue >= 2
     }
@@ -554,6 +569,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         && colorDistance(appearance.foreground, base.foreground) >= 0.1
         || colorDistance(appearance.background, base.background) >= 0.025
         || appearance.fontDesign != base.fontDesign
+        || appearance.isItalic != base.isItalic
         || appearance.isUnderlined != base.isUnderlined
         || appearance.fontWeight.rawValue - base.fontWeight.rawValue >= 2
     }

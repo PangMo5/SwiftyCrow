@@ -11,6 +11,90 @@ struct OCRVisualStructureTests {
 
   // MARK: Internal
 
+  @Test(arguments: [
+    "Financial report.pdf",
+    "Source photo.JPEG",
+    "私の 資料.pdf",
+    "proposal.pdf",
+    "budget.xlsx",
+    "notes.rtf",
+    "Report.v2.pdf",
+  ])
+  func fileLabelsRetainPixelsAndCannotBecomeParagraphs(_ name: String) {
+    let file = OCRResult.Line(boundingBoxNormalized: .init(x: 0.2, y: 0.2, width: 0.4, height: 0.02), text: name)
+    let body = OCRResult.Line(
+      boundingBoxNormalized: .init(x: 0.2, y: 0.23, width: 0.4, height: 0.02),
+      text: "Review the document."
+    )
+    let peers = ["A", "B", "C"].enumerated().map { index, text in
+      OCRResult.Line(boundingBoxNormalized: .init(x: 0.65 + Double(index) * 0.1, y: 0.2, width: 0.02, height: 0.02), text: text)
+    }
+    let classified = OCRVisualStructure.classifying(.init(lines: [file, body] + peers))
+    #expect(classified.lines[0].preservesSource)
+    #expect(classified.lines[0].preventsJoining)
+    #expect(!classified.lines[1].preservesSource)
+    #expect(classified.coalescingParagraphFragments().lines.prefix(2).map(\.text) == [name, body.text])
+  }
+
+  @Test(arguments: ["Chapter No. One", "The result is 3.14.", "Open the report.pdf to review it.", "Read this. Then notes.pdf"])
+  func ordinaryDottedProseDoesNotBecomeAFileLabel(_ text: String) {
+    #expect(!OCRTextSemantics.isFileName(text))
+    #expect(!OCRTextSemantics.isIdentifier(text))
+  }
+
+  @Test
+  func aFilenameInAnInstructionDoesNotSuppressTheAction() {
+    let line = OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.4, height: 0.02), text: "Read manual.pdf")
+    let peers = ["Print", "Share"].enumerated().map { index, text in
+      OCRResult.Line(boundingBoxNormalized: .init(x: 0.6 + Double(index) * 0.1, y: 0.1, width: 0.08, height: 0.02), text: text)
+    }
+    #expect(!OCRTextSemantics.isIdentifier(line.text))
+    #expect(!OCRVisualStructure.classifying(.init(lines: [line] + peers)).lines[0].preservesSource)
+  }
+
+  @Test
+  func aToolbarRetainsItsTitleWhenVisionCombinesAdjacentIcons() {
+    let file = OCRResult.Line(
+      boundingBoxNormalized: .init(x: 0.15, y: 0.1, width: 0.25, height: 0.02),
+      text: "Financial report.pdf"
+    )
+    let icons = OCRResult.Line(boundingBoxNormalized: .init(x: 0.5, y: 0.1, width: 0.06, height: 0.02), text: "Q Q.")
+    let icon = OCRResult.Line(boundingBoxNormalized: .init(x: 0.58, y: 0.1, width: 0.02, height: 0.02), text: "Q")
+    let action = OCRResult.Line(boundingBoxNormalized: .init(x: 0.7, y: 0.1, width: 0.04, height: 0.02), text: "Print")
+    let result = OCRVisualStructure.classifying(.init(lines: [file, icons, icon, action]))
+    #expect(result.lines.prefix(3).allSatisfy { $0.preservesSource })
+    #expect(!result.lines[3].preservesSource)
+  }
+
+  @Test
+  func aFileColumnCannotOwnItsHeaderOrAnUnrelatedParagraphTail() {
+    let names = ["proposal.pdf", "budget.xlsx", "photo.JPEG"].enumerated().map { index, text in
+      OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.2 + Double(index) * 0.05, width: 0.2, height: 0.02), text: text)
+    }
+    let header = OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.15, width: 0.1, height: 0.02), text: "File")
+    let tail = OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.6, width: 0.2, height: 0.02), text: "available.")
+    let result = OCRVisualStructure.classifying(.init(lines: [header] + names + [tail]))
+    #expect(!result.lines[0].preservesSource)
+    #expect(result.lines[1...3].allSatisfy { $0.preservesSource })
+    #expect(!result.lines[4].preservesSource)
+    #expect(!result.lines[4].preventsJoining)
+  }
+
+  @Test
+  func unreadableStemsDoNotEraseTheSymbolColumnContract() {
+    func cell(_ text: String, row: Int, column: Int) -> OCRResult.Line {
+      let box = CGRect(x: Double(column) * 0.2, y: Double(row) * 0.04, width: 0.1, height: 0.02)
+      return .init(boundingBoxNormalized: box, text: text, tableCell: .init(table: 0, row: row, column: column, box: box))
+    }
+    let left = [cell("116", row: 1, column: 1), cell("132", row: 2, column: 1), cell("isize", row: 3, column: 1)]
+    let right = [cell("u16", row: 1, column: 2), cell("u32", row: 2, column: 2), cell("usize", row: 3, column: 2)]
+    #expect(!OCRTableStructure.isSymbolColumnValue(left[2], among: left))
+    #expect(OCRTableStructure.isSymbolColumnValue(left[2], among: left + right))
+    var unrelated = right
+    for index in unrelated.indices { unrelated[index].tableCell!.table = 1 }
+    #expect(!OCRTableStructure.isSymbolColumnValue(left[2], among: left + unrelated))
+  }
+
   @Test(arguments: [false, true], [false, true])
   func aMeasuredLeadingMarkerKeepsItsSourcePixels(large: Bool, sharedBox: Bool) {
     let text = "• Backchannel"

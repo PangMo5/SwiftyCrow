@@ -12,6 +12,16 @@ struct CaptureQualitySelectionTests {
   ]
 
   @Test
+  func unsupportedStyleGatesFailAtSelection() {
+    let item = CaptureQualityCase(
+      id: "unsupported",
+      source: "source.png",
+      requiredStyles: [.init(source: "Text", target: "Text", kind: "italc")]
+    )
+    #expect(throws: CocoaError.self) { try CaptureQualitySelection.select([item], environment: [:]) }
+  }
+
+  @Test
   func strategyIsExplicitAndUnknownValuesDoNotDowngradeTheRun() throws {
     let data = Data(#"{"id":"high","source":"input.png","translationStrategy":"highFidelity"}"#.utf8)
     #expect(try JSONDecoder().decode(CaptureQualityCase.self, from: data).translationStrategy == .highFidelity)
@@ -57,7 +67,9 @@ struct CaptureQualitySelectionTests {
 
   @Test @MainActor
   func failedRerunCannotKeepAnOldSuccessfulReport() async throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let temporary = ProcessInfo.processInfo.environment["SWIFTYCROW_TEST_TEMP_ROOT"].map { URL(fileURLWithPath: $0) }
+      ?? FileManager.default.temporaryDirectory
+    let root = temporary.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: root) }
     let output = root.appendingPathComponent("output")

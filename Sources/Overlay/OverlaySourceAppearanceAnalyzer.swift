@@ -111,6 +111,9 @@ enum OverlaySourceAppearanceAnalyzer {
             )
             sampledRuns.append((run.box, run.appearance))
           }
+          if line.isVerticalBlock || abs(line.rotationRadians) > 0.04 {
+            run.appearance.isItalic = false
+          }
           run.appearance.fontDesign = fontDesign(
             for: text(in: run.range, source: line.text),
             appearance: run.appearance,
@@ -278,6 +281,23 @@ enum OverlaySourceAppearanceAnalyzer {
           minimumConfidence: 0.30,
           acceptedConfidenceFloor: 0.35
         )
+      }
+      if line.surface == nil, line.rowCount == 1, line.tableCell == nil, let styleRaster {
+        // A one-pixel outline can disappear in the whole-page surface raster.
+        // Search only a compact neighborhood at glyph resolution, and require
+        // an enclosed component; whitespace cut off by this search is not a control.
+        let limit = surfaceAnchor.insetBy(dx: -surfaceAnchor.width * 0.65, dy: -surfaceAnchor.height * 1.1)
+          .intersection(OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines))
+        if
+          let surface = inferredSurface(
+            containing: surfaceAnchor,
+            appearance: line.appearance,
+            raster: styleRaster,
+            limitingTo: limit
+          ), isCompactTextSurface(surface, around: surfaceAnchor)
+        {
+          line.surface = surface
+        }
       }
       if
         hasDistinctCompactFill,
@@ -1012,9 +1032,13 @@ enum OverlaySourceAppearanceAnalyzer {
       return nil
     }
 
-    var visited = [Bool](repeating: false, count: raster.width * raster.height)
+    let localWidth = Int(allowedBounds.width)
+    func localIndex(_ index: Int) -> Int {
+      (index / raster.width - Int(allowedBounds.minY)) * localWidth + index % raster.width - Int(allowedBounds.minX)
+    }
+    var visited = [Bool](repeating: false, count: localWidth * Int(allowedBounds.height))
     var queue = [seed]
-    visited[seed] = true
+    visited[localIndex(seed)] = true
     var cursor = 0
     var minimumX = raster.width
     var minimumY = raster.height
@@ -1033,6 +1057,9 @@ enum OverlaySourceAppearanceAnalyzer {
       if x == 0 || y == 0 || x == raster.width - 1 || y == raster.height - 1 {
         return nil
       }
+      if
+        x == Int(allowedBounds.minX) || y == Int(allowedBounds.minY)
+        || x == Int(allowedBounds.maxX) - 1 || y == Int(allowedBounds.maxY) - 1 { return nil }
       minimumX = min(minimumX, x)
       minimumY = min(minimumY, y)
       maximumX = max(maximumX, x)
@@ -1045,8 +1072,7 @@ enum OverlaySourceAppearanceAnalyzer {
         y > 0 ? index - raster.width : -1,
         y + 1 < raster.height ? index + raster.width : -1,
       ]
-      for neighbor in neighbors where neighbor >= 0 && !visited[neighbor] {
-        visited[neighbor] = true
+      for neighbor in neighbors where neighbor >= 0 {
         let neighborX = neighbor % raster.width
         let neighborY = neighbor / raster.width
         guard
@@ -1055,6 +1081,9 @@ enum OverlaySourceAppearanceAnalyzer {
             y: CGFloat(neighborY) + 0.5
           ))
         else { continue }
+        let local = localIndex(neighbor)
+        guard !visited[local] else { continue }
+        visited[local] = true
         guard
           raster.matchesBackground(
             at: neighbor,
@@ -1230,6 +1259,10 @@ enum OverlaySourceAppearanceAnalyzer {
     var inkMaximumY = Int.min
     var integratedInk: CGFloat = 0
     var inkColumns = [CGFloat](repeating: 0, count: text == nil ? 0 : Int(source.width))
+    let measuresSlant = text.map {
+      SourceTypographySlant.canMeasure(text: $0, width: Int(source.width), height: Int(source.height))
+    } == true
+    var slantInk = [CGFloat](repeating: 0, count: measuresSlant ? Int(source.width * source.height) : 0)
     for y in Int(source.minY) ..< Int(source.maxY) {
       for x in Int(source.minX) ..< Int(source.maxX) {
         guard let color = raster.color(at: y * raster.width + x) else { continue }
@@ -1252,7 +1285,11 @@ enum OverlaySourceAppearanceAnalyzer {
         if !inkColumns.isEmpty {
           inkColumns[x - Int(source.minX)] = max(inkColumns[x - Int(source.minX)], distance)
         }
-        integratedInk += min(1, distance / max(0.001, maximumDistance))
+        let strength = min(1, distance / max(0.001, maximumDistance))
+        integratedInk += strength
+        if measuresSlant {
+          slantInk[(y - Int(source.minY)) * Int(source.width) + x - Int(source.minX)] = strength
+        }
       }
     }
     let foreground: OverlayColor =
@@ -1312,6 +1349,16 @@ enum OverlaySourceAppearanceAnalyzer {
         coverage: integratedInk / CGFloat(max(1, inkWidth * inkHeight))
       )
     }
+    let isItalic = measuresSlant && inkWidth > 0 && inkHeight > 0 && SourceTypographySlant.isItalic(
+      text: text!,
+      ink: (inkMinimumY...inkMaximumY).flatMap { y in
+        (inkMinimumX...inkMaximumX).map { x in
+          slantInk[(y - Int(source.minY)) * Int(source.width) + x - Int(source.minX)]
+        }
+      },
+      width: inkWidth,
+      height: inkHeight
+    )
     return OverlaySourceAppearance(
       background: background,
       foreground: foreground,
@@ -1322,6 +1369,7 @@ enum OverlaySourceAppearanceAnalyzer {
       fontSizeScale: (typography?.pointSize ?? 0) / CGFloat(raster.height),
       fontWeight: typography?.weight ?? fontWeight(for: inkCoverage, source: source, raster: raster),
       fontDesign: text.map { SourceTypography.isMonospaced(text: $0, inkColumns: inkColumns) } == true ? .monospaced : .standard,
+      isItalic: isItalic,
       isUnderlined: isUnderlined
     )
   }
@@ -1372,7 +1420,14 @@ enum OverlaySourceAppearanceAnalyzer {
     let fontSamples = samples.filter { $0.appearance.fontSizeScale > 0 }.sorted {
       $0.appearance.fontSizeScale < $1.appearance.fontSizeScale
     }
-    let fontSize = fontSamples.isEmpty ? 0 : fontSamples[fontSamples.count / 2].appearance.fontSizeScale
+    // A large marker or a small footnote owns only its characters. Giving
+    // every span one vote makes tokenization determine the paragraph's size.
+    let midpoint = fontSamples.reduce(0) { $0 + $1.weight } / 2
+    var cumulative: CGFloat = 0
+    let fontSize = fontSamples.first { sample in
+      cumulative += sample.weight
+      return cumulative >= midpoint
+    }?.appearance.fontSizeScale ?? 0
     return OverlaySourceAppearance(
       background: background,
       foreground: foreground,
@@ -1394,6 +1449,7 @@ enum OverlaySourceAppearanceAnalyzer {
       } * 2 >= totalSemanticWeight
         ? .monospaced
         : .standard,
+      isItalic: dominant.filter { $0.appearance.isItalic }.reduce(0) { $0 + $1.weight } * 2 >= totalSemanticWeight,
       isUnderlined: dominant.filter { $0.appearance.isUnderlined }.reduce(0) {
         $0 + $1.weight
       } * 2 >= totalSemanticWeight
@@ -1607,6 +1663,7 @@ enum OverlaySourceAppearanceAnalyzer {
       >= max(0.04, original.foregroundConfidence * 1.2)
     guard originalMatchesParent || hasBetterInkEvidence else { return nil }
     refined.fontDesign = original.fontDesign
+    refined.isItalic = original.isItalic
     return refined
   }
 

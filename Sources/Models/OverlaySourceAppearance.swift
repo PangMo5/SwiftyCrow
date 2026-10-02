@@ -64,6 +64,7 @@ struct OverlaySourceAppearance: Equatable, Hashable, Sendable {
   var fontSizeScale: CGFloat = 0
   var fontWeight = OverlayFontWeight.semibold
   var fontDesign = OverlayFontDesign.standard
+  var isItalic = false
   var isUnderlined = false
 
 }

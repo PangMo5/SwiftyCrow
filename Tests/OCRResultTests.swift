@@ -34,6 +34,42 @@ struct OCRResultTests {
     }
   }
 
+  @Test(arguments: [false, true], [false, true])
+  func physicalHeadingSizeOutweighsNativeContinuationAndWeightNoise(_ sharedGroup: Bool, _ continues: Bool) {
+    let appearance = OverlaySourceAppearance(
+      background: .white,
+      foreground: .black,
+      confidence: 0.8,
+      foregroundConfidence: 0.08,
+      fontSizeScale: 0.03,
+      fontWeight: .regular
+    )
+    let heading = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.02, width: 0.2, height: 0.034),
+      text: "System Design",
+      horizontalGlyphScale: 0.03,
+      horizontalInkScale: 0.03,
+      recognitionGroupID: 1,
+      appearance: appearance,
+      continuesToNextLine: continues
+    )
+    var subtitle = heading
+    subtitle.text = "Documentation reference"
+    subtitle.boundingBoxNormalized = CGRect(x: 0.1, y: 0.06, width: 0.2, height: 0.022)
+    subtitle.horizontalGlyphScale = 0.018
+    subtitle.horizontalInkScale = 0.018
+    subtitle.appearance.fontSizeScale = 0.018
+    subtitle.recognitionGroupID = sharedGroup ? 1 : 2
+    subtitle.continuesToNextLine = nil
+    #expect(OCRResult(lines: [heading, subtitle]).coalescingParagraphFragments().lines.count == 2)
+    var noisy = subtitle
+    noisy.horizontalGlyphScale = heading.horizontalGlyphScale
+    noisy.horizontalInkScale = heading.horizontalInkScale
+    noisy.boundingBoxNormalized.size.height = heading.boundingBoxNormalized.height
+    noisy.recognitionGroupID = heading.recognitionGroupID
+    #expect(OCRResult(lines: [heading, noisy]).coalescingParagraphFragments().lines.count == 1)
+  }
+
   @Test
   func sameParagraphInkGeometryOutweighsNoisyFontCalibration() {
     var first = OCRResult.Line(

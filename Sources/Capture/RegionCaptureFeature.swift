@@ -160,7 +160,7 @@ struct RegionCaptureFeature {
           OverlayTranslationPolicy.preservesSource(at: $0, in: sourceLines)
         }
 
-        let contextGroups = TranslationGroupContext.tableHeaders(in: sourceLines)
+        let contextGroups = TranslationGroupContext.associations(in: sourceLines)
         var newLines = [OverlayLine]()
         // Lines to translate, grouped by source language (one session per group).
         var groups = [String: (source: Locale.Language, items: [TranslationLine])]()

@@ -9,6 +9,25 @@ import NaturalLanguage
 /// Output checks with explicit fixture expectations. A successful API response
 /// does not establish that the composited capture is usable.
 enum CaptureQualityMetrics {
+  static func sourceBoundaryIssues(_ placements: [OverlayPlacement], canvas: CGSize) -> [String] {
+    placements.compactMap { placement in
+      let box = placement.line.source.box
+      let boundary = CGRect(
+        x: box.minX * canvas.width,
+        y: box.minY * canvas.height,
+        width: box.width * canvas.width,
+        height: box.height * canvas.height
+      )
+      let ink: [CGRect] =
+        if case .horizontal = placement.flow {
+          HorizontalTextRenderer.paintedBounds(for: placement).map { $0.applying(placement.transform) }
+        } else { [placement.visualFrame] }
+      return ink.allSatisfy { boundary.insetBy(dx: -0.00001, dy: -0.00001).contains($0) }
+        ? nil
+        : "Target crossed original text box: \(placement.line.source.text)"
+    }
+  }
+
   static func sourceFragmentIssues(lines: [OverlayLine], expected: [CaptureSourceFragmentExpectation]) -> [String] {
     expected.compactMap { expectation in
       let values = expectation.region
@@ -139,7 +158,11 @@ enum CaptureQualityMetrics {
         expectation.minimum > 0, expectation.maximum >= expectation.minimum,
         expectation.maximum.isFinite
       else { return ["Invalid font-scale expectation"] }
-      let owners = placements.filter { $0.line.source.text.contains(expectation.source) }
+      let owners = placements.filter {
+        expectation.sourceIsExact == true
+          ? $0.line.source.text == expectation.source
+          : $0.line.source.text.contains(expectation.source)
+      }
       guard !owners.isEmpty else { return ["Missing font-scale subject: \(expectation.source)"] }
       return owners.compactMap { placement in
         let scale = placement.fontSize / canvas.height
@@ -277,7 +300,9 @@ enum CaptureQualityMetrics {
   static func styleIssues(lines: [OverlayLine], expected: [CaptureStyleExpectation]) -> [String] {
     expected.compactMap { expectation in
       guard
-        let line = lines.first(where: { $0.source.text.contains(expectation.source) }),
+        let line = lines.first(where: {
+          expectation.sourceIsExact == true ? $0.source.text == expectation.source : $0.source.text.contains(expectation.source)
+        }),
         let range = line.displayedText.range(of: expectation.target)
       else { return "Missing styled text: \(expectation.source) -> \(expectation.target)" }
       let utf16 = NSRange(range, in: line.displayedText)
@@ -288,6 +313,10 @@ enum CaptureQualityMetrics {
         case "color":
           let color = appearance.foreground
           return max(color.red, color.green, color.blue) - min(color.red, color.green, color.blue) >= 0.2
+
+        case "italic": return appearance.isItalic
+
+        case "upright": return !appearance.isItalic
 
         case "weight": return appearance.fontWeight.rawValue >= OverlayFontWeight.semibold.rawValue
 
@@ -322,7 +351,8 @@ enum CaptureQualityMetrics {
       for sentence in sentences {
         let value = normalized(sentence)
         guard !value.isEmpty else { continue }
-        guard let owner = units.firstIndex(where: { $0.contains(value) }) else {
+        let matchingOwner = units.firstIndex(of: value) ?? units.firstIndex(where: { $0.contains(value) })
+        guard let owner = matchingOwner else {
           issues.append("Sentence split or incomplete: \(sentence)")
           continue
         }
@@ -342,6 +372,20 @@ enum CaptureQualityMetrics {
       .filter { !comparison.contains($0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale)) }
   }
 
+  /// Presence alone misses duplicated OCR and repeated effects that disappear.
+  /// Count exact nonoverlapping occurrences across physical recognized owners.
+  static func sourceOccurrenceIssues(_ texts: [String], expected: [String: Int], forbidden: [String]) -> [String] {
+    var issues = [String]()
+    for (token, count) in expected.sorted(by: { $0.key < $1.key }) where !token.isEmpty {
+      let observed = texts.reduce(0) { $0 + $1.components(separatedBy: token).count - 1 }
+      if observed != count { issues.append("Source occurrence count: \(token), expected \(count), observed \(observed)") }
+    }
+    for token in forbidden where !token.isEmpty && texts.contains(where: { $0.contains(token) }) {
+      issues.append("Forbidden source text: \(token)")
+    }
+    return issues
+  }
+
   static func layoutIssues(_ placements: [OverlayPlacement], canvas: CGSize, minimumFontRatio: CGFloat) -> [String] {
     var issues = [String]()
     for placement in placements {
@@ -357,6 +401,7 @@ enum CaptureQualityMetrics {
           fontSize: placement.fontSize,
           fontWeight: line.source.appearance.fontWeight,
           fontDesign: line.source.appearance.fontDesign,
+          isItalic: line.source.appearance.isItalic,
           in: placement.frame.size,
           verticalWrapping: placement.verticalWrapping,
           styles: line.displayedStyleRuns,

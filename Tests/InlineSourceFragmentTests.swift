@@ -46,7 +46,7 @@ struct InlineSourceFragmentTests {
     formula.link = link
     let source = code + AttributedString(" stores ") + formula
     let target = "i8에는 127까지 저장됩니다."
-    let anchors = try await TranslationClient.aligningNativeSourceFragments(
+    let anchors = try await TranslationClient.aligningNativeStyles(
       [id: target],
       linesByID: [id: .init(id: id, text: String(source.characters), attributedText: source)],
       preserving: [:]
@@ -96,7 +96,7 @@ struct InlineSourceFragmentTests {
     successfulSource.link = link
     var successfulNative = AttributedString("127")
     successfulNative.link = link
-    let anchors = try await TranslationClient.aligningNativeSourceFragments(
+    let anchors = try await TranslationClient.aligningNativeStyles(
       [failedID: "255", successfulID: "127"],
       linesByID: [
         failedID: .init(id: failedID, text: "2⁸ − 1", attributedText: failedSource),
@@ -126,7 +126,7 @@ struct InlineSourceFragmentTests {
     var source = AttributedString("2⁸ − 1")
     source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
     await #expect(throws: CancellationError.self) {
-      _ = try await TranslationClient.aligningNativeSourceFragments(
+      _ = try await TranslationClient.aligningNativeStyles(
         [id: "255"],
         linesByID: [id: .init(id: id, text: "2⁸ − 1", attributedText: source)],
         preserving: [:]
@@ -215,7 +215,7 @@ struct InlineSourceFragmentTests {
     var native = AttributedString(target)
     native[native.range(of: "2'")!].link = link
     native[native.range(of: ",")!].link = link
-    let aligned = TranslationStyleMapper.alignNativeSourceFragments(
+    let aligned = TranslationStyleMapper.alignNativeStyles(
       source: source,
       target: target,
       native: native,
@@ -226,7 +226,7 @@ struct InlineSourceFragmentTests {
     #expect(aligned.target.runs.filter { $0.link == link }.map { String(aligned.target.characters[$0.range]) } == ["2'"])
     var different = AttributedString("서명되지 않은 값은 2'까지 저장한다.")
     different.link = link
-    let rejected = TranslationStyleMapper.alignNativeSourceFragments(
+    let rejected = TranslationStyleMapper.alignNativeStyles(
       source: source,
       target: target,
       native: different,

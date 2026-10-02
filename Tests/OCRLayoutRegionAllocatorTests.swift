@@ -128,7 +128,7 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test(arguments: [("개요", "Overview", "ko"), ("下载", "Download", "zh-Hans"), ("設定", "Settings", "ja")])
-  func translatedControlsUseWhitespaceWithoutWideningTheirEraser(_ item: (String, String, String)) throws {
+  func allocatedWhitespaceCannotEnlargeTranslatedTextRegions(_ item: (String, String, String)) throws {
     let appearance = OverlaySourceAppearance(
       background: .black,
       foreground: .white,
@@ -156,8 +156,8 @@ struct OCRLayoutRegionAllocatorTests {
     )
     translated.showTranslation(item.1, language: Locale.Language(identifier: "en"))
     let placement = try #require(OverlayLayoutEngine.placements(for: [translated], in: CGSize(width: 600, height: 100)).first)
-    #expect(placement.fontSize >= 20)
-    #expect(placement.frame.width > placement.sourceFrame.width)
+    #expect(placement.sourceFrame.contains(placement.frame))
+    #expect(CaptureQualityMetrics.sourceBoundaryIssues([placement], canvas: CGSize(width: 600, height: 100)).isEmpty)
     #expect(placement.frame.maxX < lines[1].boundingBoxNormalized.minX * 600)
   }
 

@@ -45,6 +45,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     constrainedToWidth width: CGFloat
   ) -> CGSize {
     guard !text.isEmpty, width > 0 else { return .zero }
@@ -54,6 +55,7 @@ enum CoreTextTypesetter {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
+      isItalic: isItalic,
       vertical: false
     )
     let framesetter = CTFramesetterCreateWithAttributedString(attributed)
@@ -73,6 +75,7 @@ enum CoreTextTypesetter {
     flow: OverlayTextFlow,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     constrainedTo size: CGSize,
     preferred: CGFloat,
     minimum: CGFloat,
@@ -97,6 +100,7 @@ enum CoreTextTypesetter {
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
+        isItalic: isItalic,
         in: size,
         lineHeightMultiple: lineHeightMultiple,
         verticalWrapping: wrapping,
@@ -140,6 +144,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     in size: CGSize,
     lineHeightMultiple: CGFloat = 1,
     verticalWrapping: VerticalWrapping = .words,
@@ -155,6 +160,7 @@ enum CoreTextTypesetter {
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
+        isItalic: isItalic,
         constrainedToHeight: size.height,
         wrapping: verticalWrapping,
         styles: styles,
@@ -166,7 +172,14 @@ enum CoreTextTypesetter {
       text: text,
       language: language,
       fontSize: fontSize,
-      appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: fontWeight, fontDesign: fontDesign),
+      appearance: .init(
+        background: .white,
+        foreground: .black,
+        confidence: 1,
+        fontWeight: fontWeight,
+        fontDesign: fontDesign,
+        isItalic: isItalic
+      ),
       styles: styles,
       width: size.width,
       lineHeightMultiple: lineHeightMultiple,
@@ -176,15 +189,16 @@ enum CoreTextTypesetter {
 
   static func lineHeight(
     fontSize: CGFloat,
-    language: Locale.Language,
+    language _: Locale.Language,
     fontWeight: OverlayFontWeight = .semibold,
-    fontDesign: OverlayFontDesign = .standard
+    fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false
   ) -> CGFloat {
-    let font = localizedSystemFont(
+    let font = OverlayTypography.font(
       size: fontSize,
-      language: language,
       weight: fontWeight,
-      design: fontDesign
+      design: fontDesign,
+      isItalic: isItalic
     )
     return ceil(CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font))
   }
@@ -194,13 +208,15 @@ enum CoreTextTypesetter {
     language: Locale.Language,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     lineHeightMultiple: CGFloat
   ) -> CGFloat {
     let natural = lineHeight(
       fontSize: fontSize,
       language: language,
       fontWeight: fontWeight,
-      fontDesign: fontDesign
+      fontDesign: fontDesign,
+      isItalic: isItalic
     )
     return max(0, natural * (max(1, lineHeightMultiple) - 1))
   }
@@ -212,7 +228,8 @@ enum CoreTextTypesetter {
     preferred: CGFloat,
     minimum: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
-    fontDesign: OverlayFontDesign = .standard
+    fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false
   ) -> CGFloat {
     guard width > 0, preferred > 0 else { return minimum }
     guard !usesCharacterWrapping(language) else { return preferred }
@@ -230,6 +247,7 @@ enum CoreTextTypesetter {
             fontSize: fontSize,
             fontWeight: fontWeight,
             fontDesign: fontDesign,
+            isItalic: isItalic,
             constrainedToWidth: 100_000
           ).width
         )
@@ -251,6 +269,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     constrainedToWidth width: CGFloat
   ) -> Bool {
     guard width > 0, fontSize > 0 else { return false }
@@ -264,6 +283,7 @@ enum CoreTextTypesetter {
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
+        isItalic: isItalic,
         constrainedToWidth: 100_000
       ).width <= width + 0.5
     }
@@ -275,6 +295,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     constrainedToHeight height: CGFloat
   ) -> Bool {
     guard !usesCharacterWrapping(language) else { return true }
@@ -284,6 +305,7 @@ enum CoreTextTypesetter {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
+      isItalic: isItalic,
       constrainedToHeight: height
     ).columns.dropLast().map { $0.location + $0.length })
     return wrappingWordRanges(in: text).allSatisfy { token in
@@ -297,6 +319,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     size: CGSize,
     scale: CGFloat,
     progression: OverlayColumnProgression,
@@ -332,6 +355,7 @@ enum CoreTextTypesetter {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
+      isItalic: isItalic,
       vertical: true,
       styles: styles,
       isUnderlined: isUnderlined
@@ -469,6 +493,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
+    isItalic: Bool = false,
     constrainedToHeight height: CGFloat,
     wrapping: VerticalWrapping = .words,
     styles: [OverlayTextStyleRun] = [],
@@ -481,6 +506,7 @@ enum CoreTextTypesetter {
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
+        isItalic: isItalic,
         vertical: true,
         styles: styles,
         isUnderlined: isUnderlined
@@ -627,17 +653,18 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     fontWeight: OverlayFontWeight,
     fontDesign: OverlayFontDesign,
+    isItalic: Bool,
     vertical: Bool,
     lineHeightMultiple: CGFloat = 1,
     styles: [OverlayTextStyleRun] = [],
     isUnderlined: Bool = false
   ) -> NSMutableAttributedString {
     let attributes: [NSAttributedString.Key: Any] = [
-      NSAttributedString.Key(kCTFontAttributeName as String): localizedSystemFont(
+      NSAttributedString.Key(kCTFontAttributeName as String): OverlayTypography.font(
         size: fontSize,
-        language: language,
         weight: fontWeight,
-        design: fontDesign
+        design: fontDesign,
+        isItalic: isItalic
       ),
       NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(
         red: 1,
@@ -657,11 +684,11 @@ enum CoreTextTypesetter {
     attributed.addAttribute(underlineKey, value: underlineValue, range: wholeRange)
     for style in resolvedStyles {
       attributed.addAttributes([
-        NSAttributedString.Key(kCTFontAttributeName as String): localizedSystemFont(
+        NSAttributedString.Key(kCTFontAttributeName as String): OverlayTypography.font(
           size: fontSize,
-          language: language,
           weight: style.appearance.fontWeight,
-          design: style.appearance.fontDesign
+          design: style.appearance.fontDesign,
+          isItalic: style.appearance.isItalic
         ),
         underlineKey: vertical
           ? NSNumber(value: style.appearance.isUnderlined)
@@ -677,6 +704,7 @@ enum CoreTextTypesetter {
             language: language,
             fontWeight: fontWeight,
             fontDesign: fontDesign,
+            isItalic: isItalic,
             lineHeightMultiple: lineHeightMultiple
           )
         ),
@@ -863,20 +891,6 @@ enum CoreTextTypesetter {
       return end - offset
     }
     return proposedLength
-  }
-
-  private static func localizedSystemFont(
-    size: CGFloat,
-    language _: Locale.Language,
-    weight: OverlayFontWeight,
-    design: OverlayFontDesign
-  ) -> CTFont {
-    switch design {
-    case .standard:
-      NSFont.systemFont(ofSize: max(1, size), weight: weight.nsFontWeight) as CTFont
-    case .monospaced:
-      NSFont.monospacedSystemFont(ofSize: max(1, size), weight: weight.nsFontWeight) as CTFont
-    }
   }
 
   private static func horizontalTokens(

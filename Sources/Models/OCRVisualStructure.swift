@@ -34,9 +34,21 @@ enum OCRVisualStructure {
           && abs(line.boundingBoxNormalized.midY - lines[other].boundingBoxNormalized.midY)
           < max(line.boundingBoxNormalized.height, lines[other].boundingBoxNormalized.height) * 6
       }
-      let fileColumn = text.split(whereSeparator: \.isWhitespace).count == 1
-        && text.count < 60
-        && pathRows.count(where: { sameColumn(line, lines[$0]) }) >= 3
+      let filePeers = pathRows.filter { sameColumn(line, lines[$0]) }
+      let nativeFileColumn = line.tableCell.map { cell in
+        cell.row > 0 && filePeers.count(where: {
+          lines[$0].tableCell.map { $0.table == cell.table && $0.column == cell.column } == true
+        }) >= 3
+      } ?? false
+      let fileRange = filePeers.reduce(CGRect.null) { $0.union(lines[$1].boundingBoxNormalized) }
+      let positions = filePeers.map { lines[$0].boundingBoxNormalized.midY }.sorted()
+      let advances = zip(positions, positions.dropFirst()).map { $1 - $0 }.sorted()
+      let fileAdvance = advances.isEmpty ? 0 : advances[advances.count / 2]
+      let fileColumn = text.split(whereSeparator: \.isWhitespace).count == 1 && text.count < 60
+        && !OCRTextSemantics.endsSentence(text)
+        && filePeers.count >= 3 && (nativeFileColumn || (line.tableCell == nil && !fileRange.isNull
+            && line.boundingBoxNormalized.midY >= fileRange.minY
+            && line.boundingBoxNormalized.midY <= fileRange.maxY + fileAdvance))
       let nativeNameCount = text.split(whereSeparator: \.isWhitespace).count(where: { isLanguageName(String($0)) })
       let languageSelector = text.count <= 80 && (nativeNameCount >= 2 || (nativeNameCount == 1 && lines.contains { other in
         let a = line.boundingBoxNormalized
@@ -63,7 +75,9 @@ enum OCRVisualStructure {
       }
       let accessory = belongsToAccessoryColumn || isIsolatedAccessory(line, among: result.lines)
       if
-        repeatedCode || isPath(text) || fileColumn || isLanguageName(text) || languageSelector || ambiguousCounter || accessory
+        repeatedCode || isPath(text) || isFileLabel(line, among: lines) || OCRTextSemantics.isIdentifier(text)
+        || fileColumn || isLanguageName(text)
+        || languageSelector || ambiguousCounter || accessory
         || OCRTableStructure.isSymbolColumnValue(line, among: lines)
       {
         lines[index].preservesSource = true
@@ -76,7 +90,26 @@ enum OCRVisualStructure {
 
   static func isPath(_ text: String) -> Bool {
     text.range(of: #"^(?:\.?\.?/|[A-Za-z_][\w.-]*/)[\w./-]+$"#, options: .regularExpression) != nil
-      || text.range(of: #"^[\w.-]+\.(?:swift|json|toml|yaml|yml|md|png|js|ts|html|css)$"#, options: .regularExpression) != nil
+      || (!text.contains(where: \.isWhitespace) && OCRTextSemantics.isFileName(text))
+  }
+
+  /// Spaces are part of a title only when the observed layout supplies its
+  /// file role. An instruction such as "Read manual.pdf" still owns prose.
+  static func isFileLabel(_ line: OCRResult.Line, among lines: [OCRResult.Line]) -> Bool {
+    guard !line.isVerticalBlock, line.rowCount == 1, OCRTextSemantics.isFileName(line.text) else { return false }
+    if !line.text.contains(where: \.isWhitespace) { return true }
+    if
+      lines.count(where: { other in
+        other != line && sameColumn(line, other) && OCRTextSemantics.isFileName(other.text)
+      }) >= 2 { return true }
+    let box = line.boundingBoxNormalized
+    let peers = lines.filter { other in
+      let peer = other.boundingBoxNormalized
+      return other != line && !other.isVerticalBlock && other.rowCount == 1 && other.text.count <= 24
+        && abs(peer.midY - box.midY) <= max(box.height, peer.height) * 0.5
+        && min(box.height, peer.height) >= max(box.height, peer.height) * 0.5
+    }
+    return peers.count >= 2 && !OCRTextSemantics.fileNameStartsWithVerb(line.text)
   }
 
   static func isLanguageName(_ text: String) -> Bool {
@@ -495,19 +528,19 @@ enum OCRVisualStructure {
   }
 
   private static func isolatedSymbolRows(in lines: [OCRResult.Line]) -> Set<Int> {
-    let candidates = lines.indices.filter {
+    let glyphRows = Set(lines.indices.filter { isCompactGlyphRow(lines[$0]) })
+    let candidates = glyphRows.filter {
       let line = lines[$0]
       let box = line.boundingBoxNormalized
       let aspect = box.width * line.imageAspectRatio / max(0.00001, box.height)
       let touchesProse = lines.contains { other in
-        guard other.text.count > 1 else { return false }
+        guard !isCompactGlyphRow(other) else { return false }
         let peer = other.boundingBoxNormalized
         let gap = max(box.minX, peer.minX) - min(box.maxX, peer.maxX)
         return abs(box.midY - peer.midY) < max(box.height, peer.height) * 0.5
           && gap * line.imageAspectRatio < box.height * 1.2
       }
-      return line.text.count == 1 && (!line.text.allSatisfy(\.isNumber) || isEnclosedMarker(line.text))
-        && !touchesProse && !line.isVerticalBlock && line.rowCount == 1 && (0.5 ... 1.8).contains(aspect)
+      return !touchesProse && !line.isVerticalBlock && line.rowCount == 1 && (0.5 ... 5.4).contains(aspect)
     }
     return Set(candidates.filter { index in
       let line = lines[index]
@@ -524,6 +557,15 @@ enum OCRVisualStructure {
           && gap * line.imageAspectRatio <= height * 5
       }
     })
+  }
+
+  private static func isCompactGlyphRow(_ line: OCRResult.Line) -> Bool {
+    guard !line.isVerticalBlock, line.rowCount == 1 else { return false }
+    let tokens = line.text.split(whereSeparator: \.isWhitespace)
+    return (1...3).contains(tokens.count) && tokens.allSatisfy { token in
+      let glyph = String(token).trimmingCharacters(in: .punctuationCharacters)
+      return glyph.count == 1 && (!glyph.allSatisfy(\.isNumber) || isEnclosedMarker(glyph))
+    }
   }
 
   private static func hasMonospacedWordGeometry(_ line: OCRResult.Line) -> Bool {

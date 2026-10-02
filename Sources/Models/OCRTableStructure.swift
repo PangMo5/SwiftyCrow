@@ -44,9 +44,18 @@ enum OCRTableStructure {
         && (OCRTextSemantics.isAlphanumericIdentifier(other.text) ||
           (!other.text.isEmpty && other.text.allSatisfy(\.isNumber)))
     }
-    return Set(columnValues.compactMap(\.tableCell?.row)).count >= 2
-      && columnValues.contains { OCRTextSemantics.isAlphanumericIdentifier($0.text) }
-      && columnValues.contains { $0.tableCell!.row != cell.row && abs(cell.row - $0.tableCell!.row) <= 2 }
+    guard Set(columnValues.compactMap(\.tableCell?.row)).count >= 2 else { return false }
+    if columnValues.contains(where: { OCRTextSemantics.isAlphanumericIdentifier($0.text) }) { return true }
+    // Narrow stems can all be read as digits. A neighboring symbol column
+    // supplies independent evidence only in the same observed numeric rows.
+    let rows = Set(columnValues.compactMap(\.tableCell?.row))
+    let peers = Dictionary(grouping: lines.filter { other in
+      guard let owner = other.tableCell else { return false }
+      return owner.table == cell.table && abs(owner.column - cell.column) == 1
+        && owner.rowSpan == 1 && owner.columnSpan == 1 && rows.contains(owner.row)
+        && OCRTextSemantics.isAlphanumericIdentifier(other.text)
+    }, by: { $0.tableCell!.column })
+    return peers.values.contains { Set($0.compactMap(\.tableCell?.row)).count >= 2 }
   }
 
   /// Establish native symbol-column roles before spelling recovery can remove
