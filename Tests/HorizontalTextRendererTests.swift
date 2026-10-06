@@ -9,6 +9,61 @@ import Testing
 
 @Suite("Horizontal capture compositor")
 struct HorizontalTextRendererTests {
+  @Test(arguments: [CGFloat(1), 2])
+  @MainActor
+  func aLooseSingleRowBoxKeepsTheMeasuredInkCenter(_ scale: CGFloat) throws {
+    let size = CGSize(width: 240, height: 100)
+    let box = CGRect(x: 20 / size.width, y: 20 / size.height, width: 120 / size.width, height: 28 / size.height)
+    let ink = CGRect(x: 21 / size.width, y: 21 / size.height, width: 80 / size.width, height: 12 / size.height)
+    let appearance = OverlaySourceAppearance(
+      background: .white,
+      foreground: .init(red: 0.05, green: 0.3, blue: 0.9, alpha: 1),
+      confidence: 1,
+      fontSizeScale: 0.14,
+      fontWeight: .regular
+    )
+    let source = OCRResult.Line(
+      boundingBoxNormalized: box,
+      text: "Share",
+      imageAspectRatio: 2.4,
+      appearance: appearance,
+      styleRuns: [.init(
+        range: .init(location: 0, length: 5),
+        box: box,
+        appearance: appearance,
+        inkBox: ink
+      )]
+    )
+    var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
+    line.showTranslation("공유", language: .init(identifier: "ko"))
+    let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    #expect(abs(placement.frame.midY - 27) < 0.01)
+    let image = try #require(OverlayRasterRenderer.render(
+      lines: [line],
+      size: size,
+      scale: scale,
+      prefersHorizontalTextLayout: false
+    ))
+    let context = try #require(CGContext(
+      data: nil,
+      width: image.width,
+      height: image.height,
+      bitsPerComponent: 8,
+      bytesPerRow: image.width * 4,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
+    let rows = (0..<image.height).filter { y in (0..<image.width).contains { x in
+      let offset = (y * image.width + x) * 4
+      return Int(bytes[offset + 2]) - Int(bytes[offset]) > 40
+    } }
+    let top = try #require(rows.first)
+    let bottom = try #require(rows.last)
+    #expect(abs(CGFloat(top + bottom + 1) / (2 * scale) - 27) <= 1 / scale)
+  }
+
   @Test(arguments: [("en", "A B"), ("ar", "نص عربي")])
   func inlineBackgroundIsPaintedOnceByNativeCoreText(_ sample: (String, String)) throws {
     let base = OverlaySourceAppearance(

@@ -234,6 +234,12 @@ enum OverlayLayoutEngine {
       among: lines
     )
     var frame = inkAlignedFrame(for: line, alignment: alignment, sourceFrame: source, canvas: canvas) ?? source
+    if abs(line.source.rotationRadians) > 0.025, !line.source.isReconstructedTextRegion {
+      // An oriented OCR hint is a shaping axis, not a second ownership bound.
+      // The transformed glyph footprint still has to fit the original box.
+      frame.origin.y = boundary.minY
+      frame.size.height = boundary.height
+    }
     if line.source.isReconstructedTextRegion, let surface = exclusiveSurface(for: line, among: lines) {
       let interior = sourceFrame(for: surface.box, canvas: canvas, safeBounds: source)
       if !interior.isNull, !interior.isEmpty { frame = interior }
@@ -463,7 +469,16 @@ enum OverlayLayoutEngine {
     // the visible reading edge; only centered text needs both ink edges.
     let minimumX = alignment == .trailing ? sourceFrame.minX : left
     let maximumX = alignment == .leading ? sourceFrame.maxX : right
-    return CGRect(x: minimumX, y: sourceFrame.minY, width: maximumX - minimumX, height: sourceFrame.height)
+    // The measured ink anchors the row, while the original observation still
+    // supplies its fitting height. A target script's taller glyphs must not be
+    // shrunk to the source alphabet's cap height. Final paint stays in its owner.
+    let centerY = min(sourceFrame.maxY, max(sourceFrame.minY, ink.midY * canvas.height))
+    return CGRect(
+      x: minimumX,
+      y: centerY - sourceFrame.height / 2,
+      width: maximumX - minimumX,
+      height: sourceFrame.height
+    )
   }
 
   private static func avoidingRetainedContent(_ placement: OverlayPlacement, canvasSize: CGSize) -> OverlayPlacement? {

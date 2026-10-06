@@ -261,6 +261,53 @@ struct CaptureFeatureTests {
     #expect(!store.state.isTranslating)
   }
 
+  @Test
+  func styledRevisionCanReplaceTheEarlierPlainWordingInTheSameGeneration() async {
+    var state = makeState()
+    state.overlayLines[0].source.styleRuns = [.init(
+      range: NSRange(location: 0, length: 2),
+      box: pendingLine.source.box,
+      appearance: .init(
+        background: .white,
+        foreground: .init(
+          red: 0.2,
+          green: 0.4,
+          blue: 0.8,
+          alpha: 1
+        ),
+        confidence: 1
+      )
+    )]
+    let store = TestStore(initialState: state) { CaptureFeature() }
+    store.exhaustivity = .off
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: .init(text: "Earlier wording")
+    ))
+    var formatted = AttributedString("Linked revised wording")
+    formatted.link = URL(string: "swiftycrow-style://run/0")!
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: .init(
+        text: String(formatted.characters),
+        attributedText: formatted
+      )
+    ))
+    #expect(store.state.overlayLines[0].translatedText == "Linked revised wording")
+    #expect(store.state.overlayLines[0].displayedStyleRuns.count == 1)
+    await store.send(.translationResponse(
+      generation: 1,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: .init(text: "Stale wording")
+    ))
+    #expect(store.state.overlayLines[0].translatedText == "Linked revised wording")
+  }
+
   // MARK: Private
 
   private var cacheKey: CaptureFeature.TranslationCacheKey {

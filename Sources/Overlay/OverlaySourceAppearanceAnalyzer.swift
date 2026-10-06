@@ -90,6 +90,9 @@ enum OverlaySourceAppearanceAnalyzer {
           band: samplingBand
         )
       }
+      if let samplingRaster, !line.isVerticalBlock {
+        line.styleRuns = separatingChromaticReferences(line, raster: samplingRaster, band: samplingBand)
+      }
       let observedRuns = line.styleRuns
       var sampledRuns = [(box: CGRect, appearance: OverlaySourceAppearance)]()
       line.styleRuns = observedRuns.map { run in
@@ -368,7 +371,11 @@ enum OverlaySourceAppearanceAnalyzer {
       return line
     })
     let assigned = OCRTableStructure.classifyingObservedCells(styled, cells: tableCells)
-    let separated = OCRVisualStructure.separatingStyleAccessories(assigned)
+    let references = styleRaster.map { completingChromaticReferences(assigned, raster: $0) } ?? assigned
+    let separated = OCRInlineSourceFragments.capturingAnnotations(
+      OCRVisualStructure.separatingCompoundControls(OCRVisualStructure.separatingStyleAccessories(references)),
+      image: image
+    )
     let spaced = styleRaster.map { raster in
       OCRVisualSpacing.refining(
         separated,
@@ -648,6 +655,117 @@ enum OverlaySourceAppearanceAnalyzer {
 
     private let columnLimits: [(minimum: Int, maximum: Int)]?
 
+  }
+
+  /// Vision sometimes assigns a raised link and its preceding word one box.
+  /// A distinct chromatic component supplies exclusive ownership for the
+  /// reference, including brackets that OCR flattened into the word's range.
+  private static func completingChromaticReferences(_ result: OCRResult, raster: PixelRaster) -> OCRResult {
+    .init(lines: result.lines.map { line in
+      guard !line.isVerticalBlock, !line.preservesSource else { return line }
+      let text = line.text as NSString
+      var line = line
+      let original = line.styleRuns
+      line.styleRuns = original.map { run in
+        let shared = original.filter { sameBox($0.box, run.box) }
+        let range = shared.reduce(run.range) { NSUnionRange($0, $1.range) }
+        guard NSMaxRange(range) <= text.length, let ink = run.inkBox, isChromatic(run.appearance.foreground) else { return run }
+        let value = text.substring(with: range)
+        guard
+          value.count <= 16, value.contains(where: \.isNumber),
+          value.contains(where: { "[]［］()（）".contains($0) }),
+          value.allSatisfy({ $0.isNumber || "[]［］()（）.,".contains($0) })
+        else { return run }
+        // A dropped bracket can lie just outside Vision's range box. Recover
+        // only nearby ink of the same hue; adjacent body ink has no ownership
+        // here. The completed marker is retained rather than translated.
+        let pixels = pixelRect(for: ink, raster: raster)
+        let margin = max(1, pixels.height * 0.3)
+        let search = pixels.insetBy(dx: -margin, dy: -margin).integral
+          .intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
+        var complete = CGRect.null
+        for y in Int(search.minY)..<Int(search.maxY) {
+          for x in Int(search.minX)..<Int(search.maxX) {
+            guard
+              let color = raster.color(at: y * raster.width + x),
+              color.distance(to: run.appearance.background) > 0.02,
+              sameInkColor(.init(background: run.appearance.background, foreground: color, confidence: 1), run.appearance)
+            else { continue }
+            complete = complete.union(CGRect(x: x, y: y, width: 1, height: 1))
+          }
+        }
+        guard !complete.isNull else { return run }
+        var run = run
+        run.inkBox = CGRect(
+          x: complete.minX / CGFloat(raster.width),
+          y: complete.minY / CGFloat(raster.height),
+          width: complete.width / CGFloat(raster.width),
+          height: complete.height / CGFloat(raster.height)
+        )
+        return run
+      }
+      return line
+    })
+  }
+
+  private static func separatingChromaticReferences(
+    _ line: OCRResult.Line,
+    raster: PixelRaster,
+    band: CGRect
+  ) -> [OverlaySourceStyleRun] {
+    let text = line.text as NSString
+    return line.styleRuns.flatMap { run -> [OverlaySourceStyleRun] in
+      let shared = line.styleRuns.filter { sameBox($0.box, run.box) }
+      let range = shared.reduce(run.range) { NSUnionRange($0, $1.range) }
+      guard NSMaxRange(range) <= text.length else { return [run] }
+      let value = text.substring(with: range)
+      guard
+        value.contains(where: \.isLetter),
+        let suffix = value.range(of: #"[\[(]?\d+(?:\.\d+)?[\])]$"#, options: .regularExpression)
+      else { return [run] }
+      let local = NSRange(suffix, in: value)
+      let annotation = NSRange(location: range.location + local.location, length: local.length)
+      let pixels = pixelRect(for: run.box, raster: raster).intersection(pixelRect(for: band, raster: raster)).integral
+      let background = sampledSurroundingBackground(around: run.box, raster: raster) ?? line.appearance.background
+      var colored = CGRect.null
+      for y in Int(pixels.minY)..<Int(pixels.maxY) {
+        for x in Int(pixels.minX)..<Int(pixels.maxX) {
+          guard
+            let color = raster.color(at: y * raster.width + x),
+            isChromatic(color), color.distance(to: background) > 0.15
+          else { continue }
+          colored = colored.union(CGRect(x: x, y: y, width: 1, height: 1))
+        }
+      }
+      guard
+        !colored.isNull, colored.width <= pixels.width * 0.5,
+        colored.width <= colored.height * 4,
+        min(colored.minX - pixels.minX, pixels.maxX - colored.maxX) <= max(2, pixels.height * 0.3)
+      else { return [run] }
+      let markerOnRight = colored.midX > pixels.midX
+      let body = CGRect(
+        x: markerOnRight ? pixels.minX : colored.maxX,
+        y: pixels.minY,
+        width: markerOnRight ? colored.minX - pixels.minX : pixels.maxX - colored.maxX,
+        height: pixels.height
+      )
+      let prefix = NSRange(location: range.location, length: annotation.location - range.location)
+      return [(prefix, body), (annotation, colored.insetBy(dx: -0.5, dy: -0.5).intersection(pixels))]
+        .compactMap { scope, bounds -> OverlaySourceStyleRun? in
+          let intersection = NSIntersectionRange(run.range, scope)
+          guard intersection.length > 0, bounds.width > 0, bounds.height > 0 else { return nil }
+          var piece = run
+          piece.range = intersection
+          piece.box = CGRect(
+            x: bounds.minX / CGFloat(raster.width),
+            y: bounds.minY / CGFloat(raster.height),
+            width: bounds.width / CGFloat(raster.width),
+            height: bounds.height / CGFloat(raster.height)
+          )
+          piece.inkBox = nil
+          return piece
+        }
+    }
   }
 
   private static func splitChromaticRuns(
@@ -1250,6 +1368,7 @@ enum OverlaySourceAppearanceAnalyzer {
     var foregroundGreen: CGFloat = 0
     var foregroundBlue: CGFloat = 0
     var foregroundSampleCount = 0
+    var foregroundBuckets = [Int: Bucket]()
     var foregroundMinimumY = Int.max
     var foregroundMaximumY = Int.min
     var inkSampleCount = 0
@@ -1267,6 +1386,18 @@ enum OverlaySourceAppearanceAnalyzer {
       for x in Int(source.minX) ..< Int(source.maxX) {
         guard let color = raster.color(at: y * raster.width + x) else { continue }
         let distance = color.distance(to: background)
+        if distance >= max(0.08, maximumDistance * 0.65) {
+          let red = Int((color.red * 255).rounded())
+          let green = Int((color.green * 255).rounded())
+          let blue = Int((color.blue * 255).rounded())
+          let key = (red / 16) * 256 + (green / 16) * 16 + blue / 16
+          var bucket = foregroundBuckets[key, default: Bucket()]
+          bucket.count += 1
+          bucket.red += red
+          bucket.green += green
+          bucket.blue += blue
+          foregroundBuckets[key] = bucket
+        }
         if distance >= foregroundThreshold {
           foregroundRed += color.red
           foregroundGreen += color.green
@@ -1292,8 +1423,57 @@ enum OverlaySourceAppearanceAnalyzer {
         }
       }
     }
+    // An isolated darker bracket must not choose the ink color of a blue
+    // link. The modal strong-ink cluster represents the observed glyph style;
+    // the darkest pixel alone only measures contrast, not semantic ownership.
+    func bucketColor(_ bucket: Bucket) -> OverlayColor {
+      .init(
+        red: CGFloat(bucket.red) / CGFloat(bucket.count * 255),
+        green: CGFloat(bucket.green) / CGFloat(bucket.count * 255),
+        blue: CGFloat(bucket.blue) / CGFloat(bucket.count * 255),
+        alpha: 1
+      )
+    }
+    func sameFamily(_ a: Bucket, _ b: Bucket) -> Bool {
+      sameInkColor(
+        .init(background: background, foreground: bucketColor(a), confidence: 1),
+        .init(background: background, foreground: bucketColor(b), confidence: 1)
+      )
+    }
+    // Antialiasing disperses one hue across RGB buckets. Count its family
+    // before choosing a mode so a few solid black brackets cannot win by
+    // occupying one undispersed bucket.
+    let mode = foregroundBuckets.values.sorted { $0.count > $1.count }.prefix(8)
+      .map { candidate in
+        (bucket: candidate, count: foregroundBuckets.values.filter { sameFamily($0, candidate) }.reduce(0) { $0 + $1.count })
+      }.max(by: { $0.count < $1.count })?.bucket
+    let family = mode.map { mode in
+      foregroundBuckets.values.filter {
+        sameInkColor(
+          .init(background: background, foreground: bucketColor($0), confidence: 1),
+          .init(background: background, foreground: bucketColor(mode), confidence: 1)
+        )
+      }
+    } ?? []
+    let familyContrast = family.map { bucketColor($0).distance(to: background) }.max() ?? 0
+    let dominantForeground = family.filter { bucketColor($0).distance(to: background) >= familyContrast * 0.94 }
+      .reduce(Bucket()) { sum, item in
+        Bucket(
+          count: sum.count + item.count,
+          red: sum.red + item.red,
+          green: sum.green + item.green,
+          blue: sum.blue + item.blue
+        )
+      }
     let foreground: OverlayColor =
-      if foregroundSampleCount > 0 {
+      if dominantForeground.count > 0 {
+        OverlayColor(
+          red: CGFloat(dominantForeground.red) / CGFloat(dominantForeground.count * 255),
+          green: CGFloat(dominantForeground.green) / CGFloat(dominantForeground.count * 255),
+          blue: CGFloat(dominantForeground.blue) / CGFloat(dominantForeground.count * 255),
+          alpha: 1
+        )
+      } else if foregroundSampleCount > 0 {
         OverlayColor(
           red: foregroundRed / CGFloat(foregroundSampleCount),
           green: foregroundGreen / CGFloat(foregroundSampleCount),

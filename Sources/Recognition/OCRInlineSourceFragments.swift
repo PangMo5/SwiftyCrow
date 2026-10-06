@@ -19,7 +19,8 @@ enum OCRInlineSourceFragments {
     result.lines.contains { line in
       !line.isVerticalBlock && !line.preservesSource && !line.needsReview
         && abs(line.rotationRadians) < 0.025 && line.appearance.fontSizeScale > 0
-        && hasCompleteRunCoverage(line) && !candidateRanges(in: line.text).isEmpty
+        && hasCompleteRunCoverage(line) &&
+        (line.styleRuns.contains { $0.sourceFragment != nil } || !candidateRanges(in: line.text).isEmpty)
     }
   }
 
@@ -121,6 +122,73 @@ enum OCRInlineSourceFragments {
       result.lines[index] = line
     }
     return result
+  }
+
+  static func capturingAnnotations(_ result: OCRResult, image: CGImage) -> OCRResult {
+    let size = CGSize(width: image.width, height: image.height)
+    return .init(lines: result.lines.map { original in
+      var line = original
+      for annotation in OCRVisualStructure.inlineAnnotations(in: original) where !annotation.isSeparator {
+        let neighbors = original.styleRuns.filter {
+          NSIntersectionRange($0.range, annotation.range).length == 0
+            && Range($0.range, in: original.text).map { original.text[$0].contains(where: \.isLetter) } == true
+            && abs(($0.inkBox ?? $0.box).midY - annotation.inkBox.midY) <= ($0.inkBox ?? $0.box).height
+        }
+        let fontSize = original.appearance.fontSizeScale * size.height
+        guard fontSize > 0, !neighbors.isEmpty else { continue }
+        let baselines = neighbors.compactMap { run -> CGFloat? in
+          guard let ink = run.inkBox, let range = Range(run.range, in: original.text) else { return nil }
+          let reference = CTLineCreateWithAttributedString(NSAttributedString(string: String(original.text[range]), attributes: [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: run.appearance.fontWeight.nsFontWeight)
+          ]))
+          return ink.maxY * size.height + CTLineGetBoundsWithOptions(reference, [.useGlyphPathBounds]).minY
+        }.sorted()
+        guard !baselines.isEmpty else { continue }
+        let baseline = baselines[baselines.count / 2]
+        var bounds = pixelBox(annotation.inkBox, size: size).insetBy(dx: -1, dy: -1)
+        bounds = bounds.integral.intersection(CGRect(origin: .zero, size: size))
+        guard
+          bounds.width > 0, bounds.height > 0, bounds.width * bounds.height <= 100_000,
+          let crop = image.cropping(to: bounds),
+          let context = CGContext(
+            data: nil,
+            width: crop.width,
+            height: crop.height,
+            bitsPerComponent: 8,
+            bytesPerRow: crop.width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          ),
+          let bytes = context.data
+        else { continue }
+        context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
+        guard
+          let fragment = OverlayInlineSourceFragment(
+            pixels: Data(bytes: bytes, count: crop.width * crop.height * 4),
+            width: crop.width,
+            height: crop.height,
+            descent: bounds.maxY - baseline,
+            referenceFontSize: fontSize,
+            kind: .annotation
+          )
+        else { continue }
+        line.styleRuns.removeAll { NSIntersectionRange($0.range, annotation.range).length > 0 }
+        line.styleRuns.append(.init(
+          range: annotation.range,
+          box: annotation.inkBox,
+          appearance: annotation.runs[0].appearance,
+          inkBox: CGRect(
+            x: bounds.minX / size.width,
+            y: bounds.minY / size.height,
+            width: bounds.width / size.width,
+            height: bounds.height / size.height
+          ),
+          sourceFragment: fragment
+        ))
+        line.styleRuns.sort { $0.range.location < $1.range.location }
+      }
+      return line
+    })
   }
 
   // MARK: Private

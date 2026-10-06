@@ -117,7 +117,7 @@ enum OverlayRasterRenderer {
       let glyphs: CGImage?
       switch placement.flow {
       case .horizontal:
-        glyphs = HorizontalTextRenderer.image(for: placement, scale: scale)
+        glyphs = nil
       case .vertical(let progression):
         let appearance = placement.line.source.appearance
         glyphs = CoreTextTypesetter.verticalGlyphImage(
@@ -137,7 +137,6 @@ enum OverlayRasterRenderer {
           isUnderlined: appearance.isUnderlined
         )
       }
-      guard let glyphs else { return nil }
       context.saveGState()
       context.clip(to: bottomLeft(placement.placementBounds, height: size.height))
       context.translateBy(x: placement.frame.midX, y: size.height - placement.frame.midY)
@@ -149,7 +148,15 @@ enum OverlayRasterRenderer {
         height: placement.frame.height
       )
       context.clip(to: local)
-      context.draw(glyphs, in: local)
+      switch placement.flow {
+      case .horizontal:
+        context.translateBy(x: local.minX, y: local.minY)
+        guard HorizontalTextRenderer.draw(placement, in: context) else { return nil }
+
+      case .vertical:
+        guard let glyphs else { return nil }
+        context.draw(glyphs, in: local)
+      }
       context.restoreGState()
     }
     return context.makeImage()

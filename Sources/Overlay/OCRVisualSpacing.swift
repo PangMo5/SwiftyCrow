@@ -18,6 +18,7 @@ enum OCRVisualSpacing {
     let lines = result.lines.flatMap { line -> [OCRResult.Line] in
       guard
         !line.preservesSource, !line.isVerticalBlock, line.rowCount == 1,
+        !line.styleRuns.contains(where: { $0.sourceFragment != nil }),
         abs(line.rotationRadians) < 0.025, line.text.count <= 80,
         line.text.last.map({ !".!?。！？".contains($0) }) == true,
         !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text),

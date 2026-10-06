@@ -13,6 +13,35 @@ struct InlineSourceFragmentTests {
   // MARK: Internal
 
   @Test
+  func rewordedContextKeepsTheLinkWithItsTranslatedPhrase() throws {
+    let link = URL(string: "swiftycrow-style://run/1")!
+    var phrase = AttributedString("من سلسلة مقالات")
+    phrase.link = link
+    let source = AttributedString("جزء ") + phrase + AttributedString(" حول")
+    let target = try #require(TranslationStyleMapper.contextualTranslation(
+      source: source,
+      response: "관련 <s0>기사 시리즈</s0>의 일부"
+    ))
+    #expect(String(target.characters) == "관련 기사 시리즈의 일부")
+    let marked = try #require(TranslationStyleMapper.contextualTranslation(
+      source: source,
+      response: "관련 ZXQSTYLE0OPEN 기사 시리즈 ZXQSTYLE0CLOSE 의 일부"
+    ))
+    #expect(marked.runs.filter { $0.link == link }.map { String(marked.characters[$0.range]) } == [" 기사 시리즈 "])
+    #expect(target.runs.filter { $0.link == link }.map { String(target.characters[$0.range]) } == ["기사 시리즈"])
+    let rtl = try #require(TranslationStyleMapper.contextualTranslation(
+      source: source,
+      response: "ZXQSTYLE0CLOSE시리즈 기사ZXQSTYLE0OPEN의 일부"
+    ))
+    #expect(rtl.runs.filter { $0.link == link }.map { String(rtl.characters[$0.range]) } == ["시리즈 기사"])
+    #expect(TranslationStyleMapper.contextualTranslation(source: source, response: "관련 기사의 일부") == nil)
+    #expect(TranslationStyleMapper.contextualTranslation(
+      source: source,
+      response: "<s0>기사</s0> <s0>시리즈</s0>"
+    ) == nil)
+  }
+
+  @Test
   func sourcePixelGateRequiresTheWholeRegionAndTranslatedPublication() throws {
     let input = try fixture()
     let result = OCRInlineSourceFragments.applying(to: .init(lines: [input.line]), image: input.image)

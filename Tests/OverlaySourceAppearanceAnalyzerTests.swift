@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import AppKit
 import CoreGraphics
+import CoreText
 import Foundation
 import Testing
 @testable import SwiftyCrow
@@ -10,6 +12,150 @@ import Testing
 struct OverlaySourceAppearanceAnalyzerTests {
 
   // MARK: Internal
+
+  @Test(arguments: [false, true])
+  func aSharedWordBoxSeparatesTheRaisedChromaticReference(_ clipsBracket: Bool) async throws {
+    let size = CGSize(width: 240, height: 100)
+    let context = try #require(CGContext(
+      data: nil,
+      width: 240,
+      height: 100,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    func paint(_ text: String, _ font: CGFloat, _ x: CGFloat, _ y: CGFloat, _ color: NSColor) -> CGRect {
+      let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: [
+        .font: NSFont(name: "Arial", size: font)!,
+        .foregroundColor: color,
+      ]))
+      context.textPosition = CGPoint(x: x, y: y)
+      CTLineDraw(line, context)
+      let ink = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds])
+      return CGRect(x: x + ink.minX, y: size.height - y - ink.maxY, width: ink.width, height: ink.height)
+    }
+    let body = paint("Output.", 18, 20, 40, .black)
+    let reference = paint("[1.1]", 13, body.maxX + 2, 46, .systemBlue)
+    let pixels = body.union(reference).insetBy(dx: -1, dy: -1)
+    let box = CGRect(
+      x: pixels.minX / size.width,
+      y: pixels.minY / size.height,
+      width: pixels.width / size.width,
+      height: pixels.height / size.height
+    )
+    func normalized(_ pixels: CGRect) -> CGRect {
+      .init(
+        x: pixels.minX / size.width,
+        y: pixels.minY / size.height,
+        width: pixels.width / size.width,
+        height: pixels.height / size.height
+      )
+    }
+    let runs: [OverlaySourceStyleRun] = clipsBracket
+      ? [.init(range: NSRange(location: 0, length: 7), box: normalized(body.insetBy(dx: -1, dy: -1)))]
+        + (8...11).map { .init(
+          range: NSRange(location: $0, length: 1),
+          box: normalized(CGRect(
+            x: reference.minX + 3,
+            y: reference.minY - 1,
+            width: reference.width - 3,
+            height: reference.height + 2
+          ))
+        ) }
+      : [(0, 6), (6, 2), (8, 1), (9, 1), (10, 1), (11, 1)].map {
+        .init(range: NSRange(location: $0.0, length: $0.1), box: box)
+      }
+    let observed = OCRResult.Line(
+      boundingBoxNormalized: box,
+      text: clipsBracket ? "Output. 1.1]" : "Output.(1.1]",
+      imageAspectRatio: 2.4,
+      styleRuns: runs
+    )
+    let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
+      to: .init(lines: [observed]),
+      from: try #require(context.makeImage())
+    )
+    let paragraph = try #require(result.lines.first)
+    let retained = try #require(paragraph.styleRuns.first { $0.sourceFragment != nil })
+    #expect((paragraph.text as NSString).substring(with: retained.range) == (clipsBracket ? "1.1]" : "(1.1]"))
+    #expect(abs((try #require(retained.inkBox)).minX * size.width - reference.minX) < 2)
+    #expect(try #require(retained.sourceFragment).descent < 0)
+    #expect(result.lines.count == 1)
+    #expect(paragraph.text == observed.text)
+    #expect(paragraph.layoutExclusions.isEmpty)
+    var translated = OverlayLine(id: UUID(), source: .init(recognized: paragraph, language: .init(identifier: "en")))
+    let request = try #require(translated.source.attributedTextForTranslation())
+    let protection = try #require(TranslationLiteralPlan(request))
+    let regex = try NSRegularExpression(pattern: "ZXQ[0-9]+XQZ")
+    let match = try #require(regex.firstMatch(
+      in: protection.requestText,
+      range: NSRange(location: 0, length: protection.requestText.utf16.count)
+    ))
+    let token = (protection.requestText as NSString).substring(with: match.range)
+    let target = try #require(protection.restoring("결과." + token))
+    translated.showTranslation(String(target.characters), attributedText: target, language: .init(identifier: "ko"))
+    let carried = try #require(translated.displayedStyleRuns.first { $0.sourceFragment != nil })
+    #expect(carried.range.location == 3)
+    #expect(carried.sourceFragment == retained.sourceFragment)
+    let plan = HorizontalTextRenderer.plan(
+      text: translated.displayedText,
+      language: translated.displayedLanguage,
+      fontSize: retained.sourceFragment!.referenceFontSize,
+      appearance: translated.source.appearance,
+      styles: translated.displayedStyleRuns,
+      width: 180,
+      lineHeightMultiple: 1
+    )
+    let line = try #require(plan.lines.first)
+    #expect(InlineSourceFragmentRenderer.bounds(in: line).minY > 0)
+  }
+
+  @Test
+  func darkerBracketsDoNotTurnTheDominantLinkInkBlack() async throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 240,
+      height: 100,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 240, height: 100))
+    let content = NSMutableAttributedString(string: "[Open]", attributes: [
+      .font: NSFont(name: "Arial", size: 18)!,
+      .foregroundColor: NSColor.black,
+    ])
+    content.addAttribute(
+      .foregroundColor,
+      value: NSColor(calibratedRed: 0.2, green: 0.4, blue: 0.8, alpha: 1),
+      range: NSRange(location: 1, length: 4)
+    )
+    let line = CTLineCreateWithAttributedString(content)
+    context.textPosition = CGPoint(x: 20, y: 40)
+    CTLineDraw(line, context)
+    let ink = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds])
+    let box = CGRect(
+      x: (20 + ink.minX - 1) / 240,
+      y: (60 - ink.maxY - 1) / 100,
+      width: (ink.width + 2) / 240,
+      height: (ink.height + 2) / 100
+    )
+    let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(to: .init(lines: [
+      .init(
+        boundingBoxNormalized: box,
+        text: "[Open]",
+        imageAspectRatio: 2.4,
+        styleRuns: [.init(range: NSRange(location: 0, length: 6), box: box)]
+      )
+    ]), from: try #require(context.makeImage()))
+    let color = try #require(result.lines.first).appearance.foreground
+    #expect(color.blue > color.red + 0.4)
+  }
 
   @Test
   func neighboringLabelSearchLimitsCannotManufactureAClosedSurface() async throws {

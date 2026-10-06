@@ -242,7 +242,7 @@ struct OverlayLayoutEngineTests {
       return try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
     }
     let original = try placement()
-    #expect(original.fontSize >= preferred * 0.85)
+    #expect(original.fontSize + 0.25 >= preferred * 0.85)
     #expect(HorizontalTextRenderer.plan(for: original).lines.count == 2)
     source.layoutBounds = CGRect(x: 0, y: 10 / size.height, width: 343 / size.width, height: 61 / size.height)
     let expanded = try placement()

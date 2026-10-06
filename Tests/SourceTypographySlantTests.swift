@@ -19,6 +19,8 @@ struct SourceTypographySlantTests {
       "unsigned",
       "Settings",
       "Architecture",
+      "Jetzt",
+      "erstellen",
       "value",
       "minimum",
       "maximum",
@@ -129,10 +131,32 @@ struct SourceTypographySlantTests {
 
   @Test(arguments: [CGFloat(0.75), 0.88, 1, 1.25], [CGFloat(0), 0.5])
   func resampledUprightTextRetainsItsStyle(_ scale: CGFloat, _ phase: CGFloat) async throws {
-    for text in ["Architecture", "Settings", "Reference", "minimum"] {
+    for text in ["Architecture", "Settings", "Reference", "minimum", "Jetzt", "erstellen"] {
       let result = try await analyze(text, font: #require(NSFont(name: "Arial", size: 17)), scale: scale, phase: phase)
       #expect(!result.appearance.isItalic, "Resampled upright source: \(text), \(scale), \(phase)")
       #expect(result.styleRuns.allSatisfy { !$0.appearance.isItalic })
+    }
+  }
+
+  @Test
+  func capturedUprightSmallLinksRetainTheirRasterStyle() throws {
+    let samples: [(String, Int, Int, String)] = [
+      (
+        "Jetzt",
+        29,
+        10,
+        "AAAAAM3IAAAAAAAAAAAAX30AAAAAAAAAAABffQAAAAAAzcgAAAAAAAAAAACi1wAAAAAAAAAAAKLXAAAAAADNyAAAOr7mwlYAfe76xxbIyMjIyKB97vrHAAAAAM3IAC765Ye+/1ZL1Ot+DpeXl9D/s0vU634AAAAAzcgAq/oUAAXbwACi1wAAAAAa5uYZAKLXAAAAAADNyADd8Zubm+LmAKLXAAAABsj6OAAAotcAkSwAANDIAO7rpaWlpZoAotcAAACb/2UAAACi1wD/ZQAA4qwAzOYBAABweACi1wAAaP+YAAAAAKLXAPzNS6D/fQBz/5c4hP6IAJvxODb6+mBaWlUAm/E4cu7//8gSAAWg////tAoAT/r/bf//////6wBP+v8="
+      ),
+      (
+        "erstellen",
+        52,
+        10,
+        "AAAAAAAAAAAAAAAAAAAAAAAAAABffQAAAAAAAAAAAC7/SC7/SAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAotcAAAAAAAAAAAAu/0gu/0gAAAAAAAAAAAAAAAAAAAAAE6Dc1ooGAGWzadtCLJrm3IoFfe76xwEActDirCQALv9ILv9IAABy0OKsJAApyFzD6r4kBNH5n5b+qgCD///NMMrYdqz/aUvU634Bfv/Dg+TrFC7/SC7/SAB+/8OD5OsUN///qKv/vFb/ZAAAiv4Zg/9sABj/oQAAg2YAotcADPW5AAA0/2wu/0gu/0gM9bkAADT/bDf/kQAApeqH/6mbm8D/PIP6DAAAqv/akEEAAKLXADL/0Jubm/+RLv9ILv9IMv/Qm5ub/5E3/0sAAIH8mP+qpaWlpSyD9AAAAA9zvvr/bgCi1wBE/82lpaWlYy7/SC7/SET/zaWlpaVjN/9AAACA/Hf/PQAAPZcUg/QAACiXGgAQzNwAotcAIv+SAAAMlkYu/0gu/0gi/5IAAAyWRjf/QAAAgPwk+shIX+HcAYP0AAAM9awzMeKpAJvxOAHI7mxBuP80Lv9ILv9IAcjubEG4/zQ3/0AAAID8AFv0///eMwCC8AAAAHb0///KMQBP+v8CJ9P///VzAC3/Ri3/RgAn0///9XMANv8+AAB9+g=="
+      ),
+    ]
+    for (text, width, height, data) in samples {
+      let bytes = try #require(Data(base64Encoded: data))
+      #expect(!SourceTypographySlant.isItalic(text: text, ink: bytes.map { CGFloat($0) / 255 }, width: width, height: height))
     }
   }
 
