@@ -18,8 +18,8 @@ struct OverlayView: View {
   let lines: [OverlayLine]
   let isTranslating: Bool
   let isLive: Bool
-  /// Translation failed (usually a missing model) — shows the "open Settings"
-  /// hint banner along the bottom.
+  /// Translation failed (usually a missing model). Details and recovery live
+  /// in the warning popover, without a duplicate banner over the source text.
   var translationUnavailable = false
   var lastError: String? = nil
   /// Recognition or subsequent layout analysis has exceeded the hint delay.
@@ -64,10 +64,12 @@ struct OverlayView: View {
       }
       .overlay(alignment: .topTrailing) {
         HStack(spacing: 6) {
-          if lines.contains(where: { $0.source.needsReview }) {
-            Image(systemName: "exclamationmark.triangle")
-              .foregroundStyle(.orange)
-              .help("Some text may be misread. Compare with the original.")
+          if hasWarnings {
+            CaptureWarningButton(
+              needsReview: lines.contains(where: { $0.source.needsReview }),
+              translationUnavailable: translationUnavailable,
+              message: lastError
+            )
           }
           // A small spinner while the overlay is busy (capturing / OCR or
           // translating); nothing otherwise.
@@ -75,15 +77,21 @@ struct OverlayView: View {
             ProgressView()
               .controlSize(.small)
           }
-          // LIVE toggle + close are chrome: like the move handle, they only
-          // appear while the cursor is over the overlay. Removed from layout
-          // (not just hidden) when away, so the spinner sits flush in the
-          // top-right corner on its own instead of leaving a gap for them.
-          if showsControls {
+          if showsControls || hasWarnings {
             HStack(spacing: 6) {
-              LiveHandle(isLive: isLive, action: onToggleLive)
+              if showsControls {
+                LiveHandle(isLive: isLive, action: onToggleLive)
+              } else {
+                // Reserve the exact localized label width without mounting
+                // an invisible pulsing indicator. Hover cannot move the
+                // leading warning away from the cursor.
+                LiveHandleLabel(isLive: isLive).hidden()
+              }
               CloseHandle(action: onClose)
+                .opacity(showsControls ? 1 : 0)
             }
+            .allowsHitTesting(showsControls)
+            .accessibilityHidden(!showsControls)
             .transition(.move(edge: .trailing).combined(with: .opacity))
           }
         }
@@ -91,12 +99,7 @@ struct OverlayView: View {
         .padding(10)
       }
       .overlay(alignment: .bottom) {
-        if translationUnavailable, !frameOnly {
-          TranslationModelHint(message: lastError)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .padding(8)
-            .transition(.opacity)
-        } else if isPreparingRecognition {
+        if isPreparingRecognition {
           // Shown in Window mode too: there the overlay is just a frame, which
           // makes an unexplained wait even harder to read.
           PreparingRecognitionNote()
@@ -111,6 +114,10 @@ struct OverlayView: View {
   }
 
   // MARK: Private
+
+  private var hasWarnings: Bool {
+    lastError != nil || translationUnavailable || lines.contains(where: { $0.source.needsReview })
+  }
 
   private var showsControls: Bool {
     showMoveHandle
@@ -130,6 +137,58 @@ struct OverlayView: View {
   }
 }
 
+// MARK: - CaptureWarningButton
+
+/// Remains available even when setup advice is dismissed or the translation
+/// lives in a separate window. The native popover owns its own mouse handling;
+/// the overlay's interior continues passing events through to the source app.
+private struct CaptureWarningButton: View {
+
+  // MARK: Internal
+
+  let needsReview: Bool
+  let translationUnavailable: Bool
+  let message: String?
+
+  var body: some View {
+    Button { isPresented.toggle() } label: {
+      Image(systemName: "exclamationmark.triangle")
+        .foregroundStyle(.orange)
+        .frame(width: 24, height: 24)
+        .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+    .help("Show capture warnings")
+    .accessibilityLabel("Show capture warnings")
+    .popover(isPresented: $isPresented, arrowEdge: .bottom) {
+      VStack(alignment: .leading, spacing: 12) {
+        if translationUnavailable {
+          TranslationFailureDetails(message: message)
+        } else if let message {
+          Label("Capture", systemImage: "exclamationmark.triangle.fill")
+            .fontWeight(.semibold)
+          Text(message)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        if needsReview {
+          Label("Some text may be misread. Compare the translation with the original.", systemImage: "text.magnifyingglass")
+            .font(.callout)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      .font(.callout)
+      .padding(16)
+      .frame(width: 320, alignment: .leading)
+      .textSelection(.enabled)
+    }
+  }
+
+  // MARK: Private
+
+  @State private var isPresented = false
+
+}
+
 // MARK: - LiveHandle
 
 /// Always-present control that toggles Live. It carries colour while Live is on
@@ -143,22 +202,7 @@ private struct LiveHandle: View {
 
   var body: some View {
     Button(action: action) {
-      HStack(spacing: 4) {
-        Circle()
-          .fill(isLive ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
-          .frame(width: 7, height: 7)
-          .opacity(isLive && pulse ? 0.35 : 1)
-          .animation(
-            isLive ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default,
-            value: pulse
-          )
-        Text("LIVE")
-          .font(.system(size: 10, weight: .bold, design: .rounded))
-          .foregroundStyle(isLive ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-      }
-      .padding(.horizontal, 7)
-      .padding(.vertical, 3)
-      .glassEffect(.regular.tint(isLive ? .red : nil), in: Capsule())
+      LiveHandleLabel(isLive: isLive, pulse: pulse)
     }
     .buttonStyle(.plain)
     .onAppear { pulse = true }
@@ -170,6 +214,32 @@ private struct LiveHandle: View {
 
   @State private var pulse = false
 
+}
+
+// MARK: - LiveHandleLabel
+
+private struct LiveHandleLabel: View {
+  let isLive: Bool
+  var pulse = false
+
+  var body: some View {
+    HStack(spacing: 4) {
+      Circle()
+        .fill(isLive ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+        .frame(width: 7, height: 7)
+        .opacity(isLive && pulse ? 0.35 : 1)
+        .animation(
+          isLive ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default,
+          value: pulse
+        )
+      Text("LIVE")
+        .font(.system(size: 10, weight: .bold, design: .rounded))
+        .foregroundStyle(isLive ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+    }
+    .padding(.horizontal, 7)
+    .padding(.vertical, 3)
+    .glassEffect(.regular.tint(isLive ? .red : nil), in: Capsule())
+  }
 }
 
 // MARK: - MoveHandle

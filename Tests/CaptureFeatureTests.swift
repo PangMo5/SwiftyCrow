@@ -71,6 +71,27 @@ struct CaptureFeatureTests {
   }
 
   @Test
+  func recoveredTranslationClearsTheFailureShownByTheWarningPopover() async {
+    var state = makeState()
+    state.translationUnavailable = true
+    state.lastError = "Required model is not installed."
+    let store = TestStore(initialState: state) { CaptureFeature() }
+    await store.send(.translationResponse(
+      generation: 2,
+      lineID: pendingLine.id,
+      key: cacheKey,
+      translation: .init(text: "Recovered translation")
+    )) {
+      $0.translationCache[cacheKey] = .init(text: "Recovered translation")
+      $0.translationCacheOrder = [cacheKey]
+      $0.overlayLines[0].showTranslation("Recovered translation", language: Locale.Language(identifier: "en-US"))
+      $0.isTranslating = false
+      $0.translationUnavailable = false
+      $0.lastError = nil
+    }
+  }
+
+  @Test
   func emptyResponseBecomesVisibleErrorWithoutPoisoningCache() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()

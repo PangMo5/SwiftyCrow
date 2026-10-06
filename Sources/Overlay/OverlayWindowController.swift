@@ -432,17 +432,6 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       return
     }
 
-    // Bottom hint banner (shown when the translation model is missing, unless
-    // the user dismissed it): keep it clickable so its buttons work.
-    if model.translationUnavailable, !UserDefaults.standard.bool(forKey: translationModelHintDismissedKey) {
-      let hintZone = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: 64)
-      if hintZone.contains(mouse) {
-        window.alphaValue = 1
-        window.ignoresMouseEvents = false
-        return
-      }
-    }
-
     // Edges stay interactive for resizing.
     let withinX = mouse.x >= frame.minX - resizeMargin && mouse.x <= frame.maxX + resizeMargin
     let withinY = mouse.y >= frame.minY - resizeMargin && mouse.y <= frame.maxY + resizeMargin

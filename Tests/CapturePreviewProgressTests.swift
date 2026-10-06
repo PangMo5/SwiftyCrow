@@ -8,6 +8,42 @@ import Testing
 
 @MainActor
 struct CapturePreviewProgressTests {
+  @Test(arguments: [false, true])
+  func autoSourceFailureKeepsOriginalAndStopsLoadingWithAnExplicitError(_ missingModel: Bool) async {
+    let state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
+      RegionCaptureFeature.State(target: .region(.zero))
+    }
+    state.$settings.withLock {
+      $0.languages.source = .auto
+      $0.languages.target = Language(code: "ko")
+    }
+    let store = Store(initialState: state) { RegionCaptureFeature() } withDependencies: {
+      $0.uuid = .incrementing
+      $0.languageDetection = .liveValue
+      $0.translation.translateBatch = { _, source, target, _ in
+        #expect(source.languageCode?.identifier == "de")
+        #expect(target.languageCode?.identifier == "ko")
+        return AsyncThrowingStream {
+          if missingModel {
+            $0.finish(throwing: TranslationModelResolver.ModelError(message: "Required model is not installed."))
+          } else {
+            $0.finish()
+          }
+        }
+      }
+    }
+    var line = OCRResult.Line(boundingBoxNormalized: .zero, text: "Künstliche Intelligenz")
+    line.recognitionLanguages = ["de"]
+    await store.send(.recognized(.init(pngData: Data([1]), size: .zero, lines: [line]), restorationPending: false)).finish()
+    #expect(!store.state.isRecognizing && !store.state.isRestoring && !store.state.isTranslating)
+    #expect(store.state.lastError != nil)
+    #expect(store.state.translationUnavailable == missingModel)
+    #expect(store.state.overlayLines[0].isUnavailable)
+    #expect(store.state.overlayLines[0].translatedText == nil)
+    #expect(!store.state.overlayLines[0].shouldReplaceSourcePixels)
+    #expect(store.state.imageData == Data([1]))
+  }
+
   @Test
   func translationCanFinishDuringRestorationButCannotPaintUnrestoredPixels() async {
     var state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
