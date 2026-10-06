@@ -89,11 +89,8 @@ extension ScreenCaptureClient: DependencyKey {
           throw ScreenCaptureError.noDisplay
         }
 
-        let nsScreen = NSScreen.screens.first { screen in
-          let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
-          return number?.uint32Value == display.displayID
-        }
-        let scale = nsScreen?.backingScaleFactor ?? 1
+        let screen = await displayGeometry(for: display.displayID)
+        let scale = screen.scale ?? 1
 
         // Resolve exclusions from the current ScreenCaptureKit snapshot on every
         // capture. Passing a window id that was read before the overlay panel was
@@ -125,8 +122,8 @@ extension ScreenCaptureClient: DependencyKey {
 
         var capturedFrame: CGRect?
         if let overlayFrame {
-          guard let nsScreen else { throw ScreenCaptureError.noDisplay }
-          let geometry = try ScreenCaptureRegionGeometry(requested: overlayFrame, display: nsScreen.frame)
+          guard let frame = screen.frame else { throw ScreenCaptureError.noDisplay }
+          let geometry = try ScreenCaptureRegionGeometry(requested: overlayFrame, display: frame)
           capturedFrame = geometry.intersection
           configuration.sourceRect = geometry.sourceRect
           configuration.width = max(1, Int((geometry.intersection.width * scale).rounded(.up)))
@@ -188,11 +185,8 @@ extension ScreenCaptureClient: DependencyKey {
       // The window may live on a non-main display; match its display's backing
       // scale so the screenshot keeps native resolution.
       let display = content.displays.first { $0.frame.intersects(window.frame) }
-      let nsScreen = NSScreen.screens.first { screen in
-        let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
-        return number?.uint32Value == display?.displayID
-      }
-      let scale = nsScreen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+      let screen = await displayGeometry(for: display?.displayID)
+      let scale = screen.scale ?? screen.mainScale
 
       let configuration = SCStreamConfiguration()
       configuration.pixelFormat = kCVPixelFormatType_32BGRA
@@ -202,11 +196,9 @@ extension ScreenCaptureClient: DependencyKey {
 
       let filter = SCContentFilter(desktopIndependentWindow: window)
       let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
-      let flipHeight = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
-        ?? NSScreen.main?.frame.height ?? 0
       return CapturedWindow(image: image, frame: CGRect(
         x: window.frame.minX,
-        y: flipHeight - window.frame.maxY,
+        y: screen.flipHeight - window.frame.maxY,
         width: window.frame.width,
         height: window.frame.height
       ))
@@ -215,6 +207,25 @@ extension ScreenCaptureClient: DependencyKey {
       if !(await ScreenRecordingAccessState.shared.isGranted()) { throw ScreenCaptureError.permissionRequired }
       throw error
     }
+  }
+
+  /// Read AppKit display state on the main actor and transfer only values to
+  /// the screen-acquisition worker. NSScreen instances never cross that boundary.
+  @MainActor
+  private static func displayGeometry(
+    for displayID: CGDirectDisplayID?
+  ) -> (frame: CGRect?, scale: CGFloat?, mainScale: CGFloat, flipHeight: CGFloat) {
+    let screens = NSScreen.screens
+    let screen = screens.first {
+      let number = $0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+      return number?.uint32Value == displayID
+    }
+    return (
+      screen?.frame,
+      screen?.backingScaleFactor,
+      NSScreen.main?.backingScaleFactor ?? 2,
+      screens.first(where: { $0.frame.origin == .zero })?.frame.height ?? NSScreen.main?.frame.height ?? 0
+    )
   }
 }
 

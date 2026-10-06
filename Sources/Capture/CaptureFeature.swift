@@ -850,7 +850,7 @@ struct CaptureFeature {
     ) { [screenCapture] in
       try await screenCapture.captureImage(
         overlayFrame.rect,
-        displayID(coveringMostOf: overlayFrame.rect),
+        await displayID(coveringMostOf: overlayFrame.rect),
         ProcessInfo.processInfo.processIdentifier
       )
     }

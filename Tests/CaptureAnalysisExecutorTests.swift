@@ -1,11 +1,20 @@
 // SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import Foundation
 import Synchronization
 import Testing
 @testable import SwiftyCrow
 
 struct CaptureAnalysisExecutorTests {
+  @MainActor
+  @Test(arguments: [0, 1, 40])
+  func rasterWorkLeavesTheMainActorEvenForASingleInput(_ count: Int) async {
+    let result = await CaptureAnalysisExecutor.map(Array(0..<count)) { _ in Thread.isMainThread }
+    #expect(result.count == count)
+    #expect(result.allSatisfy { !$0 })
+  }
+
   @Test(arguments: [0, 1, 3, 8])
   func longCaptureRespectsConcurrencyBudgetAndPreservesOrder(_ limit: Int) async {
     let counts = Mutex((active: 0, maximum: 0, completed: 0))
