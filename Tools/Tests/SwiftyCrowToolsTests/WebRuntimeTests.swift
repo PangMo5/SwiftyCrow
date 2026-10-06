@@ -37,12 +37,18 @@ struct WebRuntimeTests {
     for locale in locales {
       var markdown = try docs.stripNavigation(docs.destination("CHANGELOG.md", locale).text())
       if locale == "en" { markdown = try docs.anchorHeadings(markdown, docs.headings(markdown)) }
+      let sourceLines = lines(markdown)
+      let releaseCount = MarkdownStructure(markdown).headingLines.count(where: { sourceLines[$0].hasPrefix("## ") })
       let context = try render(markdown)
-      #expect(context.evaluateScript("container.children.length")?.toInt32() == 22)
-      #expect(context.evaluateScript("container.children[0].id")?.toString() == "2100-2026-09-17")
-      #expect(context.evaluateScript("container.children[0].innerHTML.includes('<a id=\"improvements\"></a>')")?.toBool() == true)
-      #expect(context.evaluateScript("container.children[0].innerHTML.includes('releases/tag/v2.10.0')")?.toBool() == true)
-      #expect(context.evaluateScript("container.children[1].innerHTML.includes('releases/tag/v2.9.1')")?.toBool() == true)
+      #expect(context.evaluateScript("container.children.length")?.toInt32() == Int32(releaseCount))
+      // Published releases retain their own anchors and links even when newer
+      // published or draft sections precede them.
+      context.evaluateScript("const published = container.children.find(section => section.id === '2100-2026-09-17');")
+      #expect(context.evaluateScript("published != null")?.toBool() == true)
+      #expect(context.evaluateScript("published?.innerHTML.includes('<a id=\"improvements\"></a>')")?.toBool() == true)
+      #expect(context.evaluateScript("published?.innerHTML.includes('releases/tag/v2.10.0')")?.toBool() == true)
+      #expect(context.evaluateScript("container.children.some(section => section.innerHTML.includes('releases/tag/v2.9.1'))")?
+        .toBool() == true)
     }
   }
 

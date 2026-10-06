@@ -13,6 +13,13 @@
     "zh-Hans": "**{0}：** 自动检查更新",
     "zh-Hant": "**{0}：** 自動檢查更新"
   },
+  "0528641740b67198": {
+    "en": "**Clearer errors and warning details:** Capture results and the menu bar provide the same recovery actions. Click the live overlay warning to read its message and open Settings; the duplicate lower error banner is removed. Incomplete translation responses now report an error instead of appearing complete.",
+    "ja": "**エラーと警告の詳細を明確化：** キャプチャ結果とメニューバーで同じ対処操作を提供します。ライブオーバーレイの警告をクリックすると、内容を読んで設定を開けます。下部の重複したエラーバナーは削除しました。翻訳の応答が一部欠けた場合は、完了したように表示せずエラーを知らせます。",
+    "ko": "**오류와 경고 상세 안내:** 캡처 결과와 메뉴 막대에서 같은 해결 동작을 제공해요. 실시간 오버레이의 경고를 누르면 내용을 읽고 설정을 열 수 있으며, 하단의 중복 오류 배너는 제거했어요. 번역 응답이 일부 누락되면 완료된 것처럼 표시하지 않고 오류를 알려드려요.",
+    "zh-Hans": "**更清晰的错误和警告详情：** 截图结果与菜单栏提供相同的处理操作。点击实时叠加层的警告可查看内容并打开设置，底部重复的错误横幅已移除。翻译响应不完整时会报告错误，不再显示为已完成。",
+    "zh-Hant": "**更清楚的錯誤與警告詳情：** 擷取結果與選單列提供相同的處理操作。點選即時覆蓋視窗的警告可查看內容並開啟設定，底部重複的錯誤橫幅已移除。翻譯回應不完整時會回報錯誤，不再顯示為已完成。"
+  },
   "0542d6f4198e73dd": {
     "en": "Install models for every language that might appear in your screenshots",
     "ja": "キャプチャに含まれそうなすべての言語のモデルをインストールしてください。",
@@ -257,6 +264,13 @@
     "ko": "**{0}:** 실시간 번역 표시",
     "zh-Hans": "**{0}：** 实时翻译显示",
     "zh-Hant": "**{0}：** 即時翻譯顯示"
+  },
+  "266951d4da09a715": {
+    "en": "SwiftyCrow uses Apple's on-device Translation framework. If an **\"Unable to translate\"** message appears, open its details to check whether the selected mode needs a language download or whether High Fidelity requires Apple Intelligence to be ready.",
+    "ja": "SwiftyCrowはAppleのデバイス内翻訳フレームワークを使用します。**「翻訳できません」**と表示されたら詳細を開き、選択したモードに言語のダウンロードが必要か、High FidelityのApple Intelligenceが準備済みかを確認してください。",
+    "ko": "SwiftyCrow는 Apple의 기기 내 번역 프레임워크를 사용해요. **\"번역할 수 없어요\"** 안내가 나오면 상세 내용을 열어, 선택한 방식에 언어 다운로드가 필요한지 또는 High Fidelity에 Apple Intelligence 준비가 필요한지 확인해 주세요.",
+    "zh-Hans": "SwiftyCrow 使用 Apple 的设备端翻译框架。出现**“无法翻译”**消息时，请打开详情，确认所选模式是否需要下载语言，或 High Fidelity 是否需要 Apple Intelligence 准备就绪。",
+    "zh-Hant": "SwiftyCrow 使用 Apple 的裝置端翻譯框架。出現**「無法翻譯」**訊息時，請開啟詳情，確認所選模式是否需要下載語言，或 High Fidelity 是否需要 Apple Intelligence 準備就緒。"
   },
   "277d24052418ee99": {
     "en": "**Live mode:** Re-captures the overlay region on an interval, with a pulsing {0} badge while running.",
@@ -531,19 +545,26 @@
     "zh-Hans": "**显示或隐藏翻译：** **显示悬浮翻译**开关控制所选区域的翻译。隐藏时停止截图和翻译，再次显示时在同一区域继续。",
     "zh-Hant": "**顯示或隱藏翻譯：** **顯示浮動翻譯**開關控制所選區域的翻譯。隱藏時停止擷取和翻譯，再次顯示時在同一區域繼續。"
   },
-  "50fad618b212ebf4": {
-    "en": "SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails or SwiftyCrow shows a **\"Translation model not installed\"** hint, the model for the detected language usually is not downloaded yet.",
-    "ja": "SwiftyCrowは、翻訳する言語のモデルが必要なAppleのオンデバイス翻訳を使っています。翻訳に失敗したり、**言語モデルがインストールされていないという案内**が表示された場合は、検出した言語のモデルがまだダウンロードされていない可能性があります。",
-    "ko": "SwiftyCrow는 번역할 언어의 모델이 필요한 Apple의 기기 내 번역 기능을 사용해요. 번역이 실패하거나 **언어 모델이 설치되어 있지 않다는 안내**가 나오면, 감지한 언어의 모델이 아직 다운로드되지 않았을 가능성이 커요.",
-    "zh-Hans": "SwiftyCrow 使用 Apple 的设备端翻译框架，需要先安装对应语言的模型。如果翻译失败或提示**语言模型尚未安装**，通常是因为检测到的语言模型还未下载。",
-    "zh-Hant": "SwiftyCrow 使用 Apple 的裝置端翻譯框架，需要先安裝對應語言的模型。如果翻譯失敗或提示**語言模型尚未安裝**，通常是因為偵測到的語言模型還未下載。"
-  },
   "526e0087cc3f254d": {
     "en": "Description",
     "ja": "説明",
     "ko": "설명",
     "zh-Hans": "说明",
     "zh-Hant": "說明"
+  },
+  "5302518b1cde41ac": {
+    "en": "The **Open Settings** action is available in capture results, the live overlay's warning popover, and the menu bar. On the live overlay, click the warning symbol to read the message and recovery steps. Models are managed by macOS and stored locally; remove unused downloads from the language settings panel.",
+    "ja": "**設定を開く**操作は、キャプチャ結果、ライブオーバーレイの警告ポップオーバー、メニューバーで利用できます。ライブオーバーレイでは警告の記号をクリックして内容と対処方法を確認できます。モデルはmacOSが管理し、デバイス内に保存されます。使わないダウンロードは言語設定のパネルで削除してください。",
+    "ko": "**설정 열기**는 캡처 결과, 실시간 오버레이의 경고 팝오버, 메뉴 막대에서 사용할 수 있어요. 실시간 오버레이에서는 경고 심볼을 눌러 안내와 해결 방법을 읽을 수 있어요. 모델은 macOS가 관리하며 기기에 저장돼요. 사용하지 않는 다운로드는 언어 설정 패널에서 제거해 주세요.",
+    "zh-Hans": "**打开设置**操作可在截图结果、实时叠加层的警告弹出框和菜单栏中使用。点击实时叠加层的警告符号可查看消息和处理步骤。模型由 macOS 管理并保存在本机；可在语言设置面板中移除不使用的下载。",
+    "zh-Hant": "**開啟設定**操作可在擷取結果、即時覆蓋視窗的警告彈出視窗與選單列中使用。點選即時覆蓋視窗的警告符號可查看訊息與處理步驟。模型由 macOS 管理並儲存在本機；可在語言設定面板中移除不使用的下載。"
+  },
+  "53985950d54ae901": {
+    "en": "**Translations stay in their source regions:** Keep menu items and labels in their individual original text areas. Improve paragraph alignment, font fitting, links, emphasis, and inline backgrounds without rearranging the surrounding interface.",
+    "ja": "**原文の領域内に翻訳を表示：** メニュー項目やラベルは、それぞれ元のテキスト領域を維持します。周囲のインターフェイスを並べ替えずに、段落の配置、文字サイズ、リンク、強調、インライン背景を改善しました。",
+    "ko": "**원문 영역 안에 번역 표시:** 메뉴 항목과 라벨은 각각의 원래 텍스트 영역을 유지해요. 주변 인터페이스를 재배치하지 않으면서 문단 정렬, 글자 크기, 링크, 강조, 인라인 배경 처리를 개선했어요.",
+    "zh-Hans": "**译文保留在原文区域内：** 菜单项和标签分别保持在各自原有的文字区域内。在不重新排列周围界面的情况下，改进段落对齐、字号适配、链接、强调和行内背景。",
+    "zh-Hant": "**譯文保留在原文區域內：** 選單項目與標籤分別維持在各自原有的文字區域內。在不重新排列周圍介面的情況下，改善段落對齊、字級調整、連結、強調與行內背景。"
   },
   "544e990d6957cff1": {
     "en": "**Per-line translation cache:** Repeat captures of the same screen skip the translation call.",
@@ -650,6 +671,13 @@
     "zh-Hans": "**需要多少空间？** 下载大小因语言和模型而异。安装常用语言，需要空间时可删除不用的下载。",
     "zh-Hant": "**需要多少空間？** 下載大小因語言與模型而異。安裝常用語言，需要空間時可刪除不用的下載。"
   },
+  "5bfca1840ea44a1d": {
+    "en": "SwiftyCrow now uses only the translation mode selected in Settings. If its model is missing or unavailable, install the required languages or choose another mode yourself. Existing language and shortcut settings are retained; High Fidelity requires macOS 26.4 or later and ready Apple Intelligence.",
+    "ja": "設定で選択した翻訳モードだけを使用するようになりました。必要なモデルがない場合や利用できない場合は、言語をインストールするか、自分で別のモードを選んでください。既存の言語とショートカット設定は維持されます。High FidelityにはmacOS 26.4以降と準備済みのApple Intelligenceが必要です。",
+    "ko": "이제 설정에서 선택한 번역 방식만 사용해요. 해당 모델이 없거나 사용할 수 없으면 필요한 언어를 설치하거나 직접 다른 방식을 선택해 주세요. 기존 언어와 단축키 설정은 유지되며, High Fidelity는 macOS 26.4 이상과 준비된 Apple Intelligence가 필요해요.",
+    "zh-Hans": "现在只使用设置中选择的翻译模式。模型未安装或不可用时，请安装所需语言或自行选择另一种模式。现有语言和快捷键设置保持不变；High Fidelity 需要 macOS 26.4 或更高版本，并且 Apple Intelligence 已准备就绪。",
+    "zh-Hant": "現在只使用設定中選擇的翻譯模式。模型未安裝或無法使用時，請安裝所需語言或自行選擇另一種模式。現有語言與快速鍵設定維持不變；High Fidelity 需要 macOS 26.4 或以上版本，且 Apple Intelligence 已準備就緒。"
+  },
   "5cc6154d08293194": {
     "en": "Read images and documents",
     "ja": "画像や文書を読む",
@@ -699,6 +727,13 @@
     "zh-Hans": "修饰键为 {0}、{1}、{2}（option）和 {3}。按键可使用字母、数字、{4}、{5}、{6}、方向键（{7}/{8}/{9}/{10}）、标点等。使用空字符串可解除该操作的快捷键。",
     "zh-Hant": "修飾鍵為 {0}、{1}、{2}（option）與 {3}。按鍵可使用字母、數字、{4}、{5}、{6}、方向鍵（{7}/{8}/{9}/{10}）、標點等。使用空字串即可解除該操作的快捷鍵。"
   },
+  "62681f53bd23d884": {
+    "en": "**Recover more difficult text:** Improve detection of missed line edges, vertical columns, mixed-language paragraphs, and Japanese ruby. Reduce accidental erasure of artwork and controls when replacing source text.",
+    "ja": "**認識しにくい文字を改善：** 見落とされた行端、縦書きの列、多言語が混在する段落、日本語のルビの検出を改善しました。原文を置き換える際に、絵や操作部品を誤って消す問題も軽減しました。",
+    "ko": "**읽기 어려운 글 인식 개선:** 누락된 줄 끝, 세로 열, 여러 언어가 섞인 문단, 일본어 후리가나의 인식을 개선했어요. 원문을 번역으로 바꿀 때 그림이나 제어 요소를 잘못 지우는 문제도 줄였어요.",
+    "zh-Hans": "**改进难以识别的文字：** 改进遗漏的行尾、竖排文字列、混合语言段落和日文注音的检测。减少替换原文时误擦除图画和控件的问题。",
+    "zh-Hant": "**改善難以辨識的文字：** 改善遺漏的行尾、直排文字欄、混合語言段落與日文注音的偵測。減少替換原文時誤擦除圖畫與控制項的問題。"
+  },
   "62babba1a6220390": {
     "en": "**Menu bar controls:** Start capture or live translation from the menu bar and configure their shortcuts in Settings.",
     "ja": "**メニューバーから操作：** キャプチャやライブ翻訳をメニューバーから開始し、設定でショートカットを変更できます。",
@@ -747,6 +782,13 @@
     "ko": "**제거(파란색):** 모델이 설치되어 있어요. 공간이 필요하면 눌러서 지울 수 있어요.",
     "zh-Hans": "**移除（蓝色）：** 模型已安装，需要空间时可点击删除。",
     "zh-Hant": "**移除（藍色）：** 模型已安裝，需要空間時可點按刪除。"
+  },
+  "680b8099f5455252": {
+    "en": "OCR and translation can still misread difficult comic text or choose the wrong meaning. Compare uncertain results with the original; copied source text comes from OCR even when the original pixels are preserved.",
+    "ja": "複雑な漫画の文字を誤認識したり、別の意味に翻訳したりすることがあります。不確かな結果は原文と比較してください。元のピクセルを保持している部分でも、コピーされる原文テキストは文字認識の結果です。",
+    "ko": "복잡한 만화의 글을 잘못 인식하거나 다른 뜻으로 번역할 수 있어요. 불확실한 결과는 원문과 비교해 주세요. 원래 픽셀이 보존된 부분도 복사한 원문 텍스트는 글자 인식 결과예요.",
+    "zh-Hans": "OCR 和翻译仍可能误读复杂的漫画文字，或选择错误的含义。请将不确定的结果与原文对照；即使保留了原始像素，复制的原文文字仍来自 OCR。",
+    "zh-Hant": "OCR 與翻譯仍可能誤讀複雜的漫畫文字，或選擇錯誤的含義。請將不確定的結果與原文對照；即使保留了原始像素，複製的原文文字仍來自 OCR。"
   },
   "69a4fa6dc4880098": {
     "en": "**Source interaction:** Clicks and scrolling in the content area pass through to the application below.",
@@ -1203,6 +1245,13 @@
     "zh-Hans": "全局快捷键使用 skhd 风格：用 {0} 连接零个或多个修饰键，接着写 {1}，最后写按键。",
     "zh-Hant": "全域快速鍵使用 skhd 風格：以 {0} 連接零個或多個修飾鍵，接著寫 {1}，最後寫按鍵。"
   },
+  "a3c71b90162be56c": {
+    "en": "Known limitations",
+    "ja": "既知の制限",
+    "ko": "알려진 제한",
+    "zh-Hans": "已知限制",
+    "zh-Hant": "已知限制"
+  },
   "a413152602ae4a6d": {
     "en": "On macOS 26.4+, try **Low Latency** mode (Settings → Translation)",
     "ja": "macOS 26.4以降なら、設定 → 翻訳で**速度優先**を試してください。",
@@ -1350,6 +1399,13 @@
     "zh-Hans": "**源语言和目标语言都需要安装吗？** 是的。将英语翻译成西班牙语时，需要同时安装英语和西班牙语模型。",
     "zh-Hant": "**原文與翻譯語言都需要安裝嗎？** 是的。將英語翻譯成西班牙語時，需要同時安裝英語與西班牙語模型。"
   },
+  "b189e83b0764cf02": {
+    "en": "**Preserve code and interface symbols:** Retain the original pixels of recognized code, file names, technical literals, and controls instead of translating or retyping them. Improve footnote attachment to translated text and ruby placement.",
+    "ja": "**コードとインターフェイスの記号を保持：** コード、ファイル名、技術的な表記、操作部品として認識した部分は、翻訳や再描画をせず元のピクセルを維持します。翻訳文への脚注の接続とルビの配置も改善しました。",
+    "ko": "**코드와 인터페이스 심볼 보존:** 코드, 파일명, 기술 표기, 제어 요소로 인식한 부분은 번역하거나 다시 쓰지 않고 원래 픽셀을 유지해요. 번역문에 연결되는 각주와 후리가나 배치도 개선했어요.",
+    "zh-Hans": "**保留代码和界面符号：** 被识别为代码、文件名、技术标记或控件的部分保持原始像素，不再翻译或重新绘制。改进脚注与译文的连接，以及注音的位置。",
+    "zh-Hant": "**保留程式碼與介面符號：** 被辨識為程式碼、檔案名稱、技術標記或控制項的部分維持原始像素，不再翻譯或重新繪製。改善註腳與譯文的連接，以及注音的位置。"
+  },
   "b1fb61d346957f3e": {
     "en": "**Consistent region capture styling:** Region capture now matches the live overlay. Translation chips render as the same Liquid Glass over a blurred backdrop. Save and copy use the on-screen result so the image you keep matches what you saw.",
     "ja": "**キャプチャ表示のスタイルを統一：** 通常のキャプチャもライブ翻訳と同じLiquid Glassの翻訳チップとぼかし背景で表示します。保存・コピーには画面上の結果を使うので、見たままの画像を残せます。",
@@ -1399,6 +1455,13 @@
     "zh-Hans": "使用**自动检测**时，请安装截图中可能出现的所有语言模型。",
     "zh-Hant": "使用**自動偵測**時，請安裝擷取內容中可能出現的所有語言模型。"
   },
+  "b62b77607262f330": {
+    "en": "**Safer live updates:** Prevent stale translations and source masks from being applied to a changed frame, and discard results from a replaced or closed capture.",
+    "ja": "**安全なライブ更新：** 画面が変わった後に古い翻訳や原文消去マスクが適用されないよう改善し、置き換えたり閉じたりしたキャプチャの結果は破棄します。",
+    "ko": "**안정적인 실시간 갱신:** 화면이 바뀌었을 때 지난 번역이나 원문 지우기 영역이 적용되지 않도록 개선했어요. 교체되거나 닫힌 캡처의 결과는 적용하지 않아요.",
+    "zh-Hans": "**更安全的实时更新：** 防止旧译文和原文擦除区域被应用到变化后的画面，并丢弃已被替换或关闭的截图结果。",
+    "zh-Hant": "**更安全的即時更新：** 防止舊譯文與原文擦除區域被套用到變更後的畫面，並捨棄已被替換或關閉的擷取結果。"
+  },
   "b64563898a65f959": {
     "en": "**Removed persistent overlay setting:** {0} is removed. The overlay no longer has a persistent on/off. You place it by selecting a region/window and close it with the overlay's **×** button. The key is ignored if present.",
     "ja": "**常設表示の設定を削除：** {0}を削除しました。範囲やウインドウを選んでライブ翻訳を配置し、**×**で閉じます。以前のキーが残っていても無視されます。",
@@ -1429,8 +1492,8 @@
   },
   "b8ecc971045f331b": {
     "en": "**High Fidelity requires macOS 26.4 or later and ready Apple Intelligence.** On macOS 26.0–26.3, Low Latency uses the Translation framework's default model; High Fidelity is reported as unsupported.",
-    "ko": "**자연스럽게 번역하려면 macOS 26.4 이상과 준비된 Apple Intelligence가 필요해요.** macOS 26.0–26.3에서는 빠르게 번역이 Apple 번역의 기본 모델을 사용하며, 자연스럽게 번역은 지원되지 않는다고 안내해요.",
     "ja": "**品質優先の翻訳にはmacOS 26.4以降と準備済みのApple Intelligenceが必要です。** macOS 26.0–26.3では速度優先がApple翻訳の既定モデルを使い、品質優先は非対応と案内されます。",
+    "ko": "**자연스럽게 번역하려면 macOS 26.4 이상과 준비된 Apple Intelligence가 필요해요.** macOS 26.0–26.3에서는 빠르게 번역이 Apple 번역의 기본 모델을 사용하며, 자연스럽게 번역은 지원되지 않는다고 안내해요.",
     "zh-Hans": "**高质量翻译需要 macOS 26.4 及以上版本，且 Apple Intelligence 已就绪。** 在 macOS 26.0–26.3 上，快速翻译使用 Apple 翻译框架的默认模型；高质量翻译会提示不受支持。",
     "zh-Hant": "**高品質翻譯需要 macOS 26.4 以上版本，且 Apple Intelligence 已就緒。** 在 macOS 26.0–26.3 上，快速翻譯使用 Apple 翻譯框架的預設模型；高品質翻譯會提示不支援。"
   },
@@ -1650,6 +1713,13 @@
     "ko": "시스템 설정 → 일반 → 언어 및 지역 → 번역 언어…로 돌아가 주세요.",
     "zh-Hans": "返回系统设置 → 通用 → 语言与地区 → 翻译语言…。",
     "zh-Hant": "返回系統設定 → 一般 → 語言與地區 → 翻譯語言…。"
+  },
+  "cbb43194e3330711": {
+    "en": "**Capture the source before showing the result:** Acquire the screenshot before presenting the result window, preventing its loading interface from racing the capture. Closing or replacing a result cancels its pending work. Fix a crash when closing the result window.",
+    "ja": "**結果を表示する前に原文をキャプチャ：** スクリーンショットを取得してから結果ウインドウを表示し、読み込み画面とキャプチャが競合する経路をなくしました。結果を閉じたり置き換えたりすると保留中の処理をキャンセルします。結果ウインドウを閉じるときのクラッシュも修正しました。",
+    "ko": "**결과창을 표시하기 전에 원본 캡처:** 스크린샷을 먼저 확보하고 결과창을 표시해, 로딩 화면이 캡처와 겹치는 경로를 제거했어요. 결과창을 닫거나 교체하면 대기 중인 작업을 취소해요. 결과창을 닫을 때 발생하던 크래시도 수정했어요.",
+    "zh-Hans": "**先截取原文，再显示结果：** 先获取截图，再显示结果窗口，避免加载界面与截图发生竞争。关闭或替换结果会取消待处理工作。修复关闭结果窗口时的崩溃。",
+    "zh-Hant": "**先擷取原文，再顯示結果：** 先取得螢幕截圖，再顯示結果視窗，避免載入介面與擷取發生競爭。關閉或替換結果會取消待處理工作。修正關閉結果視窗時的當機。"
   },
   "cbef567f01612bca": {
     "en": "**TCA** ({0}) for app + capture state, with dependencies wired through {1}",
@@ -2091,13 +2161,6 @@
     "ko": "SwiftyCrow를 다시 실행하고 시도해 주세요.",
     "zh-Hans": "重新启动 SwiftyCrow 后再试。",
     "zh-Hant": "重新啟動 SwiftyCrow 後再試。"
-  },
-  "f8162d4d274c5452": {
-    "en": "The in-app hint has an **Open Settings** button that jumps straight there, plus **Don't show again** once you no longer need the reminder. Models are managed by macOS and stored locally. Remove unused models from the same panel to free disk space.",
-    "ja": "アプリの**設定を開く**ボタンから該当する設定に移動できます。案内が不要になったら**今後表示しない**を選べます。モデルはmacOSが管理し、Mac内に保存されます。同じ設定から使わないモデルを削除して空き容量を増やせます。",
-    "ko": "앱의 **설정 열기** 버튼을 누르면 해당 설정으로 바로 이동해요. 안내가 더 이상 필요 없으면 **다시 보지 않기**를 선택할 수 있어요. 모델은 macOS가 관리하며 기기에 저장돼요. 같은 설정에서 쓰지 않는 모델을 삭제해 저장 공간을 확보할 수 있어요.",
-    "zh-Hans": "应用中的**打开设置**按钮可直接跳转到相应设置。不再需要提醒时可选择**不再显示**。模型由 macOS 管理并保存在本机；可在同一面板删除不用的模型以释放空间。",
-    "zh-Hant": "App 中的**開啟設定**按鈕可直接前往對應設定。不再需要提醒時可選擇**不再顯示**。模型由 macOS 管理並儲存在本機；可在相同面板刪除不用的模型以釋出空間。"
   },
   "fc3b8098f1aceed8": {
     "en": "**Chinese OCR:** Fixed recognition failing when Chinese OCR was selected.",

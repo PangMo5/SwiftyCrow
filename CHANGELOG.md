@@ -8,6 +8,25 @@ All notable changes to SwiftyCrow. This file is the source of truth for the
 release notes shown on the website and on GitHub Releases (the release workflow
 appends an Install / Update section when publishing).
 
+## 2.10.1 (2026-10-06)
+
+### Fixes
+
+- **Translations stay in their source regions:** Keep menu items and labels in their individual original text areas. Improve paragraph alignment, font fitting, links, emphasis, and inline backgrounds without rearranging the surrounding interface.
+- **Preserve code and interface symbols:** Retain the original pixels of recognized code, file names, technical literals, and controls instead of translating or retyping them. Improve footnote attachment to translated text and ruby placement.
+- **Recover more difficult text:** Improve detection of missed line edges, vertical columns, mixed-language paragraphs, and Japanese ruby. Reduce accidental erasure of artwork and controls when replacing source text.
+- **Clearer errors and warning details:** Capture results and the menu bar provide the same recovery actions. Click the live overlay warning to read its message and open Settings; the duplicate lower error banner is removed. Incomplete translation responses now report an error instead of appearing complete.
+- **Capture the source before showing the result:** Acquire the screenshot before presenting the result window, preventing its loading interface from racing the capture. Closing or replacing a result cancels its pending work. Fix a crash when closing the result window.
+- **Safer live updates:** Prevent stale translations and source masks from being applied to a changed frame, and discard results from a replaced or closed capture.
+
+### Changed
+
+- SwiftyCrow now uses only the translation mode selected in Settings. If its model is missing or unavailable, install the required languages or choose another mode yourself. Existing language and shortcut settings are retained; High Fidelity requires macOS 26.4 or later and ready Apple Intelligence.
+
+### Known limitations
+
+- OCR and translation can still misread difficult comic text or choose the wrong meaning. Compare uncertain results with the original; copied source text comes from OCR even when the original pixels are preserved.
+
 ## 2.10.0 (2026-09-17)
 
 ### Improvements
