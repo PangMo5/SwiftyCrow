@@ -6,6 +6,7 @@ import Foundation
 /// Bounds concurrent raster analysis for long captures while retaining source
 /// order. Queued inputs are values, not hundreds of already-created child tasks.
 enum CaptureAnalysisExecutor {
+  @concurrent
   static func map<Element: Sendable, Output: Sendable>(
     _ elements: [Element],
     maximumConcurrency: Int = min(8, ProcessInfo.processInfo.activeProcessorCount),

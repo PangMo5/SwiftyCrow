@@ -16,6 +16,7 @@ enum OCRPipeline {
   /// Capture-local diagnostics; ordinary captures perform no serialization or I/O.
   @TaskLocal static var traceObserver: TraceObserver? = nil
 
+  @concurrent
   static func recognize(
     _ image: CGImage,
     language: Language,

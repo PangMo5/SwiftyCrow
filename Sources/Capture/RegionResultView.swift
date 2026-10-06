@@ -63,7 +63,6 @@ struct RegionResultView: View {
     .frame(minWidth: 360, minHeight: 280)
     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    .task { await store.send(.task).finish() }
     .onAppear(perform: installMonitor)
     .onDisappear(perform: removeMonitor)
     .onChange(of: store.finished) { _, finished in

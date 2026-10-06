@@ -6,6 +6,7 @@ import CoreGraphics
 
 /// The display whose frame overlaps `frame` the most — used to pick the right
 /// `CGDirectDisplayID` for a capture that may span or sit on a non-main screen.
+@MainActor
 func displayID(coveringMostOf frame: CGRect) -> CGDirectDisplayID? {
   let screen = NSScreen.screens
     .map { ($0, frame.intersection($0.frame)) }

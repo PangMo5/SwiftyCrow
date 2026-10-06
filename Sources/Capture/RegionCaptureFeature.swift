@@ -55,6 +55,7 @@ struct RegionCaptureFeature {
     case task
     case captureIsTakingLong
     case capturePreviewReady(Data?, CGSize)
+    case resultWindowPresented
     case recognized(CapturedRegion, restorationPending: Bool = true)
     case captured(Result<CapturedRegion, any Error>)
     case translationResponse(id: UUID, translation: TranslatedText, target: Locale.Language)
@@ -98,6 +99,10 @@ struct RegionCaptureFeature {
         state.imageData = data
         state.imageSize = size
         state.recordLatency("preview")
+        return .none
+
+      case .resultWindowPresented:
+        state.recordLatency("windowPresented")
         return .none
 
       case .captured(.success(let captured)):
@@ -306,6 +311,7 @@ struct RegionCaptureFeature {
 
   private enum CancelID { case slowHint, translation }
 
+  @concurrent
   private static func encodePreview(_ image: CGImage, size: CGSize, send: Send<Action>) async -> Data? {
     let data = image.pngData
     await send(.capturePreviewReady(data, size))
@@ -329,7 +335,7 @@ struct RegionCaptureFeature {
             case .region(let region):
               try await screenCapture.captureImage(
                 region,
-                displayID(coveringMostOf: region),
+                await displayID(coveringMostOf: region),
                 ProcessInfo.processInfo.processIdentifier
               )
 
@@ -338,6 +344,7 @@ struct RegionCaptureFeature {
             }
           return image
         }
+        try Task.checkCancellation()
         let size = CGSize(width: image.width, height: image.height)
         // Encoding is CPU work; it must neither occupy the main actor nor
         // delay Vision. Both child tasks are scoped to this capture effect.
@@ -353,6 +360,7 @@ struct RegionCaptureFeature {
           lines: result.lines
         )
       }
+      guard !Task.isCancelled else { return }
       if case .failure(let error) = captured {
         Log.capture.error("Region capture failed: \(error.localizedDescription, privacy: .public)")
       }
@@ -417,19 +425,17 @@ extension DependencyValues {
 // MARK: - RegionResultWindowController
 
 @MainActor
-private final class RegionResultWindowController {
+final class RegionResultWindowController {
 
   // MARK: Internal
 
-  func present(target: CaptureTarget) {
-    panel?.close()
+  private(set) var panel: NSWindow?
+  private(set) var captureTask: StoreTask?
 
-    // The app is normally a menu-bar agent (.accessory), which can't become
-    // frontmost — so it never receives ⌘-key events. Promote to .regular while
-    // a result window is open so its shortcuts work, then revert on close. The
-    // shared coordinator ref-counts this against the Settings window so closing
-    // one while the other is open doesn't drop the app back to accessory early.
-    WindowActivation.opened()
+  func present(target: CaptureTarget) {
+    captureTask?.cancel()
+    observeToken = nil
+    panel?.close()
 
     let store = Store(initialState: RegionCaptureFeature.State(target: target)) {
       RegionCaptureFeature()
@@ -440,6 +446,10 @@ private final class RegionResultWindowController {
       backing: .buffered,
       defer: false
     )
+    // ARC and this controller own the window lifetime, including a hidden
+    // capture replaced before presentation. AppKit must not release it on close.
+    panel.isReleasedWhenClosed = false
+    panel.title = String(localized: "Capture")
     panel.isOpaque = false
     panel.backgroundColor = .clear
     panel.hasShadow = true
@@ -461,27 +471,42 @@ private final class RegionResultWindowController {
     panel.contentViewController = hosting
 
     panel.center()
-    panel.makeKeyAndOrderFront(nil)
-    NSApp.activate(ignoringOtherApps: true)
-
     self.panel = panel
-    // Resize the window to the screenshot's aspect ratio once the capture
-    // lands, so the image initially fits the available screen.
+    // Acquire the source pixels before presenting any result UI. Presentation
+    // must not race screen acquisition, even if WindowServer exclusion metadata
+    // is incomplete while a window is being created or replaced.
+    // Start the effect here rather than waiting for SwiftUI's visible .task.
     observeToken = observe { [weak self, weak panel] in
-      guard let self, let panel, store.imageSize != .zero else { return }
-      fitWindow(panel, toPixelSize: store.imageSize)
+      guard let self, let panel, self.panel === panel else { return }
+      guard store.imageData != nil || store.lastError != nil else { return }
+      if store.imageSize != .zero { fitWindow(panel, toPixelSize: store.imageSize) }
+      if !panel.didPresent {
+        // Promote the menu-bar agent only when its result is ready to appear.
+        // The shared coordinator balances activation with Settings windows.
+        panel.didPresent = true
+        WindowActivation.opened()
+        panel.makeKeyAndOrderFront(nil)
+        store.send(.resultWindowPresented)
+        NSApp.activate(ignoringOtherApps: true)
+      }
     }
-    NotificationCenter.default.addObserver(
+    captureTask = store.send(.task)
+    closeObserver = NotificationCenter.default.addObserver(
       forName: NSWindow.willCloseNotification,
       object: panel,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor in
-        // Balance the opened() from this panel's present() exactly once — even
-        // when a newer present() has already replaced `panel` (so the identity
-        // guard below is false). Otherwise the ref-count would leak on replace.
-        WindowActivation.closed()
-        if self?.panel === panel { self?.panel = nil }
+      MainActor.assumeIsolated {
+        Log.capture.debug("Capture result window closed")
+        if panel.didPresent { WindowActivation.closed() }
+        if self?.panel === panel {
+          self?.captureTask?.cancel()
+          self?.captureTask = nil
+          self?.observeToken = nil
+          self?.panel = nil
+          if let token = self?.closeObserver { NotificationCenter.default.removeObserver(token) }
+          self?.closeObserver = nil
+        }
       }
     }
   }
@@ -492,8 +517,8 @@ private final class RegionResultWindowController {
   @Dependency(\.pasteboard) private var pasteboard
   @Dependency(\.savePanel) private var savePanel
 
-  private var panel: NSWindow?
   private var observeToken: ObserveToken?
+  private var closeObserver: NSObjectProtocol?
 
   private func saveImage(_ data: Data, panel: NSWindow?) {
     Task { @MainActor in
@@ -539,6 +564,8 @@ private final class RegionResultWindowController {
 /// A borderless NSWindow (not NSPanel) so it reliably becomes the key window
 /// and receives ⌘-key events.
 private final class ResultPanel: NSWindow {
+  var didPresent = false
+
   override var canBecomeKey: Bool {
     true
   }
