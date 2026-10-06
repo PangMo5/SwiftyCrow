@@ -232,7 +232,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
           ))
           continue
         }
-        guard !Self.isBoundaryPunctuationBleed(run, in: text) else { continue }
+        guard !Self.isBoundaryPunctuationBleed(run, in: text, among: styleRuns, base: appearance) else { continue }
         guard
           let stringRange = Range(run.range, in: text),
           Self.shouldCarryStyle(String(text[stringRange]), appearance: run.appearance, base: appearance)
@@ -515,7 +515,9 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
     private static func isBoundaryPunctuationBleed(
       _ run: OverlaySourceStyleRun,
-      in text: String
+      in text: String,
+      among runs: [OverlaySourceStyleRun],
+      base: OverlaySourceAppearance
     ) -> Bool {
       guard let range = Range(run.range, in: text) else { return false }
       let token = text[range]
@@ -525,6 +527,29 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         token.unicodeScalars.allSatisfy(sentencePunctuation.contains),
         range.upperBound == text.endIndex || text[range.upperBound].isWhitespace
       else { return false }
+      // Vision can insert whitespace within a filename and give its dot the
+      // same box as the preceding stem. That punctuation belongs to the token,
+      // even when the transcript makes it look like a sentence boundary.
+      let sharesStem = runs.contains(where: { other in
+        guard
+          other.range != run.range, other.box == run.box,
+          NSMaxRange(other.range) <= run.range.location,
+          let range = Range(other.range, in: text)
+        else { return false }
+        return text[range].contains { $0.isLetter || $0.isNumber }
+      })
+      let continuesToken = runs.contains { next in
+        guard
+          next.range.location >= NSMaxRange(run.range),
+          next.range.location - NSMaxRange(run.range) <= 2,
+          let nextRange = Range(next.range, in: text), text[nextRange].contains(where: \.isLetter)
+        else { return false }
+        let gap = NSRange(location: NSMaxRange(run.range), length: next.range.location - NSMaxRange(run.range))
+        return (text as NSString).substring(with: gap).allSatisfy(\.isWhitespace)
+          && colorDistance(run.appearance.background, base.background) >= 0.025
+          && colorDistance(run.appearance.background, next.appearance.background) <= 0.04
+      }
+      if sharesStem, continuesToken { return false }
       // A punctuation box immediately after an inline chip can sample the
       // chip fill even though the glyph belongs to the surrounding sentence.
       // Enclosing punctuation remains style-aware; terminal sentence marks

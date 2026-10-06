@@ -54,7 +54,22 @@ enum OCRConflictRecovery {
         : language
       let boxes = group.map { lines[$0].boundingBoxNormalized }
       let box = boxes.dropFirst().reduce(boxes[0]) { $0.union($1) }
-      let pad = max(3, min(box.width * CGFloat(image.width), box.height * CGFloat(image.height)) * 0.18)
+      // A dense cluster can end halfway through the next glyph. One observed
+      // glyph of context gives that neighboring word a complete OCR input.
+      let glyphs = group.map { index -> CGFloat in
+        let line = lines[index]
+        return line.isVerticalBlock
+          ? (line.verticalCharScale > 0 ? line.verticalCharScale : line.boundingBoxNormalized.width) * CGFloat(image.width)
+          : (line.horizontalGlyphScale > 0 ? line.horizontalGlyphScale : line.boundingBoxNormalized.height) *
+          CGFloat(image.height)
+      }.sorted()
+      let compact = group.allSatisfy { lines[$0].text.count <= 3 }
+      let pad = max(
+        3,
+        compact
+          ? glyphs[glyphs.count / 2]
+          : min(box.width * CGFloat(image.width), box.height * CGFloat(image.height)) * 0.18
+      )
       let crop = CGRect(
         x: box.minX * CGFloat(image.width),
         y: box.minY * CGFloat(image.height),

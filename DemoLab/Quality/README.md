@@ -100,6 +100,23 @@ Chromatic ink can recover a dropped bracket outside Vision's incomplete range
 box. Whole paragraphs retain their original boundary; inline elements no longer
 reserve obsolete source coordinates or overlap translated text.
 
+Ruby-bearing terms inside mixed prose carry their original base glyph and reading
+as one protected inline object. Japanese paragraphs absorb pronunciation metadata
+without translating it separately. A weak short final column is reconsidered in
+the surrounding vertical writing mode; a horizontal recognition strip preserves
+upright glyph shapes and reading order while layout keeps the original columns.
+Tilted phonetic sequences supply neighboring words as translation-only context.
+Each effect word retains its own frame. A filename dot sharing its stem's observed
+box and continuing into the same code fill keeps that style; sentence punctuation
+still follows the surrounding prose.
+
+Code-fill literals retain source pixels even when OCR inserts spaces inside a
+path. Raised reference recognition tolerates confusable numeric stems only with
+measured annotation geometry. Two file rows can establish an uncertain intervening
+filename's role without guessing its spelling. Wrapped paragraphs use their
+measured reading edge while keeping the original vertical frame. Refinement rows
+without paragraph IDs receive independent ownership for a bounded late edge check.
+
 For those interactions, install the normal app packaged by `BuildNativeApp.sh`.
 It keeps the production module's exact bytes and the build's Apple Development
 signer. The fixed QA bundle identity is separate from an installed release.

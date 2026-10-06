@@ -11,6 +11,33 @@ struct OCRVerticalColumnRecoveryTests {
   // MARK: Internal
 
   @Test
+  func aWeakShortFinalColumnNeedsTwoAlignedJapanesePeers() {
+    let tail = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.025, height: 0.035),
+      text: "중",
+      preservesSource: true,
+      recognitionConfidence: 0.15
+    )
+    let columns = [0.235, 0.27].map { x in
+      OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: x, y: 0.2, width: 0.025, height: 0.2),
+        text: "文書を保存する",
+        recognitionConfidence: 0.5,
+        isVerticalBlock: true,
+        verticalCharScale: 0.025
+      )
+    }
+    #expect(OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: [tail] + columns) == [0])
+    #expect(OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: [tail, columns[0]]).isEmpty)
+    var shifted = tail
+    shifted.boundingBoxNormalized.origin.y = 0.1
+    #expect(OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: [shifted] + columns).isEmpty)
+    var confident = tail
+    confident.recognitionConfidence = 0.9
+    #expect(OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: [confident] + columns).isEmpty)
+  }
+
+  @Test
   func oneColumnKeepsItsPrefixButExcludesRubyAndNeighbors() {
     let (source, prefix, body) = sample()
     var ruby = prefix

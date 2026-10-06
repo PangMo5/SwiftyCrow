@@ -6,6 +6,37 @@ import Foundation
 /// A reread may split a physical column at a printed blank gap. Its longest
 /// observation is not a replacement for the complete source column.
 enum OCRVerticalColumnRecovery {
+  /// A short final column can be guessed as a horizontal foreign glyph. Two
+  /// neighboring Japanese columns establish its writing mode before artwork
+  /// classification can preserve that guess as an icon.
+  static func shortWrappedColumnIndices(in lines: [OCRResult.Line]) -> [Int] {
+    lines.indices.filter { index in
+      let line = lines[index]
+      guard
+        !line.isVerticalBlock, line.recognitionConfidence < 0.45,
+        !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text),
+        !line.text.unicodeScalars.allSatisfy(\.isASCII),
+        (1...3).contains(line.text.count), line.text.contains(where: \.isLetter)
+      else { return false }
+      let box = line.boundingBoxNormalized
+      let columns = lines.filter { peer in
+        guard
+          peer.isVerticalBlock, peer.text.count >= 4, peer.verticalCharScale > 0,
+          peer.text.unicodeScalars
+            .contains(where: { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value) })
+        else { return false }
+        let glyph = peer.verticalCharScale
+        let gap = peer.boundingBoxNormalized.minX - box.maxX
+        return gap >= -glyph * 0.2 && gap <= glyph * 5
+          &&
+          box.width >= glyph * 0.6 && box.width <= glyph * 1.6
+          && box.height <= glyph * line.imageAspectRatio * 2.5
+          && abs(box.minY - peer.boundingBoxNormalized.minY) <= glyph * line.imageAspectRatio * 0.5
+      }
+      return columns.count >= 2
+    }
+  }
+
   static func fragments(for source: OCRResult.Line, candidates: [OCRResult.Line]) -> [OCRResult.Line] {
     guard
       source.isVerticalBlock, source.text.count > 3, source.recognitionConfidence < 0.45,

@@ -13,6 +13,75 @@ struct OverlaySourceAppearanceAnalyzerTests {
 
   // MARK: Internal
 
+  @Test(arguments: ["相", "fE"])
+  func aQuotedRubyTermTravelsAsOneInlineOwner(_ spelling: String) throws {
+    let size = CGSize(width: 320, height: 100)
+    let context = try #require(CGContext(
+      data: nil,
+      width: 320,
+      height: 100,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    func paint(_ text: String, font: CGFloat, x: CGFloat, y: CGFloat) -> CGRect {
+      let line = CTLineCreateWithAttributedString(NSAttributedString(
+        string: text,
+        attributes: [.font: NSFont.systemFont(ofSize: font), .foregroundColor: NSColor.systemBlue]
+      ))
+      context.textPosition = CGPoint(x: x, y: y)
+      CTLineDraw(line, context)
+      let ink = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds])
+      return CGRect(
+        x: (x + ink.minX) / size.width,
+        y: (size.height - y - ink.maxY) / size.height,
+        width: ink.width / size.width,
+        height: ink.height / size.height
+      )
+    }
+    let word = paint("相", font: 18, x: 90, y: 45)
+    let rail = paint("あい", font: 9, x: 90, y: 67)
+    var appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
+    appearance.fontSizeScale = 0.18
+    let text = "This is \(spelling) plus more."
+    let range = (text as NSString).range(of: spelling)
+    let base = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.03, y: word.minY, width: 0.9, height: word.height),
+      text: text,
+      horizontalGlyphScale: word.height,
+      appearance: appearance,
+      styleRuns: [.init(
+        range: range,
+        box: word,
+        appearance: appearance,
+        inkBox: word
+      )]
+    )
+    let ruby = OCRResult.Line(boundingBoxNormalized: rail, text: "あい")
+    let captured = OCRInlineSourceFragments.capturingRubyAnnotations(
+      .init(lines: [ruby, base]),
+      image: try #require(context.makeImage())
+    ).absorbingRubyAnnotations()
+    #expect(captured.lines.count == 1)
+    let fragment = try #require(captured.lines[0].styleRuns.first?.sourceFragment)
+    #expect(CGFloat(fragment.height) > word.height * size.height)
+    var line = OverlayLine(id: UUID(), source: .init(recognized: captured.lines[0], language: .init(identifier: "en")))
+    let source = try #require(line.source.attributedTextForTranslation())
+    let plan = try #require(TranslationLiteralPlan(source))
+    #expect(plan.requestText == "This is ZXQ000XQZ plus more.")
+    let target = try #require(plan.restoring("설명은 ZXQ000XQZ에 관한 것이다."))
+    line.showTranslation(String(target.characters), attributedText: target, language: .init(identifier: "ko"))
+    let carried = try #require(line.displayedStyleRuns.first { $0.sourceFragment != nil })
+    #expect((try #require(line.translatedText) as NSString).substring(with: carried.range) == spelling)
+    #expect(carried.sourceFragment == fragment)
+    #expect(line.source.box.contains(word.union(rail)))
+    let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: size).first)
+    #expect(placement.fontSize >= 18 * 0.8)
+  }
+
   @Test(arguments: [false, true])
   func aSharedWordBoxSeparatesTheRaisedChromaticReference(_ clipsBracket: Bool) async throws {
     let size = CGSize(width: 240, height: 100)

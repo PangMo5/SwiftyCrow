@@ -442,7 +442,7 @@ enum OverlayLayoutEngine {
     canvas: CGRect
   ) -> CGRect? {
     guard
-      case .horizontal(rows: 1) = line.source.layout,
+      case .horizontal = line.source.layout,
       !line.source.isReconstructedTextRegion,
       abs(line.source.rotationRadians) <= 0.025, !line.source.styleRuns.isEmpty
     else { return nil }
@@ -472,7 +472,8 @@ enum OverlayLayoutEngine {
     // The measured ink anchors the row, while the original observation still
     // supplies its fitting height. A target script's taller glyphs must not be
     // shrunk to the source alphabet's cap height. Final paint stays in its owner.
-    let centerY = min(sourceFrame.maxY, max(sourceFrame.minY, ink.midY * canvas.height))
+    let singleRow = line.source.layout == .horizontal(rows: 1)
+    let centerY = singleRow ? min(sourceFrame.maxY, max(sourceFrame.minY, ink.midY * canvas.height)) : sourceFrame.midY
     return CGRect(
       x: minimumX,
       y: centerY - sourceFrame.height / 2,

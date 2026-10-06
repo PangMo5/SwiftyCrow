@@ -56,6 +56,7 @@ enum OverlayTranslationPolicy {
     }
     let source = sources[index]
     guard case .horizontal = source.layout, isCompactMetadata(source.text) else { return nil }
+    if let rhythm = phoneticCluster(at: index, in: sources) { return rhythm }
 
     let rowValues = sources.indices.filter { candidate in
       guard candidate != index, case .horizontal = sources[candidate].layout else { return false }
@@ -151,6 +152,46 @@ enum OverlayTranslationPolicy {
   }
 
   // MARK: Private
+
+  /// Repeated, tilted phonetic words form a sound sequence rather than an
+  /// isolated proper name. Context is translation-only; each frame stays owned
+  /// by its original word, including different rotations within the sequence.
+  private static func phoneticCluster(at index: Int, in sources: [OverlayLine.Source]) -> String? {
+    let candidates = sources.indices.filter { candidate in
+      let value = sources[candidate]
+      guard case .horizontal(rows: 1) = value.layout else { return false }
+      return !value.isProtectedLiteral && !value.preservesSource && (2...6).contains(value.text.count)
+        && value.text.unicodeScalars.allSatisfy { (0x30A0...0x30FF).contains($0.value) }
+        && value.recognitionContextID == sources[index].recognitionContextID
+        && value.language.maximalIdentifier == sources[index].language.maximalIdentifier
+    }
+    guard candidates.contains(index) else { return nil }
+    var group = [index]
+    var seen: Set<Int> = [index]
+    var cursor = 0
+    while cursor < group.count, group.count < 8 {
+      let a = sources[group[cursor]]
+      cursor += 1
+      for other in candidates where !seen.contains(other) {
+        let b = sources[other]
+        let height = max(a.box.height, b.box.height)
+        let dx = max(0, max(a.box.minX - b.box.maxX, b.box.minX - a.box.maxX)) * a.imageAspectRatio
+        let dy = max(0, max(a.box.minY - b.box.maxY, b.box.minY - a.box.maxY))
+        if
+          dx <= height, dy <= height, min(a.box.height, b.box.height) >= height * 0.55,
+          a.appearance.background.distance(to: b.appearance.background) <= 0.06
+        {
+          seen.insert(other)
+          group.append(other)
+        }
+      }
+    }
+    guard
+      group.count >= 3, group.contains(where: { abs(sources[$0].rotationRadians) > 0.04 }),
+      Set(group.map { sources[$0].text }).count >= 2
+    else { return nil }
+    return group.sorted { sources[$0].box.minY < sources[$1].box.minY }.map { sources[$0].text }.joined(separator: "、")
+  }
 
   private static func isCompactMetadata(_ text: String) -> Bool {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)

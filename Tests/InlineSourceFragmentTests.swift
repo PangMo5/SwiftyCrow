@@ -13,6 +13,92 @@ struct InlineSourceFragmentTests {
   // MARK: Internal
 
   @Test
+  func aCodeFillProtectsTheOriginalPathEvenWhenOCRInsertedWhitespace() throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 320,
+      height: 100,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 320, height: 100))
+    context.setFillColor(CGColor(gray: 0.8, alpha: 1))
+    context.fill(CGRect(x: 70, y: 38, width: 160, height: 24))
+    let glyphs = CTLineCreateWithAttributedString(NSAttributedString(
+      string: "scripts/export.sh",
+      attributes: [.font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)]
+    ))
+    context.textPosition = CGPoint(x: 73, y: 44)
+    CTLineDraw(glyphs, context)
+    var plain = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
+    plain.fontSizeScale = 0.16
+    var chip = plain
+    chip.background = .init(red: 0.8, green: 0.8, blue: 0.8, alpha: 1)
+    let text = "Run scripts/export. sh now more."
+    func box(_ x: CGFloat, _ w: CGFloat) -> CGRect {
+      CGRect(x: x / 320, y: 0.4, width: w / 320, height: 0.2)
+    }
+    let row = OCRResult.Line(boundingBoxNormalized: box(20, 295), text: text, appearance: plain, styleRuns: [
+      .init(range: NSRange(location: 0, length: 3), box: box(20, 26), appearance: plain, inkBox: box(20, 26)),
+      .init(range: NSRange(location: 4, length: 15), box: box(70, 130), appearance: chip, inkBox: box(73, 124)),
+      .init(range: NSRange(location: 20, length: 2), box: box(201, 29), appearance: chip, inkBox: box(202, 26)),
+      .init(range: NSRange(location: 23, length: 3), box: box(242, 26), appearance: plain, inkBox: box(242, 26)),
+      .init(range: NSRange(location: 27, length: 4), box: box(280, 31), appearance: plain, inkBox: box(280, 31)),
+    ])
+    let image = try #require(context.makeImage())
+    let captured = OCRInlineSourceFragments.capturingCodeLiterals(.init(lines: [row]), image: image).lines[0]
+    let source = OverlayLine.Source(recognized: captured, language: .init(identifier: "en"))
+    let attributed = try #require(source.attributedTextForTranslation())
+    #expect(captured.styleRuns.count(where: { $0.sourceFragment != nil }) == 1)
+    let plan = try #require(TranslationLiteralPlan(attributed))
+    #expect(plan.requestText == "Run ZXQ000XQZ now more.")
+    let target = try #require(plan.restoring("ZXQ000XQZ 실행"))
+    #expect(target.runs.count(where: { $0.link != nil }) == 1)
+  }
+
+  @Test(arguments: [false, true])
+  func onlyInternalFilenameDotsCarryTheCodeBackground(_ internalDot: Bool) throws {
+    let text = internalDot ? "Keep report.v2. pdf here." : "Keep report.v2. here."
+    let source = text as NSString
+    let stem = source.range(of: "report.v2")
+    let dot = NSRange(location: NSMaxRange(stem), length: 1)
+    let box = CGRect(x: 0.2, y: 0.2, width: 0.2, height: 0.04)
+    var code = OverlaySourceAppearance(
+      background: .init(red: 0.3, green: 0.3, blue: 0.3, alpha: 1),
+      foreground: .white,
+      confidence: 1
+    )
+    code.fontDesign = .monospaced
+    var runs: [OverlaySourceStyleRun] = [
+      .init(range: stem, box: box, appearance: code),
+      .init(range: dot, box: box, appearance: code),
+    ]
+    if internalDot { runs.append(.init(
+      range: source.range(of: "pdf"),
+      box: CGRect(x: 0.41, y: 0.2, width: 0.06, height: 0.04),
+      appearance: code
+    )) }
+    let observed = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.04),
+      text: text,
+      appearance: .init(background: .white, foreground: .black, confidence: 1),
+      styleRuns: runs
+    )
+    let line = OverlayLine(id: UUID(), source: .init(recognized: observed, language: .init(identifier: "en")))
+    let attributed = try #require(line.source.attributedTextForTranslation())
+    let plan = try #require(TranslationLiteralPlan(attributed))
+    #expect(plan.requestText == (internalDot ? "Keep ZXQ000XQZ here." : "Keep ZXQ000XQZ. here."))
+    let restored = try #require(plan.restoring("보관: ZXQ000XQZ"))
+    #expect(String(restored.characters) == (internalDot ? "보관: report.v2. pdf" : "보관: report.v2"))
+    #expect(restored.runs.filter { $0.link != nil }.map { String(restored.characters[$0.range]) } == [internalDot
+        ? "report.v2. pdf"
+        : "report.v2"])
+  }
+
+  @Test
   func rewordedContextKeepsTheLinkWithItsTranslatedPhrase() throws {
     let link = URL(string: "swiftycrow-style://run/1")!
     var phrase = AttributedString("من سلسلة مقالات")

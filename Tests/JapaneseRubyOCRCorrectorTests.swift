@@ -1,12 +1,60 @@
 // SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import AppKit
 import Foundation
 import Testing
 @testable import SwiftyCrow
 
 @Suite("Japanese ruby OCR correction")
 struct JapaneseRubyOCRCorrectorTests {
+  @Test
+  func aWrappedStripKeepsUprightGlyphsInRightToLeftColumnOrder() throws {
+    let context = try #require(CGContext(
+      data: nil,
+      width: 100,
+      height: 80,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 100, height: 80))
+    for (x, y, width) in [(60, 40, 10), (63, 20, 4), (20, 40, 6)] {
+      context.setFillColor(CGColor(gray: 0, alpha: 1))
+      context.fill(CGRect(x: x, y: y, width: width, height: 10))
+    }
+    let columns = [
+      OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: 0.58, y: 0.35, width: 0.16, height: 0.5),
+        text: "漢字",
+        isVerticalBlock: true,
+        verticalCharScale: 0.2
+      ),
+      OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: 0.18, y: 0.35, width: 0.16, height: 0.25),
+        text: "る",
+        isVerticalBlock: true,
+        verticalCharScale: 0.2
+      ),
+    ]
+    let image = try #require(context.makeImage())
+    let strip = try #require(JapaneseRubyOCRCorrector.wrappedColumnStrip(
+      Array(columns.reversed()),
+      image: image
+    ))
+    let bitmap = NSBitmapImageRep(cgImage: strip)
+    let stride = 20
+    let counts = (0..<3).map { slot in
+      (0..<strip.height)
+        .flatMap { y in (slot * stride..<(slot + 1) * stride).compactMap { x in
+          bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB)?.redComponent
+        } }.count { $0 < 0.8 }
+    }
+    #expect(counts[0] > counts[2] && counts[2] > counts[1])
+  }
+
   @Test(arguments: [0.0, -0.00000001, -0.002])
   func touchingColumnsDoNotAddExtraRubyMargin(_ overlap: Double) {
     let source = OCRResult.Line(
