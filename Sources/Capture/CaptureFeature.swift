@@ -444,6 +444,7 @@ struct CaptureFeature {
           // Every requested line resolved, so a previous missing-model warning
           // is stale even if this live session started with a failed tick.
           state.translationUnavailable = false
+          state.lastError = nil
         }
         return .none
       }

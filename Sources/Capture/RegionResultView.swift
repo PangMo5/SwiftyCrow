@@ -38,13 +38,17 @@ struct RegionResultView: View {
           .padding(.horizontal, 14)
       }
       CaptureStatusNote(lines: store.overlayLines)
-      if store.isRecognizing, store.imageData != nil {
-        Text("Processing screen text")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.horizontal, 14)
-          .padding(.vertical, 8)
+      if store.imageData != nil {
+        if store.isTakingLong || store.isRestoring {
+          PreparingRecognitionNote()
+        } else if store.isRecognizing {
+          Text("Processing screen text")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
       }
       content
       Divider().opacity(0.4)

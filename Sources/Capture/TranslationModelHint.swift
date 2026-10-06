@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AppKit
-import Sharing
 import SwiftUI
 
 // MARK: - Open Language Settings
@@ -14,10 +13,6 @@ func openLanguageSettings() {
   guard let url = URL(string: "x-apple.systempreferences:com.apple.Localization-Settings.extension") else { return }
   NSWorkspace.shared.open(url)
 }
-
-/// UserDefaults key for "don't show again". Read directly by the overlay
-/// controller (which isn't a SwiftUI view) to drop the hint's interactive zone.
-let translationModelHintDismissedKey = "hideTranslationModelHint"
 
 // MARK: - PreparingRecognitionNote
 
@@ -49,58 +44,41 @@ struct PreparingRecognitionNote: View {
 
 // MARK: - TranslationModelHint
 
-/// Shown when translation fails because the on-device model isn't installed.
-/// The Translation framework only translates languages downloaded in System
-/// Settings, so this explains the situation and links straight there — with a
-/// "Don't show again" that suppresses it for good once the user gets the point.
+/// Compact failure banner for capture results, detached live results and the
+/// menu bar. Every presentation includes the same explanation and recovery action.
 struct TranslationModelHint: View {
-
-  // MARK: Internal
-
   var message: String? = nil
 
   var body: some View {
-    if !dismissed {
-      content
-    }
+    TranslationFailureDetails(message: message)
+      .font(.caption)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 8)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(.orange.opacity(0.18))
+      .background(.regularMaterial)
   }
+}
 
-  // MARK: Private
+// MARK: - TranslationFailureDetails
 
-  @Shared(.appStorage(translationModelHintDismissedKey)) private var dismissed = false
+/// Shared by failure banners and the overlay popover. An old preference to
+/// dismiss setup advice must never suppress an active failure's recovery action.
+struct TranslationFailureDetails: View {
+  var message: String? = nil
 
-  private var content: some View {
+  var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      HStack(spacing: 10) {
-        Image(systemName: "exclamationmark.triangle.fill")
-          .foregroundStyle(.orange)
-        VStack(alignment: .leading, spacing: 1) {
-          Text("Translation unavailable")
-            .font(.caption)
-            .fontWeight(.semibold)
-          Text(message ?? String(localized:
-            "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again."))
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        Spacer(minLength: 8)
-      }
-      HStack(spacing: 14) {
-        Button("Open Settings", action: openLanguageSettings)
-          .controlSize(.small)
-        Button("Don't show again") { $dismissed.withLock { $0 = true } }
-          .buttonStyle(.plain)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-        Spacer(minLength: 0)
-      }
+      Label("Translation unavailable", systemImage: "exclamationmark.triangle.fill")
+        .fontWeight(.semibold)
+        .foregroundStyle(.orange)
+      Text(message ?? String(localized:
+        "Add the required language model in System Settings → General → Language & Region → Translation Languages, then capture again."))
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      Button("Open Settings", action: openLanguageSettings)
+        .controlSize(.small)
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 8)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.orange.opacity(0.18))
-    .background(.regularMaterial)
   }
 }
 

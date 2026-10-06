@@ -275,7 +275,12 @@ extension TranslationClient: DependencyKey {
               continuation.finish()
             } onCancel: { session.cancel() }
           } catch {
-            continuation.finish(throwing: TranslationModelResolver.explaining(error, source: source, target: target))
+            let explained = TranslationModelResolver.explaining(error, source: source, target: target)
+            if !(error is CancellationError) {
+              Log.translation
+                .error("Batch failed for \(pair, privacy: .public): \(explained.localizedDescription, privacy: .public)")
+            }
+            continuation.finish(throwing: explained)
           }
         }
         // The translation service is launched on demand, and on the first use
