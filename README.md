@@ -113,7 +113,7 @@ New installations include ⇧⌘1 for capture and ⇧⌘2 to select a live trans
 
 ### "Unable to translate" or a missing-model hint
 
-SwiftyCrow translates with Apple's on-device Translation framework, which needs a language model installed for each language you translate. If translation fails or SwiftyCrow shows a **"Translation model not installed"** hint, the model for the detected language usually is not downloaded yet.
+SwiftyCrow uses Apple's on-device Translation framework. If an **"Unable to translate"** message appears, open its details to check whether the selected mode needs a language download or whether High Fidelity requires Apple Intelligence to be ready.
 
 **To install translation models:**
 
@@ -122,7 +122,7 @@ SwiftyCrow translates with Apple's on-device Translation framework, which needs 
 3. Click **Download** next to your source *and* target language. With **Auto** source, install every language that might appear in your captures
 4. Relaunch SwiftyCrow and try again
 
-The in-app hint has an **Open Settings** button that jumps straight there, plus **Don't show again** once you no longer need the reminder. Models are managed by macOS and stored locally. Remove unused models from the same panel to free disk space.
+The **Open Settings** action is available in capture results, the live overlay's warning popover, and the menu bar. On the live overlay, click the warning symbol to read the message and recovery steps. Models are managed by macOS and stored locally; remove unused downloads from the language settings panel.
 
 For more details, see [docs/LANGUAGE_MODELS.md](docs/LANGUAGE_MODELS.md).
 

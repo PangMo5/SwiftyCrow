@@ -124,7 +124,7 @@ brew install --cask PangMo5/tap/swiftycrow
 <a id="unable-to-translate-or-a-missing-model-hint"></a>
 ### 翻译失败或提示缺少模型
 
-SwiftyCrow 使用 Apple 的设备端翻译框架，需要先安装对应语言的模型。如果翻译失败或提示**语言模型尚未安装**，通常是因为检测到的语言模型还未下载。
+SwiftyCrow 使用 Apple 的设备端翻译框架。出现**“无法翻译”**消息时，请打开详情，确认所选模式是否需要下载语言，或 High Fidelity 是否需要 Apple Intelligence 准备就绪。
 
 **安装翻译模型：**
 
@@ -133,7 +133,7 @@ SwiftyCrow 使用 Apple 的设备端翻译框架，需要先安装对应语言�
 3. 为源语言和目标语言**分别**点击**下载**。使用**自动检测**时，请安装截图中可能出现的所有语言。
 4. 重新启动 SwiftyCrow 后再试。
 
-应用中的**打开设置**按钮可直接跳转到相应设置。不再需要提醒时可选择**不再显示**。模型由 macOS 管理并保存在本机；可在同一面板删除不用的模型以释放空间。
+**打开设置**操作可在截图结果、实时叠加层的警告弹出框和菜单栏中使用。点击实时叠加层的警告符号可查看消息和处理步骤。模型由 macOS 管理并保存在本机；可在语言设置面板中移除不使用的下载。
 
 详情请参阅 [docs/LANGUAGE_MODELS.md](LANGUAGE_MODELS.md)。
 
