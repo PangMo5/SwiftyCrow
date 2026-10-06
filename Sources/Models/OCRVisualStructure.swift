@@ -9,6 +9,59 @@ enum OCRVisualStructure {
 
   // MARK: Internal
 
+  struct InlineAnnotation {
+    var range: NSRange
+    var inkBox: CGRect
+    var runs: [OverlaySourceStyleRun]
+    var isSeparator: Bool
+  }
+
+  /// A divider belongs between independent UI labels, not inside a translated
+  /// sentence. Preserve each label's original owner and the divider's pixels.
+  static func separatingCompoundControls(_ result: OCRResult) -> OCRResult {
+    .init(lines: result.lines.flatMap { line -> [OCRResult.Line] in
+      let separators = inlineAnnotations(in: line).filter(\.isSeparator).sorted { $0.range.location < $1.range.location }
+      guard !separators.isEmpty else { return [line] }
+      let text = line.text as NSString
+      var scopes = [(NSRange, Bool)]()
+      var cursor = 0
+      for separator in separators {
+        if separator.range.location > cursor { scopes.append((
+          NSRange(location: cursor, length: separator.range.location - cursor),
+          false
+        )) }
+        scopes.append((separator.range, true))
+        cursor = NSMaxRange(separator.range)
+      }
+      if cursor < text.length { scopes.append((NSRange(location: cursor, length: text.length - cursor), false)) }
+      return scopes.compactMap { scope, retained -> OCRResult.Line? in
+        let value = text.substring(with: scope).trimmingCharacters(in: .whitespaces)
+        guard !value.isEmpty else { return nil }
+        let range = text.range(of: value, options: [], range: scope)
+        let runs = line.styleRuns.filter { NSIntersectionRange($0.range, range).length > 0 }
+        guard let first = runs.first, runs.allSatisfy({ NSIntersectionRange($0.range, range) == $0.range }) else { return nil }
+        var fragment = line
+        fragment.text = value
+        fragment.boundingBoxNormalized = runs.reduce(first.inkBox ?? first.box) { $0.union($1.inkBox ?? $1.box) }
+        fragment.styleRuns = runs.map { run in
+          var run = run
+          run.range.location -= range.location
+          return run
+        }
+        fragment.spacingAnchors = []
+        fragment.layoutExclusions = []
+        fragment.textFlowRegions = []
+        fragment.layoutBounds = nil
+        fragment.orientedBox = nil
+        fragment.replacementPatches = runs.map { .init(box: $0.box, appearance: $0.appearance) }
+        fragment.preservesSource = retained
+        fragment.preventsJoining = true
+        fragment.adoptFragmentAppearance(from: fragment.styleRuns)
+        return fragment
+      }
+    })
+  }
+
   static func classifying(_ result: OCRResult) -> OCRResult {
     let accessories = leadingAccessories(in: result.lines)
     let controlIcons = stackedControlIcons(in: result.lines).union(isolatedSymbolRows(in: result.lines))
@@ -160,6 +213,57 @@ enum OCRVisualStructure {
     .init(lines: result.lines.flatMap { splitControls($0, preservesLeadingAccessory: false, separatesGaps: false) })
   }
 
+  /// A semantic inline owner follows its translated clause inside the containing
+  /// paragraph. Recognition selects the range; measured geometry establishes role.
+  static func inlineAnnotations(in line: OCRResult.Line) -> [InlineAnnotation] {
+    guard !line.isVerticalBlock, !line.preservesSource, abs(line.rotationRadians) < 0.025 else { return [] }
+    let text = line.text as NSString
+    let runs = line.styleRuns.filter { $0.range.location >= 0 && NSMaxRange($0.range) <= text.length }
+    let letters = runs.filter { text.substring(with: $0.range).contains(where: \.isLetter) }
+    guard !letters.isEmpty else { return [] }
+    var groups = [[OverlaySourceStyleRun]]()
+    for run in runs.sorted(by: { $0.range.location < $1.range.location }) {
+      if let previous = groups.last?.first, previous.box == run.box {
+        groups[groups.count - 1].append(run)
+      } else { groups.append([run]) }
+    }
+    return groups.compactMap { group -> InlineAnnotation? in
+      guard let first = group.first, let last = group.last, let ink = first.inkBox else { return nil }
+      let range = NSRange(location: first.range.location, length: NSMaxRange(last.range) - first.range.location)
+      let value = text.substring(with: range)
+      guard
+        value.count <= 16
+      else { return nil }
+      let reference = value.contains(where: \.isNumber) && value.contains(where: { "[]［］()（）".contains($0) })
+        && value.allSatisfy { $0.isNumber || "[]［］()（）.,".contains($0) }
+      let separator = value.count == 1 && "|1Il".contains(value)
+        && ink.width * line.imageAspectRatio <= ink.height * 0.18
+        && text.length <= 80 && line.text.first.map { "[［【".contains($0) } == true
+      guard reference || separator else { return nil }
+      let neighbors = letters.filter {
+        let body = $0.inkBox ?? $0.box
+        return abs(body.midY - ink.midY) <= body.height
+          && max(0, max(body.minX - ink.maxX, ink.minX - body.maxX)) * line.imageAspectRatio <= body.height * 5
+      }
+      if separator {
+        guard
+          neighbors.contains(where: { ($0.inkBox ?? $0.box).maxX < ink.minX }),
+          neighbors.contains(where: { ($0.inkBox ?? $0.box).minX > ink.maxX })
+        else { return nil }
+        return InlineAnnotation(range: range, inkBox: ink, runs: group, isSeparator: separator)
+      }
+      guard
+        neighbors.contains(where: {
+          let body = $0.inkBox ?? $0.box
+          let smaller = ink.height <= body.height * 0.85
+            || (first.appearance.fontSizeScale > 0 && first.appearance.fontSizeScale <= $0.appearance.fontSizeScale * 0.95)
+          return smaller && ink.maxY <= body.maxY - body.height * 0.15
+        })
+      else { return nil }
+      return InlineAnnotation(range: range, inkBox: ink, runs: group, isSeparator: separator)
+    }
+  }
+
   // MARK: Private
 
   /// A full-height, independently measured symbol can be an icon that OCR
@@ -286,16 +390,20 @@ enum OCRVisualStructure {
     let runs = line.styleRuns.sorted { $0.range.location < $1.range.location }
     let text = line.text as NSString
     guard
-      let first = runs.first, first.range.location == 0, first.range.length > 0,
-      NSMaxRange(first.range) < text.length, let icon = first.inkBox
+      let first = runs.first, first.range.location == 0, first.range.length > 0
     else { return nil }
-    let token = text.substring(with: first.range)
+    let token = String(line.text.prefix(while: { !$0.isWhitespace }))
+    let prefixLength = token.utf16.count
+    let prefix = runs.filter { NSMaxRange($0.range) <= prefixLength }
+    guard let initial = prefix.first?.inkBox, prefix.allSatisfy({ $0.inkBox != nil }) else { return nil }
+    let icon = prefix.dropFirst().reduce(initial) { $0.union($1.inkBox!) }
     guard
-      token.count == 1,
-      token.unicodeScalars.allSatisfy({ !CharacterSet.alphanumerics.contains($0) }),
-      text.substring(with: NSRange(location: NSMaxRange(first.range), length: 1)).allSatisfy(\.isWhitespace),
+      (1...3).contains(token.count), prefixLength < text.length,
+      token.unicodeScalars.allSatisfy({ !CharacterSet.alphanumerics.contains($0) })
+      || (token.count <= 2 && token.contains(where: { !$0.isLetter && !$0.isNumber })),
+      text.substring(with: NSRange(location: prefixLength, length: 1)).allSatisfy(\.isWhitespace),
       let body = runs.dropFirst().first(where: {
-        $0.range.location > NSMaxRange(first.range) && NSMaxRange($0.range) <= text.length
+        $0.range.location > prefixLength && NSMaxRange($0.range) <= text.length
           && text.substring(with: $0.range).contains(where: \.isLetter)
       })?.inkBox
     else { return nil }
@@ -303,10 +411,11 @@ enum OCRVisualStructure {
     let width = icon.width * aspect
     let gap = max(body.minX - icon.maxX, icon.minX - body.maxX) * aspect
     guard abs(icon.midY - body.midY) <= max(icon.height, body.height) * 0.4, gap >= 0 else { return nil }
+    let bullet = ["•", "·", "●", "▪", "◦", "‣", "⁃"].contains(token)
     if
-      icon.height >= body.height * 0.8, width >= icon.height * 0.6, width <= icon.height * 1.8,
-      gap >= body.height * 0.4 { return .pictogram }
-    return ["•", "·", "●", "▪", "◦", "‣", "⁃"].contains(token) ? .listMarker : nil
+      icon.height >= body.height * (bullet ? 0.8 : 0.3), width >= icon.height * (bullet ? 0.6 : 0.3),
+      width <= icon.height * 1.8, gap >= body.height * 0.4 { return .pictogram }
+    return bullet ? .listMarker : nil
   }
 
   private static func splitControls(
@@ -327,6 +436,15 @@ enum OCRVisualStructure {
     let runs = line.styleRuns.sorted { $0.range.location < $1.range.location }
     guard runs.count >= 2 else { return [line] }
     let source = line.text as NSString
+    let trailingIcon = runs.last.flatMap { last -> OverlaySourceStyleRun? in
+      guard
+        let previous = runs.dropLast().last, let icon = last.inkBox, let label = previous.inkBox,
+        last.range.length <= 2, last.appearance.fontSizeScale == 0,
+        icon.height < label.height * 0.5, abs(icon.midY - label.midY) < label.height * 0.3,
+        max(icon.minX - label.maxX, label.minX - icon.maxX) * line.imageAspectRatio > label.height * 0.3
+      else { return nil }
+      return last
+    }
     let prefixLength = line.text.prefix(while: { !$0.isWhitespace }).utf16.count
     let leadingLiteral: Bool
     if
@@ -346,12 +464,17 @@ enum OCRVisualStructure {
         && source.substring(with: NSRange(location: NSMaxRange(first.range), length: 1)).allSatisfy(\.isWhitespace)
     } else { leadingLiteral = false }
     let aspect = max(0.01, line.imageAspectRatio)
+    func styleScale(_ run: OverlaySourceStyleRun) -> CGFloat {
+      // Different scripts have different cap/diacritic heights at one point
+      // size. A short Latin span after Arabic is still the same paragraph.
+      run.appearance.fontSizeScale > 0 ? run.appearance.fontSizeScale : (run.inkBox?.height ?? run.box.height)
+    }
     var groups = [[OverlaySourceStyleRun]]()
     for run in runs {
       let previous = groups.last?.last
       let smallerStyle = previous.map { previous in
-        let immediateHeight = previous.inkBox?.height ?? previous.box.height
-        guard (run.inkBox?.height ?? run.box.height) < immediateHeight * 0.6 else { return false }
+        let immediateHeight = styleScale(previous)
+        guard styleScale(run) < immediateHeight * 0.6 else { return false }
         // A tall parenthesis or formula glyph is not the typography of the
         // preceding phrase. Use its letter-weighted median so inline math
         // cannot turn the remaining body text into a separate small control.
@@ -359,17 +482,17 @@ enum OCRVisualStructure {
           .compactMap { candidate -> (height: CGFloat, weight: Int)? in
             let letters = source.substring(with: candidate.range).filter(\.isLetter).count
             guard letters > 0 else { return nil }
-            return (candidate.inkBox?.height ?? candidate.box.height, letters)
+            return (styleScale(candidate), letters)
           }.sorted { $0.height < $1.height }
         var remaining = prefix.reduce(0) { $0 + $1.weight } / 2
         let typicalHeight = prefix.first { sample in
           remaining -= sample.weight
           return remaining < 0
         }?.height
-        let previousHeight = typicalHeight ?? (previous.inkBox?.height ?? previous.box.height)
-        return (run.inkBox?.height ?? run.box.height) < previousHeight * 0.6
+        let previousHeight = typicalHeight ?? styleScale(previous)
+        return styleScale(run) < previousHeight * 0.6
           && runs.filter { $0.range.location >= run.range.location }
-          .allSatisfy { ($0.inkBox?.height ?? $0.box.height) < previousHeight * 0.7 }
+          .allSatisfy { styleScale($0) < previousHeight * 0.7 }
           && source.substring(from: run.range.location).unicodeScalars.count(where: CharacterSet.letters.contains) >= 2
       } ?? false
       let hasWordBoundary = previous.map {
@@ -383,6 +506,7 @@ enum OCRVisualStructure {
         (leadingLiteral || preservesAccessory) && NSMaxRange(previous.range) == prefixLength
         || (separatesGaps && (run.box.minX - previous.box.maxX) * aspect > max(run.box.height, previous.box.height) * 0.8)
         || (smallerStyle && (hasWordBoundary || startsBracketedAccessory))
+        || trailingIcon?.range == run.range
       {
         groups.append([run])
       } else if groups.isEmpty {
@@ -425,7 +549,12 @@ enum OCRVisualStructure {
         ? line.preventsJoining
         : true
       if preservesAccessory, range.location == 0 { fragment.preservesSource = true }
-      fragment.alignment = .leading
+      if let trailingIcon, NSIntersectionRange(range, trailingIcon.range).length > 0 { fragment.preservesSource = true }
+      // Accessory position is physical evidence. RTL controls put their icon
+      // on the right; splitting it must not turn the caption into a left anchor.
+      let rightAccessory = preservesAccessory && range.location > 0
+        && (groups.first?.first?.box.midX ?? 0) > fragment.boundingBoxNormalized.midX
+      fragment.alignment = rightAccessory ? .trailing : .leading
       return fragment
     }
     // A partial range map is not permission to discard punctuation or words.
@@ -472,6 +601,14 @@ enum OCRVisualStructure {
       line.text.count == 1, !line.isVerticalBlock,
       box.width * line.imageAspectRatio > box.height * 0.55
     else { return false }
+    if
+      line.text.allSatisfy({ $0.isASCII && $0.isLetter }), !lines.contains(where: { other in
+        guard other != line else { return false }
+        let next = other.boundingBoxNormalized
+        let dx = max(0, max(box.minX - next.maxX, next.minX - box.maxX)) * line.imageAspectRatio
+        let dy = max(0, max(box.minY - next.maxY, next.minY - box.maxY))
+        return other.text.contains(where: \.isLetter) && dx < box.height * 6 && dy < box.height
+      }) { return true }
     return lines.contains { other in
       let next = other.boundingBoxNormalized
       let gap = (next.minX - box.maxX) * line.imageAspectRatio

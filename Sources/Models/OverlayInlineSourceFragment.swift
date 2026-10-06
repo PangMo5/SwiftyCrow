@@ -11,11 +11,11 @@ struct OverlayInlineSourceFragment: Equatable, Hashable, Sendable {
 
   // MARK: Lifecycle
 
-  init?(pixels: Data, width: Int, height: Int, descent: CGFloat, referenceFontSize: CGFloat) {
+  init?(pixels: Data, width: Int, height: Int, descent: CGFloat, referenceFontSize: CGFloat, kind: Kind = .arithmetic) {
     guard
       width > 0, height > 0, width <= Int.max / 4 / height,
       pixels.count == width * height * 4,
-      descent.isFinite, descent >= 0, descent <= CGFloat(height),
+      descent.isFinite, descent >= (kind == .annotation ? -CGFloat(height) * 2 : 0), descent <= CGFloat(height),
       referenceFontSize.isFinite, referenceFontSize > 0
     else { return nil }
     self.pixels = pixels
@@ -23,10 +23,17 @@ struct OverlayInlineSourceFragment: Equatable, Hashable, Sendable {
     self.height = height
     self.descent = descent
     self.referenceFontSize = referenceFontSize
+    self.kind = kind
   }
 
   // MARK: Internal
 
+  enum Kind: Equatable, Hashable, Sendable {
+    case arithmetic
+    case annotation
+  }
+
+  let kind: Kind
   let pixels: Data
   let width: Int
   let height: Int

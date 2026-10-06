@@ -24,7 +24,7 @@ enum HorizontalTextRenderer {
     }
 
     func fits(_ size: CGSize) -> Bool {
-      complete && inkBounds.width <= size.width + 0.5 && inkBounds.height <= size.height + 0.5
+      complete && inkBounds.width <= size.width + 0.00001 && inkBounds.height <= size.height + 0.00001
         && (!usesContainerCoordinates || (inkBounds.minX >= -0.5 && inkBounds.minY >= -0.5
             && inkBounds.maxX <= size.width + 0.5 && inkBounds.maxY <= size.height + 0.5))
     }
@@ -177,11 +177,11 @@ enum HorizontalTextRenderer {
     }
     // Core Text's optical metrics/line-break choices are not monotonic across
     // every fractional size. A valid binary-search sample can stop fitting
-    // after quarter-point quantization. Validate the size actually drawn.
-    var fitted = floor(low * 4) / 4
+    // after size quantization. Validate the size actually drawn.
+    var fitted = floor(low * 64) / 64
     var complete = fits(fitted)
     while fitted > min(4, preferred), !complete {
-      fitted -= 0.25
+      fitted -= 1 / 64
       complete = fits(fitted)
     }
     return .init(fontSize: fitted, verticalWrapping: .words, isComplete: complete)
@@ -204,6 +204,19 @@ enum HorizontalTextRenderer {
       )
     else { return nil }
     context.scaleBy(x: scale, y: scale)
+    guard draw(placement, in: context) else { return nil }
+    return context.makeImage()
+  }
+
+  /// Draw into the final pixel grid. An intermediate ceil-sized bitmap would
+  /// resample small glyphs when stretched back into fractional layout bounds.
+  @discardableResult
+  static func draw(_ placement: OverlayPlacement, in context: CGContext) -> Bool {
+    let size = placement.frame.size
+    let plan = plan(for: placement)
+    guard plan.fits(size) else { return false }
+    context.saveGState()
+    defer { context.restoreGState() }
     if !placement.textFlowRegions.isEmpty {
       context.addRects(placement.textFlowRegions.map {
         CGRect(x: $0.minX, y: size.height - $0.maxY, width: $0.width, height: $0.height)
@@ -217,7 +230,7 @@ enum HorizontalTextRenderer {
         draw(hyphen, at: CGPoint(x: baseline.x + CTLineGetTypographicBounds(line, nil, nil, nil), y: baseline.y), in: context)
       }
     }
-    return context.makeImage()
+    return true
   }
 
   /// Uses the compositor's exact baseline/alignment calculation. Decorative
@@ -438,7 +451,13 @@ enum HorizontalTextRenderer {
   }
 
   private static func ink(_ line: CTLine, hyphen: CTLine?) -> CGRect {
-    let bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds]).union(InlineSourceFragmentRenderer.bounds(in: line))
+    // Outlines alone omit the antialias fringe. Reserve it inside the original
+    // owner so final clipping cannot shave the bottom of a fitted glyph.
+    var bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds]).union(InlineSourceFragmentRenderer.bounds(in: line))
+    let hasGlyphs = (CTLineGetGlyphRuns(line) as! [CTRun]).contains {
+      (CTRunGetAttributes($0) as NSDictionary)[kCTRunDelegateAttributeName] == nil && CTRunGetGlyphCount($0) > 0
+    }
+    if hasGlyphs { bounds = bounds.insetBy(dx: -0.5, dy: -0.5) }
     guard let hyphen else { return bounds }
     return bounds.union(CTLineGetBoundsWithOptions(hyphen, [.useGlyphPathBounds]).offsetBy(
       dx: CTLineGetTypographicBounds(line, nil, nil, nil),

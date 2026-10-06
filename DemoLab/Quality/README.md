@@ -61,8 +61,9 @@ authored graphic regions and transcript gates. The source protection mask is a
 pixel-aligned vector difference, with winding fill for overlapping owners.
 Capture preview/export and the transparent live layer share
 `OverlayRasterRenderer`: Core Graphics draws the source, then clips restoration
-and Core Text glyph images to that difference. Background colors explicitly use
-sRGB. This avoids a separate SwiftUI offscreen-compositing contract in Save/Copy.
+and target ink to that difference. Horizontal Core Text draws directly into the
+final pixel grid, avoiding resampling a ceil-sized intermediate bitmap; vertical
+text uses its glyph image. Background colors explicitly use sRGB. This avoids a separate SwiftUI offscreen-compositing contract in Save/Copy.
 
 Keep authored fixtures and their expectations independent of generated outputs.
 Inspect the original, baseline and candidate at source resolution, especially
@@ -77,12 +78,27 @@ search edge is open whitespace, not a control. Unequal-width source labels in
 one native table column establish leading, centered or trailing alignment;
 estimated cell padding must not move that observed anchor. Unit tests cover
 open/closed outlines, light/dark backgrounds and column alignment at two scales.
+When Vision includes an empty radio or checkbox in a label box but omits it from
+the transcript, a separated taller closed outline remains source artwork. Both
+the erasure patches and target owner are restricted to the adjacent label ink;
+a letter O or an open stroke cannot establish that ownership change.
 
 Every target must fit inside its own original text box. A paragraph owns its
 paragraph box; separate menu items retain their individual boxes and positions.
 Whitespace, detected control interiors and table cells cannot enlarge target
-bounds. Fitting and final raster clipping enforce the same invariant for preview,
-Save/Copy and live output. The runner checks this globally on every placement.
+bounds. Fitting includes glyph antialias margins and final raster clipping enforces
+the same invariant for preview, Save/Copy and live output. A single physical row
+uses its measured source ink center without shrinking the fitting height to a
+Latin cap height. The runner checks the boundary globally on every placement.
+
+Raised references are captured as inline owners before paragraph joining.
+Their immutable pixels and relative baseline follow their translated clause
+through protected translation markers. Thin separators in bracketed control
+rows divide independent caption owners, keeping each caption in its original
+box and the separator at the original control boundary.
+Chromatic ink can recover a dropped bracket outside Vision's incomplete range
+box. Whole paragraphs retain their original boundary; inline elements no longer
+reserve obsolete source coordinates or overlap translated text.
 
 For those interactions, install the normal app packaged by `BuildNativeApp.sh`.
 It keeps the production module's exact bytes and the build's Apple Development

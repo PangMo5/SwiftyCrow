@@ -51,6 +51,71 @@ enum TranslationStyleMapper {
     return request
   }
 
+  static func ownershipRequest(source: AttributedString) -> String? {
+    // One semantic phrase can be carried by paired boundaries. Several spans
+    // require contextual alignment to the established prose rather than a
+    // heavily tokenized request that changes the sentence itself.
+    guard sourceSpans(in: source).count == 1 else { return nil }
+    guard let tagged = contextualRequest(source: source) else { return nil }
+    return tagged.replacingOccurrences(of: #"<s(\d+)>"#, with: " ZXQSTYLE$1OPEN ", options: .regularExpression)
+      .replacingOccurrences(of: #"</s(\d+)>"#, with: " ZXQSTYLE$1CLOSE ", options: .regularExpression)
+  }
+
+  /// A structurally complete tagged translation supplies both prose and style
+  /// ownership. Do not project it onto a separately reworded plain translation.
+  static func contextualTranslation(source: AttributedString, response: String) -> AttributedString? {
+    let tokens = try! NSRegularExpression(pattern: #"ZXQSTYLE(\d+)(OPEN|CLOSE)"#, options: .caseInsensitive)
+    let original = response as NSString
+    let matches = tokens.matches(in: response, range: NSRange(location: 0, length: original.length))
+    var response = response
+    if !matches.isEmpty {
+      // RTL translation can reverse the boundary names. They delimit an owner,
+      // so match complete pairs by identity rather than treating visual order
+      // as a new nesting grammar.
+      var seen = [String: Set<String>]()
+      for match in matches {
+        let id = original.substring(with: match.range(at: 1))
+        let side = original.substring(with: match.range(at: 2)).uppercased()
+        guard seen[id, default: []].insert(side).inserted else { return nil }
+      }
+      guard seen.values.allSatisfy({ $0 == ["OPEN", "CLOSE"] }) else { return nil }
+      var first = Set<String>()
+      var replacements = [(NSRange, String)]()
+      for match in matches {
+        let id = original.substring(with: match.range(at: 1))
+        replacements.append((match.range, first.insert(id).inserted ? "<s\(id)>" : "</s\(id)>"))
+      }
+      let value = NSMutableString(string: response)
+      for (range, tag) in replacements.reversed() { value.replaceCharacters(in: range, with: tag) }
+      response = value as String
+    }
+    let spans = sourceSpans(in: source)
+    guard
+      spans.count == 1, spans.allSatisfy({ !$0.isLiteral && !$0.isSourceFragment }),
+      let parsed = contextualSpans(response, allowed: spans.count),
+      parsed.spans.count == spans.count,
+      Set(parsed.spans.map(\.id)).count == spans.count
+    else { return nil }
+    var target = AttributedString(parsed.text)
+    for span in parsed.spans {
+      guard
+        let range = Range(span.range, in: parsed.text),
+        let lo = AttributedString.Index(range.lowerBound, within: target),
+        let hi = AttributedString.Index(range.upperBound, within: target)
+      else { return nil }
+      target[lo..<hi].link = spans[span.id].link
+    }
+    let characters = target.characters
+    let lower = characters.firstIndex { !$0.isWhitespace } ?? target.endIndex
+    var upper = target.endIndex
+    while upper > lower {
+      let previous = characters.index(before: upper)
+      guard characters[previous].isWhitespace else { break }
+      upper = previous
+    }
+    return AttributedString(target[lower..<upper])
+  }
+
   static func alignContextual(
     source: AttributedString,
     target: String,

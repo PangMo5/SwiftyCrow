@@ -254,8 +254,7 @@ struct RegionCaptureFeature {
           return .none
         }
         if
-          let index = state.overlayLines.firstIndex(where: { $0.id == id }),
-          state.overlayLines[index].isPending || state.overlayLines[index].translatedText == text
+          let index = state.overlayLines.firstIndex(where: { $0.id == id })
         {
           state.overlayLines[index].showTranslation(
             text,

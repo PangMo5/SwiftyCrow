@@ -232,7 +232,14 @@ final class CaptureQualityRunner {
       )
     try write(final.overlayLines.map { line in
       let placement = placements.first { $0.id == line.id }
+      let sourceAttributes = line.source.attributedTextForTranslation()
+      let sourceSpans = sourceAttributes.map { attributes in
+        attributes.runs.map { run in
+          ["text": String(attributes.characters[run.range]), "link": run.link?.absoluteString ?? ""]
+        }
+      } ?? []
       return [
+        "sourceStyleSpans": sourceSpans,
         "source": line.source.text,
         "protectedRequest": TranslationLiteralPlan(line.source.attributedTextForTranslation())?.requestText ?? "",
         "target": line.displayedText,

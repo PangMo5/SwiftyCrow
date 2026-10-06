@@ -431,8 +431,7 @@ struct CaptureFeature {
           state.translationCache.removeValue(forKey: state.translationCacheOrder.removeFirst())
         }
         if
-          let index = state.overlayLines.firstIndex(where: { $0.id == lineID }),
-          state.overlayLines[index].isPending || state.overlayLines[index].translatedText == translation.text
+          let index = state.overlayLines.firstIndex(where: { $0.id == lineID })
         {
           state.overlayLines[index].showTranslation(
             translation.text,

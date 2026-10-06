@@ -228,7 +228,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
             range: run.range,
             box: run.box,
             appearance: run.appearance,
-            isLiteral: false
+            isLiteral: run.sourceFragment?.kind == .annotation
           ))
           continue
         }

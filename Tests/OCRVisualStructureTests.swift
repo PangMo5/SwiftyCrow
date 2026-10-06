@@ -11,6 +11,84 @@ struct OCRVisualStructureTests {
 
   // MARK: Internal
 
+  @Test(arguments: [">", "=", ":-", "*A"], [false, true])
+  func punctuationArtworkOwnsItsPixelsAndKeepsTheLabelAnchor(_ symbol: String, _ rtl: Bool) throws {
+    let text = symbol + " Label"
+    let icon = CGRect(x: rtl ? 0.8 : 0.1, y: 0.2, width: 0.008, height: 0.016)
+    let caption = CGRect(x: rtl ? 0.65 : 0.13, y: 0.196, width: 0.1, height: 0.025)
+    let line = OCRResult.Line(boundingBoxNormalized: icon.union(caption), text: text, styleRuns: [
+      .init(range: .init(location: 0, length: symbol.utf16.count), box: icon, inkBox: icon),
+      .init(range: .init(location: symbol.utf16.count + 1, length: 5), box: caption, inkBox: caption),
+    ])
+    let result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line]))
+    let marker = try #require(result.lines.first { $0.text == symbol })
+    let label = try #require(result.lines.first { $0.text == "Label" })
+    #expect(marker.preservesSource)
+    #expect(!label.preservesSource)
+    #expect(label.boundingBoxNormalized == caption)
+    #expect(label.alignment == (rtl ? .trailing : .leading))
+  }
+
+  @Test
+  func anUnmeasurableSmallDropdownGlyphIsRetainedBesideItsLabel() {
+    let label = CGRect(x: 0.2, y: 0.2, width: 0.1, height: 0.02)
+    let icon = CGRect(x: 0.32, y: 0.207, width: 0.008, height: 0.006)
+    var appearance = OverlaySourceAppearance.fallback
+    appearance.fontSizeScale = 0.025
+    let line = OCRResult.Line(boundingBoxNormalized: label.union(icon), text: "Language v", styleRuns: [
+      .init(range: .init(location: 0, length: 8), box: label, appearance: appearance, inkBox: label),
+      .init(range: .init(location: 9, length: 1), box: icon, inkBox: icon),
+    ])
+    let result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line]))
+    #expect(result.lines.map(\.text) == ["Language", "v"])
+    #expect(result.lines.last?.preservesSource == true)
+    #expect(result.lines.first?.preservesSource == false)
+  }
+
+  @Test
+  func aThinSeparatorCannotBecomeAnOCRNumeralInsideControlLinks() {
+    let left = CGRect(x: 0.1, y: 0.2, width: 0.1, height: 0.02)
+    let rule = CGRect(x: 0.21, y: 0.2, width: 0.002, height: 0.02)
+    let right = CGRect(x: 0.22, y: 0.2, width: 0.12, height: 0.02)
+    let source = OCRResult.Line(boundingBoxNormalized: left.union(right), text: "[Edit 1 Source]", styleRuns: [
+      .init(range: .init(location: 0, length: 5), box: left, inkBox: left),
+      .init(range: .init(location: 6, length: 1), box: rule, inkBox: rule),
+      .init(range: .init(location: 8, length: 7), box: right, inkBox: right),
+    ])
+    let annotations = OCRVisualStructure.inlineAnnotations(in: source)
+    #expect(annotations.count == 1)
+    #expect(annotations.first?.inkBox == rule)
+    #expect(annotations.first?.isSeparator == true)
+    let controls = OCRVisualStructure.separatingCompoundControls(.init(lines: [source])).lines
+    #expect(controls.map(\.text) == ["[Edit", "1", "Source]"])
+    #expect(controls[1].preservesSource)
+    #expect(abs(controls[0].boundingBoxNormalized.midX - left.midX) < 1e-12)
+    #expect(abs(controls[2].boundingBoxNormalized.midX - right.midX) < 1e-12)
+    var prose = source
+    prose.text = " Edit 1 Source "
+    #expect(OCRVisualStructure.inlineAnnotations(in: prose).isEmpty)
+  }
+
+  @Test(arguments: ["[2]", "2]", "(4]13)"], [false, true])
+  func raisedReferencesKeepTheirSemanticRangeEvenWithUncertainBrackets(_ marker: String, _ raised: Bool) {
+    let text = "Content " + marker + " continues"
+    let body = CGRect(x: 0.1, y: 0.2, width: 0.12, height: 0.03)
+    let citation = CGRect(x: 0.23, y: raised ? 0.198 : 0.22, width: 0.03, height: 0.018)
+    let tail = CGRect(x: 0.27, y: 0.2, width: 0.15, height: 0.03)
+    let line = OCRResult.Line(boundingBoxNormalized: body.union(tail).union(citation), text: text, styleRuns: [
+      .init(range: .init(location: 0, length: 7), box: body, inkBox: body),
+      .init(range: .init(location: 8, length: marker.utf16.count), box: citation, inkBox: citation),
+      .init(range: .init(location: 9 + marker.utf16.count, length: 9), box: tail, inkBox: tail),
+    ])
+    let annotations = OCRVisualStructure.inlineAnnotations(in: line)
+    #expect(annotations.count == (raised ? 1 : 0))
+    if raised {
+      #expect(annotations[0].range == NSRange(location: 8, length: marker.utf16.count))
+      #expect(annotations[0].inkBox == citation)
+      #expect(!annotations[0].isSeparator)
+    }
+  }
+
   @Test(arguments: [
     "Financial report.pdf",
     "Source photo.JPEG",

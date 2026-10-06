@@ -151,7 +151,11 @@ extension TranslationClient: DependencyKey {
           items.map {
             var request = $0
             request.text = literalPlans[$0.id]?.requestText ?? $0.text
-            return TranslationSession.Request(sourceText: request.requestText, clientIdentifier: $0.id.uuidString)
+            var native = TranslationSession.Request(sourceText: request.requestText, clientIdentifier: $0.id.uuidString)
+            if #available(macOS 26.4, *), $0.trailingContext == nil {
+              native.attributedSourceText = literalPlans[$0.id]?.requestAttributedText ?? $0.attributedText
+            }
+            return native
           }
         }
         let task = Task {
@@ -170,7 +174,7 @@ extension TranslationClient: DependencyKey {
             try await withTaskCancellationHandler {
               var styledTargets = [UUID: String]()
               var anchoredTargets = [UUID: AttributedString]()
-              func accept(_ responseText: String, id: UUID) throws {
+              func accept(_ responseText: String, id: UUID, metadata: AttributedString? = nil) throws {
                 try Task.checkCancellation()
                 if !receivedFirstResponse {
                   receivedFirstResponse = true
@@ -195,16 +199,19 @@ extension TranslationClient: DependencyKey {
                   translatedLabel,
                   source: sourceLine.text
                 )
+                let nativeMetadata = metadata.flatMap { String($0.characters) == normalizedTarget ? $0 : nil }
                 let restored: AttributedString
                 if let plan = literalPlans[id] {
-                  guard let decoded = plan.restoring(normalizedTarget) else {
+                  guard let decoded = plan.restoring(nativeMetadata ?? AttributedString(normalizedTarget)) else {
                     Log.translation
                       .error("Rejected translation with invalid protected text markers for \(pair, privacy: .public)")
                     return
                   }
                   restored = decoded
                   anchoredTargets[id] = decoded
-                } else { restored = AttributedString(normalizedTarget) }
+                } else { restored = nativeMetadata ?? AttributedString(normalizedTarget)
+                  if nativeMetadata != nil { anchoredTargets[id] = restored }
+                }
                 let targetText = String(restored.characters)
                 var attributedTarget = anchoredTargets[id]
                 var requiresSourceAlignment = false
@@ -229,7 +236,9 @@ extension TranslationClient: DependencyKey {
               if !ordinary.isEmpty {
                 for try await response in session.translate(batch: requests(for: ordinary)) {
                   guard let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)) else { continue }
-                  try accept(response.targetText, id: id)
+                  if #available(macOS 26.4, *) {
+                    try accept(response.targetText, id: id, metadata: response.attributedTargetText)
+                  } else { try accept(response.targetText, id: id) }
                 }
               }
               if #available(macOS 26.4, *) {
@@ -381,7 +390,8 @@ extension TranslationClient: DependencyKey {
         .filter { !$0.isLiteral && ($0.isSourceFragment || $0.text.contains(where: \.isLetter)) }.map(\.link))
       guard
         !unresolved.isEmpty,
-        let contextual = TranslationStyleMapper.contextualRequest(source: source, links: unresolved)
+        let contextual = TranslationStyleMapper.ownershipRequest(source: source)
+        ?? TranslationStyleMapper.contextualRequest(source: source, links: unresolved)
       else { return nil }
       return TranslationSession.Request(sourceText: contextual, clientIdentifier: id.uuidString)
     }
@@ -392,6 +402,10 @@ extension TranslationClient: DependencyKey {
         let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
         let source = linesByID[id]?.attributedText, let target = targets[id]
       else { continue }
+      if let formatted = TranslationStyleMapper.contextualTranslation(source: source, response: response.targetText) {
+        continuation.yield(TranslationLine(id: id, text: String(formatted.characters), attributedText: formatted))
+        continue
+      }
       let alignment = TranslationStyleMapper.alignContextual(
         source: source,
         target: target,

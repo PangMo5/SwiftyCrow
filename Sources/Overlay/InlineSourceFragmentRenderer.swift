@@ -81,7 +81,7 @@ enum InlineSourceFragmentRenderer {
       version: kCTRunDelegateVersion1,
       dealloc: { Unmanaged<Run>.fromOpaque($0).release() },
       getAscent: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().ascent },
-      getDescent: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().descent },
+      getDescent: { max(0, Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().descent) },
       getWidth: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().width }
     )
     let pointer = Unmanaged.passRetained(run).toOpaque()
