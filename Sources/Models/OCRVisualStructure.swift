@@ -97,11 +97,18 @@ enum OCRVisualStructure {
       let positions = filePeers.map { lines[$0].boundingBoxNormalized.midY }.sorted()
       let advances = zip(positions, positions.dropFirst()).map { $1 - $0 }.sorted()
       let fileAdvance = advances.isEmpty ? 0 : advances[advances.count / 2]
-      let fileColumn = text.split(whereSeparator: \.isWhitespace).count == 1 && text.count < 60
+      let enclosedFileRow = filePeers.count >= 2 && line.recognitionConfidence < 0.65
+        && text.split(whereSeparator: \.isWhitespace).count <= 2 && !fileRange.isNull
+        && line.boundingBoxNormalized.midY > fileRange.minY && line.boundingBoxNormalized.midY < fileRange.maxY
+        && filePeers.allSatisfy { peer in
+          min(line.boundingBoxNormalized.height, lines[peer].boundingBoxNormalized.height)
+            >= max(line.boundingBoxNormalized.height, lines[peer].boundingBoxNormalized.height) * 0.7
+        }
+      let fileColumn = (text.split(whereSeparator: \.isWhitespace).count == 1 || enclosedFileRow) && text.count < 60
         && !OCRTextSemantics.endsSentence(text)
-        && filePeers.count >= 3 && (nativeFileColumn || (line.tableCell == nil && !fileRange.isNull
+        && (enclosedFileRow || filePeers.count >= 3 && (nativeFileColumn || (line.tableCell == nil && !fileRange.isNull
             && line.boundingBoxNormalized.midY >= fileRange.minY
-            && line.boundingBoxNormalized.midY <= fileRange.maxY + fileAdvance))
+            && line.boundingBoxNormalized.midY <= fileRange.maxY + fileAdvance)))
       let nativeNameCount = text.split(whereSeparator: \.isWhitespace).count(where: { isLanguageName(String($0)) })
       let languageSelector = text.count <= 80 && (nativeNameCount >= 2 || (nativeNameCount == 1 && lines.contains { other in
         let a = line.boundingBoxNormalized
@@ -234,8 +241,7 @@ enum OCRVisualStructure {
       guard
         value.count <= 16
       else { return nil }
-      let reference = value.contains(where: \.isNumber) && value.contains(where: { "[]［］()（）".contains($0) })
-        && value.allSatisfy { $0.isNumber || "[]［］()（）.,".contains($0) }
+      let reference = isReferenceTranscript(value)
       let separator = value.count == 1 && "|1Il".contains(value)
         && ink.width * line.imageAspectRatio <= ink.height * 0.18
         && text.length <= 80 && line.text.first.map { "[［【".contains($0) } == true
@@ -262,6 +268,15 @@ enum OCRVisualStructure {
       else { return nil }
       return InlineAnnotation(range: range, inkBox: ink, runs: group, isSeparator: separator)
     }
+  }
+
+  /// Recognition may flatten numeric stems or bracket edges into I/l/|/O.
+  /// Only measured raised geometry can turn this transcript into an annotation;
+  /// its original pixels, rather than guessed replacement numbers, are carried.
+  static func isReferenceTranscript(_ value: String) -> Bool {
+    value.count <= 16 && value.contains(where: \.isNumber)
+      && value.contains(where: { "[]［］()（）".contains($0) })
+      && value.allSatisfy { $0.isNumber || "[]［］()（）.,Iil|Oo".contains($0) }
   }
 
   // MARK: Private

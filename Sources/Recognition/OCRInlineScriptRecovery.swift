@@ -14,13 +14,15 @@ enum OCRInlineScriptRecovery {
   struct Span {
     var range: NSRange
     var box: CGRect
+    var isRubyBase = false
   }
 
   static func recover(_ lines: [OCRResult.Line], image: CGImage) async throws -> [OCRResult.Line] {
     var result = lines
     var remaining = 4
+    let ruby = lines.filter(OCRResult.isLikelyRuby)
     for index in lines.indices {
-      let spans = suspiciousSpans(in: lines[index])
+      let spans = suspiciousSpans(in: lines[index], among: ruby)
       for span in spans.reversed() where remaining > 0 {
         remaining -= 1
         try Task.checkCancellation()
@@ -35,7 +37,7 @@ enum OCRInlineScriptRecovery {
         let started = ContinuousClock.now
         let candidates = try await VisionTextRecognizer.additionalText(
           in: image,
-          language: .auto,
+          language: span.isRubyBase ? .init(code: "ja") : .auto,
           crop: crop,
           minimumGlyphHeight: box.height * CGFloat(image.height),
           preferredScale: 2,
@@ -44,7 +46,9 @@ enum OCRInlineScriptRecovery {
         Log.ocr.log("Inline script crop completed in \(started.duration(to: .now).loggedSeconds, privacy: .public)s")
         guard
           candidates.count == 1, let candidate = candidates.first,
-          accepts(candidate.text, confidence: candidate.recognitionConfidence)
+          span.isRubyBase
+          ? acceptsRubyBase(candidate.text, confidence: candidate.recognitionConfidence)
+          : accepts(candidate.text, confidence: candidate.recognitionConfidence)
         else { continue }
         let old = result[index].text
         let updated = (old as NSString).replacingCharacters(in: span.range, with: candidate.text)
@@ -64,7 +68,13 @@ enum OCRInlineScriptRecovery {
     }) >= 2 && !text.contains("\u{FFFD}")
   }
 
-  static func suspiciousSpans(in line: OCRResult.Line) -> [Span] {
+  static func acceptsRubyBase(_ text: String, confidence: Float) -> Bool {
+    confidence >= 0.45 && (1...4).contains(text.count)
+      && text.unicodeScalars.contains { (0x3400...0x9FFF).contains($0.value) }
+      && text.unicodeScalars.allSatisfy { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value) }
+  }
+
+  static func suspiciousSpans(in line: OCRResult.Line, among lines: [OCRResult.Line] = []) -> [Span] {
     guard
       !line.isVerticalBlock, !line.preservesSource,
       !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text)
@@ -77,9 +87,16 @@ enum OCRInlineScriptRecovery {
         words[words.count - 1].range = NSUnionRange(last.range, run.range)
       } else { words.append(Span(range: run.range, box: run.box)) }
     }
+    let rubyRanges = Set(lines.compactMap { OCRResult.rubyBaseWord(in: line, for: $0)?.range })
+    words = words.map { span in
+      var span = span
+      span.isRubyBase = rubyRanges.contains(span.range)
+      return span
+    }
     let suspicious = words.filter { span in
       let value = text.substring(with: span.range)
       guard !value.unicodeScalars.contains(where: isNonLatinLetter) else { return false }
+      if span.isRubyBase { return true }
       if
         value.count > 1,
         value.range(
@@ -101,6 +118,7 @@ enum OCRInlineScriptRecovery {
     for span in suspicious {
       if
         let last = spans.last,
+        !last.isRubyBase, !span.isRubyBase,
         (span.box.minX - last.box.maxX) * line.imageAspectRatio < max(span.box.height, last.box.height) * 0.7,
         span.range.location - NSMaxRange(last.range) <= 2
       {

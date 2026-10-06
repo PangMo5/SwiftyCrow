@@ -10,6 +10,21 @@ struct TranslationGroupContextTests {
 
   // MARK: Internal
 
+  @Test
+  func tiltedPhoneticWordsUseTheirRhythmWithoutMovingTheirOwners() {
+    var sources = ["トン", "カン", "トン", "カン"].enumerated().map { offset, text in
+      var source = label(text, x: 0.1 + Double(offset) * 0.012, y: 0.2 + Double(offset) * 0.024, width: 0.04, size: 0.02)
+      source.language = .init(identifier: "ja")
+      source.rotationRadians = offset == 1 ? -0.1 : 0
+      return source
+    }
+    let boxes = sources.map(\.box)
+    #expect(OverlayTranslationPolicy.trailingContext(at: 1, in: sources) == "トン、カン、トン、カン")
+    #expect(sources.map(\.box) == boxes)
+    sources[1].rotationRadians = 0
+    #expect(OverlayTranslationPolicy.trailingContext(at: 1, in: sources) == nil)
+  }
+
   @Test(arguments: [false, true], [false, true])
   func alignedNavigationUsesANearbyHeadingAndKeepsIndependentFrames(_ mirrored: Bool, _ nativeTable: Bool) throws {
     var sources = [label("Project Documents", x: 0.27, y: 0.18, width: 0.3, size: 0.035, weight: .bold)]

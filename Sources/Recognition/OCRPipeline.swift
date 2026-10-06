@@ -256,6 +256,7 @@ enum OCRPipeline {
     lines = try await OCRBalloonRefiner.refine(lines, in: image, language: language)
     try traceObserver?("regions", lines)
     logStage("Text region refinement", since: balloonRefinementStarted)
+    lines = try await OCRTextEdgeRecovery.recover(lines, image: image, language: language, onlyUnassigned: true)
     let rubyStarted = clock.now
     let correctedLines: [OCRResult.Line]
     let languageCode = language.localeLanguage.languageCode?.identifier

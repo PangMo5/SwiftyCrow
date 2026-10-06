@@ -138,7 +138,22 @@ enum OCRTextEdgeRecovery {
     return result
   }
 
-  static func recover(_ lines: [OCRResult.Line], image: CGImage, language: Language) async throws -> [OCRResult.Line] {
+  static func recover(
+    _ lines: [OCRResult.Line],
+    image: CGImage,
+    language: Language,
+    onlyUnassigned: Bool = false
+  ) async throws -> [OCRResult.Line] {
+    var lines = lines
+    var assigned = Set<Int>()
+    if onlyUnassigned {
+      var next = (lines.compactMap(\.recognitionGroupID).max() ?? -1) + 1
+      for index in lines.indices where lines[index].recognitionGroupID == nil && !lines[index].isVerticalBlock {
+        lines[index].recognitionGroupID = next
+        assigned.insert(next)
+        next += 1
+      }
+    }
     var result = lines
     let groups = Dictionary(
       grouping: lines.filter { !$0.isVerticalBlock && $0.recognitionGroupID != nil },
@@ -146,6 +161,7 @@ enum OCRTextEdgeRecovery {
     )
     var requests = 0
     for id in groups.keys.sorted() {
+      if onlyUnassigned && !assigned.contains(id) { continue }
       guard
         let group = groups[id], group.map(\.text).joined().count >= 24,
         !group
@@ -169,7 +185,7 @@ enum OCRTextEdgeRecovery {
       )
       result = merging(candidates, into: result, groupID: id)
       requests += 1
-      if requests == 4 { break }
+      if requests == (onlyUnassigned ? 2 : 4) { break }
     }
     return result
   }

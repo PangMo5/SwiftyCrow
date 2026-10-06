@@ -6,6 +6,29 @@ import Testing
 @testable import SwiftyCrow
 
 struct OCRInlineScriptRecoveryTests {
+  @Test
+  func aPronunciationRailCanIdentifyAMisreadSingleIdeograph() throws {
+    let base = CGRect(x: 0.3, y: 0.4, width: 0.04, height: 0.04)
+    let line = OCRResult.Line(
+      boundingBoxNormalized: CGRect(x: 0.1, y: 0.4, width: 0.7, height: 0.04),
+      text: "Compound of fE text",
+      styleRuns: [
+        .init(range: NSRange(location: 12, length: 2), box: base)
+      ]
+    )
+    let ruby = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.3, y: 0.375, width: 0.04, height: 0.02), text: "あい")
+    #expect(OCRInlineScriptRecovery.suspiciousSpans(in: line).isEmpty)
+    let span = try #require(OCRInlineScriptRecovery.suspiciousSpans(in: line, among: [ruby]).first)
+    #expect(span.range == NSRange(location: 12, length: 2))
+    #expect(span.isRubyBase)
+    #expect(OCRInlineScriptRecovery.acceptsRubyBase("相", confidence: 0.5))
+    #expect(!OCRInlineScriptRecovery.acceptsRubyBase("TE", confidence: 1))
+    #expect(!OCRInlineScriptRecovery.acceptsRubyBase("相", confidence: 0.2))
+    var neighbor = ruby
+    neighbor.boundingBoxNormalized.origin.x = 0.6
+    #expect(OCRInlineScriptRecovery.suspiciousSpans(in: line, among: [neighbor]).isEmpty)
+  }
+
   @Test(arguments: ["가격이 $50에서 $15로 상승했습니다", "日本語の引用", "مرحبا بالعالم", "שלום עולם", "Ελληνικό κείμενο"])
   func acceptsObservedScriptsInsteadOfInventingALatinSpelling(_ text: String) {
     #expect(OCRInlineScriptRecovery.accepts(text, confidence: 0.9))

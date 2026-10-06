@@ -130,6 +130,45 @@ struct OCRResult: Equatable, Sendable {
     lines.map(\.text).joined(separator: "\n")
   }
 
+  /// The pronunciation rail identifies an individual base word even when the
+  /// page's dominant Latin recognizer misread that word as Latin stems.
+  static func rubyBaseWord(in base: Line, for ruby: Line) -> (range: NSRange, box: CGRect)? {
+    guard
+      !base.isVerticalBlock, !ruby.isVerticalBlock, isLikelyRuby(ruby),
+      base.rowCount == 1, ruby.rowCount == 1
+    else { return nil }
+    let rail = ruby.boundingBoxNormalized
+    var words = [(range: NSRange, box: CGRect)]()
+    for run in base.styleRuns.sorted(by: { $0.range.location < $1.range.location }) {
+      if let last = words.last, last.box == run.box {
+        words[words.count - 1].range = NSUnionRange(last.range, run.range)
+      } else { words.append((run.range, run.box)) }
+    }
+    return words.filter { word in
+      guard
+        let range = Range(word.range, in: base.text),
+        base.text[range].contains(where: \.isLetter),
+        rail.height <= word.box.height * 0.75, rail.midY < word.box.midY
+      else { return false }
+      let overlap = max(0, min(rail.maxX, word.box.maxX) - max(rail.minX, word.box.minX))
+      return overlap >= rail.width * 0.7
+        && max(0, word.box.minY - rail.maxY) <= word.box.height * 0.7
+    }.min { abs($0.box.midX - rail.midX) < abs($1.box.midX - rail.midX) }
+  }
+
+  static func isLikelyRuby(_ line: Line) -> Bool {
+    let scalars = line.text.unicodeScalars.filter {
+      !CharacterSet.whitespacesAndNewlines.contains($0)
+    }
+    guard !scalars.isEmpty, scalars.count <= 24 else { return false }
+    let kanaCount = scalars.count(where: isKana)
+    let nonPunctuationCount = scalars.count {
+      !CharacterSet.punctuationCharacters.contains($0)
+        && !CharacterSet.symbols.contains($0)
+    }
+    return kanaCount > 0 && kanaCount * 4 >= max(1, nonPunctuationCount) * 3
+  }
+
   /// Joins fragments that Vision occasionally returns as separate paragraphs
   /// even though their boxes form one contiguous text block.
   ///
@@ -326,7 +365,10 @@ struct OCRResult: Equatable, Sendable {
 
       var base = result[baseIndex]
       let baseBox = base.boundingBoxNormalized.standardized
-      base.orientedBox = base.orientedBox ?? baseBox
+      let carriesReading = base.styleRuns.contains { run in
+        run.sourceFragment != nil && run.inkBox?.contains(CGPoint(x: rubyBox.midX, y: rubyBox.midY)) == true
+      }
+      base.orientedBox = carriesReading ? nil : base.orientedBox ?? baseBox
       if base.replacementPatches.isEmpty { base.replacementPatches = [OverlaySourcePatch(
         box: baseBox,
         appearance: base.appearance
@@ -1189,22 +1231,12 @@ struct OCRResult: Equatable, Sendable {
       && line.appearance.fontWeight != .bold
   }
 
-  private static func isLikelyRuby(_ line: Line) -> Bool {
-    let scalars = line.text.unicodeScalars.filter {
-      !CharacterSet.whitespacesAndNewlines.contains($0)
-    }
-    guard !scalars.isEmpty, scalars.count <= 24 else { return false }
-    let kanaCount = scalars.count(where: isKana)
-    let nonPunctuationCount = scalars.count {
-      !CharacterSet.punctuationCharacters.contains($0)
-        && !CharacterSet.symbols.contains($0)
-    }
-    return kanaCount > 0 && kanaCount * 4 >= max(1, nonPunctuationCount) * 3
-  }
-
   private static func canBeRubyBase(_ line: Line, for ruby: Line) -> Bool {
-    guard line.text.unicodeScalars.contains(where: isHan) else { return false }
     let rubyBox = ruby.boundingBoxNormalized.standardized
+    let capturedReading = line.styleRuns.contains { run in
+      run.sourceFragment != nil && run.inkBox?.contains(CGPoint(x: rubyBox.midX, y: rubyBox.midY)) == true
+    }
+    guard line.text.unicodeScalars.contains(where: isHan) || capturedReading else { return false }
     let base = line.boundingBoxNormalized.standardized
     if line.isVerticalBlock {
       let columnWidth = line.verticalCharScale > 0 ? line.verticalCharScale : base.width / CGFloat(max(1, line.rowCount))

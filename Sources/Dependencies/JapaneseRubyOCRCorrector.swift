@@ -93,7 +93,8 @@ enum JapaneseRubyOCRCorrector {
     _ lines: [OCRResult.Line],
     in image: CGImage
   ) async throws -> [OCRResult.Line] {
-    let lines = try await correctingVerticalColumns(lines, in: image)
+    let wrapped = try await correctingShortWrappedColumns(lines, in: image)
+    let lines = try await correctingVerticalColumns(wrapped, in: image)
     let inputs = lines.indices.compactMap { index in
       input(for: lines[index], index: index, image: image)
     }
@@ -252,6 +253,80 @@ enum JapaneseRubyOCRCorrector {
     return nil
   }
 
+  /// Upright Japanese glyphs do not rotate with their vertical reading axis.
+  /// Decode the same observed glyphs in horizontal order; ownership stays in
+  /// the original two source columns when the transcript returns to layout.
+  static func wrappedColumnStrip(_ columns: [OCRResult.Line], image: CGImage) -> CGImage? {
+    var cells = [CGImage]()
+    let canvas = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+    for column in columns.sorted(by: { $0.boundingBoxNormalized.midX > $1.boundingBoxNormalized.midX }) {
+      let box = column.boundingBoxNormalized
+      let advance = column.verticalCharScale * CGFloat(image.width)
+      guard advance >= 8 else { return nil }
+      let count = Int((box.height * CGFloat(image.height) / advance).rounded())
+      guard (1...24).contains(count), cells.count + count <= 32 else { return nil }
+      for index in 0..<count {
+        let rect = CGRect(
+          x: box.minX * CGFloat(image.width),
+          y: box.minY * CGFloat(image.height) + CGFloat(index) * advance,
+          width: box.width * CGFloat(image.width),
+          height: min(
+            advance,
+            box.height * CGFloat(image.height) - CGFloat(index) * advance
+          )
+        )
+        .insetBy(dx: -2, dy: 0).integral.intersection(canvas)
+        guard let cell = image.cropping(to: rect) else { return nil }
+        cells.append(cell)
+      }
+    }
+    let pitch = Int(ceil(columns.map { $0.verticalCharScale * CGFloat(image.width) }.max() ?? 0))
+    guard
+      let cellWidth = cells.map(\.width).max(), let cellHeight = cells.map(\.height).max(),
+      let context = CGContext(
+        data: nil,
+        width: pitch * cells.count + cellWidth,
+        height: cellHeight + 4,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      )
+    else { return nil }
+    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
+    for (index, cell) in cells.enumerated() {
+      guard
+        let glyph = CGContext(
+          data: nil,
+          width: cell.width,
+          height: cell.height,
+          bitsPerComponent: 8,
+          bytesPerRow: cell.width * 4,
+          space: CGColorSpace(name: CGColorSpace.sRGB)!,
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ), let raw = glyph.data
+      else { return nil }
+      glyph.draw(cell, in: CGRect(x: 0, y: 0, width: cell.width, height: cell.height))
+      let bytes = raw.assumingMemoryBound(to: UInt8.self)
+      let background = (Int(bytes[0]) + Int(bytes[1]) + Int(bytes[2])) / 3
+      // Transparent normalized ink lets neighboring glyphs keep their real
+      // advance without an oversized OCR rectangle introducing word spaces.
+      for pixel in 0..<(cell.width * cell.height) {
+        let offset = pixel * 4
+        let luminance = (Int(bytes[offset]) + Int(bytes[offset + 1]) + Int(bytes[offset + 2])) / 3
+        let alpha = min(255, max(0, abs(luminance - background) - 20) * 3)
+        bytes[offset] = 0
+        bytes[offset + 1] = 0
+        bytes[offset + 2] = 0
+        bytes[offset + 3] = UInt8(alpha)
+      }
+      guard let ink = glyph.makeImage() else { return nil }
+      context.draw(ink, in: CGRect(x: index * pitch, y: 2, width: cell.width, height: cell.height))
+    }
+    return context.makeImage()
+  }
+
   // MARK: Private
 
   private struct Input {
@@ -276,6 +351,75 @@ enum JapaneseRubyOCRCorrector {
   private static let maximumBatchSize = 24
   private static let imageScale = 3
   private static let padding = 64
+
+  private static func correctingShortWrappedColumns(
+    _ lines: [OCRResult.Line],
+    in image: CGImage
+  ) async throws -> [OCRResult.Line] {
+    var result = lines
+    var removed = Set<Int>()
+    for index in OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: lines).prefix(4) {
+      guard !removed.contains(index) else { continue }
+      try Task.checkCancellation()
+      let source = lines[index]
+      let box = source.boundingBoxNormalized
+      let peers = lines.indices
+        .filter { !removed.contains($0) && lines[$0].isVerticalBlock && lines[$0].boundingBoxNormalized.minX >= box.maxX
+          && lines[$0].text.unicodeScalars
+          .contains { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value) }
+        }
+      guard let peerIndex = peers.min(by: { lines[$0].boundingBoxNormalized.minX < lines[$1].boundingBoxNormalized.minX })
+      else { continue }
+      let peer = lines[peerIndex]
+      var tail = source
+      tail.verticalCharScale = peer.verticalCharScale
+      guard let strip = wrappedColumnStrip([peer, tail], image: image) else { continue }
+      let fresh = try await VisionTextRecognizer.additionalText(
+        in: strip,
+        language: .init(code: "ja"),
+        crop: CGRect(
+          x: 0,
+          y: 0,
+          width: strip.width,
+          height: strip.height
+        ),
+        minimumGlyphHeight: peer.verticalCharScale * CGFloat(image.width),
+        preferredScale: 2
+      )
+      let candidates = fresh.filter { candidate in
+        candidate.recognitionConfidence >= 0.45 && candidate.text.count > peer.text.count
+          && candidate.text.count <= peer.text.count + 4
+          && candidate.text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) }
+          && candidate.text.unicodeScalars
+          .allSatisfy { (0x3000...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value)
+            || CharacterSet.punctuationCharacters.contains($0)
+          }
+      }
+      guard let candidate = candidates.max(by: { $0.recognitionConfidence < $1.recognitionConfidence }) else { continue }
+      var repaired = peer
+      repaired.text = candidate.text
+      repaired.boundingBoxNormalized = peer.boundingBoxNormalized.union(box)
+      repaired.isVerticalBlock = true
+      repaired.rowCount = 2
+      repaired.verticalCharScale = peer.verticalCharScale
+      repaired.horizontalGlyphScale = 0
+      repaired.orientedBox = nil
+      repaired.recognitionLanguages = candidate.recognitionLanguages
+      repaired.recognitionConfidence = candidate.recognitionConfidence
+      repaired.styleRuns = [.init(
+        range: NSRange(location: 0, length: repaired.text.utf16.count),
+        box: repaired.boundingBoxNormalized
+      )]
+      repaired.spacingAnchors = []
+      repaired.replacementPatches = (peer.replacementPatches.isEmpty
+        ? [.init(box: peer.boundingBoxNormalized)]
+        : peer.replacementPatches)
+        + (source.replacementPatches.isEmpty ? [.init(box: box)] : source.replacementPatches)
+      result[peerIndex] = repaired
+      removed.insert(index)
+    }
+    return result.indices.compactMap { removed.contains($0) ? nil : result[$0] }
+  }
 
   private static func correctingVerticalColumns(_ lines: [OCRResult.Line], in image: CGImage) async throws -> [OCRResult.Line] {
     let hasKana = lines.contains { $0.text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) } }

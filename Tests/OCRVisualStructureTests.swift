@@ -69,7 +69,7 @@ struct OCRVisualStructureTests {
     #expect(OCRVisualStructure.inlineAnnotations(in: prose).isEmpty)
   }
 
-  @Test(arguments: ["[2]", "2]", "(4]13)"], [false, true])
+  @Test(arguments: ["[2]", "2]", "(4]13)", "[I2)(3|4]"], [false, true])
   func raisedReferencesKeepTheirSemanticRangeEvenWithUncertainBrackets(_ marker: String, _ raised: Bool) {
     let text = "Content " + marker + " continues"
     let body = CGRect(x: 0.1, y: 0.2, width: 0.12, height: 0.03)
@@ -87,6 +87,25 @@ struct OCRVisualStructureTests {
       #expect(annotations[0].inkBox == citation)
       #expect(!annotations[0].isSeparator)
     }
+  }
+
+  @Test
+  func anUncertainMiddleFilenameKeepsItsPixelsBetweenTwoFileRows() {
+    let rows = ["proposal.pdf", "budget xisx", "photo.JPEG"].enumerated().map { index, text in
+      OCRResult.Line(
+        boundingBoxNormalized: CGRect(x: 0.1, y: 0.2 + CGFloat(index) * 0.04, width: 0.15, height: 0.02),
+        text: text,
+        recognitionConfidence: index == 1 ? 0.4 : 0.9
+      )
+    }
+    let result = OCRVisualStructure.classifying(.init(lines: rows))
+    #expect(result.lines[1].preservesSource)
+    var outside = rows[1]
+    outside.boundingBoxNormalized.origin.y = 0.32
+    #expect(!OCRVisualStructure.classifying(.init(lines: [rows[0], outside, rows[2]])).lines[1].preservesSource)
+    var confident = rows[1]
+    confident.recognitionConfidence = 0.9
+    #expect(!OCRVisualStructure.classifying(.init(lines: [rows[0], confident, rows[2]])).lines[1].preservesSource)
   }
 
   @Test(arguments: [

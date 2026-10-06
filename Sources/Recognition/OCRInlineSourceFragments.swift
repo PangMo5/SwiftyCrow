@@ -145,38 +145,130 @@ enum OCRInlineSourceFragments {
         }.sorted()
         guard !baselines.isEmpty else { continue }
         let baseline = baselines[baselines.count / 2]
-        var bounds = pixelBox(annotation.inkBox, size: size).insetBy(dx: -1, dy: -1)
-        bounds = bounds.integral.intersection(CGRect(origin: .zero, size: size))
-        guard
-          bounds.width > 0, bounds.height > 0, bounds.width * bounds.height <= 100_000,
-          let crop = image.cropping(to: bounds),
-          let context = CGContext(
-            data: nil,
-            width: crop.width,
-            height: crop.height,
-            bitsPerComponent: 8,
-            bytesPerRow: crop.width * 4,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-          ),
-          let bytes = context.data
-        else { continue }
-        context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
-        guard
-          let fragment = OverlayInlineSourceFragment(
-            pixels: Data(bytes: bytes, count: crop.width * crop.height * 4),
-            width: crop.width,
-            height: crop.height,
-            descent: bounds.maxY - baseline,
-            referenceFontSize: fontSize,
-            kind: .annotation
-          )
+        let bounds = pixelBox(annotation.inkBox, size: size).insetBy(dx: -1, dy: -1).integral
+          .intersection(CGRect(origin: .zero, size: size))
+        guard let fragment = annotationFragment(in: bounds, image: image, baseline: baseline, fontSize: fontSize)
         else { continue }
         line.styleRuns.removeAll { NSIntersectionRange($0.range, annotation.range).length > 0 }
         line.styleRuns.append(.init(
           range: annotation.range,
           box: annotation.inkBox,
           appearance: annotation.runs[0].appearance,
+          inkBox: CGRect(
+            x: bounds.minX / size.width,
+            y: bounds.minY / size.height,
+            width: bounds.width / size.width,
+            height: bounds.height / size.height
+          ),
+          sourceFragment: fragment
+        ))
+        line.styleRuns.sort { $0.range.location < $1.range.location }
+      }
+      return line
+    })
+  }
+
+  /// In mixed prose a ruby-annotated term is a quoted source spelling, not a
+  /// separate sentence to translate. Carry its base and reading as one inline
+  /// object; a translated Japanese paragraph still absorbs its ruby normally.
+  static func capturingRubyAnnotations(_ result: OCRResult, image: CGImage) -> OCRResult {
+    let size = CGSize(width: image.width, height: image.height)
+    var lines = result.lines
+    for ruby in result.lines.filter(OCRResult.isLikelyRuby) {
+      for index in lines.indices {
+        let base = lines[index]
+        guard
+          !base.isVerticalBlock, base.text.unicodeScalars.count(where: { (0x0041...0x005A).contains($0.value)
+              || (0x0061...0x007A).contains($0.value)
+          }) >= 8,
+          let word = OCRResult.rubyBaseWord(in: base, for: ruby),
+          let range = Range(word.range, in: base.text),
+          (1...4).contains(base.text[range].count), base.text[range].contains(where: \.isLetter),
+          let run = base.styleRuns.first(where: { NSIntersectionRange($0.range, word.range).length > 0 }),
+          run.sourceFragment == nil
+        else { continue }
+        let fontSize = max(run.appearance.fontSizeScale, base.appearance.fontSizeScale) * size.height
+        guard fontSize > 0 else { continue }
+        let reference = CTLineCreateWithAttributedString(NSAttributedString(string: String(base.text[range]), attributes: [
+          .font: NSFont.systemFont(ofSize: fontSize, weight: run.appearance.fontWeight.nsFontWeight)
+        ]))
+        let ink = run.inkBox ?? word.box
+        let baseline = ink.maxY * size.height + CTLineGetBoundsWithOptions(reference, [.useGlyphPathBounds]).minY
+        let bounds = pixelBox(ink.union(ruby.boundingBoxNormalized), size: size).insetBy(dx: -1, dy: -1).integral
+          .intersection(CGRect(origin: .zero, size: size))
+        guard let fragment = annotationFragment(in: bounds, image: image, baseline: baseline, fontSize: fontSize)
+        else { continue }
+        lines[index].styleRuns.removeAll { NSIntersectionRange($0.range, word.range).length > 0 }
+        lines[index].styleRuns.append(.init(
+          range: word.range,
+          box: word.box,
+          appearance: run.appearance,
+          inkBox: CGRect(
+            x: bounds.minX / size.width,
+            y: bounds.minY / size.height,
+            width: bounds.width / size.width,
+            height: bounds.height / size.height
+          ),
+          sourceFragment: fragment
+        ))
+        lines[index].styleRuns.sort { $0.range.location < $1.range.location }
+        break
+      }
+    }
+    return .init(lines: lines)
+  }
+
+  /// A measured code fill owns exact source spelling even when OCR inserts a
+  /// space inside a path. Keep the token's pixels and move only that inline
+  /// owner with the surrounding translation; never guess a repaired filename.
+  static func capturingCodeLiterals(_ result: OCRResult, image: CGImage) -> OCRResult {
+    let size = CGSize(width: image.width, height: image.height)
+    return .init(lines: result.lines.map { original in
+      guard !original.isVerticalBlock, !original.preservesSource, abs(original.rotationRadians) < 0.025 else { return original }
+      var groups = [[OverlaySourceStyleRun]]()
+      for run in original.styleRuns.sorted(by: { $0.range.location < $1.range.location }) {
+        guard run.sourceFragment == nil, run.appearance.background.distance(to: original.appearance.background) >= 0.06 else {
+          groups.append([])
+          continue
+        }
+        if
+          let last = groups.last?.last,
+          last.appearance.background.distance(to: run.appearance.background) <= 0.035,
+          abs(last.box.midY - run.box.midY) <= min(last.box.height, run.box.height) * 0.4,
+          run.range.location - NSMaxRange(last.range) <= 2
+        {
+          groups[groups.count - 1].append(run)
+        } else { groups.append([run]) }
+      }
+      var line = original
+      let source = original.text as NSString
+      for group in groups {
+        guard let first = group.first, let last = group.last else { continue }
+        let range = NSRange(location: first.range.location, length: NSMaxRange(last.range) - first.range.location)
+        guard NSMaxRange(range) <= source.length else { continue }
+        let value = source.substring(with: range)
+        let compact = String(value.filter { !$0.isWhitespace })
+        guard
+          value.count <= 80, !value.contains(where: \.isNewline),
+          OCRVisualStructure.isPath(compact) || OCRTextSemantics.isFileName(compact) || OCRTextSemantics.isCode(value)
+        else { continue }
+        let box = group.reduce(first.box) { $0.union($1.box).union($1.inkBox ?? $1.box) }
+        let neighbors = original.styleRuns.filter { NSIntersectionRange($0.range, range).length == 0 }
+        let fontSize = original.appearance.fontSizeScale * size.height
+        guard
+          fontSize > 0,
+          let baseline = baseline(from: neighbors, row: box, text: original.text, fontSize: fontSize, size: size)
+        else { continue }
+        let bounds = pixelBox(box, size: size).insetBy(dx: -1, dy: -1).integral.intersection(CGRect(origin: .zero, size: size))
+        guard
+          !neighbors.contains(where: { pixelBox($0.inkBox ?? $0.box, size: size).intersects(bounds) }),
+          let fragment = annotationFragment(in: bounds, image: image, baseline: baseline, fontSize: fontSize)
+        else { continue }
+        line.styleRuns.removeAll { NSIntersectionRange($0.range, range).length > 0 }
+        line.styleRuns.append(.init(
+          range: range,
+          box: box,
+          appearance: first.appearance,
           inkBox: CGRect(
             x: bounds.minX / size.width,
             y: bounds.minY / size.height,
@@ -201,6 +293,36 @@ enum OCRInlineSourceFragments {
     return try! NSRegularExpression(pattern: #"(?<![\p{L}\p{N}_])(?:"# + arithmetic + "|" + negativeGroup + "|" + raisedNumber +
       #")(?![\p{L}\p{N}_])"#)
   }()
+
+  private static func annotationFragment(
+    in bounds: CGRect,
+    image: CGImage,
+    baseline: CGFloat,
+    fontSize: CGFloat
+  ) -> OverlayInlineSourceFragment? {
+    guard
+      bounds.width > 0, bounds.height > 0, bounds.width * bounds.height <= 100_000,
+      let crop = image.cropping(to: bounds),
+      let context = CGContext(
+        data: nil,
+        width: crop.width,
+        height: crop.height,
+        bitsPerComponent: 8,
+        bytesPerRow: crop.width * 4,
+        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      ), let bytes = context.data
+    else { return nil }
+    context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
+    return OverlayInlineSourceFragment(
+      pixels: Data(bytes: bytes, count: crop.width * crop.height * 4),
+      width: crop.width,
+      height: crop.height,
+      descent: bounds.maxY - baseline,
+      referenceFontSize: fontSize,
+      kind: .annotation
+    )
+  }
 
   private static func hasCompleteRunCoverage(_ line: OCRResult.Line) -> Bool {
     guard !line.text.isEmpty, !line.styleRuns.isEmpty else { return false }

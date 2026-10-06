@@ -376,14 +376,18 @@ enum OverlaySourceAppearanceAnalyzer {
       OCRVisualStructure.separatingCompoundControls(OCRVisualStructure.separatingStyleAccessories(references)),
       image: image
     )
+    let rubyOwned = OCRInlineSourceFragments.capturingCodeLiterals(
+      OCRInlineSourceFragments.capturingRubyAnnotations(separated, image: image),
+      image: image
+    )
     let spaced = styleRaster.map { raster in
       OCRVisualSpacing.refining(
-        separated,
+        rubyOwned,
         width: raster.width,
         height: raster.height,
         sample: { x, y in raster.color(at: y * raster.width + x) }
       )
-    } ?? separated
+    } ?? rubyOwned
     let prepared = OCRVisualStructure.preservingIdentifierTags(spaced.removingNestedDuplicates()).absorbingRubyAnnotations()
     didPrepareParagraphs?(prepared.lines)
     let coalesced = prepared.coalescingParagraphFragments(clearVerticalExpansion: styleRaster.map { raster in
@@ -672,9 +676,7 @@ enum OverlaySourceAppearanceAnalyzer {
         guard NSMaxRange(range) <= text.length, let ink = run.inkBox, isChromatic(run.appearance.foreground) else { return run }
         let value = text.substring(with: range)
         guard
-          value.count <= 16, value.contains(where: \.isNumber),
-          value.contains(where: { "[]［］()（）".contains($0) }),
-          value.allSatisfy({ $0.isNumber || "[]［］()（）.,".contains($0) })
+          OCRVisualStructure.isReferenceTranscript(value)
         else { return run }
         // A dropped bracket can lie just outside Vision's range box. Recover
         // only nearby ink of the same hue; adjacent body ink has no ownership
