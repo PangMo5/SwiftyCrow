@@ -31,6 +31,7 @@ enum LiveCaptureQualityRunner {
         $0.overlay.liveMode = .inPlace
       }
       let store = Store(initialState: state) { CaptureFeature() } withDependencies: {
+        $0.continuousClock = ContinuousClock()
         $0.ocr = .liveValue
         $0.translation = .liveValue
         $0.languageDetection = .liveValue
