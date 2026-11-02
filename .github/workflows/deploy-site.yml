@@ -17,6 +17,19 @@ on:
       - "Resources/Marketing/app-icon.png"
       - ".github/workflows/deploy-site.yml"
       - "wrangler.jsonc"
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "Localization/**"
+      - "DemoLab/Localization/**"
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "Tools/**"
+      - "Resources/Marketing/app-icon.png"
+      - ".github/workflows/deploy-site.yml"
+      - "wrangler.jsonc"
   workflow_dispatch:
 
 permissions:
@@ -29,10 +42,18 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Match the environment already exercised by the portable-tools job.
+    container: swift:6.4-noble
+    defaults:
+      run:
+        shell: bash
     outputs:
       should-deploy: ${{ steps.release.outputs.should-deploy }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Install site build tools
+        run: apt-get update && apt-get install -y --no-install-recommends gh ffmpeg
 
       - name: Check latest release
         id: release
@@ -50,15 +71,6 @@ jobs:
           fi
           echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-
-      - uses: swift-actions/setup-swift@v2
-        if: steps.release.outputs.should-deploy == 'true'
-        with:
-          swift-version: "6.4.2"
-
-      - name: Install video metadata tools
-        if: steps.release.outputs.should-deploy == 'true'
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Assemble site
         if: steps.release.outputs.should-deploy == 'true'
@@ -95,7 +107,7 @@ jobs:
 
   deploy:
     needs: build
-    if: needs.build.outputs.should-deploy == 'true'
+    if: github.event_name != 'pull_request' && needs.build.outputs.should-deploy == 'true'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-site
