@@ -331,11 +331,15 @@ struct OCRRecoveryTests {
       boundingBoxNormalized: CGRect(x: 0.16, y: 0.2, width: 0.7, height: 0.08),
       text: "let count = 4Z;",
     )
-    let result = try await OCRLineRefiner.refine(
-      Array(repeating: weak, count: skippedCount) + [code],
-      in: image,
-      language: .init(code: "en"),
-    )
+    // Exercise native recognition on the public CPU stage so this regression
+    // does not require a Neural Engine on virtualized CI hosts.
+    let result = try await VisionTextRecognizer.$computePolicy.withValue(.cpu) {
+      try await OCRLineRefiner.refine(
+        Array(repeating: weak, count: skippedCount) + [code],
+        in: image,
+        language: .init(code: "en"),
+      )
+    }
     #expect(result.last?.text == "let count = 42;")
     #expect(result.last?.boundingBoxNormalized == code.boundingBoxNormalized)
     #expect(result.prefix(skippedCount).allSatisfy { $0 == weak })
