@@ -39,7 +39,7 @@ extension AppRelaunchClient: DependencyKey {
         try task.run()
         NSApp.terminate(nil)
       }
-    }
+    },
   )
   static let testValue = AppRelaunchClient(prepare: { }, relaunch: { })
 }

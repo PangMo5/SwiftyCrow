@@ -32,7 +32,6 @@ enum ShortcutEvent: String, Equatable, CaseIterable, Sendable {
   var identifier: String {
     rawValue
   }
-
 }
 
 // MARK: - GlobalShortcutsClient
@@ -69,7 +68,7 @@ extension GlobalShortcutsClient: DependencyKey {
       // A recorder starts on the main actor. Suspend before the next key event,
       // rather than enqueueing a task that could run after that event.
       GlobalHotKeyRegistrar.shared.setEnabled(enabled)
-    }
+    },
   )
 }
 
@@ -126,4 +125,5 @@ private final class GlobalHotKeyRegistrar {
   /// being suspended (registering takes a handler, so we can't rebuild blindly).
   private var hotKeys = [ShortcutEvent: Magnet.HotKey]()
   private var enabled = true
+
 }

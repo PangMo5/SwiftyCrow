@@ -14,7 +14,10 @@ struct SidewaysLabelTests {
   static let targets = [("ar", "كيفية الاستخدام"), ("de", "Gebrauchsand"), ("he", "אופן שימוש")]
 
   @Test(arguments: targets, [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func shortLabelsRetainShapingAndReadableScale(_ target: (String, String), _ progression: OverlayColumnProgression) throws {
+  func `short labels retain shaping and readable scale`(
+    _ target: (String, String),
+    _ progression: OverlayColumnProgression,
+  ) throws {
     let line = Self.label(target, progression: progression)
     let source = line.source
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: Self.canvas).first)
@@ -28,7 +31,7 @@ struct SidewaysLabelTests {
       x: box.minX * Self.canvas.width,
       y: box.minY * Self.canvas.height,
       width: box.width * Self.canvas.width,
-      height: box.height * Self.canvas.height
+      height: box.height * Self.canvas.height,
     )
     #expect(abs(placement.visualFrame.minX - physical.minX) < 1e-6)
     #expect(abs(placement.visualFrame.minY - physical.minY) < 1e-6)
@@ -40,12 +43,12 @@ struct SidewaysLabelTests {
   }
 
   @Test(arguments: [1, 2, 3])
-  func orientationAndPhysicalSizeSurviveCaptureScaling(scale: Int) throws {
+  func `orientation and physical size survive capture scaling`(scale: Int) throws {
     let line = Self.label(Self.targets[0])
     let small = try #require(OverlayLayoutEngine.placements(for: [line], in: Self.canvas).first)
     let large = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(
       width: Self.canvas.width * CGFloat(scale),
-      height: Self.canvas.height * CGFloat(scale)
+      height: Self.canvas.height * CGFloat(scale),
     )).first)
     #expect(large.rotationRadians == small.rotationRadians)
     // SF Arabic uses automatic optical sizing: its normalized advances change
@@ -53,7 +56,7 @@ struct SidewaysLabelTests {
     // assumption that native font-point values must scale linearly.
     #expect(CaptureQualityMetrics.sourceBoundaryIssues([large], canvas: CGSize(
       width: Self.canvas.width * CGFloat(scale),
-      height: Self.canvas.height * CGFloat(scale)
+      height: Self.canvas.height * CGFloat(scale),
     )).isEmpty)
     let plan = HorizontalTextRenderer.plan(for: large)
     #expect(plan.lines.count == 1)
@@ -64,19 +67,19 @@ struct SidewaysLabelTests {
   }
 
   @Test(arguments: targets)
-  func horizontalAccessibilityPreferenceIsRespected(_ target: (String, String)) throws {
+  func `horizontal accessibility preference is respected`(_ target: (String, String)) throws {
     let line = Self.label(target)
     let placement = try #require(OverlayLayoutEngine.placements(
       for: [line],
       in: Self.canvas,
-      prefersHorizontalTextLayout: true
+      prefersHorizontalTextLayout: true,
     ).first)
     #expect(placement.rotationRadians == 0)
     #expect(placement.frame.height > placement.frame.width)
   }
 
   @Test(arguments: targets)
-  func embeddingPreservesOrientationAndPhysicalGeometry(_ target: (String, String)) throws {
+  func `embedding preserves orientation and physical geometry`(_ target: (String, String)) throws {
     let line = Self.label(target)
     let original = try #require(OverlayLayoutEngine.placements(for: [line], in: Self.canvas).first)
     var recognized = OCRResult.Line(
@@ -84,7 +87,7 @@ struct SidewaysLabelTests {
       text: line.source.text,
       isVerticalBlock: true,
       verticalCharScale: 0.1,
-      appearance: line.source.appearance
+      appearance: line.source.appearance,
     )
     recognized.surface = line.source.surface
     recognized.recognitionContextID = 0
@@ -104,14 +107,14 @@ struct SidewaysLabelTests {
   }
 
   @Test(arguments: targets)
-  func retainedContentIsCheckedAfterTargetRotation(_ target: (String, String)) throws {
+  func `retained content is checked after target rotation`(_ target: (String, String)) throws {
     var line = Self.label(target)
     let exclusion = CGRect(x: 98, y: 63, width: 44, height: 25)
     line.source.layoutExclusions = [CGRect(
       x: exclusion.minX / Self.canvas.width,
       y: exclusion.minY / Self.canvas.height,
       width: exclusion.width / Self.canvas.width,
-      height: exclusion.height / Self.canvas.height
+      height: exclusion.height / Self.canvas.height,
     )]
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: Self.canvas).first)
     #expect(placement.targetRotationRadians == .pi / 2)
@@ -123,7 +126,7 @@ struct SidewaysLabelTests {
   }
 
   @Test(arguments: ["readable", "no surface", "shared", "long paragraph", "multiple columns", "CJK", "shaped paragraph"])
-  func unrelatedContentDoesNotAcquireSidewaysOrientation(_ kind: String) throws {
+  func `unrelated content does not acquire sideways orientation`(_ kind: String) throws {
     var line = Self.label(Self.targets[1])
     var lines = [OverlayLine]()
     switch kind {
@@ -156,7 +159,7 @@ struct SidewaysLabelTests {
 
   @Test(arguments: targets)
   @MainActor
-  func exportedInkStaysInsideItsPhysicalSurface(_ target: (String, String)) throws {
+  func `exported ink stays inside its physical surface`(_ target: (String, String)) throws {
     var line = Self.label(target)
     line.source.replacementPatches = []
     let width = Int(Self.canvas.width)
@@ -168,7 +171,7 @@ struct SidewaysLabelTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: Self.canvas))
@@ -177,7 +180,7 @@ struct SidewaysLabelTests {
       imageData: data,
       imageSize: Self.canvas,
       lines: [line],
-      prefersHorizontalTextLayout: false
+      prefersHorizontalTextLayout: false,
     ))
     context.draw(rendered, in: CGRect(origin: .zero, size: Self.canvas))
     let pixels = try #require(context.data).bindMemory(to: UInt8.self, capacity: width * height * 4)
@@ -187,7 +190,9 @@ struct SidewaysLabelTests {
     for y in 0..<height {
       for x in 0..<width where pixels[(y * width + x) * 4] < 128 {
         count += 1
-        if !surface.contains(CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)) { outside += 1 }
+        if !surface.contains(CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)) {
+          outside += 1
+        }
       }
     }
     #expect(count > 150)
@@ -200,7 +205,7 @@ struct SidewaysLabelTests {
 
   private static func label(
     _ target: (String, String),
-    progression: OverlayColumnProgression = .rightToLeft
+    progression: OverlayColumnProgression = .rightToLeft,
   ) -> OverlayLine {
     let box = CGRect(x: 0.25, y: 0.25, width: 0.1, height: 0.4)
     var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
@@ -208,15 +213,16 @@ struct SidewaysLabelTests {
       text: "使い方",
       isVerticalBlock: true,
       verticalCharScale: 0.1,
-      appearance: .init(background: .white, foreground: .black, confidence: 1)
+      appearance: .init(background: .white, foreground: .black, confidence: 1),
     ), language: .init(identifier: "ja")))
     line.source.layout = .vertical(characterScale: 0.1, progression: progression)
     line.source.surface = .init(
       box: CGRect(x: 0.245, y: 0.21, width: 0.11, height: 0.48),
       confidence: 0.9,
-      cornerRadiusFraction: 0.3
+      cornerRadiusFraction: 0.3,
     )
     line.showTranslation(target.1, language: .init(identifier: target.0))
     return line
   }
+
 }

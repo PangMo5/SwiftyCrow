@@ -7,10 +7,10 @@ import Testing
 
 struct LiveSourceIdentityTests {
   @Test
-  func identicalPixelsCannotAcquireADifferentCharacterOrFont() {
+  func `identical pixels cannot acquire A different character or font`() {
     let old = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.05), text: "更新過程中請勿中斷裝置連線。"),
-      language: Locale.Language(identifier: "zh-Hant")
+      language: Locale.Language(identifier: "zh-Hant"),
     )
     let line = OverlayLine(id: UUID(), source: old)
     var noisy = old
@@ -19,7 +19,7 @@ struct LiveSourceIdentityTests {
     #expect(LiveSourceIdentity.sources(
       [noisy],
       previous: [line],
-      verifiedBounds: [line.id: CGRect(x: 0, y: 0, width: 1, height: 1)]
+      verifiedBounds: [line.id: CGRect(x: 0, y: 0, width: 1, height: 1)],
     ) == [old])
     #expect(LiveSourceIdentity.sources([noisy], previous: [line], verifiedBounds: [:]) == [noisy])
     var changedLanguage = noisy

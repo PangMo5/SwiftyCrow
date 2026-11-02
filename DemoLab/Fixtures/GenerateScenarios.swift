@@ -10,19 +10,23 @@ func option(_ name: String) -> String? {
   guard let index = CommandLine.arguments.firstIndex(of: name), index + 1 < CommandLine.arguments.count else { return nil }
   return CommandLine.arguments[index + 1]
 }
+
 let destination = option("--output").map { URL(fileURLWithPath: $0) } ?? sourceDirectory
 try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 let magazineName = option("--magazine-name") ?? "japanese-magazine.png"
-let selected = Set((option("--images") ?? "travel-leaflet.png,camera-manual.png,japanese-magazine.png").split(separator: ",").map(String.init))
+let selected = Set((option("--images") ?? "travel-leaflet.png,camera-manual.png,japanese-magazine.png").split(separator: ",")
+  .map(String.init))
 let sourceLocale = option("--source-language")
 let sourceStrings: [String: String]? = try option("--text-catalog").map {
   try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: $0)))
 }
+
 func sourceText(_ value: String) -> String {
   guard let sourceStrings else { return value }
   guard let localized = sourceStrings[value] else { fatalError("Missing authored source text: \(value)") }
   return localized
 }
+
 let size = CGSize(width: 1800, height: 1200)
 func color(_ hex: UInt32) -> NSColor {
   NSColor(red: CGFloat((hex >> 16) & 255) / 255, green: CGFloat((hex >> 8) & 255) / 255, blue: CGFloat(hex & 255) / 255, alpha: 1)
@@ -43,7 +47,11 @@ func line(_ points: [CGPoint], _ hex: UInt32, width: CGFloat = 4) {
   p.lineCapStyle = .round
   for (i, v) in points.enumerated() {
     let pt = CGPoint(x: v.x, y: size.height - v.y)
-    if i == 0 { p.move(to: pt) } else { p.line(to: pt) }
+    if i == 0 {
+      p.move(to: pt)
+    } else {
+      p.line(to: pt)
+    }
   }
   color(hex).setStroke()
   p.stroke()
@@ -58,7 +66,7 @@ func text(
   _ fontSize: CGFloat,
   _ hex: UInt32 = 0x182C3A,
   bold: Bool = false,
-  serif: Bool = false
+  serif: Bool = false,
 ) {
   let paragraph = NSMutableParagraphStyle()
   paragraph.lineSpacing = 12
@@ -67,7 +75,7 @@ func text(
     : NSFont.systemFont(ofSize: fontSize, weight: bold ? .bold : .regular)
   (sourceText(value) as NSString).draw(
     in: rect(x, y, w, h),
-    withAttributes: [.font: font, .foregroundColor: color(hex), .paragraphStyle: paragraph]
+    withAttributes: [.font: font, .foregroundColor: color(hex), .paragraphStyle: paragraph],
   )
 }
 
@@ -88,7 +96,7 @@ func make(_ name: String, draw: () -> Void) throws {
     isPlanar: false,
     colorSpaceName: .deviceRGB,
     bytesPerRow: 0,
-    bitsPerPixel: 0
+    bitsPerPixel: 0,
   )!
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
@@ -111,7 +119,7 @@ try make("travel-leaflet.png") {
   coast.curve(
     to: CGPoint(x: 210, y: 1200 - 1090),
     controlPoint1: CGPoint(x: 270, y: 1200 - 640),
-    controlPoint2: CGPoint(x: 520, y: 1200 - 880)
+    controlPoint2: CGPoint(x: 520, y: 1200 - 880),
   )
   coast.line(to: CGPoint(x: 60, y: 1200 - 1090))
   coast.close()
@@ -134,7 +142,7 @@ try make("travel-leaflet.png") {
     535,
     880,
     310,
-    44
+    44,
   )
   fill(805, 917, 900, 180, 0xF0E6CE, radius: 20)
   text("Before you leave", 835, 942, 820, 55, 33, 0x184D55, bold: true)
@@ -169,7 +177,17 @@ try make("camera-manual.png") {
 
 let verticalBody = "雨上がりの町を歩くと、古い本屋の窓に明かりが見えた。店主は温かいお茶を用意して、旅の話を聞いてくれた。帰り道には川沿いの橋を渡った。静かな水面に夕方の空が映っていた。橋の向こうには小さな喫茶店がある。窓際の席で地図を広げ、次に歩く道を決めた。急がずに歩くと、いつもの町にも新しい発見がある。"
 try make(magazineName) {
-  text("町を歩く", sourceLocale == "zh-Hant" ? 1410 : 80, 45, sourceLocale == "zh-Hant" ? 350 : 900, 120, 78, 0x263A38, bold: true, serif: true)
+  text(
+    "町を歩く",
+    sourceLocale == "zh-Hant" ? 1410 : 80,
+    45,
+    sourceLocale == "zh-Hant" ? 350 : 900,
+    120,
+    78,
+    0x263A38,
+    bold: true,
+    serif: true,
+  )
   text("週末の小さな旅", sourceLocale == "zh-Hant" ? 600 : 1120, 100, 600, 70, 37, 0x7F4936, serif: true)
   fill(80, 190, 1640, 3, 0x8D8C72)
   // Original editorial photography sits beside independent horizontal and vertical text blocks.
@@ -186,18 +204,23 @@ try make(magazineName) {
   let value = NSAttributedString(
     string: sourceText(verticalBody),
     attributes: [
-      .font: NSFont(name: sourceLocale == "zh-Hant" ? "PingFang TC" : "Hiragino Mincho ProN", size: sourceLocale == "zh-Hant" ? 46 : 42)!,
+      .font: NSFont(
+        name: sourceLocale == "zh-Hant" ? "PingFang TC" : "Hiragino Mincho ProN",
+        size: sourceLocale == "zh-Hant"
+          ? 46
+          : 42,
+      )!,
       .foregroundColor: color(0x263A38),
       .verticalGlyphForm: true,
       .paragraphStyle: paragraph,
-    ]
+    ],
   )
   let setter = CTFramesetterCreateWithAttributedString(value)
   let frame = CTFramesetterCreateFrame(
     setter,
     CFRange(location: 0, length: 0),
     CGPath(rect: rect(930, 265, 775, 800), transform: nil),
-    [kCTFrameProgressionAttributeName: CTFrameProgression.rightToLeft.rawValue] as CFDictionary
+    [kCTFrameProgressionAttributeName: CTFrameProgression.rightToLeft.rawValue] as CFDictionary,
   )
   let range = CTFrameGetVisibleStringRange(frame)
   precondition(range.length == value.length, "Vertical article must fit completely")
@@ -209,7 +232,9 @@ try make(magazineName) {
 
 let evidence: [String: Any] = [
   "verticalBody": selected.contains(magazineName) ? sourceText(verticalBody) : "",
-  "sourceLanguages": Dictionary(uniqueKeysWithValues: selected.map { ($0, sourceLocale ?? ($0 == "japanese-magazine.png" ? "ja-JP" : "en-US")) }),
+  "sourceLanguages": Dictionary(uniqueKeysWithValues: selected.map { ($0, sourceLocale ?? ($0 == "japanese-magazine.png"
+      ? "ja-JP"
+      : "en-US")) }),
   "note": "Original source material; no translated text is present.",
 ]
 try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])

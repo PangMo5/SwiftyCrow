@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AppKit
@@ -31,7 +31,6 @@ public enum PointerError: Error, Equatable, CustomStringConvertible {
         + "it sits at (\(Int(actual.x)), \(Int(actual.y)))"
     }
   }
-
 }
 
 // MARK: - Pointer
@@ -87,7 +86,7 @@ public enum Pointer {
     // parked exactly on an edge reads as the neighbouring display or none.
     let point = CGPoint(
       x: min(max(x, frame.minX + edgeInset), frame.maxX - edgeInset),
-      y: min(max(y, top + edgeInset), top + frame.height - edgeInset)
+      y: min(max(y, top + edgeInset), top + frame.height - edgeInset),
     )
     try warp(to: point)
   }

@@ -11,7 +11,7 @@ struct SourceTypographySlantTests {
   // MARK: Internal
 
   @Test(arguments: ["Arial", "TimesNewRomanPSMT", "Georgia", "Verdana", "Menlo-Regular"], [12.0, 18.0, 24.0])
-  func uprightGlyphShapesDoNotBecomeItalic(_ family: String, _ size: Double) async throws {
+  func `upright glyph shapes do not become italic`(_ family: String, _ size: Double) async throws {
     let font = try #require(NSFont(name: family, size: size))
     for text in [
       "integer",
@@ -36,9 +36,9 @@ struct SourceTypographySlantTests {
 
   @Test(
     arguments: ["Arial-ItalicMT", "TimesNewRomanPS-ItalicMT", "Georgia-Italic", "Verdana-Italic", "Menlo-Italic"],
-    [18.0, 24.0]
+    [18.0, 24.0],
   )
-  func italicStemsAreMeasuredAcrossIndependentFontFamilies(_ family: String, _ size: Double) async throws {
+  func `italic stems are measured across independent font families`(_ family: String, _ size: Double) async throws {
     let font = try #require(NSFont(name: family, size: size))
     for text in ["integer", "signed", "artificial"] {
       let result = try await analyze(text, font: font)
@@ -48,7 +48,7 @@ struct SourceTypographySlantTests {
   }
 
   @Test(arguments: [("integer", "en"), ("정수", "ko"), ("整数", "zh"), ("العربية", "ar")])
-  func fallbackGlyphsReceiveTheMeasuredSlant(_ sample: (String, String)) throws {
+  func `fallback glyphs receive the measured slant`(_ sample: (String, String)) throws {
     var appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     let normal = HorizontalTextRenderer.plan(
       text: sample.0,
@@ -57,7 +57,7 @@ struct SourceTypographySlantTests {
       appearance: appearance,
       styles: [],
       width: 200,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     appearance.isItalic = true
     let italic = HorizontalTextRenderer.plan(
@@ -67,27 +67,30 @@ struct SourceTypographySlantTests {
       appearance: appearance,
       styles: [],
       width: 200,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(normal.complete && italic.complete)
     #expect(italic.inkBounds.width > normal.inkBounds.width + 1)
-    let runs = CTLineGetGlyphRuns(try #require(italic.lines.first)) as! [CTRun]
+    let firstLine = try #require(italic.lines.first)
+    let runs = try #require(CTLineGetGlyphRuns(firstLine) as? [CTRun])
     #expect(!runs.isEmpty)
     for run in runs {
+      // CoreText supplies CTFont here; Swift rejects conditional CF downcasts.
+      // swiftformat:disable:next noForceUnwrapInTests
       let font = (CTRunGetAttributes(run) as NSDictionary)[kCTFontAttributeName] as! CTFont
       #expect(abs(CTFontGetMatrix(font).c - 0.2) < 0.001)
     }
   }
 
   @Test
-  func uprightSpansRemainUprightInsideAnItalicBase() throws {
+  func `upright spans remain upright inside an italic base`() throws {
     let text = "integer Signed"
     let italic = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       fontWeight: .regular,
-      isItalic: true
+      isItalic: true,
     )
     var upright = italic
     upright.isItalic = false
@@ -100,15 +103,15 @@ struct SourceTypographySlantTests {
         .init(
           range: (text as NSString).range(of: "Signed"),
           box: CGRect(x: 0.5, y: 0, width: 0.4, height: 1),
-          appearance: upright
+          appearance: upright,
         ),
-      ]
+      ],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     let request = try #require(line.source.attributedTextForTranslation())
     let neutralRun = try #require(request.runs.first { String(request.characters[$0.range]).contains("Signed") })
     var translated = AttributedString("정수 부호 있음")
-    translated[translated.range(of: "부호 있음")!].link = neutralRun.link
+    translated[try #require(translated.range(of: "부호 있음"))].link = neutralRun.link
     line.showTranslation("정수 부호 있음", attributedText: translated, language: .init(identifier: "ko"))
     let retained = try #require(line.displayedStyleRuns.first { NSLocationInRange(3, $0.range) })
     #expect(!retained.appearance.isItalic)
@@ -119,9 +122,10 @@ struct SourceTypographySlantTests {
       appearance: line.source.appearance,
       styles: line.displayedStyleRuns,
       width: 300,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
-    let runs = CTLineGetGlyphRuns(try #require(plan.lines.first)) as! [CTRun]
+    let firstLine = try #require(plan.lines.first)
+    let runs = try #require(CTLineGetGlyphRuns(firstLine) as? [CTRun])
     #expect(runs.contains { run in
       let range = CTRunGetStringRange(run)
       let font = (CTRunGetAttributes(run) as NSDictionary)[kCTFontAttributeName] as! CTFont
@@ -130,7 +134,7 @@ struct SourceTypographySlantTests {
   }
 
   @Test(arguments: [CGFloat(0.75), 0.88, 1, 1.25], [CGFloat(0), 0.5])
-  func resampledUprightTextRetainsItsStyle(_ scale: CGFloat, _ phase: CGFloat) async throws {
+  func `resampled upright text retains its style`(_ scale: CGFloat, _ phase: CGFloat) async throws {
     for text in ["Architecture", "Settings", "Reference", "minimum", "Jetzt", "erstellen"] {
       let result = try await analyze(text, font: #require(NSFont(name: "Arial", size: 17)), scale: scale, phase: phase)
       #expect(!result.appearance.isItalic, "Resampled upright source: \(text), \(scale), \(phase)")
@@ -139,19 +143,19 @@ struct SourceTypographySlantTests {
   }
 
   @Test
-  func capturedUprightSmallLinksRetainTheirRasterStyle() throws {
+  func `captured upright small links retain their raster style`() throws {
     let samples: [(String, Int, Int, String)] = [
       (
         "Jetzt",
         29,
         10,
-        "AAAAAM3IAAAAAAAAAAAAX30AAAAAAAAAAABffQAAAAAAzcgAAAAAAAAAAACi1wAAAAAAAAAAAKLXAAAAAADNyAAAOr7mwlYAfe76xxbIyMjIyKB97vrHAAAAAM3IAC765Ye+/1ZL1Ot+DpeXl9D/s0vU634AAAAAzcgAq/oUAAXbwACi1wAAAAAa5uYZAKLXAAAAAADNyADd8Zubm+LmAKLXAAAABsj6OAAAotcAkSwAANDIAO7rpaWlpZoAotcAAACb/2UAAACi1wD/ZQAA4qwAzOYBAABweACi1wAAaP+YAAAAAKLXAPzNS6D/fQBz/5c4hP6IAJvxODb6+mBaWlUAm/E4cu7//8gSAAWg////tAoAT/r/bf//////6wBP+v8="
+        "AAAAAM3IAAAAAAAAAAAAX30AAAAAAAAAAABffQAAAAAAzcgAAAAAAAAAAACi1wAAAAAAAAAAAKLXAAAAAADNyAAAOr7mwlYAfe76xxbIyMjIyKB97vrHAAAAAM3IAC765Ye+/1ZL1Ot+DpeXl9D/s0vU634AAAAAzcgAq/oUAAXbwACi1wAAAAAa5uYZAKLXAAAAAADNyADd8Zubm+LmAKLXAAAABsj6OAAAotcAkSwAANDIAO7rpaWlpZoAotcAAACb/2UAAACi1wD/ZQAA4qwAzOYBAABweACi1wAAaP+YAAAAAKLXAPzNS6D/fQBz/5c4hP6IAJvxODb6+mBaWlUAm/E4cu7//8gSAAWg////tAoAT/r/bf//////6wBP+v8=",
       ),
       (
         "erstellen",
         52,
         10,
-        "AAAAAAAAAAAAAAAAAAAAAAAAAABffQAAAAAAAAAAAC7/SC7/SAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAotcAAAAAAAAAAAAu/0gu/0gAAAAAAAAAAAAAAAAAAAAAE6Dc1ooGAGWzadtCLJrm3IoFfe76xwEActDirCQALv9ILv9IAABy0OKsJAApyFzD6r4kBNH5n5b+qgCD///NMMrYdqz/aUvU634Bfv/Dg+TrFC7/SC7/SAB+/8OD5OsUN///qKv/vFb/ZAAAiv4Zg/9sABj/oQAAg2YAotcADPW5AAA0/2wu/0gu/0gM9bkAADT/bDf/kQAApeqH/6mbm8D/PIP6DAAAqv/akEEAAKLXADL/0Jubm/+RLv9ILv9IMv/Qm5ub/5E3/0sAAIH8mP+qpaWlpSyD9AAAAA9zvvr/bgCi1wBE/82lpaWlYy7/SC7/SET/zaWlpaVjN/9AAACA/Hf/PQAAPZcUg/QAACiXGgAQzNwAotcAIv+SAAAMlkYu/0gu/0gi/5IAAAyWRjf/QAAAgPwk+shIX+HcAYP0AAAM9awzMeKpAJvxOAHI7mxBuP80Lv9ILv9IAcjubEG4/zQ3/0AAAID8AFv0///eMwCC8AAAAHb0///KMQBP+v8CJ9P///VzAC3/Ri3/RgAn0///9XMANv8+AAB9+g=="
+        "AAAAAAAAAAAAAAAAAAAAAAAAAABffQAAAAAAAAAAAC7/SC7/SAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAotcAAAAAAAAAAAAu/0gu/0gAAAAAAAAAAAAAAAAAAAAAE6Dc1ooGAGWzadtCLJrm3IoFfe76xwEActDirCQALv9ILv9IAABy0OKsJAApyFzD6r4kBNH5n5b+qgCD///NMMrYdqz/aUvU634Bfv/Dg+TrFC7/SC7/SAB+/8OD5OsUN///qKv/vFb/ZAAAiv4Zg/9sABj/oQAAg2YAotcADPW5AAA0/2wu/0gu/0gM9bkAADT/bDf/kQAApeqH/6mbm8D/PIP6DAAAqv/akEEAAKLXADL/0Jubm/+RLv9ILv9IMv/Qm5ub/5E3/0sAAIH8mP+qpaWlpSyD9AAAAA9zvvr/bgCi1wBE/82lpaWlYy7/SC7/SET/zaWlpaVjN/9AAACA/Hf/PQAAPZcUg/QAACiXGgAQzNwAotcAIv+SAAAMlkYu/0gu/0gi/5IAAAyWRjf/QAAAgPwk+shIX+HcAYP0AAAM9awzMeKpAJvxOAHI7mxBuP80Lv9ILv9IAcjubEG4/zQ3/0AAAID8AFv0///eMwCC8AAAAHb0///KMQBP+v8CJ9P///VzAC3/Ri3/RgAn0///9XMANv8+AAB9+g==",
       ),
     ]
     for (text, width, height, data) in samples {
@@ -171,7 +175,7 @@ struct SourceTypographySlantTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -186,7 +190,7 @@ struct SourceTypographySlantTests {
       x: (20 + phase + ink.minX - 2) / 500,
       y: (60 - phase - ink.maxY - 2) / 100,
       width: (ink.width + 4) / 500,
-      height: (ink.height + 4) / 100
+      height: (ink.height + 4) / 100,
     )
     let original = try #require(context.makeImage())
     let resampled = try #require(CGContext(
@@ -196,7 +200,7 @@ struct SourceTypographySlantTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     resampled.interpolationQuality = .high
     resampled.draw(original, in: CGRect(x: 0, y: 0, width: 500 * scale, height: 100 * scale))
@@ -204,13 +208,14 @@ struct SourceTypographySlantTests {
       boundingBoxNormalized: box,
       text: text,
       preventsJoining: true,
-      styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)]
+      styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)],
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [observed]),
-      from: try #require(resampled.makeImage())
+      from: try #require(resampled.makeImage()),
     )
     #expect(result.lines.count == 1)
     return try #require(result.lines.first)
   }
+
 }

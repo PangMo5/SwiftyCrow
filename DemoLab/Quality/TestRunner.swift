@@ -20,7 +20,9 @@ struct TestRunner {
     var arguments = Testing.__CommandLineArguments_v0()
     arguments.experimentalMaximumParallelizationWidth = 4
     arguments.xunitOutput = output
-    if CommandLine.arguments.count > 2 { arguments.filter = Array(CommandLine.arguments.dropFirst(2)) }
+    if CommandLine.arguments.count > 2 {
+      arguments.filter = Array(CommandLine.arguments.dropFirst(2))
+    }
     let result: Int32 = await Testing.__swiftPMEntryPoint(passing: arguments)
     guard
       let document = try? XMLDocument(contentsOf: URL(fileURLWithPath: output)),
@@ -32,7 +34,7 @@ struct TestRunner {
 }
 
 @Test
-func standaloneRunnerIsolatesDependencies() throws {
+func `standalone runner isolates dependencies`() throws {
   let current = try #require(Test.current)
   guard case .swiftTesting(let context?) = TestContext.current else {
     Issue.record("Swift Testing context is unavailable to dependency libraries")

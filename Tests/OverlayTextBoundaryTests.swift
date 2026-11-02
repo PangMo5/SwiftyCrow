@@ -9,7 +9,7 @@ import Testing
 struct OverlayTextBoundaryTests {
   @Test(arguments: ["plain", "control", "table", "whitespace", "rotated", "vertical"], [CGFloat(1), 2, 3])
   @MainActor
-  func everyTargetRespectsItsOriginalTextBox(_ kind: String, _ scale: CGFloat) throws {
+  func `every target respects its original text box`(_ kind: String, _ scale: CGFloat) throws {
     let size = CGSize(width: 600 * scale, height: 400 * scale)
     let box = CGRect(x: 0.4, y: 0.3, width: 0.08, height: 0.05)
     var source = OCRResult.Line(
@@ -23,12 +23,12 @@ struct OverlayTextBoundaryTests {
           red: 0.05,
           green: 0.3,
           blue: 0.8,
-          alpha: 1
+          alpha: 1,
         ),
         confidence: 1,
         fontSizeScale: 0.04,
-        fontWeight: .regular
-      )
+        fontWeight: .regular,
+      ),
     )
     switch kind {
     case "control": source.surface = .init(box: CGRect(x: 0.375, y: 0.285, width: 0.14, height: 0.08), confidence: 1)
@@ -37,7 +37,7 @@ struct OverlayTextBoundaryTests {
         table: 0,
         row: 0,
         column: 0,
-        box: CGRect(x: 0.3, y: 0.2, width: 0.4, height: 0.2)
+        box: CGRect(x: 0.3, y: 0.2, width: 0.4, height: 0.2),
       )
 
     case "whitespace": source.layoutBounds = CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.8)
@@ -67,7 +67,7 @@ struct OverlayTextBoundaryTests {
           bitsPerComponent: 8,
           bytesPerRow: image.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { return false }
       context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
@@ -78,7 +78,7 @@ struct OverlayTextBoundaryTests {
       x: box.minX * size.width,
       y: box.minY * size.height,
       width: box.width * size.width,
-      height: box.height * size.height
+      height: box.height * size.height,
     ).integral
     var painted = 0
     var outside = 0
@@ -89,7 +89,9 @@ struct OverlayTextBoundaryTests {
         Int(bytes[offset + 2]) - Int(bytes[offset + 1]) > 20
       {
         painted += 1
-        if !boundary.contains(CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)) { outside += 1 }
+        if !boundary.contains(CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)) {
+          outside += 1
+        }
       }
     } }
     #expect(painted > 0)
@@ -97,7 +99,7 @@ struct OverlayTextBoundaryTests {
   }
 
   @Test
-  func clippingAtTheCaptureEdgeCannotMoveTheOriginalTextRegion() throws {
+  func `clipping at the capture edge cannot move the original text region`() throws {
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: -0.01, y: 0.1, width: 0.1, height: 0.05),
       text: "Export",
@@ -106,8 +108,8 @@ struct OverlayTextBoundaryTests {
         foreground: .black,
         confidence: 1,
         fontSizeScale: 0.04,
-        fontWeight: .regular
-      )
+        fontWeight: .regular,
+      ),
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
     line.showTranslation("내보내기", language: .init(identifier: "ko"))

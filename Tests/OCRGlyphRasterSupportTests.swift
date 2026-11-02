@@ -11,7 +11,7 @@ struct OCRGlyphRasterSupportTests {
   // MARK: Internal
 
   @Test(arguments: ["Arial", "Georgia", "Verdana", "Menlo", "Baskerville", "Hiragino Sans", "PingFang SC"], [12.0, 18.0, 24.0])
-  func readableTextAcrossFontsAndScriptsIsNotRejected(_ family: String, _ size: Double) throws {
+  func `readable text across fonts and scripts is not rejected`(_ family: String, _ size: Double) throws {
     let font = try #require(NSFont(name: family, size: size))
     for text in ["巴、", "i凸", "く", "相槌", "山", "정수", "Q", "RGB", "Д", "Ω", "é"] {
       let image = try render(text, font: font)
@@ -21,7 +21,7 @@ struct OCRGlyphRasterSupportTests {
   }
 
   @Test(arguments: [12.0, 18.0, 24.0])
-  func aDownwardChevronDoesNotOwnHiraganaPixels(_ size: Double) throws {
+  func `a downward chevron does not own hiragana pixels`(_ size: Double) throws {
     let context = try bitmap(width: 80, height: 60)
     context.setStrokeColor(CGColor(gray: 0, alpha: 1))
     context.setLineWidth(size / 8)
@@ -33,13 +33,13 @@ struct OCRGlyphRasterSupportTests {
     let evidence = try #require(OCRGlyphRasterSupport.evidence(
       text: "く",
       image: image,
-      background: white
+      background: white,
     ))
     #expect(OCRGlyphRasterSupport.contradicts(evidence))
   }
 
   @Test
-  func tableValuesAndVerticalTextRetainTheirIndependentOwnership() throws {
+  func `table values and vertical text retain their independent ownership`() throws {
     let context = try bitmap(width: 100, height: 100)
     context.setFillColor(CGColor(gray: 0, alpha: 1))
     context.fill(CGRect(x: 20, y: 20, width: 40, height: 3))
@@ -51,7 +51,7 @@ struct OCRGlyphRasterSupportTests {
     vertical.isVerticalBlock = true
     #expect(OCRGlyphRasterSupport.rejectingUnsupportedSymbols(
       .init(lines: [table, vertical]),
-      image: try #require(context.makeImage())
+      image: try #require(context.makeImage()),
     ).lines == [table, vertical])
   }
 
@@ -69,7 +69,7 @@ struct OCRGlyphRasterSupportTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: width, height: height))
@@ -79,7 +79,7 @@ struct OCRGlyphRasterSupportTests {
   private func render(_ text: String, font: NSFont) throws -> CGImage {
     let line = CTLineCreateWithAttributedString(NSAttributedString(
       string: text,
-      attributes: [.font: font, .foregroundColor: NSColor.black]
+      attributes: [.font: font, .foregroundColor: NSColor.black],
     ))
     let bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds]).integral
     let context = try bitmap(width: Int(bounds.width) + 8, height: Int(bounds.height) + 8)
@@ -87,4 +87,5 @@ struct OCRGlyphRasterSupportTests {
     CTLineDraw(line, context)
     return try #require(context.makeImage())
   }
+
 }

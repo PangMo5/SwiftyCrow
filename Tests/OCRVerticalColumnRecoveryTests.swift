@@ -11,12 +11,12 @@ struct OCRVerticalColumnRecoveryTests {
   // MARK: Internal
 
   @Test
-  func aWeakShortFinalColumnNeedsTwoAlignedJapanesePeers() {
+  func `a weak short final column needs two aligned japanese peers`() {
     let tail = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.025, height: 0.035),
       text: "중",
       preservesSource: true,
-      recognitionConfidence: 0.15
+      recognitionConfidence: 0.15,
     )
     let columns = [0.235, 0.27].map { x in
       OCRResult.Line(
@@ -24,7 +24,7 @@ struct OCRVerticalColumnRecoveryTests {
         text: "文書を保存する",
         recognitionConfidence: 0.5,
         isVerticalBlock: true,
-        verticalCharScale: 0.025
+        verticalCharScale: 0.025,
       )
     }
     #expect(OCRVerticalColumnRecovery.shortWrappedColumnIndices(in: [tail] + columns) == [0])
@@ -38,7 +38,7 @@ struct OCRVerticalColumnRecoveryTests {
   }
 
   @Test
-  func oneColumnKeepsItsPrefixButExcludesRubyAndNeighbors() {
+  func `one column keeps its prefix but excludes ruby and neighbors`() {
     let (source, prefix, body) = sample()
     var ruby = prefix
     ruby.text = "カイ"
@@ -62,7 +62,7 @@ struct OCRVerticalColumnRecoveryTests {
   }
 
   @Test
-  func localAgreementRetainsEveryFragmentAndItsGeometryWithoutInflatingConfidence() async throws {
+  func `local agreement retains every fragment and its geometry without inflating confidence`() async throws {
     let (source, prefix, body) = sample()
     let fragments = OCRVerticalColumnRecovery.fragments(for: source, candidates: [body, prefix])
     let reads = Mutex(0)
@@ -83,18 +83,18 @@ struct OCRVerticalColumnRecoveryTests {
     #expect(JapaneseRubyOCRCorrector.preferredCorrection(
       original: source.text,
       candidate: combined.text,
-      confidence: combined.recognitionConfidence
+      confidence: combined.recognitionConfidence,
     ) == nil)
     #expect(JapaneseRubyOCRCorrector.preferredCorrection(
       original: source.text,
       candidate: combined.text,
       confidence: combined.recognitionConfidence,
-      independentlyConfirmed: true
+      independentlyConfirmed: true,
     ) == combined.text)
   }
 
   @Test
-  func anUnconfirmedPrefixCannotDisappearIntoAShorterCorrection() async throws {
+  func `an unconfirmed prefix cannot disappear into A shorter correction`() async throws {
     let (source, prefix, body) = sample()
     let fragments = OCRVerticalColumnRecovery.fragments(for: source, candidates: [prefix, body])
     let missing = try await OCRVerticalColumnRecovery.confirmedColumn(fragments) { _ in nil }
@@ -121,7 +121,7 @@ struct OCRVerticalColumnRecoveryTests {
       text: "旧字、最後まで読む",
       recognitionConfidence: 0.1,
       isVerticalBlock: true,
-      verticalCharScale: 0.03
+      verticalCharScale: 0.03,
     )
     func row(_ text: String, box: CGRect, confidence: Float) -> OCRResult.Line {
       .init(
@@ -133,13 +133,14 @@ struct OCRVerticalColumnRecoveryTests {
         replacementPatches: [.init(box: box)],
         styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)],
         spacingAnchors: [.init(range: NSRange(location: 0, length: 1), box: box)],
-        recognitionLanguages: ["ja"]
+        recognitionLanguages: ["ja"],
       )
     }
     return (
       source,
       row("第一章、", box: CGRect(x: 0.3, y: 0.1, width: 0.035, height: 0.09), confidence: 0.3),
-      row("最後まで読む", box: CGRect(x: 0.301, y: 0.2, width: 0.03, height: 0.3), confidence: 0.5)
+      row("最後まで読む", box: CGRect(x: 0.301, y: 0.2, width: 0.03, height: 0.3), confidence: 0.5),
     )
   }
+
 }

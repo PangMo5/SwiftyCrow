@@ -12,7 +12,7 @@ struct OCRCoverageRecoveryTests {
   // MARK: Internal
 
   @Test(arguments: [false, true])
-  func distantControlsKeepIndependentlyRecognizedLabelsSeparate(mirrored: Bool) {
+  func `distant controls keep independently recognized labels separate`(mirrored: Bool) {
     let labels = ["الأهداف الرئيسية", "النهج", "التطبيقات", "الفلسفة"]
     let lines = labels.enumerated().flatMap { index, text in
       let y = 0.1 + Double(index) * 0.04
@@ -21,12 +21,12 @@ struct OCRCoverageRecoveryTests {
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: mirrored ? 0.9 : 0.06, y: y, width: 0.06, height: 0.022),
           text: "[show]",
-          recognitionGroupID: index + 10
+          recognitionGroupID: index + 10,
         ),
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.53 - width / 2, y: y, width: width, height: 0.022),
           text: text,
-          recognitionGroupID: index
+          recognitionGroupID: index,
         ),
       ]
     }
@@ -35,19 +35,19 @@ struct OCRCoverageRecoveryTests {
   }
 
   @Test
-  func distantWrappedParagraphIsNotInferredToBeTableLabels() {
+  func `distant wrapped paragraph is not inferred to be table labels`() {
     let lines = (0..<4).flatMap { index in
       let y = 0.1 + Double(index) * 0.04
       return [
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.06, y: y, width: 0.06, height: 0.022),
           text: "[show]",
-          recognitionGroupID: index + 10
+          recognitionGroupID: index + 10,
         ),
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.43, y: y, width: 0.18, height: 0.022),
           text: "A nearby article row \(index)",
-          recognitionGroupID: 1
+          recognitionGroupID: 1,
         ),
       ]
     }
@@ -56,7 +56,7 @@ struct OCRCoverageRecoveryTests {
   }
 
   @Test
-  func wordEvidenceDoesNotClaimAnAbsentBaselineInsideAParentRectangle() {
+  func `word evidence does not claim an absent baseline inside A parent rectangle`() {
     let first = CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.03)
     let last = CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.03)
     let missing = CGRect(x: 0.1, y: 0.15, width: 0.8, height: 0.03)
@@ -66,25 +66,25 @@ struct OCRCoverageRecoveryTests {
       styleRuns: [
         .init(range: NSRange(location: 0, length: 5), box: first),
         .init(range: NSRange(location: 6, length: 4), box: last),
-      ]
+      ],
     )
     #expect(OCRCoverage.uncovered([missing], by: OCRCoverage.evidenceBoxes(for: line)) == [missing])
   }
 
   @Test
-  func whitespaceInsideARecognizedRowDoesNotTriggerRecovery() {
+  func `whitespace inside A recognized row does not trigger recovery`() {
     let a = CGRect(x: 0.1, y: 0.1, width: 0.15, height: 0.03)
     let b = CGRect(x: 0.7, y: 0.1, width: 0.15, height: 0.03)
     let line = OCRResult.Line(
       boundingBoxNormalized: a.union(b),
       text: "One row",
-      styleRuns: [.init(range: NSRange(location: 0, length: 3), box: a), .init(range: NSRange(location: 4, length: 3), box: b)]
+      styleRuns: [.init(range: NSRange(location: 0, length: 3), box: a), .init(range: NSRange(location: 4, length: 3), box: b)],
     )
     #expect(OCRCoverage.uncovered([a.union(b)], by: OCRCoverage.evidenceBoxes(for: line)).isEmpty)
   }
 
   @Test
-  func failedLongRowSplitsOnlyAtBlankGapsAndRetainsRightToLeftOrder() async throws {
+  func `failed long row splits only at blank gaps and retains right to left order`() async throws {
     let (image, detected) = try rowFixture()
     let recovered = try await OCRCoverage.recoveringUncoveredRows([detected], recognized: [], image: image) { crop in
       let right = crop.midX > 127
@@ -93,7 +93,7 @@ struct OCRCoverageRecoveryTests {
         boundingBoxNormalized: box,
         text: right ? "Intelligence بداية" : "نهاية الجملة",
         imageAspectRatio: 300.0 / 80,
-        horizontalGlyphScale: box.height
+        horizontalGlyphScale: box.height,
       )]
     }
     #expect(recovered.map(\.text).joined(separator: " ") == "Intelligence بداية نهاية الجملة")
@@ -101,26 +101,26 @@ struct OCRCoverageRecoveryTests {
   }
 
   @Test
-  func partialSubregionRecognitionIsNotAcceptedAsACompleteRow() async throws {
+  func `partial subregion recognition is not accepted as A complete row`() async throws {
     let (image, detected) = try rowFixture()
     let recovered = try await OCRCoverage.recoveringUncoveredRows([detected], recognized: [], image: image) { crop in
       guard crop.midX < 127 else { return [] }
       return [.init(
         boundingBoxNormalized: CGRect(x: 20.0 / 300, y: 35.0 / 80, width: 105.0 / 300, height: 10.0 / 80),
         text: "نهاية الجملة",
-        imageAspectRatio: 300.0 / 80
+        imageAspectRatio: 300.0 / 80,
       )]
     }
     #expect(recovered.isEmpty)
   }
 
   @Test
-  func completeRowsDoNotInvokeTheAdditionalRecognizer() async throws {
+  func `complete rows do not invoke the additional recognizer`() async throws {
     let (image, detected) = try rowFixture()
     let recovered = try await OCRCoverage.recoveringUncoveredRows(
       [detected],
       recognized: [.init(boundingBoxNormalized: detected, text: "Already recognized")],
-      image: image
+      image: image,
     ) { _ in
       Issue.record("A fully covered row must not invoke recovery")
       return []
@@ -129,7 +129,7 @@ struct OCRCoverageRecoveryTests {
   }
 
   @Test
-  func aNarrowWordIsNotDiscardedBecauseItIsTallerThanItIsWide() {
+  func `a narrow word is not discarded because it is taller than it is wide`() {
     let width = 150
     let height = 20
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -142,14 +142,14 @@ struct OCRCoverageRecoveryTests {
       of: CGRect(x: 0, y: 0, width: width, height: height),
       pixels: Data(pixels),
       width: width,
-      height: height
+      height: height,
     )
     #expect(pieces.count == 2)
     #expect(pieces.first?.width == 17)
   }
 
   @Test
-  func shortScriptGlyphsOnTheSameBaselineStillOwnTheirWordSpan() {
+  func `short script glyphs on the same baseline still own their word span`() {
     let row = CGRect(x: 0.2, y: 0.4, width: 0.1, height: 0.03)
     let word = CGRect(x: 0.21, y: 0.408, width: 0.08, height: 0.016)
     #expect(OCRCoverage.coversHorizontalSpan(row, by: [word]))
@@ -158,7 +158,7 @@ struct OCRCoverageRecoveryTests {
   }
 
   @Test
-  func recoveryAcceptsAShortLeafOnlyWhenTheWholeRowStillHasCoverage() async throws {
+  func `recovery accepts A short leaf only when the whole row still has coverage`() async throws {
     let (image, detected) = try rowFixture()
     let recovered = try await OCRCoverage.recoveringUncoveredRows([detected], recognized: [], image: image) { crop in
       let right = crop.midX > 127
@@ -167,10 +167,10 @@ struct OCRCoverageRecoveryTests {
           x: right ? 130.0 / 300 : 20.0 / 300,
           y: right ? 38.0 / 80 : 35.0 / 80,
           width: 105.0 / 300,
-          height: right ? 4.0 / 80 : 10.0 / 80
+          height: right ? 4.0 / 80 : 10.0 / 80,
         ),
         text: right ? "AI" : "بداية الجملة",
-        imageAspectRatio: 300.0 / 80
+        imageAspectRatio: 300.0 / 80,
       )]
     }
     let text = recovered.map(\.text).joined(separator: " ")
@@ -189,7 +189,7 @@ struct OCRCoverageRecoveryTests {
       bitsPerComponent: 8,
       bytesPerRow: 1200,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 300, height: 80))

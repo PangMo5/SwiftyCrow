@@ -45,7 +45,7 @@ enum OCRCoverage {
     _ detected: [CGRect],
     recognized: [OCRResult.Line],
     image: CGImage,
-    recognize: @Sendable (CGRect) async throws -> [OCRResult.Line]
+    recognize: @Sendable (CGRect) async throws -> [OCRResult.Line],
   ) async throws -> [OCRResult.Line] {
     let size = CGSize(width: image.width, height: image.height)
     let missing = uncovered(detected, by: recognized.flatMap(evidenceBoxes))
@@ -59,7 +59,7 @@ enum OCRCoverage {
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return [] }
     raster.draw(image, in: CGRect(origin: .zero, size: size))
@@ -73,7 +73,7 @@ enum OCRCoverage {
         x: box.minX * size.width,
         y: box.minY * size.height,
         width: box.width * size.width,
-        height: box.height * size.height
+        height: box.height * size.height,
       ).insetBy(dx: -max(3, min(9, box.height * size.height * 0.4)), dy: -3)
         .integral.intersection(CGRect(origin: .zero, size: size))
       let first = whitespaceSplit(of: crop, pixels: pixels, width: image.width, height: image.height)
@@ -93,10 +93,11 @@ enum OCRCoverage {
           x: item.crop.minX / size.width,
           y: box.minY,
           width: item.crop.width / size.width,
-          height: box.height
+          height: box.height,
         ).intersection(box)
         if
-          !lines.isEmpty, lines.allSatisfy({ $0.recognitionConfidence >= 0.6 }),
+          !lines.isEmpty,
+          lines.allSatisfy({ $0.recognitionConfidence >= 0.6 }),
           coversHorizontalSpan(expected, by: lines.flatMap(evidenceBoxes))
         {
           recovered.append(contentsOf: lines)
@@ -118,7 +119,9 @@ enum OCRCoverage {
       let ordered = recovered.sorted { left, right in
         let a = left.boundingBoxNormalized
         let b = right.boundingBoxNormalized
-        if abs(a.midY - b.midY) > min(a.height, b.height) * 0.65 { return a.minY < b.minY }
+        if abs(a.midY - b.midY) > min(a.height, b.height) * 0.65 {
+          return a.minY < b.minY
+        }
         return rightToLeft ? a.midX > b.midX : a.midX < b.midX
       }
       result.append(contentsOf: OCRResult(lines: ordered).coalescingParagraphFragments().lines)
@@ -199,9 +202,14 @@ enum OCRCoverage {
         let hasInk = (y0..<y1).contains { y in
           zip(color(x, y), background).contains { abs($0 - $1) > 32 }
         }
-        if !hasInk { if start == nil { start = x } }
-        else if let from = start {
-          if x - from >= minimumGap { gaps.append(from..<x) }
+        if !hasInk {
+          if start == nil {
+            start = x
+          }
+        } else if let from = start {
+          if x - from >= minimumGap {
+            gaps.append(from..<x)
+          }
           start = nil
         }
       }
@@ -232,7 +240,7 @@ enum OCRCoverage {
       x: union.minX * imageSize.width,
       y: union.minY * imageSize.height,
       width: union.width * imageSize.width,
-      height: union.height * imageSize.height
+      height: union.height * imageSize.height,
     )
     .insetBy(dx: -3, dy: -3).integral.intersection(CGRect(origin: .zero, size: imageSize))
   }

@@ -62,7 +62,7 @@ func withDeadline<T: Sendable>(
   _ duration: Duration,
   stage: DeadlineStage,
   clock: any Clock<Duration>,
-  operation: @Sendable @escaping () async throws -> T
+  operation: @Sendable @escaping () async throws -> T,
 ) async throws -> T {
   // Whichever task finishes the stream first wins; the loser's call is a no-op.
   let (outcome, continuation) = AsyncThrowingStream<T, any Error>.makeStream(

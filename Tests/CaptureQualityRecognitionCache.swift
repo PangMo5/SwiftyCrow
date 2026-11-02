@@ -17,5 +17,4 @@ struct CaptureQualityRecognitionCache {
   }
 
   private var entry: (data: Data, language: String, result: OCRResult)?
-
 }

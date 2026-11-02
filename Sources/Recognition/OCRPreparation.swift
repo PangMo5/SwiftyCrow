@@ -37,7 +37,9 @@ actor OCRPreparation {
   func beginRecognition() async throws {
     recognitionStarted = true
     // Awaiting raises the utility task's priority for a foreground capture.
-    if let task { await task.value }
+    if let task {
+      await task.value
+    }
     try Task.checkCancellation()
   }
 
@@ -60,7 +62,7 @@ actor OCRPreparation {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.setFillColor(CGColor(gray: 1, alpha: 1))
@@ -73,4 +75,5 @@ actor OCRPreparation {
     CTLineDraw(CTLineCreateWithAttributedString(text), context)
     return context.makeImage()
   }
+
 }

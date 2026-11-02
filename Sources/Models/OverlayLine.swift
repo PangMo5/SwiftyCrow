@@ -37,7 +37,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let semanticAppearance = Self.semanticBaseAppearance(
         for: line.text,
         styleRuns: line.styleRuns,
-        fallback: line.appearance
+        fallback: line.appearance,
       )
       needsReview = line.needsReview
       preservesSource = line.preservesSource
@@ -68,7 +68,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       if line.isVerticalBlock {
         layout = .vertical(
           characterScale: max(0, line.verticalCharScale),
-          progression: OverlayTextFlowResolver.columnProgression(for: language)
+          progression: OverlayTextFlowResolver.columnProgression(for: language),
         )
       } else {
         layout = .horizontal(rows: max(1, line.rowCount))
@@ -114,7 +114,9 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     /// monospace metrics, and native rounded backgrounds while also avoiding a
     /// needless translation request.
     var isProtectedLiteral: Bool {
-      if preservesSource || OCRTextSemantics.isIdentifier(text) || OCRTextSemantics.isCode(text) { return true }
+      if preservesSource || OCRTextSemantics.isIdentifier(text) || OCRTextSemantics.isCode(text) {
+        return true
+      }
       guard case .horizontal = layout, appearance.fontDesign == .monospaced else { return false }
       let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
       let words = text.split(whereSeparator: \.isWhitespace)
@@ -122,8 +124,12 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       // A measured fixed-pitch single token is a code-style label even when
       // its spelling has no digits or punctuation. Prose remains translatable.
       if
-        words.count == 1, (4...40).contains(text.count),
-        text.unicodeScalars.allSatisfy({ $0.isASCII && CharacterSet.letters.contains($0) }) { return true }
+        words.count == 1,
+        (4...40).contains(text.count),
+        text.unicodeScalars.allSatisfy({ $0.isASCII && CharacterSet.letters.contains($0) })
+      {
+        return true
+      }
       let compact = String(text.filter { !$0.isWhitespace })
       return compact.hasPrefix(".")
         || compact.hasSuffix(":")
@@ -145,7 +151,9 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let value = text.dropFirst(marker.count).trimmingCharacters(in: .whitespacesAndNewlines)
       let words = value.split(whereSeparator: \.isWhitespace)
       guard !words.isEmpty, words.count <= 4 else { return false }
-      if words.count == 1 { return true }
+      if words.count == 1 {
+        return true
+      }
       return value.unicodeScalars.contains(where: CharacterSet.decimalDigits.contains)
     }
 
@@ -182,7 +190,10 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let currentInk = appearance.inkHeightScale > 0 ? appearance.inkHeightScale : horizontalInkScale
       let oldInk = previous.appearance.inkHeightScale > 0 ? previous.appearance.inkHeightScale : previous.horizontalInkScale
       if
-        previous.appearance.fontSizeScale > 0, currentInk > 0, oldInk > 0, abs(currentInk - oldInk) * imageSize.height <= 1,
+        previous.appearance.fontSizeScale > 0,
+        currentInk > 0,
+        oldInk > 0,
+        abs(currentInk - oldInk) * imageSize.height <= 1,
         appearance.fontDesign == previous.appearance.fontDesign
       {
         result.appearance.fontSizeScale = previous.appearance.fontSizeScale
@@ -194,7 +205,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       result.alignment = previous.alignment ?? alignment
       result.styleRuns = Self.stabilizedStyleRuns(
         styleRuns,
-        previous.styleRuns
+        previous.styleRuns,
       )
 
       // Ink coverage sits close to the weight thresholds on anti-aliased UI
@@ -228,7 +239,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
             range: run.range,
             box: run.box,
             appearance: run.appearance,
-            isLiteral: run.sourceFragment?.kind == .annotation
+            isLiteral: run.sourceFragment?.kind == .annotation,
           ))
           continue
         }
@@ -242,7 +253,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
           range: run.range,
           box: run.box,
           appearance: run.appearance,
-          isLiteral: Self.isLiteralStyle(for: String(text[stringRange]), appearance: run.appearance, base: appearance)
+          isLiteral: Self.isLiteralStyle(for: String(text[stringRange]), appearance: run.appearance, base: appearance),
         )
         let extendsPreviousStyle = spans.last.map {
           styleRuns[$0.index].sourceFragment == nil && Self.isMateriallyDifferent($0.appearance, from: appearance)
@@ -277,7 +288,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
           spans[spans.count - 1].isLiteral = merged.isLiteral || Self.isLiteralStyle(
             for: (text as NSString).substring(with: merged.range),
             appearance: merged.appearance,
-            base: appearance
+            base: appearance,
           )
         } else {
           spans.append(next)
@@ -336,7 +347,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     private static func semanticBaseAppearance(
       for text: String,
       styleRuns: [OverlaySourceStyleRun],
-      fallback: OverlaySourceAppearance
+      fallback: OverlaySourceAppearance,
     ) -> OverlaySourceAppearance {
       guard fallback.fontWeight.rawValue >= OverlayFontWeight.medium.rawValue else { return fallback }
       let source = text as NSString
@@ -392,7 +403,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
           red: color.red + run.appearance.foreground.red * weight,
           green: color.green + run.appearance.foreground.green * weight,
           blue: color.blue + run.appearance.foreground.blue * weight,
-          alpha: 1
+          alpha: 1,
         )
       }
       result.foregroundConfidence = suffix.reduce(CGFloat.zero) {
@@ -423,7 +434,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
     private static func stabilizedStyleRuns(
       _ current: [OverlaySourceStyleRun],
-      _ previous: [OverlaySourceStyleRun]
+      _ previous: [OverlaySourceStyleRun],
     ) -> [OverlaySourceStyleRun] {
       current.map { run in
         guard let previous = previous.first(where: { $0.range == run.range }) else { return run }
@@ -445,14 +456,14 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         abs(lhs.minX - rhs.minX) * imageSize.width,
         abs(lhs.maxX - rhs.maxX) * imageSize.width,
         abs(lhs.minY - rhs.minY) * imageSize.height,
-        abs(lhs.maxY - rhs.maxY) * imageSize.height
+        abs(lhs.maxY - rhs.maxY) * imageSize.height,
       )
     }
 
     private static func centerDistance(_ lhs: CGRect, _ rhs: CGRect, imageSize: CGSize) -> CGFloat {
       hypot(
         (lhs.midX - rhs.midX) * imageSize.width,
-        (lhs.midY - rhs.midY) * imageSize.height
+        (lhs.midY - rhs.midY) * imageSize.height,
       )
     }
 
@@ -464,7 +475,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       _ lhs: AttributedStyleSpan,
       with rhs: AttributedStyleSpan,
       in text: String,
-      base: OverlaySourceAppearance
+      base: OverlaySourceAppearance,
     ) -> Bool {
       guard NSMaxRange(lhs.range) <= rhs.range.location else { return false }
       let source = text as NSString
@@ -472,12 +483,14 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let rhsHasText = source.substring(with: rhs.range).contains { $0.isLetter || $0.isNumber }
       // Punctuation and lexical text have separate weight evidence. A noisy
       // bracket or colon must not promote an adjacent word when spans merge.
-      if lhsHasText != rhsHasText, lhs.appearance.fontWeight != rhs.appearance.fontWeight { return false }
+      if lhsHasText != rhsHasText, lhs.appearance.fontWeight != rhs.appearance.fontWeight {
+        return false
+      }
       // Similar colors do not make adjacent prose part of a code literal.
       // Punctuation can still attach to its token without changing its role.
       let gap = NSRange(
         location: NSMaxRange(lhs.range),
-        length: rhs.range.location - NSMaxRange(lhs.range)
+        length: rhs.range.location - NSMaxRange(lhs.range),
       )
       let separator = (text as NSString).substring(with: gap)
       guard !separator.contains(where: \.isNewline) else { return false }
@@ -492,7 +505,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let intersection = lhs.box.intersection(rhs.box)
       let minimumArea = min(
         lhs.box.width * lhs.box.height,
-        rhs.box.width * rhs.box.height
+        rhs.box.width * rhs.box.height,
       )
       let sharesVisionBox = !intersection.isNull
         && !intersection.isEmpty
@@ -501,7 +514,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       let underlineMatches = lhs.appearance.isUnderlined == rhs.appearance.isUnderlined
       let sharedDistinctForeground = colorDistance(
         lhs.appearance.foreground,
-        base.foreground
+        base.foreground,
       ) >= 0.1
         && colorDistance(rhs.appearance.foreground, base.foreground) >= 0.1
       let wrapsSameColoredSpan = separator.isEmpty && sharedDistinctForeground
@@ -517,7 +530,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       _ run: OverlaySourceStyleRun,
       in text: String,
       among runs: [OverlaySourceStyleRun],
-      base: OverlaySourceAppearance
+      base: OverlaySourceAppearance,
     ) -> Bool {
       guard let range = Range(run.range, in: text) else { return false }
       let token = text[range]
@@ -532,7 +545,8 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       // even when the transcript makes it look like a sentence boundary.
       let sharesStem = runs.contains(where: { other in
         guard
-          other.range != run.range, other.box == run.box,
+          other.range != run.range,
+          other.box == run.box,
           NSMaxRange(other.range) <= run.range.location,
           let range = Range(other.range, in: text)
         else { return false }
@@ -542,14 +556,17 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         guard
           next.range.location >= NSMaxRange(run.range),
           next.range.location - NSMaxRange(run.range) <= 2,
-          let nextRange = Range(next.range, in: text), text[nextRange].contains(where: \.isLetter)
+          let nextRange = Range(next.range, in: text),
+          text[nextRange].contains(where: \.isLetter)
         else { return false }
         let gap = NSRange(location: NSMaxRange(run.range), length: next.range.location - NSMaxRange(run.range))
         return (text as NSString).substring(with: gap).allSatisfy(\.isWhitespace)
           && colorDistance(run.appearance.background, base.background) >= 0.025
           && colorDistance(run.appearance.background, next.appearance.background) <= 0.04
       }
-      if sharesStem, continuesToken { return false }
+      if sharesStem, continuesToken {
+        return false
+      }
       // A punctuation box immediately after an inline chip can sample the
       // chip fill even though the glyph belongs to the surrounding sentence.
       // Enclosing punctuation remains style-aware; terminal sentence marks
@@ -561,7 +578,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
     private static func isMateriallyDifferent(
       _ candidate: OverlaySourceAppearance,
-      from base: OverlaySourceAppearance
+      from base: OverlaySourceAppearance,
     ) -> Bool {
       colorDistance(candidate.foreground, base.foreground) >= 0.1
         || colorDistance(candidate.background, base.background) >= 0.025
@@ -574,7 +591,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     private static func isLiteralStyle(
       for value: String,
       appearance: OverlaySourceAppearance,
-      base: OverlaySourceAppearance
+      base: OverlaySourceAppearance,
     ) -> Bool {
       appearance.fontDesign == .monospaced
         || (value.contains(where: { $0.isLetter || $0.isNumber }) && OCRTextSemantics.isIdentifier(value))
@@ -584,7 +601,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     private static func shouldCarryStyle(
       _ text: String,
       appearance: OverlaySourceAppearance,
-      base: OverlaySourceAppearance
+      base: OverlaySourceAppearance,
     ) -> Bool {
       let containsText = text.unicodeScalars.contains {
         CharacterSet.alphanumerics.contains($0)
@@ -628,7 +645,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       language: Locale.Language,
       sourceLayout: OverlaySourceLayout,
       styleSourceText: String,
-      styleReferences: [StyleReference]
+      styleReferences: [StyleReference],
     ) {
       self.text = text
       self.language = language
@@ -637,7 +654,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       flow = OverlayTextFlowResolver.translatedFlow(
         text: text,
         language: language,
-        replacing: sourceLayout
+        replacing: sourceLayout,
       )
     }
 
@@ -664,17 +681,23 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
   private(set) var content: Content
 
   var displayedText: String {
-    if case .translated(let translation) = content { return translation.text }
+    if case .translated(let translation) = content {
+      return translation.text
+    }
     return source.text
   }
 
   var displayedLanguage: Locale.Language {
-    if case .translated(let translation) = content { return translation.language }
+    if case .translated(let translation) = content {
+      return translation.language
+    }
     return source.language
   }
 
   var textFlow: OverlayTextFlow {
-    if case .translated(let translation) = content { return translation.flow }
+    if case .translated(let translation) = content {
+      return translation.flow
+    }
     return OverlayTextFlowResolver.sourceFlow(language: source.language, layout: source.layout)
   }
 
@@ -722,14 +745,14 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
     }
     return OverlayTextFlowResolver.horizontalFlow(
       text: displayedText,
-      language: displayedLanguage
+      language: displayedLanguage,
     )
   }
 
   mutating func showTranslation(
     _ text: String,
     attributedText: AttributedString? = nil,
-    language: Locale.Language
+    language: Locale.Language,
   ) {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else {
@@ -742,7 +765,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       language: language,
       sourceLayout: source.layout,
       styleSourceText: source.text,
-      styleReferences: styleReferences
+      styleReferences: styleReferences,
     ))
   }
 
@@ -785,7 +808,7 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
 
   private func translatedStyleReferences(
     in attributedText: AttributedString?,
-    matching text: String
+    matching text: String,
   ) -> [Translation.StyleReference] {
     guard
       let attributedText,
@@ -802,24 +825,24 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
       else { return nil }
       let lowerOffset = attributedText.characters.distance(
         from: attributedText.characters.startIndex,
-        to: run.range.lowerBound
+        to: run.range.lowerBound,
       )
       let upperOffset = attributedText.characters.distance(
         from: attributedText.characters.startIndex,
-        to: run.range.upperBound
+        to: run.range.upperBound,
       )
       let lowerBound = text.index(text.startIndex, offsetBy: lowerOffset)
       let upperBound = text.index(text.startIndex, offsetBy: upperOffset)
       return Translation.StyleReference(
         targetRange: NSRange(lowerBound ..< upperBound, in: text),
-        sourceRange: source.styleRuns[index].range
+        sourceRange: source.styleRuns[index].range,
       )
     }
   }
 
   private func mirroredEnclosingPunctuation(
     in runs: [OverlayTextStyleRun],
-    text: String
+    text: String,
   ) -> [OverlayTextStyleRun] {
     let source = text as NSString
     var result = runs
@@ -831,11 +854,13 @@ struct OverlayLine: Equatable, Identifiable, Sendable {
         ? NSRange(location: 0, length: run.range.location)
         : NSRange(
           location: NSMaxRange(run.range),
-          length: source.length - NSMaxRange(run.range)
+          length: source.length - NSMaxRange(run.range),
         )
       guard searchRange.length > 0 else { continue }
       var options = NSString.CompareOptions.widthInsensitive
-      if pair.searchesBefore { options.insert(.backwards) }
+      if pair.searchesBefore {
+        options.insert(.backwards)
+      }
       let match = source.range(of: pair.counterpart, options: options, range: searchRange)
       guard
         match.location != NSNotFound,

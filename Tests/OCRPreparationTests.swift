@@ -8,7 +8,7 @@ import Testing
 
 struct OCRPreparationTests {
   @Test
-  func startupAndForegroundShareOnePreparation() async throws {
+  func `startup and foreground share one preparation`() async throws {
     let started = AsyncStream<Void>.makeStream()
     let release = AsyncStream<Void>.makeStream()
     let calls = LockIsolated(0)
@@ -30,7 +30,7 @@ struct OCRPreparationTests {
   }
 
   @Test
-  func foregroundBeforeStartupDoesNotAddASecondRecognition() async throws {
+  func `foreground before startup does not add A second recognition`() async throws {
     let calls = LockIsolated(0)
     let preparation = OCRPreparation { calls.withValue { $0 += 1 } }
     try await preparation.beginRecognition()

@@ -140,20 +140,36 @@ every key, its default, and the shortcut syntax.
 
 ### Requirements
 
-- Xcode 26.4+ with Swift 6.3 and the macOS 26.4 SDK or newer
-- [mise](https://mise.jdx.dev) (manages Tuist via `.mise.toml`)
-- SwiftFormat, installed separately, for source formatting
+- Xcode 27.2 with Swift 6.4.2 and the macOS 27.2 SDK
+- [mise](https://mise.jdx.dev) (manages Tuist and SwiftFormat via `.mise.toml`)
+- [Jujutsu](https://docs.jj-vcs.dev) (`jj`) for version control
 
 ### Building from source
 
 ```sh
 export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
 export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs Tuist
-tuist install              # resolves SPM dependencies
-tuist generate             # generates the Xcode workspace
+mise install               # installs the pinned Tuist and SwiftFormat versions
+mise run generate          # resolves SPM dependencies and generates the workspace
 open SwiftyCrow.xcworkspace
 ```
+
+`.xcode-version` selects Xcode 27.2. mise exports the matching `DEVELOPER_DIR`
+for this project without changing the machine-wide Xcode selection. Use
+`mise exec -- swift ...` or `mise exec -- xcodebuild ...` when mise shell
+activation is unavailable. The SDK follows the selected Xcode; the app's
+minimum supported macOS version remains 26.0.
+
+Run `mise run format` to apply the Airbnb style and `mise run format:check`
+to check it. The upstream configuration revision is recorded in `.swiftformat`.
+
+### Version control
+
+Use `jj` in a colocated Git repository. Existing Git history and GitHub remotes
+remain available. For a fresh clone, run `jj git init --colocate` once, then
+`jj bookmark track main@origin`. Inspect changes with `jj status` and `jj diff`,
+start work with `jj new -m "description"`, and name task bookmarks with the
+`pangmo5/` prefix. Update remotes with `jj git fetch`.
 
 The project uses Apple Development signing for Debug builds. Set
 `TUIST_DEVELOPMENT_TEAM` to the team associated with your development certificate.

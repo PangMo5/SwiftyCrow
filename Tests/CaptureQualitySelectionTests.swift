@@ -6,23 +6,21 @@ import Testing
 @testable import SwiftyCrow
 
 struct CaptureQualitySelectionTests {
-  let cases = [
-    CaptureQualityCase(id: "ja-card-ko", source: "ja.png", structure: "cards", originalLanguage: "ja", targetLanguage: "ko"),
-    CaptureQualityCase(id: "ar-table-ja", source: "ar.png", structure: "table", originalLanguage: "ar", targetLanguage: "ja"),
-  ]
+
+  // MARK: Internal
 
   @Test
-  func unsupportedStyleGatesFailAtSelection() {
+  func `unsupported style gates fail at selection`() {
     let item = CaptureQualityCase(
       id: "unsupported",
       source: "source.png",
-      requiredStyles: [.init(source: "Text", target: "Text", kind: "italc")]
+      requiredStyles: [.init(source: "Text", target: "Text", kind: "italc")],
     )
     #expect(throws: CocoaError.self) { try CaptureQualitySelection.select([item], environment: [:]) }
   }
 
   @Test
-  func strategyIsExplicitAndUnknownValuesDoNotDowngradeTheRun() throws {
+  func `strategy is explicit and unknown values do not downgrade the run`() throws {
     let data = Data(#"{"id":"high","source":"input.png","translationStrategy":"highFidelity"}"#.utf8)
     #expect(try JSONDecoder().decode(CaptureQualityCase.self, from: data).translationStrategy == .highFidelity)
     let invalid = Data(#"{"id":"bad","source":"input.png","translationStrategy":"highFidelty"}"#.utf8)
@@ -35,19 +33,19 @@ struct CaptureQualitySelectionTests {
     ("SWIFTYCROW_QUALITY_TARGET", "ko", "ja-card-ko"),
     ("SWIFTYCROW_QUALITY_STRUCTURE", "table", "ar-table-ja"),
   ])
-  func exactSelection(_ input: (String, String, String)) throws {
+  func `exact selection`(_ input: (String, String, String)) throws {
     #expect(try CaptureQualitySelection.select(cases, environment: [input.0: input.1]).map(\.id) == [input.2])
   }
 
   @Test
-  func invalidSelectionsFailInsteadOfPassingWithoutTests() {
+  func `invalid selections fail instead of passing without tests`() {
     #expect(throws: CaptureQualitySelection.SelectionError.self) {
       try CaptureQualitySelection.select(cases, environment: ["SWIFTYCROW_QUALITY_CASE": "typo"])
     }
     #expect(throws: CaptureQualitySelection.SelectionError.self) {
       try CaptureQualitySelection.select(
         cases,
-        environment: ["SWIFTYCROW_QUALITY_SOURCE": "ar", "SWIFTYCROW_QUALITY_TARGET": "ko"]
+        environment: ["SWIFTYCROW_QUALITY_SOURCE": "ar", "SWIFTYCROW_QUALITY_TARGET": "ko"],
       )
     }
     #expect(throws: CaptureQualitySelection.SelectionError.self) {
@@ -59,14 +57,14 @@ struct CaptureQualitySelectionTests {
   }
 
   @Test(arguments: ["", "..", "../outside", "nested/case"])
-  func outputIDsCannotEscapeTheirArtifactDirectory(_ id: String) {
+  func `output I ds cannot escape their artifact directory`(_ id: String) {
     #expect(throws: CaptureQualitySelection.SelectionError.self) {
       try CaptureQualitySelection.select([CaptureQualityCase(id: id, source: "source.png")], environment: [:])
     }
   }
 
   @Test @MainActor
-  func failedRerunCannotKeepAnOldSuccessfulReport() async throws {
+  func `failed rerun cannot keep an old successful report`() async throws {
     let temporary = ProcessInfo.processInfo.environment["SWIFTYCROW_TEST_TEMP_ROOT"].map { URL(fileURLWithPath: $0) }
       ?? FileManager.default.temporaryDirectory
     let root = temporary.appendingPathComponent(UUID().uuidString)
@@ -83,5 +81,12 @@ struct CaptureQualitySelectionTests {
     #expect(!FileManager.default.fileExists(atPath: output.appendingPathComponent("broken-metrics.json").path))
     #expect(!FileManager.default.fileExists(atPath: output.appendingPathComponent("broken-result.png").path))
   }
+
+  // MARK: Private
+
+  private let cases = [
+    CaptureQualityCase(id: "ja-card-ko", source: "ja.png", structure: "cards", originalLanguage: "ja", targetLanguage: "ko"),
+    CaptureQualityCase(id: "ar-table-ja", source: "ar.png", structure: "table", originalLanguage: "ar", targetLanguage: "ja"),
+  ]
 
 }

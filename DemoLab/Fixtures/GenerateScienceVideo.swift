@@ -10,17 +10,23 @@ func option(_ name: String) -> String? {
   guard let index = CommandLine.arguments.firstIndex(of: name), index + 1 < CommandLine.arguments.count else { return nil }
   return CommandLine.arguments[index + 1]
 }
+
 let output = option("--output").map { URL(fileURLWithPath: $0) }
   ?? URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("science-light.mp4")
 let sourceStrings: [String: String]? = try option("--text-catalog").map {
   try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: $0)))
 }
+
 func sourceText(_ value: String) -> String {
   guard let sourceStrings else { return value }
   guard let authored = sourceStrings[value] else { fatalError("Missing authored source text: \(value)") }
   return authored
 }
-if FileManager.default.fileExists(atPath: output.path) { try FileManager.default.removeItem(at: output) }
+
+if FileManager.default.fileExists(atPath: output.path) {
+  try FileManager.default.removeItem(at: output)
+}
+
 let width = 1600
 let height = 1000
 let fps: Int32 = 24
@@ -37,7 +43,7 @@ let input = AVAssetWriterInput(
       AVVideoExpectedSourceFrameRateKey: fps,
       AVVideoMaxKeyFrameIntervalKey: 48,
     ],
-  ]
+  ],
 )
 input.expectsMediaDataInRealTime = false
 let adaptor = AVAssetWriterInputPixelBufferAdaptor(
@@ -48,7 +54,7 @@ let adaptor = AVAssetWriterInputPixelBufferAdaptor(
     kCVPixelBufferHeightKey as String: height,
     kCVPixelBufferCGImageCompatibilityKey as String: true,
     kCVPixelBufferCGBitmapContextCompatibilityKey as String: true,
-  ]
+  ],
 )
 writer.add(input)
 precondition(writer.startWriting())
@@ -58,7 +64,7 @@ func ink(_ hex: UInt32) -> NSColor {
     red: CGFloat(hex >> 16 & 255) / 255,
     green: CGFloat(hex >> 8 & 255) / 255,
     blue: CGFloat(hex & 255) / 255,
-    alpha: 1
+    alpha: 1,
   )
 }
 
@@ -80,7 +86,7 @@ func text(
   _ h: CGFloat,
   _ size: CGFloat,
   _ hex: UInt32,
-  bold: Bool = false
+  bold: Bool = false,
 ) {
   let p = NSMutableParagraphStyle()
   p.lineSpacing = 10
@@ -90,8 +96,8 @@ func text(
       ofSize: size,
       weight: bold
         ? .bold
-        : .regular
-    ), .foregroundColor: ink(hex), .paragraphStyle: p]
+        : .regular,
+    ), .foregroundColor: ink(hex), .paragraphStyle: p],
   )
 }
 
@@ -116,7 +122,7 @@ for n in 0..<(seconds * Int(fps)) {
       bitsPerComponent: 8,
       bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue,
     )!
     context.translateBy(x: 0, y: CGFloat(height))
     context.scaleBy(x: 1, y: -1)
@@ -136,7 +142,7 @@ for n in 0..<(seconds * Int(fps)) {
       65,
       31,
       0xF0BF6B,
-      bold: true
+      bold: true,
     )
     // The diagram actually moves throughout each caption, not just between cards.
     let lightX: CGFloat = stage == 2 ? 270 + 245 * phase : 270 + 45 * sin(time * 0.6)
@@ -166,7 +172,7 @@ for n in 0..<(seconds * Int(fps)) {
     CVPixelBufferUnlockBaseAddress(buffer, [])
     precondition(
       adaptor.append(buffer, withPresentationTime: CMTime(value: Int64(n), timescale: fps)),
-      "Could not encode source frame"
+      "Could not encode source frame",
     )
   }
 }

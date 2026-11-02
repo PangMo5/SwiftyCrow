@@ -15,7 +15,7 @@ enum OCRLineRefiner {
     _ lines: [OCRResult.Line],
     in image: CGImage,
     language: Language,
-    recognize: (CGImage, RecognizeTextRequest) async throws -> [String] = recognize
+    recognize: (CGImage, RecognizeTextRequest) async throws -> [String] = recognize,
   ) async throws -> [OCRResult.Line] {
     var result = lines
     var replacements = [Int: [OCRResult.Line]]()
@@ -31,7 +31,8 @@ enum OCRLineRefiner {
       // A short tail is ambiguous in isolation. Only reread ordinary weak
       // text when its detected script disagrees with the surrounding prose.
       if
-        lines[index].recognitionConfidence < 0.25, !syntaxSensitive,
+        lines[index].recognitionConfidence < 0.25,
+        !syntaxSensitive,
         !lines[index].text.contains(where: { "/／|".contains($0) })
       {
         guard lines[index].text.unicodeScalars.count(where: CharacterSet.letters.contains) >= 3 else { continue }
@@ -42,25 +43,28 @@ enum OCRLineRefiner {
           resolvedSurroundingLanguage = true
         }
         let observed = LanguageDetectionClient.liveValue.detect(lines[index].text, 0)?.localeLanguage
-        if surroundingLanguage?.script == observed?.script { continue }
+        if surroundingLanguage?.script == observed?.script {
+          continue
+        }
       }
       let box = literal?.box ?? lines[index].boundingBoxNormalized
       let rect = CGRect(
         x: box.minX * CGFloat(image.width),
         y: box.minY * CGFloat(image.height),
         width: box.width * CGFloat(image.width),
-        height: box.height * CGFloat(image.height)
+        height: box.height * CGFloat(image.height),
       )
       .insetBy(dx: -3, dy: -3).integral.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
       guard
-        let crop = image.cropping(to: rect), let context = CGContext(
+        let crop = image.cropping(to: rect),
+        let context = CGContext(
           data: nil,
           width: crop.width * 3,
           height: crop.height * 3,
           bitsPerComponent: 8,
           bytesPerRow: 0,
           space: CGColorSpaceCreateDeviceRGB(),
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { continue }
       context.interpolationQuality = .high
@@ -71,12 +75,14 @@ enum OCRLineRefiner {
       request.usesLanguageCorrection = !syntaxSensitive
       request.automaticallyDetectsLanguage = false
       var hints = [Locale.Language]()
-      if !language.isAuto { hints.append(language.localeLanguage) }
+      if !language.isAuto {
+        hints.append(language.localeLanguage)
+      }
       if
         lines[index].recognitionConfidence < 0.25,
         let context = LanguageDetectionClient.liveValue.detect(
           lines.filter { $0.recognitionConfidence >= 0.6 }.map(\.text).joined(separator: " "),
-          0.65
+          0.65,
         )
       {
         hints.append(context.localeLanguage)
@@ -84,11 +90,17 @@ enum OCRLineRefiner {
       if
         index > 0,
         let preceding = LanguageDetectionClient.liveValue.detect(lines[index - 1].text, 0.65)?
-          .localeLanguage { hints.append(preceding) }
+          .localeLanguage
+      {
+        hints.append(preceding)
+      }
       hints += Locale.preferredLanguages.map { Locale.Language(identifier: $0) }
-      if let inferred = LanguageDetectionClient.liveValue.detect(lines[index].text, 0)?.localeLanguage { hints.append(inferred) }
+      if let inferred = LanguageDetectionClient.liveValue.detect(lines[index].text, 0)?.localeLanguage {
+        hints.append(inferred)
+      }
       if
-        literal != nil, !lines[index].text.unicodeScalars.allSatisfy(\.isASCII),
+        literal != nil,
+        !lines[index].text.unicodeScalars.allSatisfy(\.isASCII),
         let inferred = LanguageDetectionClient.liveValue.detect(lines[index].text, 0.65)?.localeLanguage
       {
         hints.insert(inferred, at: 0)
@@ -98,7 +110,10 @@ enum OCRLineRefiner {
       for hint in hints {
         if
           let match = supported.first(where: { $0.usesSameWritingSystem(as: hint) }),
-          !resolved.contains(match) { resolved.append(match) }
+          !resolved.contains(match)
+        {
+          resolved.append(match)
+        }
       }
       request.recognitionLanguages = syntaxSensitive && lines[index].text.unicodeScalars.allSatisfy(\.isASCII)
         ? supported.filter { $0.languageCode?.identifier == "en" }
@@ -122,7 +137,7 @@ enum OCRLineRefiner {
       result[index].styleRuns = JapaneseRubyOCRCorrector.remappedStyleRuns(
         lines[index].styleRuns,
         from: lines[index].text,
-        to: text
+        to: text,
       )
     }
     return result.indices.flatMap { replacements[$0] ?? [result[$0]] }
@@ -152,7 +167,8 @@ enum OCRLineRefiner {
         let originalIsNumber = original.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
         let addsScript = alternative.unicodeScalars
           .contains { (0x3040...0x9FFF).contains($0.value) || (0xAC00...0xD7AF).contains($0.value) }
-        if originalIsNumber, addsScript { text = alternative
+        if originalIsNumber, addsScript {
+          text = alternative
           review = true
         }
       }
@@ -166,7 +182,7 @@ enum OCRLineRefiner {
         imageAspectRatio: line.imageAspectRatio,
         horizontalGlyphScale: line.horizontalGlyphScale,
         replacementPatches: [OverlaySourcePatch(box: box)],
-        alignment: .leading
+        alignment: .leading,
       )
       segment.preventsJoining = true
       segment.needsReview = review
@@ -178,14 +194,25 @@ enum OCRLineRefiner {
   static func needsRefinement(_ line: OCRResult.Line) -> Bool {
     guard !line.preservesSource else { return false }
     if
-      !line.isVerticalBlock, line.recognitionConfidence < 0.25,
-      line.text.contains(where: \.isLetter) { return true }
+      !line.isVerticalBlock,
+      line.recognitionConfidence < 0.25,
+      line.text.contains(where: \.isLetter)
+    {
+      return true
+    }
     if
-      !line.isVerticalBlock, line.text.count <= 240,
-      OCRTextSemantics.isCode(line.text) || inlinePath(in: line) != nil { return true }
+      !line.isVerticalBlock,
+      line.text.count <= 240,
+      OCRTextSemantics.isCode(line.text) || inlinePath(in: line) != nil
+    {
+      return true
+    }
     guard
-      !line.isVerticalBlock, line.text.count <= 100, line.boundingBoxNormalized.height < 0.12,
-      line.text.contains(where: { "/／|".contains($0) }), !OCRTextSemantics.isIdentifier(line.text),
+      !line.isVerticalBlock,
+      line.text.count <= 100,
+      line.boundingBoxNormalized.height < 0.12,
+      line.text.contains(where: { "/／|".contains($0) }),
+      !OCRTextSemantics.isIdentifier(line.text),
       !OCRTextSemantics.isCode(line.text)
     else { return false }
     let latin = line.text.unicodeScalars.contains { (0x41...0x7A).contains($0.value) }
@@ -206,8 +233,11 @@ enum OCRLineRefiner {
   /// feeding an extremely wide paragraph crop to the recognition model.
   private static func inlinePath(in line: OCRResult.Line) -> (range: NSRange, box: CGRect)? {
     if
-      line.rowCount == 1, !line.isVerticalBlock, line.text.count <= 120,
-      !line.text.contains(where: \.isWhitespace), line.text.contains("."),
+      line.rowCount == 1,
+      !line.isVerticalBlock,
+      line.text.count <= 120,
+      !line.text.contains(where: \.isWhitespace),
+      line.text.contains("."),
       OCRTextSemantics.isIdentifier(line.text),
       line.recognitionConfidence < 0.25 || !OCRTextSemantics.isFileName(line.text)
       || !line.text.unicodeScalars.allSatisfy(\.isASCII)
@@ -223,4 +253,5 @@ enum OCRLineRefiner {
     guard let first = runs.first else { return nil }
     return (nsRange, runs.dropFirst().reduce(first.box) { $0.union($1.box) })
   }
+
 }

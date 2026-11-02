@@ -93,7 +93,7 @@ struct GenerateWebFixtures {
         let window = NSWindow(contentRect: page.view.frame, styleMask: [.titled], backing: .buffered, defer: false)
         window.contentView = page.view
         window.orderFrontRegardless()
-        try await page.load(template.replacingOccurrences(of: "{{THEME}}", with: theme))
+        try await page.load(template.replacing("{{THEME}}", with: theme))
         let documentHeight = try await page.view.callAsyncJavaScript("""
           await document.fonts.ready;
           return Math.ceil(document.documentElement.scrollHeight);
@@ -121,7 +121,7 @@ struct GenerateWebFixtures {
             output.appendingPathComponent(name + ".png") as CFURL,
             "public.png" as CFString,
             1,
-            nil
+            nil,
           )
         else { throw CocoaError(.fileWriteUnknown) }
         CGImageDestinationAddImage(destination, image, nil)

@@ -11,7 +11,7 @@ struct TranslationGroupContextTests {
   // MARK: Internal
 
   @Test
-  func tiltedPhoneticWordsUseTheirRhythmWithoutMovingTheirOwners() {
+  func `tilted phonetic words use their rhythm without moving their owners`() {
     var sources = ["トン", "カン", "トン", "カン"].enumerated().map { offset, text in
       var source = label(text, x: 0.1 + Double(offset) * 0.012, y: 0.2 + Double(offset) * 0.024, width: 0.04, size: 0.02)
       source.language = .init(identifier: "ja")
@@ -26,7 +26,7 @@ struct TranslationGroupContextTests {
   }
 
   @Test(arguments: [false, true], [false, true])
-  func alignedNavigationUsesANearbyHeadingAndKeepsIndependentFrames(_ mirrored: Bool, _ nativeTable: Bool) throws {
+  func `aligned navigation uses A nearby heading and keeps independent frames`(_ mirrored: Bool, _ nativeTable: Bool) throws {
     var sources = [label("Project Documents", x: 0.27, y: 0.18, width: 0.3, size: 0.035, weight: .bold)]
     sources += ["Overview", "Documents", "Export", "Settings"].enumerated().map {
       label($0.element, x: 0.02, y: 0.18 + Double($0.offset) * 0.055, width: 0.09, size: 0.022)
@@ -36,7 +36,9 @@ struct TranslationGroupContextTests {
         sources[index].tableCell = .init(table: 0, row: index - 1, column: 0, box: sources[index].box)
       }
     }
-    if mirrored { for index in sources.indices { sources[index].box.origin.x = 1 - sources[index].box.maxX } }
+    if mirrored {
+      for index in sources.indices { sources[index].box.origin.x = 1 - sources[index].box.maxX }
+    }
     let groups = TranslationGroupContext.associations(in: sources)
     #expect(groups.count == 4)
     #expect(groups[0] == nil)
@@ -51,7 +53,7 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func separateSurfacesAndScriptContextsDoNotBecomeOneLabelGroup() {
+  func `separate surfaces and script contexts do not become one label group`() {
     var sources = ["First", "Second", "Third"].enumerated().map {
       label($0.element, x: 0.1, y: 0.2 + Double($0.offset) * 0.055, width: 0.1, size: 0.022)
     }
@@ -68,7 +70,7 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func columnValuesUseTheirHeaderAndRetainRepeatedOwnership() throws {
+  func `column values use their header and retain repeated ownership`() throws {
     var sources = [label("Status", x: 0.7, y: 0.4, width: 0.08, size: 0.022, weight: .bold)]
     sources += (1...3).map { label("Ready", x: 0.7, y: 0.4 + Double($0) * 0.055, width: 0.08, size: 0.022) }
     for index in sources.indices {
@@ -88,7 +90,7 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func measuredColumnHeadingSuppliesContextWithoutANativeTable() {
+  func `measured column heading supplies context without A native table`() {
     var sources = [label("Status", x: 0.7, y: 0.4, width: 0.08, size: 0.022, weight: .bold)]
     sources += (1...3).map { label("Ready", x: 0.7, y: 0.4 + Double($0) * 0.055, width: 0.08, size: 0.022) }
     let groups = TranslationGroupContext.associations(in: sources)
@@ -100,14 +102,14 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func tableContextsUseOnlyTheirOwnCaptionAndCompleteGrid() {
+  func `table contexts use only their own caption and complete grid`() {
     func source(_ text: String, x: CGFloat, y: CGFloat, row: Int?, column: Int, context: Int) -> OverlayLine.Source {
       let box = CGRect(x: x, y: y, width: row == nil ? 0.12 : 0.15, height: 0.03)
       let cell = row.map { OCRTableCell(
         table: 0,
         row: $0,
         column: column,
-        box: CGRect(x: x - 0.1, y: y, width: 0.25, height: 0.03)
+        box: CGRect(x: x - 0.1, y: y, width: 0.25, height: 0.03),
       ) }
       var line = OCRResult.Line(
         boundingBoxNormalized: box,
@@ -116,9 +118,9 @@ struct TranslationGroupContextTests {
           background: .white,
           foreground: .black,
           confidence: 1,
-          fontWeight: row == 0 ? .bold : .regular
+          fontWeight: row == 0 ? .bold : .regular,
         ),
-        tableCell: cell
+        tableCell: cell,
       )
       line.recognitionContextID = context
       return .init(recognized: line, language: .init(identifier: "en"))
@@ -131,7 +133,7 @@ struct TranslationGroupContextTests {
         y: 0.16 + Double(row) * 0.05,
         row: row,
         column: column,
-        context: 0
+        context: 0,
       ))
     } }
     let contexts = TranslationGroupContext.tableHeaders(in: sources)
@@ -149,12 +151,12 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func liveReuseRequiresTheSameSemanticGroup() {
+  func `live reuse requires the same semantic group`() {
     let id = UUID()
     let size = CGSize(width: 800, height: 600)
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .init(x: 0.2, y: 0.2, width: 0.1, height: 0.03), text: "Signed"),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     let line = OverlayLine(id: id, source: source)
     let member = TranslationGroupContext.Member(context: .init(topic: "Integer Types", labels: ["Signed", "Unsigned"]), index: 0)
@@ -163,7 +165,7 @@ struct TranslationGroupContextTests {
       target: "ko",
       imageSize: size,
       sources: [id: source],
-      groupContexts: [id: member]
+      groupContexts: [id: member],
     )
     #expect(context.matches([source], previous: [line], imageSize: size, groupContexts: [0: member]))
     var changed = member
@@ -173,7 +175,7 @@ struct TranslationGroupContextTests {
   }
 
   @Test
-  func duplicateSourceLabelsHaveIndependentOwners() throws {
+  func `duplicate source labels have independent owners`() throws {
     let group = TranslationGroupContext(topic: "Table: Measurements", labels: ["Value", "Value"])
     let request = try #require(group.attributedRequest)
     #expect(String(request.characters) == "Table: Measurements: Value; Value")
@@ -181,37 +183,37 @@ struct TranslationGroupContextTests {
   }
 
   @Test(arguments: [";", "；", "؛"])
-  func translatedLabelsReturnByOwnershipRatherThanOutputOrder(_ separator: String) {
+  func `translated labels return by ownership rather than output order`(_ separator: String) throws {
     let group = TranslationGroupContext(topic: "Integer Types", labels: ["Signed", "Unsigned"])
     var response = AttributedString("정수형: 부호 없음" + separator + " 부호")
-    response[response.range(of: "부호 없음")!].link = URL(string: "swiftycrow-context://item/1")!
+    response[try #require(response.range(of: "부호 없음"))].link = try #require(URL(string: "swiftycrow-context://item/1"))
     let last = response.characters.index(response.endIndex, offsetBy: -2)
-    response[last...].link = URL(string: "swiftycrow-context://item/0")!
+    response[last...].link = try #require(URL(string: "swiftycrow-context://item/0"))
     #expect(group.targets(from: response) == ["부호", "부호 없음"])
   }
 
   @Test
-  func missingOrPartialOwnershipCannotPublishAGroup() {
+  func `missing or partial ownership cannot publish A group`() throws {
     let group = TranslationGroupContext(topic: "Types", labels: ["Signed", "Unsigned"])
     #expect(group.targets(from: nil) == nil)
     #expect(group.targets(from: AttributedString("종류: 부호; 부호 없음")) == nil)
     var response = AttributedString("종류: 부호; 부호 없음")
-    response[response.range(of: "부호")!].link = URL(string: "swiftycrow-context://item/0")!
-    response[response.range(of: "없음")!].link = URL(string: "swiftycrow-context://item/1")!
+    response[try #require(response.range(of: "부호"))].link = try #require(URL(string: "swiftycrow-context://item/0"))
+    response[try #require(response.range(of: "없음"))].link = try #require(URL(string: "swiftycrow-context://item/1"))
     #expect(group.targets(from: response) == nil)
   }
 
   @Test
-  func mergedLabelsAndDuplicateIDsAreRejected() {
+  func `merged labels and duplicate I ds are rejected`() throws {
     let group = TranslationGroupContext(topic: "Types", labels: ["Signed", "Unsigned"])
     var response = AttributedString("종류: 부호; 부호 없음")
-    response[response.range(of: "부호; 부호 없음")!].link = URL(string: "swiftycrow-context://item/0")!
+    response[try #require(response.range(of: "부호; 부호 없음"))].link = try #require(URL(string: "swiftycrow-context://item/0"))
     #expect(group.targets(from: response) == nil)
     #expect(group.targets(from: group.attributedRequest.map { _ in AttributedString("종류: 부호 부호 없음") }) == nil)
   }
 
   @Test
-  func invalidSourceStructureCannotCreateAnAmbiguousRequest() {
+  func `invalid source structure cannot create an ambiguous request`() {
     #expect(TranslationGroupContext(topic: "Topic", labels: ["one"]).attributedRequest == nil)
     #expect(TranslationGroupContext(topic: "Topic", labels: ["one; two", "three"]).attributedRequest == nil)
     #expect(TranslationGroupContext(topic: "Topic\nOther", labels: ["one", "two"]).attributedRequest == nil)
@@ -225,7 +227,7 @@ struct TranslationGroupContextTests {
     y: CGFloat,
     width: CGFloat,
     size: CGFloat,
-    weight: OverlayFontWeight = .regular
+    weight: OverlayFontWeight = .regular,
   ) -> OverlayLine.Source {
     var line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: x, y: y, width: width, height: 0.02),
@@ -236,8 +238,8 @@ struct TranslationGroupContextTests {
         foreground: .black,
         confidence: 1,
         fontSizeScale: size,
-        fontWeight: weight
-      )
+        fontWeight: weight,
+      ),
     )
     line.recognitionContextID = 0
     return .init(recognized: line, language: .init(identifier: "en"))

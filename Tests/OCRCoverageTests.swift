@@ -7,7 +7,7 @@ import Testing
 
 struct OCRCoverageTests {
   @Test
-  func nonemptyDocumentStillRequiresCoverageForMissingBodyAndCode() {
+  func `nonempty document still requires coverage for missing body and code`() {
     let title = CGRect(x: 0.3, y: 0.1, width: 0.4, height: 0.1)
     let code = CGRect(x: 0.2, y: 0.45, width: 0.5, height: 0.03)
     let body = CGRect(x: 0.05, y: 0.8, width: 0.9, height: 0.04)
@@ -20,7 +20,7 @@ struct OCRCoverageTests {
   }
 
   @Test
-  func neighboringControlsJointlyCoverDetectionButDuplicatesDoNot() {
+  func `neighboring controls jointly cover detection but duplicates do not`() {
     let row = CGRect(x: 0, y: 0, width: 1, height: 0.1)
     let left = CGRect(x: 0, y: 0, width: 0.4, height: 0.1)
     let right = CGRect(x: 0.6, y: 0, width: 0.4, height: 0.1)
@@ -29,14 +29,14 @@ struct OCRCoverageTests {
   }
 
   @Test
-  func noMissingTextDoesNotCreateAnotherRecognitionCrop() {
+  func `no missing text does not create another recognition crop`() {
     #expect(OCRCoverage.cropBounds(for: [], imageSize: CGSize(width: 2220, height: 1256)) == nil)
     let edge = CGRect(x: 0, y: 0, width: 0.1, height: 0.1)
     #expect(OCRCoverage.cropBounds(for: [edge], imageSize: CGSize(width: 100, height: 100)) == CGRect(
       x: 0,
       y: 0,
       width: 13,
-      height: 13
+      height: 13,
     ))
   }
 }

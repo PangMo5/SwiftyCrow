@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import CoreGraphics
@@ -30,12 +30,14 @@ public enum DisplaySelection: Sendable, Equatable {
   case all
 }
 
-// MARK: - RecorderOptions
+// MARK: - RecordingCodec
 
 public enum RecordingCodec: String, Sendable {
   case hevc
   case h264
 }
+
+// MARK: - RecorderOptions
 
 /// Everything a recording run needs. Parsed once, then immutable.
 public struct RecorderOptions: Sendable {
@@ -50,7 +52,7 @@ public struct RecorderOptions: Sendable {
     durationSeconds: Double? = nil,
     bitrateMbps: Double? = nil,
     showsCursor: Bool = true,
-    pidfile: URL? = nil
+    pidfile: URL? = nil,
   ) {
     self.output = output
     self.display = display
@@ -64,16 +66,6 @@ public struct RecorderOptions: Sendable {
 
   // MARK: Public
 
-  /// `democtl` passes `--pidfile` explicitly. This fallback keeps a hand-run
-  /// recorder signalable and mirrors `LabPaths.recorderPidFile`.
-  public static func defaultPidfile() -> URL? {
-    guard let root = ProcessInfo.processInfo.environment["DEMOLAB_ROOT"], !root.isEmpty else {
-      return nil
-    }
-    return URL(fileURLWithPath: root, isDirectory: true)
-      .appendingPathComponent(".build/lab/run/recorder.pid")
-  }
-
   public let output: URL
   public let display: DisplaySelection
   /// Drives the cadence clock, the capture ceiling, and the encoder hints alike.
@@ -85,6 +77,16 @@ public struct RecorderOptions: Sendable {
   public let bitrateMbps: Double?
   public let showsCursor: Bool
   public let pidfile: URL?
+
+  /// `democtl` passes `--pidfile` explicitly. This fallback keeps a hand-run
+  /// recorder signalable and mirrors `LabPaths.recorderPidFile`.
+  public static func defaultPidfile() -> URL? {
+    guard let root = ProcessInfo.processInfo.environment["DEMOLAB_ROOT"], !root.isEmpty else {
+      return nil
+    }
+    return URL(fileURLWithPath: root, isDirectory: true)
+      .appendingPathComponent(".build/lab/run/recorder.pid")
+  }
 
 }
 
@@ -141,7 +143,6 @@ public enum RecorderError: Error, CustomStringConvertible, Sendable {
       "no frame ever reached the writer; \(url.path) was not finalized"
     }
   }
-
 }
 
 // MARK: - StandardError
@@ -154,8 +155,12 @@ public enum StandardError {
   }
 
   public static func describe(_ error: any Error) -> String {
-    if let recorderError = error as? RecorderError { return recorderError.description }
-    if let usageError = error as? UsageError { return usageError.description }
+    if let recorderError = error as? RecorderError {
+      return recorderError.description
+    }
+    if let usageError = error as? UsageError {
+      return usageError.description
+    }
     let nsError = error as NSError
     return "\(nsError.localizedDescription) [\(nsError.domain) \(nsError.code)]"
   }
@@ -226,30 +231,44 @@ public enum RecorderCommand: Sendable {
     while cursor < arguments.count {
       let argument = arguments[cursor]
       switch argument {
-      case "--help", "-h":
+      case "--help",
+           "-h":
         return .help
+
       case "--list-displays":
         return .listDisplays
+
       case "--preflight":
         return .preflight
-      case "--output", "-o":
+
+      case "--output",
+           "-o":
         output = try nextValue(for: "--output")
+
       case "--display":
         display = try parseDisplay(nextValue(for: "--display"))
+
       case "--fps":
         fps = try parseInt(nextValue(for: "--fps"), option: "--fps", lowerBound: 1, upperBound: 240)
+
       case "--codec":
         let value = try nextValue(for: "--codec")
-        guard let parsed = RecordingCodec(rawValue: value) else { throw UsageError("--codec expects hevc or h264, got '\(value)'") }
+        guard let parsed = RecordingCodec(rawValue: value)
+        else { throw UsageError("--codec expects hevc or h264, got '\(value)'") }
         codec = parsed
+
       case "--duration-seconds":
         durationSeconds = try parsePositiveDouble(nextValue(for: "--duration-seconds"), option: "--duration-seconds")
+
       case "--bitrate-mbps":
         bitrateMbps = try parsePositiveDouble(nextValue(for: "--bitrate-mbps"), option: "--bitrate-mbps")
+
       case "--no-cursor":
         showsCursor = false
+
       case "--pidfile":
         pidfile = try nextValue(for: "--pidfile")
+
       default:
         throw UsageError("unknown option '\(argument)'")
       }
@@ -267,7 +286,7 @@ public enum RecorderCommand: Sendable {
       durationSeconds: durationSeconds,
       bitrateMbps: bitrateMbps,
       showsCursor: showsCursor,
-      pidfile: pidfile.map { fileURL($0, defaultExtension: nil) } ?? RecorderOptions.defaultPidfile()
+      pidfile: pidfile.map { fileURL($0, defaultExtension: nil) } ?? RecorderOptions.defaultPidfile(),
     ))
   }
 
@@ -314,5 +333,4 @@ public enum RecorderCommand: Sendable {
     }
     return url
   }
-
 }

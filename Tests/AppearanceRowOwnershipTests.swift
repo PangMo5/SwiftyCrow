@@ -8,7 +8,7 @@ import Testing
 
 struct AppearanceRowOwnershipTests {
   @Test(arguments: [false, true])
-  func aLargeShortMarkerDoesNotResizeTheSurroundingLabel(_ reversed: Bool) async throws {
+  func `a large short marker does not resize the surrounding label`(_ reversed: Bool) async throws {
     let size = CGSize(width: 500, height: 140)
     let context = try #require(CGContext(
       data: nil,
@@ -17,7 +17,7 @@ struct AppearanceRowOwnershipTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -33,7 +33,7 @@ struct AppearanceRowOwnershipTests {
         x: (x + ink.minX - 2) / size.width,
         y: (size.height - 45 - ink.maxY - 2) / size.height,
         width: (ink.width + 4) / size.width,
-        height: (ink.height + 4) / size.height
+        height: (ink.height + 4) / size.height,
       )
     }
     let marker = draw("2", pointSize: 30, x: reversed ? 130 : 40)
@@ -47,11 +47,11 @@ struct AppearanceRowOwnershipTests {
       styleRuns: [
         .init(range: (text as NSString).range(of: "2"), box: marker),
         .init(range: (text as NSString).range(of: "Settings"), box: label),
-      ]
+      ],
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let recognized = try #require(result.lines.first)
     #expect(result.lines.count == 1)
@@ -61,23 +61,23 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test
-  func aSlantedObservationCannotSampleAdjacentHorizontalBaselines() {
+  func `a slanted observation cannot sample adjacent horizontal baselines`() {
     let upper = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.5023, y: 0.4911, width: 0.1051, height: 0.0283),
       text: "Upper row",
-      imageAspectRatio: 3.23
+      imageAspectRatio: 3.23,
     )
     let middle = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.5093, y: 0.5089, width: 0.0961, height: 0.0524),
       text: "Italic row with a footnote",
       rotationRadians: -0.0434,
       orientedBox: CGRect(x: 0.5095, y: 0.5156, width: 0.0957, height: 0.0390),
-      imageAspectRatio: 3.23
+      imageAspectRatio: 3.23,
     )
     let lower = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.5100, y: 0.5492, width: 0.0960, height: 0.0230),
       text: "Following body row",
-      imageAspectRatio: 3.23
+      imageAspectRatio: 3.23,
     )
     let region = OCRSpatialOwnership.samplingRegion(for: middle, among: [upper, middle, lower])
     for x in [0.52, 0.55, 0.59] {
@@ -88,7 +88,7 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test
-  func punctuationAliasesCalibrateTheCompleteObservedWord() async throws {
+  func `punctuation aliases calibrate the complete observed word`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 400,
@@ -96,7 +96,7 @@ struct AppearanceRowOwnershipTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 400, height: 100))
@@ -112,18 +112,18 @@ struct AppearanceRowOwnershipTests {
       x: 18.0 / 400,
       y: (60 - ink.maxY - 2) / 100,
       width: (ink.maxX + 4) / 400,
-      height: (ink.height + 4) / 100
+      height: (ink.height + 4) / 100,
     )
     let source = OCRResult.Line(
       boundingBoxNormalized: box,
       text: text,
       styleRuns: (0..<text.utf16.count).map {
         .init(range: NSRange(location: $0, length: 1), box: box)
-      }
+      },
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [source]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let sizes = result.lines.flatMap(\.styleRuns).map { $0.appearance.fontSizeScale * 100 }
     #expect(!sizes.isEmpty)
@@ -132,16 +132,16 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test
-  func samplingBudgetUsesGlyphsRatherThanParagraphPaddingAndIgnoresOneTinyOutlier() {
+  func `sampling budget uses glyphs rather than paragraph padding and ignores one tiny outlier`() {
     let padded = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.5, height: 0.4),
       text: "Readable paragraph",
       rowCount: 10,
-      horizontalGlyphScale: 0.016
+      horizontalGlyphScale: 0.016,
     )
     #expect(OverlaySourceAppearanceAnalyzer.appearanceRasterLongestSide(
       for: .init(lines: [padded]),
-      imageSize: CGSize(width: 3200, height: 1000)
+      imageSize: CGSize(width: 3200, height: 1000),
     ) == 2048)
     var regular = padded
     regular.horizontalGlyphScale = 0.035
@@ -149,12 +149,12 @@ struct AppearanceRowOwnershipTests {
     tiny.horizontalGlyphScale = 0.0001
     #expect(OverlaySourceAppearanceAnalyzer.appearanceRasterLongestSide(
       for: .init(lines: [regular, regular, regular, regular, tiny]),
-      imageSize: CGSize(width: 1200, height: 820)
+      imageSize: CGSize(width: 1200, height: 820),
     ) == 1024)
   }
 
   @Test(arguments: [false, true])
-  func wideCapturesKeepSmallTextContrastAndMeasuredSize(_ dark: Bool) async throws {
+  func `wide captures keep small text contrast and measured size`(_ dark: Bool) async throws {
     let width = 3200
     let height = 1000
     let context = try #require(CGContext(
@@ -164,7 +164,7 @@ struct AppearanceRowOwnershipTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: dark ? 0.08 : 0.98, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: width, height: height))
@@ -180,7 +180,7 @@ struct AppearanceRowOwnershipTests {
       x: 1396.0 / 3200,
       y: (300 - ink.maxY - 4) / 1000,
       width: (ink.maxX + 8) / 3200,
-      height: (ink.height + 8) / 1000
+      height: (ink.height + 8) / 1000,
     )
     let line = OCRResult.Line(
       boundingBoxNormalized: box,
@@ -189,12 +189,12 @@ struct AppearanceRowOwnershipTests {
       horizontalGlyphScale: box.height,
       styleRuns: [.init(
         range: NSRange(location: 0, length: text.utf16.count),
-        box: box
-      )]
+        box: box,
+      )],
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let appearance = try #require(result.lines.first?.appearance)
     #expect((17...23).contains(appearance.fontSizeScale * 1000))
@@ -203,7 +203,7 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test
-  func observedFixedPitchDoesNotFreezeProportionalLabels() throws {
+  func `observed fixed pitch does not freeze proportional labels`() throws {
     func projection(_ text: String, font: NSFont) throws -> [CGFloat] {
       let context = try #require(CGContext(
         data: nil,
@@ -212,7 +212,7 @@ struct AppearanceRowOwnershipTests {
         bitsPerComponent: 8,
         bytesPerRow: 2400,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       context.textPosition = CGPoint(x: 8, y: 20)
       CTLineDraw(CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: [
@@ -220,13 +220,13 @@ struct AppearanceRowOwnershipTests {
         NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0, alpha: 1),
       ])), context)
       let pixels = try #require(context.data?.assumingMemoryBound(to: UInt8.self))
-      return (0..<600).map { x in (0..<70).map { y in CGFloat(pixels[(y * 600 + x) * 4 + 3]) / 255 }.max()! }
+      return (0..<600).map { x in (0..<70).lazy.map { y in CGFloat(pixels[(y * 600 + x) * 4 + 3]) / 255 }.max()! }
     }
     for size: CGFloat in [13, 20] {
       for word in ["isize", "usize", "files", "minimum"] {
         #expect(SourceTypography.isMonospaced(text: word, inkColumns: try projection(
           word,
-          font: NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+          font: NSFont.monospacedSystemFont(ofSize: size, weight: .regular),
         )), "Fixed pitch: \(word) at \(size)")
       }
       for name in ["Helvetica", "Times New Roman", "Georgia", "Verdana"] {
@@ -256,7 +256,7 @@ struct AppearanceRowOwnershipTests {
         ] {
           #expect(
             !SourceTypography.isMonospaced(text: word, inkColumns: try projection(word, font: font)),
-            "Proportional: \(word) in \(name) at \(size)"
+            "Proportional: \(word) in \(name) at \(size)",
           )
         }
       }
@@ -440,7 +440,7 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test
-  func bracketedControlDoesNotAcquireCodeSemanticsFromItsGraySurface() async throws {
+  func `bracketed control does not acquire code semantics from its gray surface`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 240,
@@ -448,7 +448,7 @@ struct AppearanceRowOwnershipTests {
       bitsPerComponent: 8,
       bytesPerRow: 960,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 240, height: 100))
@@ -464,9 +464,9 @@ struct AppearanceRowOwnershipTests {
             kCTForegroundColorAttributeName as String
           ): CGColor(
             gray: 0.05,
-            alpha: 1
+            alpha: 1,
           ),
-      ]
+      ],
     ))
     context.textPosition = CGPoint(x: 24, y: 44)
     CTLineDraw(text, context)
@@ -480,11 +480,11 @@ struct AppearanceRowOwnershipTests {
       boundingBoxNormalized: boxes.reduce(CGRect.null) { $0.union($1) },
       text: value,
       imageAspectRatio: 2.4,
-      styleRuns: boxes.indices.map { .init(range: ranges[$0], box: boxes[$0]) }
+      styleRuns: boxes.indices.map { .init(range: ranges[$0], box: boxes[$0]) },
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let source = OverlayLine.Source(recognized: try #require(result.lines.first), language: .init(identifier: "en"))
     #expect(TranslationLiteralPlan(source.attributedTextForTranslation()) == nil)
@@ -495,7 +495,7 @@ struct AppearanceRowOwnershipTests {
 
   @Test(arguments: [false, true])
   @MainActor
-  func dividerBelowHeadingCannotInflateAccessoryTextOrEnterItsErasureMask(_ dark: Bool) async throws {
+  func `divider below heading cannot inflate accessory text or enter its erasure mask`(_ dark: Bool) async throws {
     let width = 620
     let height = 180
     let context = try #require(CGContext(
@@ -505,7 +505,7 @@ struct AppearanceRowOwnershipTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: dark ? 0.08 : 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: width, height: height))
@@ -529,7 +529,7 @@ struct AppearanceRowOwnershipTests {
         x: xs[i] / 620,
         y: (80 - ink.maxY - 2) / 180,
         width: (ink.maxX + 3) / 620,
-        height: (94 - (80 - ink.maxY - 2)) / 180
+        height: (94 - (80 - ink.maxY - 2)) / 180,
       )
       runs.append(.init(range: NSRange(location: cursor, length: texts[i].utf16.count), box: box))
       cursor += texts[i].utf16.count + 1
@@ -542,12 +542,12 @@ struct AppearanceRowOwnershipTests {
       text: texts.joined(separator: " "),
       rotationRadians: 0.035,
       imageAspectRatio: 620.0 / 180,
-      styleRuns: runs
+      styleRuns: runs,
     )
     let image = try #require(context.makeImage())
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: image
+      from: image,
     )
     #expect(result.lines.count == 2)
     let accessory = try #require(result.lines.first { $0.text.contains("Edit") })
@@ -564,25 +564,25 @@ struct AppearanceRowOwnershipTests {
     let rendered = try #require(CaptureResultImage.render(
       imageData: image.pngData,
       imageSize: CGSize(width: width, height: height),
-      lines: translated
+      lines: translated,
     ))
     #expect(CaptureQualityMetrics.protectedPixelChanges(
       original: image,
       rendered: rendered,
-      rectangles: [CGRect(x: 24.0 / 620, y: 91.0 / 180, width: 555.0 / 620, height: 1.0 / 180)]
+      rectangles: [CGRect(x: 24.0 / 620, y: 91.0 / 180, width: 555.0 / 620, height: 1.0 / 180)],
     ) == 0)
   }
 
   @Test
-  func overlappingOCRBoxesCannotSampleInkFromTheNextRow() async throws {
+  func `overlapping OCR boxes cannot sample ink from the next row`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 1200,
       height: 800,
       bitsPerComponent: 8,
       bytesPerRow: 0,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 0.97, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 1200, height: 800))
@@ -603,11 +603,11 @@ struct AppearanceRowOwnershipTests {
       text: strings[i],
       imageAspectRatio: 1.5,
       recognitionGroupID: 1,
-      styleRuns: [.init(range: NSRange(location: 0, length: (strings[i] as NSString).length), box: boxes[i])]
+      styleRuns: [.init(range: NSRange(location: 0, length: (strings[i] as NSString).length), box: boxes[i])],
     ) }
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: lines),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let measured = result.lines.flatMap(\.styleRuns).map { $0.appearance.fontSizeScale * 800 }.filter { $0 > 0 }
     #expect(!measured.isEmpty)
@@ -615,31 +615,31 @@ struct AppearanceRowOwnershipTests {
   }
 
   @Test(arguments: ["份", "한", "語", "W", "8"])
-  func singleVisibleGlyphsCanCalibrateTheirOwnWeight(_ text: String) throws {
+  func `single visible glyphs can calibrate their own weight`(_ text: String) throws {
     // Short final rows must not fall back to generic ink-density weight and
     // become a bold heading solely because only one character wrapped.
     let measured = try #require(SourceTypography.measure(
       text: text,
       inkSize: CGSize(width: 22, height: 22),
-      coverage: 0.28
+      coverage: 0.28,
     ))
     #expect(measured.pointSize > 0)
   }
 
   @Test
-  func neighboringColumnsAndVerticalTextDoNotClipHorizontalSampling() {
+  func `neighboring columns and vertical text do not clip horizontal sampling`() {
     let row = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.3, height: 0.05), text: "Example")
     let column = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.6, y: 0.22, width: 0.3, height: 0.05), text: "隣の列")
     let vertical = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.27, width: 0.1, height: 0.4),
       text: "縦書き",
-      isVerticalBlock: true
+      isVerticalBlock: true,
     )
     #expect(OCRSpatialOwnership.samplingRegion(for: row, among: [row, column, vertical]).bounds == CGRect(
       x: 0,
       y: 0,
       width: 1,
-      height: 1
+      height: 1,
     ))
   }
 }

@@ -3,4 +3,4 @@
 
 import ProjectDescription
 
-let config = Config()
+let tuist = Tuist(project: .tuist(compatibleXcodeVersions: .upToNextMinor("27.2")))

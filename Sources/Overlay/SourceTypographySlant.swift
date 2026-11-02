@@ -22,13 +22,15 @@ enum SourceTypographySlant {
     guard canMeasure(text: text, width: width, height: height), ink.count == width * height else { return false }
     let observed = projection(ink, width: width, height: height)
     guard
-      observed.shear >= 0.125, observed.gain >= 0.008,
+      observed.shear >= 0.125,
+      observed.gain >= 0.008,
       hasConsistentStemShift(ink, width: width, height: height)
     else { return false }
     let key = Key(text: text, height: height)
     let neutral: CGFloat
-    if let cached = cache.withLock({ $0[key] }) { neutral = cached }
-    else {
+    if let cached = cache.withLock({ $0[key] }) {
+      neutral = cached
+    } else {
       // Thresholded capture ink and font outlines can differ by one raster row
       // after resampling. Compare the upright envelope, not one exact height:
       // that quantization must not become semantic emphasis.
@@ -43,7 +45,9 @@ enum SourceTypographySlant {
       // directions as neutral shape evidence rather than assuming one sign.
       neutral = references.compactMap { $0 }.filter { abs($0.shear) >= 0.1 }.map(\.gain).max() ?? 0
       cache.withLock {
-        if $0.count >= 512 { $0.removeAll(keepingCapacity: true) }
+        if $0.count >= 512 {
+          $0.removeAll(keepingCapacity: true)
+        }
         $0[key] = neutral
       }
     }
@@ -83,7 +87,9 @@ enum SourceTypographySlant {
       for x in 0..<width {
         let value = ink[y * width + x]
         let strength: CGFloat = value >= 0.15 ? value : 0
-        if strength > 0 { points.append((x, y, strength)) }
+        if strength > 0 {
+          points.append((x, y, strength))
+        }
         square += strength * strength
         adjacent += strength * previous
         previous = strength
@@ -115,7 +121,9 @@ enum SourceTypographySlant {
           + 2 * fraction * (1 - fraction) * row.adjacent
       }
       let score = columns.reduce(0) { $0 + $1 * $1 } / max(0.001, rowEnergy)
-      if step == 0 { zero = score }
+      if step == 0 {
+        zero = score
+      }
       if score > best {
         best = score
         shear = candidate
@@ -132,7 +140,11 @@ enum SourceTypographySlant {
       let threshold = (columns.max() ?? 0) * 0.65
       var groups = [[Int]]()
       for x in columns.indices where columns[x] > threshold {
-        if groups.last?.last == x - 1 { groups[groups.count - 1].append(x) } else { groups.append([x]) }
+        if groups.last?.last == x - 1 {
+          groups[groups.count - 1].append(x)
+        } else {
+          groups.append([x])
+        }
       }
       return groups.map { group in
         let weight = group.reduce(CGFloat.zero) { $0 + columns[$1] }
@@ -164,14 +176,16 @@ enum SourceTypographySlant {
     let bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds])
     let width = Int(ceil(bounds.width + 1))
     guard
-      width > 0, width <= 4096, let context = CGContext(
+      width > 0,
+      width <= 4096,
+      let context = CGContext(
         data: nil,
         width: width,
         height: height,
         bitsPerComponent: 8,
         bytesPerRow: width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.textPosition = CGPoint(x: -bounds.minX + phase, y: -bounds.minY + phase)
@@ -180,4 +194,5 @@ enum SourceTypographySlant {
     // Bitmap rows and source-raster rows share the same top-to-bottom order.
     return projection((0..<width * height).map { CGFloat(pixels[$0 * 4 + 3]) / 255 }, width: width, height: height)
   }
+
 }

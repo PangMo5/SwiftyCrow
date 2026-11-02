@@ -13,7 +13,7 @@ struct LiveOverlaySequenceTests {
   // MARK: Internal
 
   @Test(arguments: ["en", "ko", "ja", "zh-Hans", "ar", "de"])
-  func repeatedOCRMeasurementDoesNotChangeDisplayedFont(_ language: String) {
+  func `repeated OCR measurement does not change displayed font`(_ language: String) {
     let original = source(language: language)
     var previous = original
     for tick in 0..<40 {
@@ -34,7 +34,7 @@ struct LiveOverlaySequenceTests {
   }
 
   @Test
-  func localWitnessIgnoresUnrelatedAnimationAndDetectsOneChangedSourcePixel() throws {
+  func `local witness ignores unrelated animation and detects one changed source pixel`() throws {
     let first = try frame(changedX: nil)
     let region = CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.4)
     let witness = try #require(first.witness(for: region))
@@ -44,7 +44,7 @@ struct LiveOverlaySequenceTests {
   }
 
   @Test
-  func witnessIncludesRestorationBleedOutsideTheOCRBox() throws {
+  func `witness includes restoration bleed outside the OCR box`() throws {
     let image = try frame(changedX: nil)
     var text = source(language: "en")
     text.box = CGRect(x: 0.3, y: 0.1, width: 0.3, height: 0.4)
@@ -56,7 +56,7 @@ struct LiveOverlaySequenceTests {
   }
 
   @Test(arguments: [OverlayLiveMode.inPlace, .window]) @MainActor
-  func changedPixelsNeverPaintOldInPlaceRestorationWhileOCRIsPending(_ mode: OverlayLiveMode) async throws {
+  func `changed pixels never paint old in place restoration while OCR is pending`(_ mode: OverlayLiveMode) async throws {
     let original = try frame(changedX: nil)
     let unrelated = try frame(changedX: 90)
     let changed = try frame(changedX: 25)
@@ -113,16 +113,18 @@ struct LiveOverlaySequenceTests {
           confidence: 1,
           inkHeightScale: 0.04,
           fontSizeScale: 0.05,
-          fontWeight: .regular
-        )
+          fontWeight: .regular,
+        ),
       ),
-      language: Locale.Language(identifier: language)
+      language: Locale.Language(identifier: language),
     )
   }
 
   private func frame(changedX: Int?) throws -> LiveFrame {
     var bytes = [UInt8](repeating: 255, count: 100 * 60 * 4)
-    if let changedX { bytes[(15 * 100 + changedX) * 4] = 0 }
+    if let changedX {
+      bytes[(15 * 100 + changedX) * 4] = 0
+    }
     let provider = try #require(CGDataProvider(data: Data(bytes) as CFData))
     let image = try #require(CGImage(
       width: 100,
@@ -135,8 +137,9 @@ struct LiveOverlaySequenceTests {
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     ))
     return try LiveFrame(image: image)
   }
+
 }

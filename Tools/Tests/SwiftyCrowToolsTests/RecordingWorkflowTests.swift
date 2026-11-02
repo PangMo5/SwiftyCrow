@@ -39,7 +39,7 @@ struct ReviewFixture {
       let stats = try JSON.parse(#"{"status":"ok","frames":300,"dropped":0,"durationSeconds":10,"error":null}"#)
       try stats.write(directory.at("capture-demo.json"))
       try JSON.parse(#"{"firstFrameUptimeNanoseconds":100000}"#).write(directory.at("capture-demo.ready.json"))
-      var timeline = try NarrationTests().timeline()
+      var timeline = try NarrationFixture.timeline()
       timeline["uiLanguage"] = .string(locale)
       timeline["scenariosSHA256"] = .string(String(repeating: "a", count: 64))
       try timeline.write(directory.at("presentation.json"))
@@ -49,7 +49,7 @@ struct ReviewFixture {
         ("translationSource", pairs[locale]["sourceLanguage"]),
         (
           "translationTarget",
-          pairs[locale]["translationLanguage"]
+          pairs[locale]["translationLanguage"],
         ),
         ("scenariosSHA256", timeline["scenariosSHA256"]),
         ("appArchiveSHA256", .string(String(repeating: locale == "ko" ? "b" : "c", count: 64))),
@@ -60,9 +60,9 @@ struct ReviewFixture {
             ("actualLanguagePairVerified", .bool(true)),
             (
               "actualLanguagePickerValues",
-              .array([.string("Source picker"), .string("Target picker")])
+              .array([.string("Source picker"), .string("Target picker")]),
             ),
-          ])
+          ]),
         ),
       ])
       try scene.write(directory.at("scene.json"))
@@ -78,7 +78,7 @@ struct ReviewFixture {
         ("sourceLanguage", scene["translationSource"]),
         (
           "translationLanguage",
-          scene["translationTarget"]
+          scene["translationTarget"],
         ),
         ("cameraOriginal", .string("raw/\(locale)/tour-01/capture-demo.mov")),
         ("cameraSHA256", .string(try sha(directory.at("capture-demo.mov")))),
@@ -142,7 +142,7 @@ struct ReviewFixture {
             : locale == "ko" ? "ko-KR" : locale == "ja" ? "ja-JP" : locale)),
         (
           "sources",
-          .array([.object([("language", .string(locale == "en" ? "ko-KR" : "en-US"))])])
+          .array([.object([("language", .string(locale == "en" ? "ko-KR" : "en-US"))])]),
         ),
       ]))]))
     }))])
@@ -151,6 +151,7 @@ struct ReviewFixture {
     plan["takes"] = try JSON.read(decisions)["takes"]
     return plan
   }
+
 }
 
 // MARK: - RecordingWorkflowTests
@@ -158,7 +159,7 @@ struct ReviewFixture {
 @Suite("Recording and review workflow")
 struct RecordingWorkflowTests {
   @Test
-  func defaultSiteBuildRejectsChangedApprovedMediaBeforeWritingOutput() async throws {
+  func `default site build rejects changed approved media before writing output`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -178,7 +179,7 @@ struct RecordingWorkflowTests {
     "capture-translated-ax.txt",
     "review.md",
   ])
-  func rejectsChangesAfterSelection(_ file: String) throws {
+  func `rejects changes after selection`(_ file: String) throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.library.select(source: f.decisions, output: f.selected)
@@ -188,7 +189,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func technicalPassDoesNotGrantVisualApproval() throws {
+  func `technical pass does not grant visual approval`() throws {
     let f = try ReviewFixture(reviewed: false)
     defer { try? fm.removeItem(at: f.root) }
     try f.library.select(source: f.decisions, output: f.selected)
@@ -197,7 +198,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func preservesDifferentArchiveCohortsAndInstallsWithoutChangingSources() throws {
+  func `preserves different archive cohorts and installs without changing sources`() throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -213,7 +214,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func changedAssetPreventsAnyInstall() throws {
+  func `changed asset prevents any install`() throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -223,7 +224,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func portableVerificationDoesNotPretendToVerifyAbsentCameraOriginals() throws {
+  func `portable verification does not pretend to verify absent camera originals`() throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -233,7 +234,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test(arguments: ["missing", "duplicate", "wrong-language", "changed-picker"])
-  func rejectsIncompleteOrContradictoryBundles(_ fault: String) throws {
+  func `rejects incomplete or contradictory bundles`(_ fault: String) throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -250,7 +251,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func resumesCompletedRequestsWithoutLaunchingRecorder() async throws {
+  func `resumes completed requests without launching recorder`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     let batch = RecordingBatch(workspace: f.workspace)
@@ -266,7 +267,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func partialTakeIsPreservedWhileOtherLocalesContinue() async throws {
+  func `partial take is preserved while other locales continue`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     let batch = RecordingBatch(workspace: f.workspace)
@@ -288,18 +289,18 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func removesQAInjectionEnvironment() async throws {
+  func `removes QA injection environment`() async throws {
     let output = try await runProcess(
       ["/usr/bin/env"],
       environment: ["SWIFTYCROW_QA_LIVE_FRAMES": "injected"],
       capture: true,
-      removingEnvironment: ["SWIFTYCROW_QA_LIVE_FRAMES"]
+      removingEnvironment: ["SWIFTYCROW_QA_LIVE_FRAMES"],
     )
     #expect(!output.contains("SWIFTYCROW_QA_LIVE_FRAMES="))
   }
 
   @Test
-  func completedExportsResumeButChangedBytesFail() async throws {
+  func `completed exports resume but changed bytes fail`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.library.select(source: f.decisions, output: f.selected)
@@ -315,7 +316,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func recordsFreshRequestsAndAllowsMutableAppConfigOnResume() async throws {
+  func `records fresh requests and allows mutable app config on resume`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     var plan = try f.plan()
@@ -345,7 +346,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func planCheckDoesNotLaunchOrCreateTakeDirectories() async throws {
+  func `plan check does not launch or create take directories`() async throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     var plan = try f.plan()
@@ -354,7 +355,7 @@ struct RecordingWorkflowTests {
     try await RecordingBatch(workspace: f.workspace).record(
       source: f.root.at("plan.json"),
       output: f.root.at("report.json"),
-      check: true
+      check: true,
     ) { _ in
       Issue.record("Plan validation must not launch the recorder")
     }
@@ -363,7 +364,7 @@ struct RecordingWorkflowTests {
   }
 
   @Test
-  func partialSelectionRequiresBaseAndRetainsUnselectedApprovedFilms() throws {
+  func `partial selection requires base and retains unselected approved films`() throws {
     let f = try ReviewFixture()
     defer { try? fm.removeItem(at: f.root) }
     try f.assemble()
@@ -375,7 +376,7 @@ struct RecordingWorkflowTests {
       try f.bundle.merge(
         selection: f.root.at("partial-selection.json"),
         mediaRoot: f.root.at("media"),
-        output: f.root.at("partial.json")
+        output: f.root.at("partial.json"),
       )
     }
     #expect(!f.root.at("partial.json").exists)
@@ -383,7 +384,7 @@ struct RecordingWorkflowTests {
       selection: f.root.at("partial-selection.json"),
       mediaRoot: f.root.at("media"),
       output: f.root.at("combined.json"),
-      base: f.merged
+      base: f.merged,
     )
     let records = try JSON.read(f.root.at("combined.json"))["recordings"].array
     #expect(records.count == 5)
@@ -391,5 +392,4 @@ struct RecordingWorkflowTests {
       #expect(base["recordings"].array.contains(record))
     }
   }
-
 }

@@ -13,15 +13,20 @@ enum OCRVerticalColumnRecovery {
     lines.indices.filter { index in
       let line = lines[index]
       guard
-        !line.isVerticalBlock, line.recognitionConfidence < 0.45,
-        !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text),
+        !line.isVerticalBlock,
+        line.recognitionConfidence < 0.45,
+        !OCRTextSemantics.isCode(line.text),
+        !OCRTextSemantics.isIdentifier(line.text),
         !line.text.unicodeScalars.allSatisfy(\.isASCII),
-        (1...3).contains(line.text.count), line.text.contains(where: \.isLetter)
+        (1...3).contains(line.text.count),
+        line.text.contains(where: \.isLetter)
       else { return false }
       let box = line.boundingBoxNormalized
       let columns = lines.filter { peer in
         guard
-          peer.isVerticalBlock, peer.text.count >= 4, peer.verticalCharScale > 0,
+          peer.isVerticalBlock,
+          peer.text.count >= 4,
+          peer.verticalCharScale > 0,
           peer.text.unicodeScalars
             .contains(where: { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value) })
         else { return false }
@@ -39,8 +44,11 @@ enum OCRVerticalColumnRecovery {
 
   static func fragments(for source: OCRResult.Line, candidates: [OCRResult.Line]) -> [OCRResult.Line] {
     guard
-      source.isVerticalBlock, source.text.count > 3, source.recognitionConfidence < 0.45,
-      source.verticalCharScale > 0, source.imageAspectRatio > 0
+      source.isVerticalBlock,
+      source.text.count > 3,
+      source.recognitionConfidence < 0.45,
+      source.verticalCharScale > 0,
+      source.imageAspectRatio > 0
     else { return [] }
     let box = source.boundingBoxNormalized
     let glyphX = source.verticalCharScale
@@ -60,7 +68,8 @@ enum OCRVerticalColumnRecovery {
       guard gap >= -glyphY * 0.1, gap <= glyphY * 0.85 else { return [] }
     }
     guard
-      let first = rows.first, let last = rows.last,
+      let first = rows.first,
+      let last = rows.last,
       first.boundingBoxNormalized.minY <= box.minY + glyphY * 0.35,
       last.boundingBoxNormalized.maxY >= box.maxY - glyphY * 0.35
     else { return [] }
@@ -71,24 +80,27 @@ enum OCRVerticalColumnRecovery {
   /// remains the observed minimum; agreement is not an invented probability.
   static func confirmedColumn(
     _ fragments: [OCRResult.Line],
-    confirm: (OCRResult.Line) async throws -> OCRResult.Line?
+    confirm: (OCRResult.Line) async throws -> OCRResult.Line?,
   ) async throws -> OCRResult.Line? {
     guard (2...4).contains(fragments.count) else { return nil }
     var rows = [OCRResult.Line]()
     for fragment in fragments {
       try Task.checkCancellation()
-      if fragment.recognitionConfidence >= 0.45 { rows.append(fragment)
+      if fragment.recognitionConfidence >= 0.45 {
+        rows.append(fragment)
         continue
       }
       guard
-        let fresh = try await confirm(fragment), fresh.text == fragment.text,
+        let fresh = try await confirm(fragment),
+        fresh.text == fragment.text,
         fresh.recognitionConfidence >= 0.25
       else { return nil }
       let a = fragment.boundingBoxNormalized
       let b = fresh.boundingBoxNormalized
       let overlap = a.intersection(b)
       guard
-        !overlap.isNull, min(a.width * a.height, b.width * b.height) > 0,
+        !overlap.isNull,
+        min(a.width * a.height, b.width * b.height) > 0,
         overlap.width * overlap.height >= min(a.width * a.height, b.width * b.height) * 0.65
       else { return nil }
       rows.append(fresh)

@@ -10,7 +10,7 @@ struct OCRVerticalParagraphGroupingTests {
   // MARK: Internal
 
   @Test(arguments: [0.03, 0.2])
-  func nativeColumnPitchCarriesQuotationAndFinalSentenceIntoOneReadingFlow(_ inkPopulation: CGFloat) throws {
+  func `native column pitch carries quotation and final sentence into one reading flow`(_ inkPopulation: CGFloat) throws {
     let input = lines().map { source in
       var line = source
       line.appearance.foregroundConfidence = inkPopulation
@@ -35,7 +35,7 @@ struct OCRVerticalParagraphGroupingTests {
     "no established paragraph",
     "mixed containers",
   ])
-  func uncertainBoundariesRemainSeparate(_ reason: String) {
+  func `uncertain boundaries remain separate`(_ reason: String) {
     var input = lines()
     switch reason {
     case "indent": input[1].boundingBoxNormalized.origin.y += 0.035
@@ -54,14 +54,14 @@ struct OCRVerticalParagraphGroupingTests {
   }
 
   @Test(arguments: [CGPoint(x: 58, y: 60), CGPoint(x: 52, y: 90), CGPoint(x: 70, y: 37)])
-  func expandedLayoutRejectsGraphicsBesideAndBelowShortColumns(_ graphic: CGPoint) {
+  func `expanded layout rejects graphics beside and below short columns`(_ graphic: CGPoint) {
     let existing = OCRVerticalParagraphGrouping.Region(
       box: CGRect(x: 0.3, y: 0.2, width: 0.13, height: 0.3),
-      background: .white
+      background: .white,
     )
     let next = OCRVerticalParagraphGrouping.Region(
       box: CGRect(x: 0.25, y: 0.18, width: 0.032, height: 0.22),
-      background: .white
+      background: .white,
     )
     #expect(OCRVerticalParagraphGrouping.clearExpansion(from: existing, to: next, width: 200, height: 200) { _, _ in .white })
     #expect(!OCRVerticalParagraphGrouping.clearExpansion(from: existing, to: next, width: 200, height: 200) { x, y in
@@ -82,7 +82,7 @@ struct OCRVerticalParagraphGroupingTests {
         confidence: 0.9,
         foregroundConfidence: 0.2,
         fontSizeScale: 0.03,
-        fontWeight: .regular
+        fontWeight: .regular,
       )
       return OCRResult.Line(
         boundingBoxNormalized: box,
@@ -92,8 +92,9 @@ struct OCRVerticalParagraphGroupingTests {
         recognitionGroupID: index >= 2 ? 10 : index,
         appearance: appearance,
         replacementPatches: [.init(box: box, appearance: appearance)],
-        styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box, appearance: appearance)]
+        styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box, appearance: appearance)],
       )
     }
   }
+
 }

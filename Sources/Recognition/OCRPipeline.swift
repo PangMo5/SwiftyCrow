@@ -20,7 +20,7 @@ enum OCRPipeline {
   static func recognize(
     _ image: CGImage,
     language: Language,
-    textReady: @Sendable (OCRResult) async -> Void = { _ in }
+    textReady: @Sendable (OCRResult) async -> Void = { _ in },
   ) async throws -> OCRResult {
     #if DEBUG
     if let captured = try await NativeCaptureTrace.capture(image, language: language, textReady: textReady) {
@@ -58,7 +58,7 @@ enum OCRPipeline {
       }
       let localInput = OCRDocumentRegion.Input(
         bounds: CGRect(origin: .zero, size: region.size),
-        ownership: input.ownership.map { $0.offsetBy(dx: -region.minX, dy: -region.minY) }
+        ownership: input.ownership.map { $0.offsetBy(dx: -region.minX, dy: -region.minY) },
       )
       let localDetectionStarted = clock.now
       let localDetected = region == canvas ? detected : try await VisionTextRecognizer.detectedText(in: localImage)
@@ -66,9 +66,11 @@ enum OCRPipeline {
         in: input,
         imageSize: canvas.size,
         global: detected,
-        local: localDetected
+        local: localDetected,
       )
-      if region != canvas { logStage("Local text coverage detection \(index)", since: localDetectionStarted) }
+      if region != canvas {
+        logStage("Local text coverage detection \(index)", since: localDetectionStarted)
+      }
       let localObserver: TraceObserver? = observer.map { observer in
         { @Sendable stage, lines in
           let prefix = inputs.count > 1 ? "input-\(index)-" : ""
@@ -90,12 +92,12 @@ enum OCRPipeline {
         let local = VisionTextRecognizer.Document(
           lines: result.lines,
           containers: [],
-          tableCells: result.lines.compactMap(\.tableCell)
+          tableCells: result.lines.compactMap(\.tableCell),
         )
         var mapped = OCRDocumentRegion.remap(
           local,
           crop: prepared[index].bounds,
-          imageSize: canvas.size
+          imageSize: canvas.size,
         )
         mapped.lines = mapped.lines.map { line in
           var line = line
@@ -105,7 +107,7 @@ enum OCRPipeline {
             x: bounds.minX / canvas.width,
             y: bounds.minY / canvas.height,
             width: bounds.width / canvas.width,
-            height: bounds.height / canvas.height
+            height: bounds.height / canvas.height,
           )
           return line
         }
@@ -127,7 +129,9 @@ enum OCRPipeline {
       let prefix = inputs.count > 1 ? "input-\(index)-" : ""
       try traceObserver?(prefix + "source-fragments", prepared[index].result.lines)
     }
-    if resolvedLiteralOwnership { logStage("Literal ownership and restoration", since: literalOwnershipStarted) }
+    if resolvedLiteralOwnership {
+      logStage("Literal ownership and restoration", since: literalOwnershipStarted)
+    }
     try Task.checkCancellation()
     await textReady(combined(prepared.map(\.result)))
     let restorationStarted = clock.now
@@ -136,7 +140,7 @@ enum OCRPipeline {
       try Task.checkCancellation()
       restoredInputs.append(input.restorationComplete ? input.result : await SourceRestorationBuilder.applying(
         to: input.result,
-        image: input.image
+        image: input.image,
       ))
     }
     var restored = combined(restoredInputs)
@@ -162,7 +166,7 @@ enum OCRPipeline {
     _ image: CGImage,
     language: Language,
     detected: [CGRect],
-    input: OCRDocumentRegion.Input
+    input: OCRDocumentRegion.Input,
   ) async throws -> OCRResult {
     let clock = ContinuousClock()
     var timings = [String: Double]()
@@ -197,7 +201,7 @@ enum OCRPipeline {
         // their observed characters instead of linguistically repairing them;
         // the recognizer retains its shared 1800-pixel input bound.
         preferredScale: 3,
-        usesLanguageCorrection: false
+        usesLanguageCorrection: false,
       )
     }
     try traceObserver?("repeated-rows", lines)
@@ -206,7 +210,7 @@ enum OCRPipeline {
     // input still covers text outside every detached content plane.
     let uncovered = OCRCoverage.uncovered(
       detected,
-      by: lines.flatMap(OCRCoverage.evidenceBoxes)
+      by: lines.flatMap(OCRCoverage.evidenceBoxes),
     )
     if let crop = OCRCoverage.cropBounds(for: uncovered, imageSize: CGSize(width: image.width, height: image.height)) {
       let supplementalStarted = clock.now
@@ -215,7 +219,7 @@ enum OCRPipeline {
         language: language,
         crop: crop,
         minimumGlyphHeight: (uncovered.map(\.height).min() ?? 0) *
-          CGFloat(image.height)
+          CGFloat(image.height),
       )
       let previousCount = lines.count
       lines = OCRCandidateReconciler.adding(supplemental, to: lines)
@@ -230,7 +234,7 @@ enum OCRPipeline {
         language: language,
         crop: crop,
         minimumGlyphHeight: max(1, crop.height - 6),
-        preferredScale: 2
+        preferredScale: 2,
       )
     }
     lines = OCRCandidateReconciler.adding(gapRecovered, to: lines)
@@ -286,7 +290,7 @@ enum OCRPipeline {
       OCRDocumentRegion.owner(
         of: line.boundingBoxNormalized,
         in: [input],
-        imageSize: CGSize(width: image.width, height: image.height)
+        imageSize: CGSize(width: image.width, height: image.height),
       ) == 0
     }.map { line in
       var line = line
@@ -298,17 +302,23 @@ enum OCRPipeline {
     }
     let preparedRows = traceObserver == nil ? nil : ParagraphTraceBuffer()
     let didPrepare: (@Sendable ([OCRResult.Line]) -> Void)? =
-      if let preparedRows { { @Sendable rows in
-        preparedRows.rows.withLock { $0 = rows } } } else { nil }
+      if let preparedRows {
+        { @Sendable rows in
+          preparedRows.rows.withLock { $0 = rows } }
+      } else {
+        nil
+      }
     let appearanceInput = OCRVisualStructure.classifying(OCRResult(lines: sourceLines).removingNestedDuplicates())
     try traceObserver?("appearance-input", appearanceInput.lines)
     let styled = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: appearanceInput,
       from: image,
       tableCells: document.tableCells,
-      didPrepareParagraphs: didPrepare
+      didPrepareParagraphs: didPrepare,
     )
-    if let preparedRows { try traceObserver?("paragraph-input", preparedRows.rows.withLock { $0 }) }
+    if let preparedRows {
+      try traceObserver?("paragraph-input", preparedRows.rows.withLock { $0 })
+    }
     let glyphStarted = clock.now
     let glyphCorrected = try await OCRInlineGlyphRecovery.recover(styled, image: image, language: language)
     logStage("Inline optical glyph recovery", since: glyphStarted)

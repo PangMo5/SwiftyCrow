@@ -44,7 +44,7 @@ try run(
     sources.appendingPathComponent("DemoScenes.swift").path,
     "-o",
     app.appendingPathComponent("Contents/MacOS/DemoScenes").path,
-  ]
+  ],
 )
 try run("/usr/bin/codesign", ["--force", "--sign", "-", app.path])
 print(app.path)

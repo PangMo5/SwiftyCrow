@@ -17,10 +17,13 @@ final class SourceCanvas: NSView {
     self.scene = scene
     let textURL = textAssets.appendingPathComponent("source-text.json")
     sourceStrings = FileManager.default.fileExists(atPath: textURL.path)
-      ? try! JSONDecoder().decode([String: String].self, from: Data(contentsOf: textURL)) : nil
+      ? try! JSONDecoder().decode([String: String].self, from: Data(contentsOf: textURL))
+      : nil
     background = scene == "game" ? NSImage(contentsOf: assets.appendingPathComponent("glass-observatory.png")) : nil
     super.init(frame: .zero)
-    if scene == "game" { precondition(background != nil, "Missing original game background") }
+    if scene == "game" {
+      precondition(background != nil, "Missing original game background")
+    }
     setAccessibilityElement(true)
     setAccessibilityRole(.image)
     setAccessibilityIdentifier("source-canvas")
@@ -64,7 +67,7 @@ final class SourceCanvas: NSView {
     _ size: CGFloat,
     _ color: UInt32,
     bold: Bool = false,
-    mono: Bool = false
+    mono: Bool = false,
   ) {
     let p = NSMutableParagraphStyle()
     p.lineSpacing = 12
@@ -75,10 +78,12 @@ final class SourceCanvas: NSView {
     if let sourceStrings {
       guard let text = sourceStrings[value] else { preconditionFailure("Missing authored source text: \(value)") }
       authored = text
-    } else { authored = value }
+    } else {
+      authored = value
+    }
     (authored as NSString).draw(
       in: CGRect(x: x, y: y, width: w, height: h),
-      withAttributes: [.font: font, .foregroundColor: ink(color), .paragraphStyle: p]
+      withAttributes: [.font: font, .foregroundColor: ink(color), .paragraphStyle: p],
     )
   }
 
@@ -86,7 +91,11 @@ final class SourceCanvas: NSView {
     let context = NSGraphicsContext.current!.cgContext
     context.saveGState()
     context.scaleBy(x: bounds.width / 1600, y: bounds.height / 1000)
-    if scene == "game" { drawGame() } else { drawDepartures() }
+    if scene == "game" {
+      drawGame()
+    } else {
+      drawDepartures()
+    }
     context.restoreGState()
   }
 
@@ -97,7 +106,7 @@ final class SourceCanvas: NSView {
       operation: .copy,
       fraction: 1,
       respectFlipped: true,
-      hints: nil
+      hints: nil,
     )
     box(90, 740, 1420, 210, 0x101C29, radius: 18)
     box(90, 740, 8, 210, 0xDFBE72, radius: 4)
@@ -138,10 +147,11 @@ final class SourceCanvas: NSView {
       1400,
       65,
       39,
-      0xFFFFFF
+      0xFFFFFF,
     )
     setAccessibilityValue("departures notice \(index + 1)")
   }
+
 }
 
 // MARK: - DemoScenesDelegate
@@ -186,7 +196,7 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
       contentRect: CGRect(x: 100, y: 100, width: 1600, height: 1060),
       styleMask: [.titled, .closable, .miniaturizable, .resizable],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     window.title = title
     window.identifier = NSUserInterfaceItemIdentifier("source-window")
@@ -256,12 +266,21 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
 
   @objc
   func play() {
-    if scene == "game" { canvas!.index = min(1, canvas!.index + 1)
+    if scene == "game" {
+      canvas!.index = min(1, canvas!.index + 1)
       canvas!.needsDisplay = true
-    } else if let player { if player.rate == 0 { player.play() } else { player.pause() } }
-    else if let start = startedAt { elapsed += ProcessInfo.processInfo.systemUptime - start
+    } else if let player {
+      if player.rate == 0 {
+        player.play()
+      } else {
+        player.pause()
+      }
+    } else if let start = startedAt {
+      elapsed += ProcessInfo.processInfo.systemUptime - start
       startedAt = nil
-    } else { startedAt = ProcessInfo.processInfo.systemUptime }
+    } else {
+      startedAt = ProcessInfo.processInfo.systemUptime
+    }
     updateState()
   }
 
@@ -279,7 +298,8 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
   func tick() {
     guard scene == "departures", let start = startedAt else { return }
     let newIndex = elapsed + ProcessInfo.processInfo.systemUptime - start >= 8 ? 1 : 0
-    if canvas!.index != newIndex { canvas!.index = newIndex
+    if canvas!.index != newIndex {
+      canvas!.index = newIndex
       canvas!.needsDisplay = true
     }
     updateState()
@@ -289,12 +309,15 @@ final class DemoScenesDelegate: NSObject, NSApplicationDelegate {
     let running = player.map { $0.rate != 0 } ?? (startedAt != nil)
     let step = player.map { min(2, Int(max(0, $0.currentTime().seconds) / 8)) } ?? canvas?.index ?? 0
     stateLabel.stringValue = "\(running ? "Playing" : "Paused") · \(step + 1)"
-    if scene != "game" { playButton.title = running ? "Pause" : "Play" }
+    if scene != "game" {
+      playButton.title = running ? "Pause" : "Play"
+    }
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
     true
   }
+
 }
 
 // MARK: - DemoScenesMain
@@ -321,7 +344,11 @@ struct DemoScenesMain {
     submenu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     item.submenu = submenu
     app.mainMenu = menu
-    let delegate = DemoScenesDelegate(scene: scene, assets: URL(fileURLWithPath: path, isDirectory: true), sourceLanguage: option("--source-language") ?? "en-US")
+    let delegate = DemoScenesDelegate(
+      scene: scene,
+      assets: URL(fileURLWithPath: path, isDirectory: true),
+      sourceLanguage: option("--source-language") ?? "en-US",
+    )
     app.delegate = delegate
     withExtendedLifetime(delegate) { app.run() }
   }

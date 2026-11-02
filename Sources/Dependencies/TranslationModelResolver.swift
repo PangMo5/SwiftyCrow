@@ -31,7 +31,9 @@ enum TranslationModelResolver {
     try validateAppleIntelligence(SystemLanguageModel.default.availability)
     let status = await LanguageAvailability(preferredStrategy: strategy.sessionStrategy).status(from: source, to: target)
     try Task.checkCancellation()
-    if status == .installed { return }
+    if status == .installed {
+      return
+    }
     throw modelError(source: source, target: target, unsupported: status == .unsupported)
   }
 
@@ -62,15 +64,19 @@ enum TranslationModelResolver {
   }
 
   static func explaining(_ error: any Error, source: Locale.Language, target: Locale.Language) -> any Error {
-    if TranslationError.notInstalled ~= error { return modelError(source: source, target: target, unsupported: false) }
+    if TranslationError.notInstalled ~= error {
+      return modelError(source: source, target: target, unsupported: false)
+    }
     if
       TranslationError.unsupportedSourceLanguage ~= error || TranslationError.unsupportedTargetLanguage ~= error
       || TranslationError.unsupportedLanguagePairing ~= error
-    { return modelError(
-      source: source,
-      target: target,
-      unsupported: true
-    ) }
+    {
+      return modelError(
+        source: source,
+        target: target,
+        unsupported: true,
+      )
+    }
     return error
   }
 
@@ -88,4 +94,5 @@ enum TranslationModelResolver {
         localized: "The selected translation mode has no installed model for \(sourceName) → \(targetName). Download these languages in System Settings."
       ))
   }
+
 }

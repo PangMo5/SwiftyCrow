@@ -18,15 +18,20 @@ enum OCRGlyphRasterSupport {
 
   static func evidence(text: String, image: CGImage, background: OverlayColor) -> Evidence? {
     guard
-      (1...3).contains(text.count), text.contains(where: \.isLetter),
+      (1...3).contains(text.count),
+      text.contains(where: \.isLetter),
       let observed = feature(image, background: background)
     else { return nil }
     let references: [Feature]
-    if let cached = cache.withLock({ $0[text] }) { references = cached }
-    else {
+    if let cached = cache.withLock({ $0[text] }) {
+      references = cached
+    } else {
       references = fonts.values.compactMap { reference(text: text, font: $0) }
       guard references.count == fonts.values.count else { return nil }
-      cache.withLock { if $0.count >= 512 { $0.removeAll(keepingCapacity: true) }
+      cache.withLock {
+        if $0.count >= 512 {
+          $0.removeAll(keepingCapacity: true)
+        }
         $0[text] = references
       }
     }
@@ -46,16 +51,20 @@ enum OCRGlyphRasterSupport {
     let height = CGFloat(image.height)
     return OCRResult(lines: result.lines.filter { line in
       guard
-        !line.preservesSource, !line.isVerticalBlock, line.rowCount == 1,
-        (1...3).contains(line.text.count), line.tableCell == nil,
-        abs(line.rotationRadians) < 0.04, !OCRTextSemantics.isIdentifier(line.text),
+        !line.preservesSource,
+        !line.isVerticalBlock,
+        line.rowCount == 1,
+        (1...3).contains(line.text.count),
+        line.tableCell == nil,
+        abs(line.rotationRadians) < 0.04,
+        !OCRTextSemantics.isIdentifier(line.text),
         !OCRTextSemantics.isCode(line.text)
       else { return true }
       let box = CGRect(
         x: line.boundingBoxNormalized.minX * width,
         y: line.boundingBoxNormalized.minY * height,
         width: line.boundingBoxNormalized.width * width,
-        height: line.boundingBoxNormalized.height * height
+        height: line.boundingBoxNormalized.height * height,
       )
       .insetBy(dx: -1, dy: -1).integral.intersection(CGRect(x: 0, y: 0, width: width, height: height))
       guard
@@ -84,20 +93,22 @@ enum OCRGlyphRasterSupport {
   private static func reference(text: String, font: CTFont) -> Feature? {
     let line = CTLineCreateWithAttributedString(NSAttributedString(
       string: text,
-      attributes: [.font: font, .foregroundColor: NSColor.black]
+      attributes: [.font: font, .foregroundColor: NSColor.black],
     ))
     let bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds]).integral
     let width = Int(bounds.width) + 4
     let height = Int(bounds.height) + 4
     guard
-      width > 4, height > 4, let context = CGContext(
+      width > 4,
+      height > 4,
+      let context = CGContext(
         data: nil,
         width: width,
         height: height,
         bitsPerComponent: 8,
         bytesPerRow: width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.setFillColor(CGColor(gray: 1, alpha: 1))
@@ -111,7 +122,9 @@ enum OCRGlyphRasterSupport {
     let width = image.width
     let height = image.height
     guard
-      width > 2, height > 2, width <= 65_536 / height,
+      width > 2,
+      height > 2,
+      width <= 65_536 / height,
       let context = CGContext(
         data: nil,
         width: width,
@@ -119,20 +132,22 @@ enum OCRGlyphRasterSupport {
         bitsPerComponent: 8,
         bytesPerRow: width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ),
       let bytes = context.data?.assumingMemoryBound(to: UInt8.self)
     else { return nil }
     context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
     let rgb = [background.red, background.green, background.blue]
     let contrast = (0..<width * height).map { index in
-      (0..<3).map { abs(CGFloat(bytes[index * 4 + $0]) / 255 - rgb[$0]) }.max()!
+      (0..<3).lazy.map { abs(CGFloat(bytes[index * 4 + $0]) / 255 - rgb[$0]) }.max()!
     }
     guard let peak = contrast.max(), peak > 0.2 else { return nil }
     let points = contrast.indices.filter { contrast[$0] >= peak * 0.35 }
     guard
-      let minX = points.map({ $0 % width }).min(), let maxX = points.map({ $0 % width }).max(),
-      let minY = points.map({ $0 / width }).min(), let maxY = points.map({ $0 / width }).max()
+      let minX = points.map({ $0 % width }).min(),
+      let maxX = points.map({ $0 % width }).max(),
+      let minY = points.map({ $0 / width }).min(),
+      let maxY = points.map({ $0 / width }).max()
     else { return nil }
     var values = [CGFloat](repeating: 0, count: 1024)
     for index in points {
@@ -152,4 +167,5 @@ enum OCRGlyphRasterSupport {
     guard norm > 0 else { return nil }
     return Feature(values: blurred.map { $0 / norm }, aspect: CGFloat(maxX - minX + 1) / CGFloat(maxY - minY + 1))
   }
+
 }

@@ -42,7 +42,7 @@ enum HorizontalTextRenderer {
     height: CGFloat? = nil,
     alignment: OverlayTextAlignment = .leading,
     wordBreaks: [NSRange: [HorizontalHyphenation.Boundary]]? = nil,
-    inlineDirection: OverlayInlineDirection? = nil
+    inlineDirection: OverlayInlineDirection? = nil,
   ) -> Plan {
     let content = InlineSourceFragmentRenderer.collapsed(text: text, styles: styles)
     guard content.isValid else { return Plan(lines: [], origins: [], inkBounds: .zero, complete: false) }
@@ -51,7 +51,7 @@ enum HorizontalTextRenderer {
     let attributed = NSMutableAttributedString(string: text, attributes: attributes(
       appearance,
       fontSize: fontSize,
-      language: language
+      language: language,
     ))
     for style in styles where style.range.location >= 0 && NSMaxRange(style.range) <= attributed.length {
       attributed.addAttributes(attributes(style.appearance, fontSize: fontSize, language: language), range: style.range)
@@ -59,7 +59,7 @@ enum HorizontalTextRenderer {
         attributed.addAttribute(
           .backgroundColor,
           value: NSColor(cgColor: cgColor(style.appearance.background))!,
-          range: style.range
+          range: style.range,
         )
       }
       if let fragment = style.sourceFragment {
@@ -85,13 +85,13 @@ enum HorizontalTextRenderer {
       fontWeight: appearance.fontWeight,
       fontDesign: appearance.fontDesign,
       isItalic: appearance.isItalic,
-      lineHeightMultiple: lineHeightMultiple
+      lineHeightMultiple: lineHeightMultiple,
     )
     attributed.addAttribute(.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: attributed.length))
     let hyphenation = hyphenation(
       in: attributed,
       width: regions.isEmpty ? width : 0,
-      boundaries: (content.changed ? nil : wordBreaks) ?? HorizontalHyphenation.wordBreaks(in: text, language: language)
+      boundaries: (content.changed ? nil : wordBreaks) ?? HorizontalHyphenation.wordBreaks(in: text, language: language),
     )
     if !regions.isEmpty, let height {
       return shapedPlan(
@@ -101,7 +101,7 @@ enum HorizontalTextRenderer {
         alignment: alignment,
         paragraph: paragraph,
         keepsWords: !CoreTextTypesetter.usesCharacterWrapping(language),
-        hyphenation: hyphenation
+        hyphenation: hyphenation,
       )
     }
     if language.languageCode?.identifier == "ko" || !hyphenation.isEmpty {
@@ -110,14 +110,14 @@ enum HorizontalTextRenderer {
         width: width,
         paragraph: paragraph,
         keepsWords: !CoreTextTypesetter.usesCharacterWrapping(language),
-        hyphenation: hyphenation
+        hyphenation: hyphenation,
       )
     }
     let frame = CTFramesetterCreateFrame(
       CTFramesetterCreateWithAttributedString(attributed),
       CFRange(location: 0, length: attributed.length),
       CGPath(rect: CGRect(x: 0, y: 0, width: max(1, width), height: 100_000), transform: nil),
-      nil
+      nil,
     )
     let lines = CTFrameGetLines(frame) as! [CTLine]
     var origins = [CGPoint](repeating: .zero, count: lines.count)
@@ -125,14 +125,16 @@ enum HorizontalTextRenderer {
     var bounds = CGRect.null
     for (line, origin) in zip(lines, origins) {
       let ink = ink(line, hyphen: nil)
-      if !ink.isEmpty { bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y)) }
+      if !ink.isEmpty {
+        bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y))
+      }
     }
     let visible = CTFrameGetVisibleStringRange(frame)
     return Plan(
       lines: lines,
       origins: origins,
       inkBounds: bounds.isNull ? .zero : bounds,
-      complete: visible.location == 0 && visible.length == attributed.length
+      complete: visible.location == 0 && visible.length == attributed.length,
     )
   }
 
@@ -144,12 +146,12 @@ enum HorizontalTextRenderer {
     regions: [CGRect] = [],
     alignment: OverlayTextAlignment = .leading,
     maximumLineCount: Int? = nil,
-    inlineDirection: OverlayInlineDirection? = nil
+    inlineDirection: OverlayInlineDirection? = nil,
   ) -> CoreTextTypesetter.FittedLayout {
     let wordBreaks = HorizontalHyphenation.wordBreaks(in: line.displayedText, language: line.displayedLanguage)
     let direction = inlineDirection ?? OverlayTextFlowResolver.horizontalDirection(
       text: line.displayedText,
-      language: line.displayedLanguage
+      language: line.displayedLanguage,
     )
     func fits(_ fontSize: CGFloat) -> Bool {
       let result = plan(
@@ -164,16 +166,22 @@ enum HorizontalTextRenderer {
         height: size.height,
         alignment: alignment,
         wordBreaks: wordBreaks,
-        inlineDirection: direction
+        inlineDirection: direction,
       )
       return result.fits(size) && (maximumLineCount.map { result.lines.count <= $0 } ?? true)
     }
-    if fits(preferred) { return .init(fontSize: preferred, verticalWrapping: .words, isComplete: true) }
+    if fits(preferred) {
+      return .init(fontSize: preferred, verticalWrapping: .words, isComplete: true)
+    }
     var low: CGFloat = min(4, preferred)
     var high = max(low, preferred)
     for _ in 0 ..< 10 {
       let candidate = (low + high) / 2
-      if fits(candidate) { low = candidate } else { high = candidate }
+      if fits(candidate) {
+        low = candidate
+      } else {
+        high = candidate
+      }
     }
     // Core Text's optical metrics/line-break choices are not monotonic across
     // every fractional size. A valid binary-search sample can stop fitting
@@ -200,7 +208,7 @@ enum HorizontalTextRenderer {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.scaleBy(x: scale, y: scale)
@@ -258,7 +266,7 @@ enum HorizontalTextRenderer {
         x: placement.frame.minX + ink.minX,
         y: placement.frame.maxY - ink.maxY,
         width: ink.width,
-        height: ink.height
+        height: ink.height,
       )
     }
   }
@@ -275,7 +283,7 @@ enum HorizontalTextRenderer {
       regions: placement.textFlowRegions,
       height: placement.frame.height,
       alignment: placement.alignment,
-      inlineDirection: placement.flow.inlineDirection
+      inlineDirection: placement.flow.inlineDirection,
     )
   }
 
@@ -284,8 +292,9 @@ enum HorizontalTextRenderer {
   private static func drawingOrigin(for index: Int, plan: Plan, placement: OverlayPlacement) -> CGPoint {
     let size = placement.frame.size
     let yOffset: CGFloat =
-      if plan.usesContainerCoordinates { 0 }
-      else if case .horizontal(let rows) = placement.line.source.layout, rows > 1 {
+      if plan.usesContainerCoordinates {
+        0
+      } else if case .horizontal(let rows) = placement.line.source.layout, rows > 1 {
         size.height - plan.inkBounds.maxY
       } else {
         (size.height - plan.inkBounds.height) / 2 - plan.inkBounds.minY
@@ -293,12 +302,15 @@ enum HorizontalTextRenderer {
     let origin = plan.origins[index]
     let ink = plan.ink(for: index)
     let x: CGFloat =
-      if plan.usesContainerCoordinates { origin.x }
-      else { switch placement.alignment {
-      case .leading: origin.x - ink.minX
-      case .center: (size.width - ink.width) / 2 - ink.minX
-      case .trailing: size.width - ink.maxX
-      } }
+      if plan.usesContainerCoordinates {
+        origin.x
+      } else {
+        switch placement.alignment {
+        case .leading: origin.x - ink.minX
+        case .center: (size.width - ink.width) / 2 - ink.minX
+        case .trailing: size.width - ink.maxX
+        }
+      }
     return CGPoint(x: x, y: origin.y + yOffset)
   }
 
@@ -311,7 +323,7 @@ enum HorizontalTextRenderer {
     alignment: OverlayTextAlignment,
     paragraph: NSParagraphStyle,
     keepsWords: Bool,
-    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]]
+    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]],
   ) -> Plan {
     let typesetter = CTTypesetterCreateWithAttributedString(attributed)
     let reference = CTLineCreateWithAttributedString(attributed)
@@ -350,7 +362,7 @@ enum HorizontalTextRenderer {
         offset: offset,
         width: width,
         words: words,
-        hyphenation: hyphenation
+        hyphenation: hyphenation,
       )
       let length = next.length
       guard length > 0 else { break }
@@ -364,7 +376,9 @@ enum HorizontalTextRenderer {
         case .trailing: right - indent - ink.maxX
         }
       let origin = CGPoint(x: x, y: size.height - top - ascent)
-      if !ink.isEmpty { bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y)) }
+      if !ink.isEmpty {
+        bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y))
+      }
       hyphens[lines.count] = next.hyphen
       lines.append(line)
       origins.append(origin)
@@ -377,7 +391,7 @@ enum HorizontalTextRenderer {
       inkBounds: bounds.isNull ? .zero : bounds,
       complete: offset == text.length,
       usesContainerCoordinates: true,
-      hyphens: hyphens
+      hyphens: hyphens,
     )
   }
 
@@ -389,7 +403,7 @@ enum HorizontalTextRenderer {
     width: CGFloat,
     paragraph: NSParagraphStyle,
     keepsWords: Bool,
-    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]]
+    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]],
   ) -> Plan {
     let typesetter = CTTypesetterCreateWithAttributedString(attributed)
     let text = attributed.string as NSString
@@ -413,7 +427,7 @@ enum HorizontalTextRenderer {
         offset: offset,
         width: max(1, width - indent),
         words: words,
-        hyphenation: hyphenation
+        hyphenation: hyphenation,
       )
       let length = next.length
       guard length > 0 else { break }
@@ -422,10 +436,14 @@ enum HorizontalTextRenderer {
       var descent: CGFloat = 0
       var leading: CGFloat = 0
       _ = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
-      if !lines.isEmpty { baseline -= previousDescent + ascent + max(previousLeading, leading) + paragraph.lineSpacing }
+      if !lines.isEmpty {
+        baseline -= previousDescent + ascent + max(previousLeading, leading) + paragraph.lineSpacing
+      }
       let origin = CGPoint(x: indent, y: baseline)
       let ink = ink(line, hyphen: next.hyphen)
-      if !ink.isEmpty { bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y)) }
+      if !ink.isEmpty {
+        bounds = bounds.union(ink.offsetBy(dx: origin.x, dy: origin.y))
+      }
       hyphens[lines.count] = next.hyphen
       lines.append(line)
       origins.append(origin)
@@ -438,7 +456,7 @@ enum HorizontalTextRenderer {
       origins: origins,
       inkBounds: bounds.isNull ? .zero : bounds,
       complete: offset == text.length,
-      hyphens: hyphens
+      hyphens: hyphens,
     )
   }
 
@@ -457,24 +475,28 @@ enum HorizontalTextRenderer {
     let hasGlyphs = (CTLineGetGlyphRuns(line) as! [CTRun]).contains {
       (CTRunGetAttributes($0) as NSDictionary)[kCTRunDelegateAttributeName] == nil && CTRunGetGlyphCount($0) > 0
     }
-    if hasGlyphs { bounds = bounds.insetBy(dx: -0.5, dy: -0.5) }
+    if hasGlyphs {
+      bounds = bounds.insetBy(dx: -0.5, dy: -0.5)
+    }
     guard let hyphen else { return bounds }
     return bounds.union(CTLineGetBoundsWithOptions(hyphen, [.useGlyphPathBounds]).offsetBy(
       dx: CTLineGetTypographicBounds(line, nil, nil, nil),
-      dy: 0
+      dy: 0,
     ))
   }
 
   private static func hyphenation(
     in attributed: NSAttributedString,
     width: CGFloat,
-    boundaries: [NSRange: [HorizontalHyphenation.Boundary]]
+    boundaries: [NSRange: [HorizontalHyphenation.Boundary]],
   ) -> [NSRange: [HorizontalHyphenation.Boundary]] {
     var result = [NSRange: [HorizontalHyphenation.Boundary]]()
     for (range, points) in boundaries {
       var monospaced = false
       attributed.enumerateAttribute(.font, in: range) { value, _, _ in
-        if let font = value as? NSFont, font.fontDescriptor.symbolicTraits.contains(.monoSpace) { monospaced = true }
+        if let font = value as? NSFont, font.fontDescriptor.symbolicTraits.contains(.monoSpace) {
+          monospaced = true
+        }
       }
       guard !monospaced else { continue }
       if width > 0 {
@@ -492,7 +514,7 @@ enum HorizontalTextRenderer {
     offset: Int,
     width: CGFloat,
     words: [NSRange],
-    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]]
+    hyphenation: [NSRange: [HorizontalHyphenation.Boundary]],
   ) -> (line: CTLine, hyphen: CTLine?, length: Int) {
     var length = CTTypesetterSuggestLineBreak(typesetter, offset, Double(width))
     let end = offset + length
@@ -515,14 +537,16 @@ enum HorizontalTextRenderer {
             let line = CTTypesetterCreateLine(typesetter, CFRange(location: offset, length: count))
             let hyphen = CTLineCreateWithAttributedString(NSAttributedString(
               string: point.hyphen,
-              attributes: attributed.attributes(at: offset + count - 1, effectiveRange: nil)
+              attributes: attributed.attributes(at: offset + count - 1, effectiveRange: nil),
             ))
-            if ink(line, hyphen: hyphen).width <= width + 0.5 { chosen = point }
+            if ink(line, hyphen: hyphen).width <= width + 0.5 {
+              chosen = point
+            }
           }
           length = word.location + chosen.offset - offset
           suffix = CTLineCreateWithAttributedString(NSAttributedString(
             string: chosen.hyphen,
-            attributes: attributed.attributes(at: offset + length - 1, effectiveRange: nil)
+            attributes: attributed.attributes(at: offset + length - 1, effectiveRange: nil),
           ))
         } else {
           length = NSMaxRange(unit) - offset
@@ -537,13 +561,13 @@ enum HorizontalTextRenderer {
   private static func attributes(
     _ appearance: OverlaySourceAppearance,
     fontSize: CGFloat,
-    language: Locale.Language
+    language: Locale.Language,
   ) -> [NSAttributedString.Key: Any] {
     let font = OverlayTypography.font(
       size: fontSize,
       weight: appearance.fontWeight,
       design: appearance.fontDesign,
-      isItalic: appearance.isItalic
+      isItalic: appearance.isItalic,
     )
     return [
       .font: font,
@@ -560,4 +584,5 @@ enum HorizontalTextRenderer {
   private static func colorDistance(_ lhs: OverlayColor, _ rhs: OverlayColor) -> CGFloat {
     max(abs(lhs.red - rhs.red), abs(lhs.green - rhs.green), abs(lhs.blue - rhs.blue))
   }
+
 }

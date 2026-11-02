@@ -66,7 +66,9 @@ struct RegionResultView: View {
     .onAppear(perform: installMonitor)
     .onDisappear(perform: removeMonitor)
     .onChange(of: store.finished) { _, finished in
-      if finished { onClose() }
+      if finished {
+        onClose()
+      }
     }
   }
 
@@ -97,7 +99,7 @@ struct RegionResultView: View {
       toolbarButton(
         "square.and.arrow.down",
         help: helpText("Save image", shortcuts.regionSave),
-        action: { exportImage(onSaveImage) }
+        action: { exportImage(onSaveImage) },
       )
       toolbarButton("doc.on.doc", help: helpText("Copy image", shortcuts.regionCopyImage), action: { exportImage(onCopyImage) })
       toolbarButton("text.quote", help: helpText("Copy original text", shortcuts.regionCopyOriginal)) {
@@ -114,7 +116,7 @@ struct RegionResultView: View {
     .padding(.vertical, 10)
   }
 
-  @ViewBuilder
+  @ContentBuilder
   private var content: some View {
     if store.imageData != nil {
       ZoomableCaptureCanvas(imageSize: store.imageSize, backingScale: displayScale, model: zoomModel) {
@@ -156,7 +158,7 @@ struct RegionResultView: View {
       let data = CaptureResultImage.png(
         imageData: store.imageData,
         imageSize: store.imageSize,
-        lines: store.overlayLines
+        lines: store.overlayLines,
       )
     else {
       exportError = String(localized: "Could not render the capture image. Please try again.")
@@ -199,23 +201,34 @@ struct RegionResultView: View {
       let keyCode = Int(event.keyCode)
       var carbonModifiers = 0
       let flags = event.modifierFlags
-      if flags.contains(.command) { carbonModifiers |= 256 }
-      if flags.contains(.shift) { carbonModifiers |= 512 }
-      if flags.contains(.option) { carbonModifiers |= 2048 }
-      if flags.contains(.control) { carbonModifiers |= 4096 }
+      if flags.contains(.command) {
+        carbonModifiers |= 256
+      }
+      if flags.contains(.shift) {
+        carbonModifiers |= 512
+      }
+      if flags.contains(.option) {
+        carbonModifiers |= 2048
+      }
+      if flags.contains(.control) {
+        carbonModifiers |= 4096
+      }
       let consumed = MainActor.assumeIsolated {
         guard owningWindow()?.windowNumber == windowNumber, owningWindow()?.isKeyWindow == true else { return false }
         if keyCode == 53 { // Escape
           onClose()
           return true
         }
-        if matches(keyCode, carbonModifiers, shortcuts.regionSave) { exportImage(onSaveImage)
+        if matches(keyCode, carbonModifiers, shortcuts.regionSave) {
+          exportImage(onSaveImage)
           return true
         }
-        if matches(keyCode, carbonModifiers, shortcuts.regionCopyImage) { exportImage(onCopyImage)
+        if matches(keyCode, carbonModifiers, shortcuts.regionCopyImage) {
+          exportImage(onCopyImage)
           return true
         }
-        if matches(keyCode, carbonModifiers, shortcuts.regionCopyOriginal) { store.send(.copyOriginalRequested)
+        if matches(keyCode, carbonModifiers, shortcuts.regionCopyOriginal) {
+          store.send(.copyOriginalRequested)
           return true
         }
         if matches(keyCode, carbonModifiers, shortcuts.regionCopyTranslation) {
@@ -249,6 +262,7 @@ struct RegionResultView: View {
     guard let hotKey, keyCode == hotKey.carbonKeyCode else { return false }
     return carbonModifiers == hotKey.carbonModifiers
   }
+
 }
 
 // MARK: - CaptureZoomControls

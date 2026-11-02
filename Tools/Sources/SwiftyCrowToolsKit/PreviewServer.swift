@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import Foundation
+import Hummingbird
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
-import Hummingbird
 #if canImport(System)
 import System
 #else
@@ -46,6 +46,7 @@ struct PreviewServer: Sendable {
     print("\(address) → \(directory.path)")
     try await application().runService()
   }
+
 }
 
 // MARK: - PreviewFileProvider
@@ -85,19 +86,19 @@ private struct PreviewFileProvider: FileProvider {
   func loadFile(id: String, context: some RequestContext) async throws -> ResponseBody {
     try await filesystem.loadFile(
       id: id,
-      context: context
+      context: context,
     )
   }
 
   func loadFile(
     id: String,
     range: ClosedRange<Int>,
-    context: some RequestContext
+    context: some RequestContext,
   ) async throws -> ResponseBody {
     try await filesystem.loadFile(
       id: id,
       range: range,
-      context: context
+      context: context,
     )
   }
 
@@ -129,8 +130,10 @@ private struct PreviewHeaders: RouterMiddleware {
     // start beyond EOF. Normalize to a bounded explicit range before FileMiddleware.
     // Remove this compatibility adapter when upstream passes the preview range tests.
     if
-      let range = request.headers[.range], let path = request.uri.path.removingPercentEncoding,
-      let file = provider.getFileIdentifier(path), let attributes = try await provider.getAttributes(id: file),
+      let range = request.headers[.range],
+      let path = request.uri.path.removingPercentEncoding,
+      let file = provider.getFileIdentifier(path),
+      let attributes = try await provider.getAttributes(id: file),
       !attributes.isFolder
     {
       do {

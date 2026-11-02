@@ -24,7 +24,7 @@ extension UpdaterClient: DependencyKey {
     let controller = SPUStandardUpdaterController(
       startingUpdater: true,
       updaterDelegate: nil,
-      userDriverDelegate: nil
+      userDriverDelegate: nil,
     )
     let updater = controller.updater
     return UpdaterClient(
@@ -55,7 +55,7 @@ extension UpdaterClient: DependencyKey {
           updater.automaticallyChecksForUpdates = automaticallyChecks
           updater.updateCheckInterval = interval
         }
-      }
+      },
     )
   }()
 }

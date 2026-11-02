@@ -25,27 +25,27 @@ struct WhatsNewView: View {
           item(
             "Read difficult text more clearly",
             icon: "text.viewfinder",
-            detail: "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results."
+            detail: "Improved recognition for vertical text, ruby annotations, rotated text, and printed dialogue. Review indicators help you spot uncertain results.",
           )
           item(
             "Translations that follow the page",
             icon: "text.alignleft",
-            detail: "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read."
+            detail: "Keep paragraphs, lists, labels, text styles, and alignment closer to the source. Vertical text is laid out for the language you read.",
           )
           item(
             "Capture, inspect, and reuse",
             icon: "doc.on.clipboard",
-            detail: "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution."
+            detail: "Move the capture window and zoom or pan to inspect text. Copy or save the complete translated image at its original resolution.",
           )
           item(
             "Keep reading as the screen changes",
             icon: "waveform",
-            detail: "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position."
+            detail: "Live translation follows text updates in the selected area. Hide it when you need to, then return to the same area and reading-window position.",
           )
           item(
             "Get started in your language",
             icon: "hand.wave",
-            detail: "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages."
+            detail: "Quick Setup helps with screen access, language downloads, and ⇧⌘1 / ⇧⌘2 shortcuts. The app, website, and guides now support five languages.",
           )
         }
       }
@@ -74,4 +74,5 @@ struct WhatsNewView: View {
       }
     }
   }
+
 }

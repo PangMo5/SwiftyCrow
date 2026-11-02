@@ -9,14 +9,14 @@ import Testing
 struct CaptureAnalysisExecutorTests {
   @MainActor
   @Test(arguments: [0, 1, 40])
-  func rasterWorkLeavesTheMainActorEvenForASingleInput(_ count: Int) async {
+  func `raster work leaves the main actor even for A single input`(_ count: Int) async {
     let result = await CaptureAnalysisExecutor.map(Array(0..<count)) { _ in Thread.isMainThread }
     #expect(result.count == count)
     #expect(result.allSatisfy { !$0 })
   }
 
   @Test(arguments: [0, 1, 3, 8])
-  func longCaptureRespectsConcurrencyBudgetAndPreservesOrder(_ limit: Int) async {
+  func `long capture respects concurrency budget and preserves order`(_ limit: Int) async {
     let counts = Mutex((active: 0, maximum: 0, completed: 0))
     let values = Array(0..<300)
     let result = await CaptureAnalysisExecutor.map(values, maximumConcurrency: limit) { value in
@@ -39,7 +39,7 @@ struct CaptureAnalysisExecutorTests {
   }
 
   @Test
-  func emptyAndSingleInputNeedNoWorkers() async {
+  func `empty and single input need no workers`() async {
     #expect(await CaptureAnalysisExecutor.map([Int]()) { $0 * 2 } == [])
     #expect(await CaptureAnalysisExecutor.map([3]) { $0 * 2 } == [6])
   }

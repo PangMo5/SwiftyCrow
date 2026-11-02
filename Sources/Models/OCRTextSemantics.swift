@@ -16,8 +16,11 @@ enum OCRTextSemantics {
   /// formats installed by other apps. Unknown dotted prose is not a file name.
   static func isFileName(_ text: String) -> Bool {
     guard
-      !text.isEmpty, text.count <= 120, !text.contains(where: \.isNewline),
-      let dot = text.lastIndex(of: "."), dot != text.startIndex,
+      !text.isEmpty,
+      text.count <= 120,
+      !text.contains(where: \.isNewline),
+      let dot = text.lastIndex(of: "."),
+      dot != text.startIndex,
       !text[..<dot].contains(where: { "!?。！？:;|".contains($0) }),
       text[..<dot].contains(where: { $0.isLetter || $0.isNumber }),
       text[..<dot].split(separator: ".", omittingEmptySubsequences: false).allSatisfy({ component in
@@ -70,11 +73,15 @@ enum OCRTextSemantics {
   static func beginsListItem(_ text: String) -> Bool {
     let trimmed = text.drop(while: \Character.isWhitespace)
     guard let first = trimmed.first else { return false }
-    if "•●◦▪▫‣⁃·".contains(first) { return true }
+    if "•●◦▪▫‣⁃·".contains(first) {
+      return true
+    }
     let tokens = trimmed.split(maxSplits: 1, whereSeparator: \Character.isWhitespace)
     guard tokens.count == 2 else { return false }
     let marker = tokens[0]
-    if ["-", "–", "—", "*", "+"].contains(String(marker)) { return true }
+    if ["-", "–", "—", "*", "+"].contains(String(marker)) {
+      return true
+    }
     if marker.first == "(", marker.last == ")" {
       let number = marker.dropFirst().dropLast()
       return !number.isEmpty && number.count <= 4 && number.allSatisfy(\.isNumber)
@@ -88,20 +95,37 @@ enum OCRTextSemantics {
 
   static func isIdentifier(_ text: String) -> Bool {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    if !text.contains(where: \.isWhitespace), isFileName(text) { return true }
-    if isPhoneticReference(text) { return true }
+    if !text.contains(where: \.isWhitespace), isFileName(text) {
+      return true
+    }
+    if isPhoneticReference(text) {
+      return true
+    }
     if
-      !text.isEmpty, text.count <= 10,
+      !text.isEmpty,
+      text.count <= 10,
       text.unicodeScalars
-        .allSatisfy({ CharacterSet.punctuationCharacters.contains($0) || CharacterSet.symbols.contains($0) }) { return true }
-    if text.range(of: #"^(?:https?|file|ssh)://\S+$"#, options: .regularExpression) != nil { return true }
-    if text.range(of: #"^(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}(?:[/:?#]\S*)?\.?$"#, options: .regularExpression) != nil { return true }
+        .allSatisfy({ CharacterSet.punctuationCharacters.contains($0) || CharacterSet.symbols.contains($0) })
+    {
+      return true
+    }
+    if text.range(of: #"^(?:https?|file|ssh)://\S+$"#, options: .regularExpression) != nil {
+      return true
+    }
+    if text.range(of: #"^(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}(?:[/:?#]\S*)?\.?$"#, options: .regularExpression) != nil {
+      return true
+    }
     if
       text.range(
         of: #"^(?:MIT|(?:A|L)?GPL(?:-\d[\w.-]*)?|BSD(?:-\d[\w.-]*)?|Apache-\d[\w.-]*|MPL-\d[\w.-]*|CC0(?:-\d[\w.-]*)?)$"#,
-        options: .regularExpression
-      ) != nil { return true }
-    if text.range(of: #"^v?\d+(?:\.\d+){1,3}(?:[-+][\w.-]+)?$"#, options: .regularExpression) != nil { return true }
+        options: .regularExpression,
+      ) != nil
+    {
+      return true
+    }
+    if text.range(of: #"^v?\d+(?:\.\d+){1,3}(?:[-+][\w.-]+)?$"#, options: .regularExpression) != nil {
+      return true
+    }
     return isVersionedProductName(text)
   }
 
@@ -129,7 +153,8 @@ enum OCRTextSemantics {
   /// records with IPA symbols or a stressed, densely accented transcription.
   static func isPhoneticReference(_ text: String) -> Bool {
     guard
-      text.contains("["), text.count <= 120,
+      text.contains("["),
+      text.count <= 120,
       text.split(whereSeparator: \.isWhitespace).count(where: { $0.contains(where: \.isLetter) }) <= 6,
       let regex = try? NSRegularExpression(pattern: #"\[([^\[\]\n]{2,60})\]"#)
     else { return false }
@@ -153,8 +178,12 @@ enum OCRTextSemantics {
   static func isCode(_ text: String) -> Bool {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else { return false }
-    if text.hasPrefix("//") || text.hasPrefix("#!") || text.hasPrefix("```") { return true }
-    if ["{", "}", "};", "]", ");"].contains(text) { return true }
+    if text.hasPrefix("//") || text.hasPrefix("#!") || text.hasPrefix("```") {
+      return true
+    }
+    if ["{", "}", "};", "]", ");"].contains(text) {
+      return true
+    }
     let patterns = [
       #"^(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*\s*="#,
       #"^(?:let|var|const|func|def|class|struct|enum|import|from)\s+[^\s]+.*(?:[=:{(]|\bimport\b)"#,
@@ -175,9 +204,16 @@ enum OCRTextSemantics {
   private static func isFileExtension(_ text: String) -> Bool {
     guard (1...16).contains(text.count), text.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return false }
     let key = text.lowercased()
-    if let known = fileExtensions.withLock({ $0[key] }) { return known }
+    if let known = fileExtensions.withLock({ $0[key] }) {
+      return known
+    }
     let known = UTType(filenameExtension: key).map { !$0.isDynamic } ?? false
-    fileExtensions.withLock { if $0.count < 128 { $0[key] = known } }
+    fileExtensions.withLock {
+      if $0.count < 128 {
+        $0[key] = known
+      }
+    }
     return known
   }
+
 }

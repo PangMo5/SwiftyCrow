@@ -52,13 +52,13 @@ func onScreenWindows(excludingPID pid: pid_t) -> [PickableWindow] {
       x: cgBounds.minX,
       y: flipHeight - cgBounds.maxY,
       width: cgBounds.width,
-      height: cgBounds.height
+      height: cgBounds.height,
     )
     return PickableWindow(
       id: number,
       frame: frame,
       ownerName: entry[kCGWindowOwnerName] as? String ?? "",
-      title: entry[kCGWindowName] as? String ?? ""
+      title: entry[kCGWindowName] as? String ?? "",
     )
   }
 }

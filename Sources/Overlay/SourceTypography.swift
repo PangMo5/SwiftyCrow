@@ -21,17 +21,21 @@ enum SourceTypography {
   /// Layout/raster objects remain local, while immutable fonts are shared.
   static func glyphTopologies(text: String) -> Set<OCRGlyphTopology.Signature> {
     guard (1...16).contains(text.count), text.unicodeScalars.allSatisfy(\.isASCII) else { return [] }
-    if let cached = topologyCache.withLock({ $0[text] }) { return cached }
+    if let cached = topologyCache.withLock({ $0[text] }) {
+      return cached
+    }
     let values = fonts.pitch.compactMap { reference -> OCRGlyphTopology.Signature? in
       let line = CTLineCreateWithAttributedString(NSAttributedString(
         string: text,
-        attributes: [.font: reference.font, .foregroundColor: NSColor.black]
+        attributes: [.font: reference.font, .foregroundColor: NSColor.black],
       ))
       let bounds = CTLineGetBoundsWithOptions(line, [.useGlyphPathBounds]).integral
       let width = Int(bounds.width) + 4
       let height = Int(bounds.height) + 4
       guard
-        width > 4, height > 4, width * height <= 65_536,
+        width > 4,
+        height > 4,
+        width * height <= 65_536,
         let context = CGContext(
           data: nil,
           width: width,
@@ -39,7 +43,7 @@ enum SourceTypography {
           bitsPerComponent: 8,
           bytesPerRow: width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { return nil }
       context.setFillColor(CGColor(gray: 1, alpha: 1))
@@ -52,7 +56,9 @@ enum SourceTypography {
     // A failed face must not silently turn disagreement into unanimous support.
     let result = values.count == fonts.pitch.count ? Set(values) : []
     topologyCache.withLock {
-      if $0.count >= 512 { $0.removeAll(keepingCapacity: true) }
+      if $0.count >= 512 {
+        $0.removeAll(keepingCapacity: true)
+      }
       $0[text] = result
     }
     return result
@@ -60,8 +66,13 @@ enum SourceTypography {
 
   static func measure(text: String, inkSize: CGSize, coverage: CGFloat) -> Measurement? {
     guard
-      !text.isEmpty, text.count <= 80, inkSize.height >= 7,
-      inkSize.width >= 4, coverage > 0, !text.contains("\n"), text.contains(where: { $0.isLetter || $0.isNumber })
+      !text.isEmpty,
+      text.count <= 80,
+      inkSize.height >= 7,
+      inkSize.width >= 4,
+      coverage > 0,
+      !text.contains("\n"),
+      text.contains(where: { $0.isLetter || $0.isNumber })
     else { return nil }
     let key = ReferenceKey(text: text, height: inkSize.height)
     let references: [Reference]
@@ -70,7 +81,9 @@ enum SourceTypography {
     } else {
       references = makeReferences(text: text, height: inkSize.height)
       cache.withLock {
-        if $0.count >= 2048 { $0.removeAll(keepingCapacity: true) }
+        if $0.count >= 2048 {
+          $0.removeAll(keepingCapacity: true)
+        }
         $0[key] = references
       }
     }
@@ -83,13 +96,16 @@ enum SourceTypography {
     guard
       (4...40).contains(text.count),
       text.unicodeScalars.allSatisfy({ CharacterSet.letters.contains($0) && $0.isASCII }),
-      let peak = inkColumns.max(), peak > 0
+      let peak = inkColumns.max(),
+      peak > 0
     else { return false }
     var ranges = [ClosedRange<Int>]()
     for (x, ink) in inkColumns.enumerated() where ink >= peak * 0.6 {
       if let previous = ranges.last, previous.upperBound == x - 1 {
         ranges[ranges.count - 1] = previous.lowerBound...x
-      } else { ranges.append(x...x) }
+      } else {
+        ranges.append(x...x)
+      }
     }
     guard ranges.count == text.count else { return false }
     // Strong ink separates glyphs; faint antialiasing still contributes their
@@ -112,11 +128,14 @@ enum SourceTypography {
     let widths = glyphBounds.map { CGFloat($0.count) / span }
     guard let observed = normalizedCenters(centers), centers.last! - centers.first! >= 15 else { return false }
     let references: [PitchReference]
-    if let cached = pitchCache.withLock({ $0[text] }) { references = cached }
-    else {
+    if let cached = pitchCache.withLock({ $0[text] }) {
+      references = cached
+    } else {
       references = pitchReferences(text: text)
       pitchCache.withLock {
-        if $0.count >= 1024 { $0.removeAll(keepingCapacity: true) }
+        if $0.count >= 1024 {
+          $0.removeAll(keepingCapacity: true)
+        }
         $0[text] = references
       }
     }
@@ -129,7 +148,8 @@ enum SourceTypography {
     // Shape agreement must not compensate for ambiguous spacing (for example a
     // bold proportional heading). Require both pieces of evidence independently.
     guard
-      monoSpacing <= 0.025, proportionalSpacing - monoSpacing >= 0.008,
+      monoSpacing <= 0.025,
+      proportionalSpacing - monoSpacing >= 0.008,
       monoSpacing < proportionalSpacing * 0.65
     else { return false }
     func error(_ reference: PitchReference) -> CGFloat {
@@ -228,7 +248,7 @@ enum SourceTypography {
       return PitchReference(
         monospaced: monospaced,
         centers: normalized,
-        widths: widths.map { $0 / (centers.last! - centers.first!) }
+        widths: widths.map { $0 / (centers.last! - centers.first!) },
       )
     }
   }
@@ -245,7 +265,8 @@ enum SourceTypography {
       let width = max(1, Int(ceil(bounds.width * scale)))
       let height = max(1, Int(ceil(inkHeight)))
       guard
-        width < 4096, height < 256,
+        width < 4096,
+        height < 256,
         let context = CGContext(
           data: nil,
           width: width,
@@ -253,7 +274,7 @@ enum SourceTypography {
           bitsPerComponent: 8,
           bytesPerRow: width * 4,
           space: CGColorSpaceCreateDeviceRGB(),
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { continue }
       context.scaleBy(x: scale, y: scale)
@@ -267,4 +288,5 @@ enum SourceTypography {
     }
     return candidates
   }
+
 }

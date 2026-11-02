@@ -9,7 +9,7 @@ import Testing
 @MainActor
 struct CaptureResultImageTests {
   @Test(arguments: [1, 2, 3])
-  func anOverlappingRestorationCannotErasePreservedSourcePixels(_ duplicates: Int) throws {
+  func `an overlapping restoration cannot erase preserved source pixels`(_ duplicates: Int) throws {
     let size = CGSize(width: 200, height: 120)
     let context = try #require(CGContext(
       data: nil,
@@ -18,7 +18,7 @@ struct CaptureResultImageTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -32,10 +32,10 @@ struct CaptureResultImageTests {
           boundingBoxNormalized: box,
           text: "i8",
           preservesSource: true,
-          replacementPatches: Array(repeating: .init(box: box), count: duplicates)
+          replacementPatches: Array(repeating: .init(box: box), count: duplicates),
         ),
-        language: .init(identifier: "en")
-      )
+        language: .init(identifier: "en"),
+      ),
     )
     var neighbor = OverlayLine(
       id: UUID(),
@@ -47,11 +47,11 @@ struct CaptureResultImageTests {
             x: 0,
             y: 1.0 / 3,
             width: 1,
-            height: 1.0 / 6
-          ))]
+            height: 1.0 / 6,
+          ))],
         ),
-        language: .init(identifier: "en")
-      )
+        language: .init(identifier: "en"),
+      ),
     )
     neighbor.showTranslation("준비됨", language: .init(identifier: "ko"))
     let source = try #require(context.makeImage()?.pngData)
@@ -63,7 +63,7 @@ struct CaptureResultImageTests {
   }
 
   @Test
-  func exportsAllCornersAtSourceResolutionWithoutAWindow() throws {
+  func `exports all corners at source resolution without A window`() throws {
     let size = CGSize(width: 1800, height: 1200)
     let context = try #require(CGContext(
       data: nil,
@@ -72,7 +72,7 @@ struct CaptureResultImageTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     for (rect, color) in [
       (CGRect(x: 0, y: 600, width: 900, height: 600), CGColor(red: 1, green: 0, blue: 0, alpha: 1)),
@@ -99,7 +99,7 @@ struct CaptureResultImageTests {
   }
 
   @Test(arguments: [false, true])
-  func exportIncludesTranslatedGlyphs(horizontal: Bool) throws {
+  func `export includes translated glyphs`(horizontal: Bool) throws {
     let size = CGSize(width: 600, height: 400)
     let context = try #require(CGContext(
       data: nil,
@@ -108,16 +108,18 @@ struct CaptureResultImageTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
     let data = try #require(context.makeImage()?.pngData)
     var line = OverlayLine(id: UUID(), source: .init(
       recognized: .init(boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.6), text: "Source text"),
-      language: Locale.Language(identifier: "en")
+      language: Locale.Language(identifier: "en"),
     ))
-    if !horizontal { line.source.layout = .vertical(characterScale: 0.05, progression: .rightToLeft) }
+    if !horizontal {
+      line.source.layout = .vertical(characterScale: 0.05, progression: .rightToLeft)
+    }
     line.showTranslation(horizontal ? "Complete translated text" : "日本語の翻訳", language: Locale.Language(identifier: horizontal
         ? "en"
         : "ja"))
@@ -127,7 +129,9 @@ struct CaptureResultImageTests {
     for y in stride(from: 85, to: 315, by: 2) {
       for x in stride(from: 125, to: 475, by: 2) {
         let color = try #require(rendered.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB))
-        if color.redComponent < 0.5 { darkPixels += 1 }
+        if color.redComponent < 0.5 {
+          darkPixels += 1
+        }
       }
     }
     #expect(darkPixels > 20)
@@ -136,7 +140,7 @@ struct CaptureResultImageTests {
   }
 
   @Test(arguments: [0.1, 0.65, 1.0, 1.41])
-  func scalingTheCompositedPreviewCannotRevealSourcePixels(scale: Double) throws {
+  func `scaling the composited preview cannot reveal source pixels`(scale: Double) throws {
     let size = CGSize(width: 400, height: 240)
     let context = try #require(CGContext(
       data: nil,
@@ -145,7 +149,7 @@ struct CaptureResultImageTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -155,7 +159,7 @@ struct CaptureResultImageTests {
     let source = try #require(context.makeImage()?.pngData)
     var line = OverlayLine(id: UUID(), source: .init(
       recognized: .init(boundingBoxNormalized: CGRect(x: 0.2, y: 0.4, width: 0.6, height: 0.2), text: "Original text"),
-      language: Locale.Language(identifier: "en")
+      language: Locale.Language(identifier: "en"),
     ))
     line.showTranslation("번역된 내용", language: Locale.Language(identifier: "ko"))
     let composite = try #require(CaptureResultImage.render(imageData: source, imageSize: size, lines: [line]))
@@ -168,7 +172,7 @@ struct CaptureResultImageTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     scaled.interpolationQuality = .high
     scaled.draw(composite, in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -186,7 +190,7 @@ struct CaptureResultImageTests {
   }
 
   @Test
-  func refusesMissingOrInvalidCapture() {
+  func `refuses missing or invalid capture`() {
     #expect(CaptureResultImage.png(imageData: nil, imageSize: .zero, lines: []) == nil)
     #expect(CaptureResultImage.png(imageData: Data(), imageSize: CGSize(width: 10, height: 10), lines: []) == nil)
   }

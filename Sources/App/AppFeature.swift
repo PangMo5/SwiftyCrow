@@ -61,7 +61,9 @@ struct AppFeature {
       case .settingsScreen(.grantScreenRecordingTapped),
            .settingsScreen(.openScreenRecordingSettingsTapped),
            .settingsScreen(.relaunchTapped):
-        if state.onboarding.isPresented { OnboardingFeature.prepareForExternalFlow(&state.onboarding) }
+        if state.onboarding.isPresented {
+          OnboardingFeature.prepareForExternalFlow(&state.onboarding)
+        }
         return .none
 
       case .screenAccessChanged(let granted):
@@ -79,7 +81,7 @@ struct AppFeature {
           .run { [
             whatsNew,
             existing = state.hasExistingConfiguration,
-            unfinished = state.onboarding.resumeRequested || (state.onboarding.hasStarted && !state.onboarding.completed)
+            unfinished = state.onboarding.resumeRequested || (state.onboarding.hasStarted && !state.onboarding.completed),
           ] _ in
             await whatsNew.showIfNeeded(existing && !unfinished)
           },
@@ -138,7 +140,7 @@ struct AppFeature {
             for await value in updater.canCheckForUpdates() {
               await send(.canCheckForUpdatesChanged(value))
             }
-          }
+          },
         )
 
       case .liveOverlayRequested:

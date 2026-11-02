@@ -19,7 +19,7 @@ struct ScreenCaptureClient {
   var captureImage: @Sendable (
     _ overlayFrame: CGRect?,
     _ displayID: CGDirectDisplayID?,
-    _ excludingProcessID: pid_t?
+    _ excludingProcessID: pid_t?,
   ) async throws -> CGImage
 
   /// Captures a single window by id, independent of what's stacked on top of it
@@ -77,11 +77,13 @@ extension ScreenCaptureClient: DependencyKey {
         try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
         let content = try await SCShareableContent.excludingDesktopWindows(
           false,
-          onScreenWindowsOnly: true
+          onScreenWindowsOnly: true,
         )
 
         let display = content.displays.first { display in
-          if let displayID { return display.displayID == displayID }
+          if let displayID {
+            return display.displayID == displayID
+          }
           return display.displayID == CGMainDisplayID()
         } ?? content.displays.first
 
@@ -108,7 +110,7 @@ extension ScreenCaptureClient: DependencyKey {
             SCContentFilter(
               display: display,
               excludingApplications: excludedApplications,
-              exceptingWindows: []
+              exceptingWindows: [],
             )
           } else {
             // Some system states omit an application entry while still reporting
@@ -147,7 +149,7 @@ extension ScreenCaptureClient: DependencyKey {
             bitsPerComponent: 8,
             bytesPerRow: 0,
             space: CGColorSpace(name: CGColorSpace.sRGB)!,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
           )
         else { throw ScreenCaptureError.unreadableImage }
         context.clear(CGRect(x: 0, y: 0, width: width, height: height))
@@ -155,18 +157,20 @@ extension ScreenCaptureClient: DependencyKey {
           x: (capturedFrame.minX - overlayFrame.minX) * scale,
           y: (capturedFrame.minY - overlayFrame.minY) * scale,
           width: capturedFrame.width * scale,
-          height: capturedFrame.height * scale
+          height: capturedFrame.height * scale,
         ))
         guard let composed = context.makeImage() else { throw ScreenCaptureError.unreadableImage }
         return composed
       } catch {
         await ScreenRecordingAccessState.shared.captureFailed(error)
-        if !(await ScreenRecordingAccessState.shared.isGranted()) { throw ScreenCaptureError.permissionRequired }
+        if !(await ScreenRecordingAccessState.shared.isGranted()) {
+          throw ScreenCaptureError.permissionRequired
+        }
         throw error
       }
     },
     captureWindow: { try await captureSingleWindow($0).image },
-    captureWindowSnapshot: { try await captureSingleWindow($0) }
+    captureWindowSnapshot: { try await captureSingleWindow($0) },
   )
 
   // MARK: Private
@@ -176,7 +180,7 @@ extension ScreenCaptureClient: DependencyKey {
       try await ScreenRecordingPermissionTracker.shared.requestIfNeeded()
       let content = try await SCShareableContent.excludingDesktopWindows(
         false,
-        onScreenWindowsOnly: true
+        onScreenWindowsOnly: true,
       )
       guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
         throw ScreenCaptureError.windowUnavailable
@@ -200,11 +204,13 @@ extension ScreenCaptureClient: DependencyKey {
         x: window.frame.minX,
         y: screen.flipHeight - window.frame.maxY,
         width: window.frame.width,
-        height: window.frame.height
+        height: window.frame.height,
       ))
     } catch {
       await ScreenRecordingAccessState.shared.captureFailed(error)
-      if !(await ScreenRecordingAccessState.shared.isGranted()) { throw ScreenCaptureError.permissionRequired }
+      if !(await ScreenRecordingAccessState.shared.isGranted()) {
+        throw ScreenCaptureError.permissionRequired
+      }
       throw error
     }
   }
@@ -224,9 +230,10 @@ extension ScreenCaptureClient: DependencyKey {
       screen?.frame,
       screen?.backingScaleFactor,
       NSScreen.main?.backingScaleFactor ?? 2,
-      screens.first(where: { $0.frame.origin == .zero })?.frame.height ?? NSScreen.main?.frame.height ?? 0
+      screens.first(where: { $0.frame.origin == .zero })?.frame.height ?? NSScreen.main?.frame.height ?? 0,
     )
   }
+
 }
 
 extension DependencyValues {
@@ -248,7 +255,7 @@ struct ScreenCaptureRegionGeometry: Equatable {
       x: intersection.minX - display.minX,
       y: display.maxY - intersection.maxY,
       width: intersection.width,
-      height: intersection.height
+      height: intersection.height,
     )
   }
 

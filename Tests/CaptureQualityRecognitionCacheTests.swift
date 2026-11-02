@@ -7,7 +7,7 @@ import Testing
 
 struct CaptureQualityRecognitionCacheTests {
   @Test
-  func reuseRequiresIdenticalPixelsAndSourceHintAndKeepsOnlyOneImage() {
+  func `reuse requires identical pixels and source hint and keeps only one image`() {
     var cache = CaptureQualityRecognitionCache()
     let result = OCRResult(lines: [.init(boundingBoxNormalized: .zero, text: "原文")])
     let image = Data([1, 2, 3])

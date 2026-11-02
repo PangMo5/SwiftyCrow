@@ -21,7 +21,11 @@ struct SettingsView: View {
       List(
         SettingsPane.allCases,
         id: \.self,
-        selection: Binding(get: { Optional(store.pane) }, set: { if let pane = $0 { store.send(.paneSelected(pane)) } })
+        selection: Binding(get: { Optional(store.pane) }, set: {
+          if let pane = $0 {
+            store.send(.paneSelected(pane))
+          }
+        }),
       ) { pane in
         Label(pane.title, systemImage: pane.icon)
       }
@@ -102,7 +106,7 @@ private struct GeneralSection: View {
     Section {
       Toggle(isOn: Binding(
         get: { store.launchAtLogin },
-        set: { store.send(.launchAtLoginChanged($0)) }
+        set: { store.send(.launchAtLoginChanged($0)) },
       )) {
         Text("Launch at login")
         Text("Start SwiftyCrow automatically when you log in.")
@@ -115,7 +119,7 @@ private struct GeneralSection: View {
         granted: store.hasScreenRecording,
         isRequesting: store.isRequestingAccess,
         grant: { store.send(.grantScreenRecordingTapped) },
-        openSettings: { store.send(.openScreenRecordingSettingsTapped) }
+        openSettings: { store.send(.openScreenRecordingSettingsTapped) },
       )
       if !store.hasScreenRecording {
         PermissionRelaunchNotice(isRelaunching: store.isRelaunching, error: store.relaunchError) { store.send(.relaunchTapped) }

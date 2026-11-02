@@ -12,13 +12,13 @@ These notices apply only to the named third-party components. SwiftyCrow itself 
 
 ## Web runtime dependencies
 
-The release-notes page loads these exact browser-side versions from jsDelivr. Their source and license texts are recorded here alongside the app's Swift packages.
+The release-notes and configuration pages load these exact browser-side versions from jsDelivr.
 
-### marked 12.0.2
+### marked 18.1.2
 
-Source: [markedjs/marked@c6a98ea66c36d12255543e2fabd8f8236dbc5276](https://github.com/markedjs/marked/tree/c6a98ea66c36d12255543e2fabd8f8236dbc5276)
+Source: [markedjs/marked@5beecae42b0beb07eaccc3a732560f56867a8301](https://github.com/markedjs/marked/tree/5beecae42b0beb07eaccc3a732560f56867a8301)
 
-Upstream license file: [LICENSE.md](https://github.com/markedjs/marked/blob/c6a98ea66c36d12255543e2fabd8f8236dbc5276/LICENSE.md)
+Upstream license file: [LICENSE](https://github.com/markedjs/marked/blob/5beecae42b0beb07eaccc3a732560f56867a8301/LICENSE)
 
 ~~~text
 # License information
@@ -67,27 +67,14 @@ Redistribution and use in source and binary forms, with or without modification,
 This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 ~~~
 
-### DOMPurify 3.1.7
+### DOMPurify 3.4.17
 
-Source: [cure53/DOMPurify@69c8c12940dbf98aef5f44eea77151e1aef532dc](https://github.com/cure53/DOMPurify/tree/69c8c12940dbf98aef5f44eea77151e1aef532dc)
+Source: [cure53/DOMPurify@a77a3e78b59f72fa4d1c83f22e121ad9cc7d3575](https://github.com/cure53/DOMPurify/tree/a77a3e78b59f72fa4d1c83f22e121ad9cc7d3575)
 
-Upstream license file: [LICENSE](https://github.com/cure53/DOMPurify/blob/69c8c12940dbf98aef5f44eea77151e1aef532dc/LICENSE)
-
-DOMPurify offers a choice of Apache-2.0 or MPL-2.0; SwiftyCrow uses it under Apache-2.0.
+Upstream license file: [LICENSE](https://github.com/cure53/DOMPurify/blob/a77a3e78b59f72fa4d1c83f22e121ad9cc7d3575/LICENSE)
 
 ~~~text
-DOMPurify
-Copyright 2024 Dr.-Ing. Mario Heiderich, Cure53
-
-DOMPurify is free software; you can redistribute it and/or modify it under the
-terms of either:
-
-a) the Apache License Version 2.0, or
-b) the Mozilla Public License Version 2.0
-
------------------------------------------------------------------------------
-
-                                 Apache License
+Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
@@ -288,369 +275,13 @@ b) the Mozilla Public License Version 2.0
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
------------------------------------------------------------------------------
-Mozilla Public License, version 2.0
-
-1. Definitions
-
-1.1. “Contributor”
-
-     means each individual or legal entity that creates, contributes to the
-     creation of, or owns Covered Software.
-
-1.2. “Contributor Version”
-
-     means the combination of the Contributions of others (if any) used by a
-     Contributor and that particular Contributor’s Contribution.
-
-1.3. “Contribution”
-
-     means Covered Software of a particular Contributor.
-
-1.4. “Covered Software”
-
-     means Source Code Form to which the initial Contributor has attached the
-     notice in Exhibit A, the Executable Form of such Source Code Form, and
-     Modifications of such Source Code Form, in each case including portions
-     thereof.
-
-1.5. “Incompatible With Secondary Licenses”
-     means
-
-     a. that the initial Contributor has attached the notice described in
-        Exhibit B to the Covered Software; or
-
-     b. that the Covered Software was made available under the terms of version
-        1.1 or earlier of the License, but not also under the terms of a
-        Secondary License.
-
-1.6. “Executable Form”
-
-     means any form of the work other than Source Code Form.
-
-1.7. “Larger Work”
-
-     means a work that combines Covered Software with other material, in a separate
-     file or files, that is not Covered Software.
-
-1.8. “License”
-
-     means this document.
-
-1.9. “Licensable”
-
-     means having the right to grant, to the maximum extent possible, whether at the
-     time of the initial grant or subsequently, any and all of the rights conveyed by
-     this License.
-
-1.10. “Modifications”
-
-     means any of the following:
-
-     a. any file in Source Code Form that results from an addition to, deletion
-        from, or modification of the contents of Covered Software; or
-
-     b. any new file in Source Code Form that contains any Covered Software.
-
-1.11. “Patent Claims” of a Contributor
-
-      means any patent claim(s), including without limitation, method, process,
-      and apparatus claims, in any patent Licensable by such Contributor that
-      would be infringed, but for the grant of the License, by the making,
-      using, selling, offering for sale, having made, import, or transfer of
-      either its Contributions or its Contributor Version.
-
-1.12. “Secondary License”
-
-      means either the GNU General Public License, Version 2.0, the GNU Lesser
-      General Public License, Version 2.1, the GNU Affero General Public
-      License, Version 3.0, or any later versions of those licenses.
-
-1.13. “Source Code Form”
-
-      means the form of the work preferred for making modifications.
-
-1.14. “You” (or “Your”)
-
-      means an individual or a legal entity exercising rights under this
-      License. For legal entities, “You” includes any entity that controls, is
-      controlled by, or is under common control with You. For purposes of this
-      definition, “control” means (a) the power, direct or indirect, to cause
-      the direction or management of such entity, whether by contract or
-      otherwise, or (b) ownership of more than fifty percent (50%) of the
-      outstanding shares or beneficial ownership of such entity.
-
-
-2. License Grants and Conditions
-
-2.1. Grants
-
-     Each Contributor hereby grants You a world-wide, royalty-free,
-     non-exclusive license:
-
-     a. under intellectual property rights (other than patent or trademark)
-        Licensable by such Contributor to use, reproduce, make available,
-        modify, display, perform, distribute, and otherwise exploit its
-        Contributions, either on an unmodified basis, with Modifications, or as
-        part of a Larger Work; and
-
-     b. under Patent Claims of such Contributor to make, use, sell, offer for
-        sale, have made, import, and otherwise transfer either its Contributions
-        or its Contributor Version.
-
-2.2. Effective Date
-
-     The licenses granted in Section 2.1 with respect to any Contribution become
-     effective for each Contribution on the date the Contributor first distributes
-     such Contribution.
-
-2.3. Limitations on Grant Scope
-
-     The licenses granted in this Section 2 are the only rights granted under this
-     License. No additional rights or licenses will be implied from the distribution
-     or licensing of Covered Software under this License. Notwithstanding Section
-     2.1(b) above, no patent license is granted by a Contributor:
-
-     a. for any code that a Contributor has removed from Covered Software; or
-
-     b. for infringements caused by: (i) Your and any other third party’s
-        modifications of Covered Software, or (ii) the combination of its
-        Contributions with other software (except as part of its Contributor
-        Version); or
-
-     c. under Patent Claims infringed by Covered Software in the absence of its
-        Contributions.
-
-     This License does not grant any rights in the trademarks, service marks, or
-     logos of any Contributor (except as may be necessary to comply with the
-     notice requirements in Section 3.4).
-
-2.4. Subsequent Licenses
-
-     No Contributor makes additional grants as a result of Your choice to
-     distribute the Covered Software under a subsequent version of this License
-     (see Section 10.2) or under the terms of a Secondary License (if permitted
-     under the terms of Section 3.3).
-
-2.5. Representation
-
-     Each Contributor represents that the Contributor believes its Contributions
-     are its original creation(s) or it has sufficient rights to grant the
-     rights to its Contributions conveyed by this License.
-
-2.6. Fair Use
-
-     This License is not intended to limit any rights You have under applicable
-     copyright doctrines of fair use, fair dealing, or other equivalents.
-
-2.7. Conditions
-
-     Sections 3.1, 3.2, 3.3, and 3.4 are conditions of the licenses granted in
-     Section 2.1.
-
-
-3. Responsibilities
-
-3.1. Distribution of Source Form
-
-     All distribution of Covered Software in Source Code Form, including any
-     Modifications that You create or to which You contribute, must be under the
-     terms of this License. You must inform recipients that the Source Code Form
-     of the Covered Software is governed by the terms of this License, and how
-     they can obtain a copy of this License. You may not attempt to alter or
-     restrict the recipients’ rights in the Source Code Form.
-
-3.2. Distribution of Executable Form
-
-     If You distribute Covered Software in Executable Form then:
-
-     a. such Covered Software must also be made available in Source Code Form,
-        as described in Section 3.1, and You must inform recipients of the
-        Executable Form how they can obtain a copy of such Source Code Form by
-        reasonable means in a timely manner, at a charge no more than the cost
-        of distribution to the recipient; and
-
-     b. You may distribute such Executable Form under the terms of this License,
-        or sublicense it under different terms, provided that the license for
-        the Executable Form does not attempt to limit or alter the recipients’
-        rights in the Source Code Form under this License.
-
-3.3. Distribution of a Larger Work
-
-     You may create and distribute a Larger Work under terms of Your choice,
-     provided that You also comply with the requirements of this License for the
-     Covered Software. If the Larger Work is a combination of Covered Software
-     with a work governed by one or more Secondary Licenses, and the Covered
-     Software is not Incompatible With Secondary Licenses, this License permits
-     You to additionally distribute such Covered Software under the terms of
-     such Secondary License(s), so that the recipient of the Larger Work may, at
-     their option, further distribute the Covered Software under the terms of
-     either this License or such Secondary License(s).
-
-3.4. Notices
-
-     You may not remove or alter the substance of any license notices (including
-     copyright notices, patent notices, disclaimers of warranty, or limitations
-     of liability) contained within the Source Code Form of the Covered
-     Software, except that You may alter any license notices to the extent
-     required to remedy known factual inaccuracies.
-
-3.5. Application of Additional Terms
-
-     You may choose to offer, and to charge a fee for, warranty, support,
-     indemnity or liability obligations to one or more recipients of Covered
-     Software. However, You may do so only on Your own behalf, and not on behalf
-     of any Contributor. You must make it absolutely clear that any such
-     warranty, support, indemnity, or liability obligation is offered by You
-     alone, and You hereby agree to indemnify every Contributor for any
-     liability incurred by such Contributor as a result of warranty, support,
-     indemnity or liability terms You offer. You may include additional
-     disclaimers of warranty and limitations of liability specific to any
-     jurisdiction.
-
-4. Inability to Comply Due to Statute or Regulation
-
-   If it is impossible for You to comply with any of the terms of this License
-   with respect to some or all of the Covered Software due to statute, judicial
-   order, or regulation then You must: (a) comply with the terms of this License
-   to the maximum extent possible; and (b) describe the limitations and the code
-   they affect. Such description must be placed in a text file included with all
-   distributions of the Covered Software under this License. Except to the
-   extent prohibited by statute or regulation, such description must be
-   sufficiently detailed for a recipient of ordinary skill to be able to
-   understand it.
-
-5. Termination
-
-5.1. The rights granted under this License will terminate automatically if You
-     fail to comply with any of its terms. However, if You become compliant,
-     then the rights granted under this License from a particular Contributor
-     are reinstated (a) provisionally, unless and until such Contributor
-     explicitly and finally terminates Your grants, and (b) on an ongoing basis,
-     if such Contributor fails to notify You of the non-compliance by some
-     reasonable means prior to 60 days after You have come back into compliance.
-     Moreover, Your grants from a particular Contributor are reinstated on an
-     ongoing basis if such Contributor notifies You of the non-compliance by
-     some reasonable means, this is the first time You have received notice of
-     non-compliance with this License from such Contributor, and You become
-     compliant prior to 30 days after Your receipt of the notice.
-
-5.2. If You initiate litigation against any entity by asserting a patent
-     infringement claim (excluding declaratory judgment actions, counter-claims,
-     and cross-claims) alleging that a Contributor Version directly or
-     indirectly infringes any patent, then the rights granted to You by any and
-     all Contributors for the Covered Software under Section 2.1 of this License
-     shall terminate.
-
-5.3. In the event of termination under Sections 5.1 or 5.2 above, all end user
-     license agreements (excluding distributors and resellers) which have been
-     validly granted by You or Your distributors under this License prior to
-     termination shall survive termination.
-
-6. Disclaimer of Warranty
-
-   Covered Software is provided under this License on an “as is” basis, without
-   warranty of any kind, either expressed, implied, or statutory, including,
-   without limitation, warranties that the Covered Software is free of defects,
-   merchantable, fit for a particular purpose or non-infringing. The entire
-   risk as to the quality and performance of the Covered Software is with You.
-   Should any Covered Software prove defective in any respect, You (not any
-   Contributor) assume the cost of any necessary servicing, repair, or
-   correction. This disclaimer of warranty constitutes an essential part of this
-   License. No use of  any Covered Software is authorized under this License
-   except under this disclaimer.
-
-7. Limitation of Liability
-
-   Under no circumstances and under no legal theory, whether tort (including
-   negligence), contract, or otherwise, shall any Contributor, or anyone who
-   distributes Covered Software as permitted above, be liable to You for any
-   direct, indirect, special, incidental, or consequential damages of any
-   character including, without limitation, damages for lost profits, loss of
-   goodwill, work stoppage, computer failure or malfunction, or any and all
-   other commercial damages or losses, even if such party shall have been
-   informed of the possibility of such damages. This limitation of liability
-   shall not apply to liability for death or personal injury resulting from such
-   party’s negligence to the extent applicable law prohibits such limitation.
-   Some jurisdictions do not allow the exclusion or limitation of incidental or
-   consequential damages, so this exclusion and limitation may not apply to You.
-
-8. Litigation
-
-   Any litigation relating to this License may be brought only in the courts of
-   a jurisdiction where the defendant maintains its principal place of business
-   and such litigation shall be governed by laws of that jurisdiction, without
-   reference to its conflict-of-law provisions. Nothing in this Section shall
-   prevent a party’s ability to bring cross-claims or counter-claims.
-
-9. Miscellaneous
-
-   This License represents the complete agreement concerning the subject matter
-   hereof. If any provision of this License is held to be unenforceable, such
-   provision shall be reformed only to the extent necessary to make it
-   enforceable. Any law or regulation which provides that the language of a
-   contract shall be construed against the drafter shall not be used to construe
-   this License against a Contributor.
-
-
-10. Versions of the License
-
-10.1. New Versions
-
-      Mozilla Foundation is the license steward. Except as provided in Section
-      10.3, no one other than the license steward has the right to modify or
-      publish new versions of this License. Each version will be given a
-      distinguishing version number.
-
-10.2. Effect of New Versions
-
-      You may distribute the Covered Software under the terms of the version of
-      the License under which You originally received the Covered Software, or
-      under the terms of any subsequent version published by the license
-      steward.
-
-10.3. Modified Versions
-
-      If you create software not governed by this License, and you want to
-      create a new license for such software, you may create and use a modified
-      version of this License if you rename the license and remove any
-      references to the name of the license steward (except to note that such
-      modified license differs from this License).
-
-10.4. Distributing Source Code Form that is Incompatible With Secondary Licenses
-      If You choose to distribute Source Code Form that is Incompatible With
-      Secondary Licenses under the terms of this version of the License, the
-      notice described in Exhibit B of this License must be attached.
-
-Exhibit A - Source Code Form License Notice
-
-      This Source Code Form is subject to the
-      terms of the Mozilla Public License, v.
-      2.0. If a copy of the MPL was not
-      distributed with this file, You can
-      obtain one at
-      http://mozilla.org/MPL/2.0/.
-
-If it is not possible or desirable to put the notice in a particular file, then
-You may include the notice in a location (such as a LICENSE file in a relevant
-directory) where a recipient would be likely to look for such a notice.
-
-You may add additional accurate notices of copyright ownership.
-
-Exhibit B - “Incompatible With Secondary Licenses” Notice
-
-      This Source Code Form is “Incompatible
-      With Secondary Licenses”, as defined by
-      the Mozilla Public License, v. 2.0.
-
 ~~~
 
-## combine-schedulers 1.2.0
+## combine-schedulers 1.2.2
 
-Source: [https://github.com/pointfreeco/combine-schedulers@dcccb979a2183b8df3334237e3dc1ae2b4116a86](https://github.com/pointfreeco/combine-schedulers/tree/dcccb979a2183b8df3334237e3dc1ae2b4116a86)
+Source: [https://github.com/pointfreeco/combine-schedulers@114354e8c1667a2edc4993700fb9fa4f90157b56](https://github.com/pointfreeco/combine-schedulers/tree/114354e8c1667a2edc4993700fb9fa4f90157b56)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/combine-schedulers/blob/dcccb979a2183b8df3334237e3dc1ae2b4116a86/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/combine-schedulers/blob/114354e8c1667a2edc4993700fb9fa4f90157b56/LICENSE)
 
 ~~~text
 MIT License
@@ -706,16 +337,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## sauce 2.5.0
+## sauce 2.5.2
 
-Source: [https://github.com/Clipy/Sauce@c9ebdcfddb4b94da5b9a6ebd113ab385edda88c1](https://github.com/Clipy/Sauce/tree/c9ebdcfddb4b94da5b9a6ebd113ab385edda88c1)
+Source: [https://github.com/Clipy/Sauce@1fce89ccc9cbb091022c17ef8f9939901d4e951a](https://github.com/Clipy/Sauce/tree/1fce89ccc9cbb091022c17ef8f9939901d4e951a)
 
-Upstream license file: [LICENSE](https://github.com/Clipy/Sauce/blob/c9ebdcfddb4b94da5b9a6ebd113ab385edda88c1/LICENSE)
+Upstream license file: [LICENSE](https://github.com/Clipy/Sauce/blob/1fce89ccc9cbb091022c17ef8f9939901d4e951a/LICENSE)
 
 ~~~text
 MIT License
 
-Copyright (c) 2015-2020 Clipy Project
+Copyright (c) 2015-2026 Clipy Project
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -736,11 +367,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## sparkle 2.9.2
+## sparkle 2.10.1
 
-Source: [https://github.com/sparkle-project/Sparkle@6276ba2b404829d139c45ff98427cf90e2efc59b](https://github.com/sparkle-project/Sparkle/tree/6276ba2b404829d139c45ff98427cf90e2efc59b)
+Source: [https://github.com/sparkle-project/Sparkle@ab7d71291238df6e0492143b120c9b696a35f603](https://github.com/sparkle-project/Sparkle/tree/ab7d71291238df6e0492143b120c9b696a35f603)
 
-Upstream license file: [LICENSE](https://github.com/sparkle-project/Sparkle/blob/6276ba2b404829d139c45ff98427cf90e2efc59b/LICENSE)
+Upstream license file: [LICENSE](https://github.com/sparkle-project/Sparkle/blob/ab7d71291238df6e0492143b120c9b696a35f603/LICENSE)
 
 ~~~text
 Copyright (c) 2006-2013 Andy Matuschak.
@@ -779,7 +410,7 @@ Copyright 2003-2005 Colin Percival
 All rights reserved
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted providing that the following conditions
+modification, are permitted providing that the following conditions 
 are met:
 1. Redistributions of source code must retain the above copyright
    notice, this list of conditions and the following disclaimer.
@@ -879,11 +510,11 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ~~~
 
-## swift-case-paths 1.7.3
+## swift-case-paths 1.10.0
 
-Source: [https://github.com/pointfreeco/swift-case-paths@206cbce3882b4de9aee19ce62ac5b7306cadd45b](https://github.com/pointfreeco/swift-case-paths/tree/206cbce3882b4de9aee19ce62ac5b7306cadd45b)
+Source: [https://github.com/pointfreeco/swift-case-paths@cb4cba6a8a46a86db0d37dbe09935ead6b24c91a](https://github.com/pointfreeco/swift-case-paths/tree/cb4cba6a8a46a86db0d37dbe09935ead6b24c91a)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-case-paths/blob/206cbce3882b4de9aee19ce62ac5b7306cadd45b/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-case-paths/blob/cb4cba6a8a46a86db0d37dbe09935ead6b24c91a/LICENSE)
 
 ~~~text
 MIT License
@@ -909,11 +540,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-clocks 1.0.6
+## swift-clocks 1.1.1
 
-Source: [https://github.com/pointfreeco/swift-clocks@cc46202b53476d64e824e0b6612da09d84ffde8e](https://github.com/pointfreeco/swift-clocks/tree/cc46202b53476d64e824e0b6612da09d84ffde8e)
+Source: [https://github.com/pointfreeco/swift-clocks@82440fa0a8b1c381a6d1e8e0fc7bbba53ec63204](https://github.com/pointfreeco/swift-clocks/tree/82440fa0a8b1c381a6d1e8e0fc7bbba53ec63204)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-clocks/blob/cc46202b53476d64e824e0b6612da09d84ffde8e/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-clocks/blob/82440fa0a8b1c381a6d1e8e0fc7bbba53ec63204/LICENSE)
 
 ~~~text
 MIT License
@@ -939,14 +570,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-collections 1.5.1
+## swift-collections 1.7.5
 
-Source: [https://github.com/apple/swift-collections@fea17c02d767f46b23070fdfdacc28a03a39232a](https://github.com/apple/swift-collections/tree/fea17c02d767f46b23070fdfdacc28a03a39232a)
+Source: [https://github.com/apple/swift-collections@f96b909e1a9e469620bc5037c1e24e00153f376f](https://github.com/apple/swift-collections/tree/f96b909e1a9e469620bc5037c1e24e00153f376f)
 
-Upstream license file: [LICENSE.txt](https://github.com/apple/swift-collections/blob/fea17c02d767f46b23070fdfdacc28a03a39232a/LICENSE.txt)
+Upstream license file: [LICENSE.txt](https://github.com/apple/swift-collections/blob/f96b909e1a9e469620bc5037c1e24e00153f376f/LICENSE.txt)
 
 ~~~text
-                                 Apache License
+Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
@@ -1159,11 +790,11 @@ Upstream license file: [LICENSE.txt](https://github.com/apple/swift-collections/
     otherwise be required by Sections 4(a), 4(b) and 4(d) of the License.
 ~~~
 
-## swift-composable-architecture 1.25.5
+## swift-composable-architecture 1.26.2
 
-Source: [https://github.com/pointfreeco/swift-composable-architecture@1eaa6fa2ee57ac42843283b9fd3457af408c858d](https://github.com/pointfreeco/swift-composable-architecture/tree/1eaa6fa2ee57ac42843283b9fd3457af408c858d)
+Source: [https://github.com/pointfreeco/swift-composable-architecture@377da4061db10d26337a71bb279c506bb951f50f](https://github.com/pointfreeco/swift-composable-architecture/tree/377da4061db10d26337a71bb279c506bb951f50f)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-composable-architecture/blob/1eaa6fa2ee57ac42843283b9fd3457af408c858d/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-composable-architecture/blob/377da4061db10d26337a71bb279c506bb951f50f/LICENSE)
 
 ~~~text
 MIT License
@@ -1189,11 +820,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-concurrency-extras 1.3.2
+## swift-concurrency-extras 1.4.3
 
-Source: [https://github.com/pointfreeco/swift-concurrency-extras@5a3825302b1a0d744183200915a47b508c828e6f](https://github.com/pointfreeco/swift-concurrency-extras/tree/5a3825302b1a0d744183200915a47b508c828e6f)
+Source: [https://github.com/pointfreeco/swift-concurrency-extras@8a4260f7373493435bd21194585c95b72bfdd401](https://github.com/pointfreeco/swift-concurrency-extras/tree/8a4260f7373493435bd21194585c95b72bfdd401)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-concurrency-extras/blob/5a3825302b1a0d744183200915a47b508c828e6f/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-concurrency-extras/blob/8a4260f7373493435bd21194585c95b72bfdd401/LICENSE)
 
 ~~~text
 MIT License
@@ -1219,11 +850,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-custom-dump 1.5.0
+## swift-custom-dump 1.7.3
 
-Source: [https://github.com/pointfreeco/swift-custom-dump@06c57924455064182d6b217f06ebc05d00cb2990](https://github.com/pointfreeco/swift-custom-dump/tree/06c57924455064182d6b217f06ebc05d00cb2990)
+Source: [https://github.com/pointfreeco/swift-custom-dump@4fb9e7cbb4b8f5a7354005db39447f570d6b3e19](https://github.com/pointfreeco/swift-custom-dump/tree/4fb9e7cbb4b8f5a7354005db39447f570d6b3e19)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-custom-dump/blob/06c57924455064182d6b217f06ebc05d00cb2990/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-custom-dump/blob/4fb9e7cbb4b8f5a7354005db39447f570d6b3e19/LICENSE)
 
 ~~~text
 MIT License
@@ -1249,11 +880,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-dependencies 1.12.0
+## swift-dependencies 1.17.2
 
-Source: [https://github.com/pointfreeco/swift-dependencies@706feb7858a7f6c242879d137b8ee30926aa5b26](https://github.com/pointfreeco/swift-dependencies/tree/706feb7858a7f6c242879d137b8ee30926aa5b26)
+Source: [https://github.com/pointfreeco/swift-dependencies@2f83b70a6fbf45795dd40ccaa907bad3c8d93fe1](https://github.com/pointfreeco/swift-dependencies/tree/2f83b70a6fbf45795dd40ccaa907bad3c8d93fe1)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-dependencies/blob/706feb7858a7f6c242879d137b8ee30926aa5b26/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-dependencies/blob/2f83b70a6fbf45795dd40ccaa907bad3c8d93fe1/LICENSE)
 
 ~~~text
 MIT License
@@ -1309,11 +940,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-navigation 2.8.0
+## swift-issue-reporting 2.1.2
 
-Source: [https://github.com/pointfreeco/swift-navigation@32f35241b8be0719c4c7f00eb27713b1cadb6248](https://github.com/pointfreeco/swift-navigation/tree/32f35241b8be0719c4c7f00eb27713b1cadb6248)
+Source: [https://github.com/pointfreeco/swift-issue-reporting@b23bb4493c439d3e05152bc167014235ba3d47fc](https://github.com/pointfreeco/swift-issue-reporting/tree/b23bb4493c439d3e05152bc167014235ba3d47fc)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-navigation/blob/32f35241b8be0719c4c7f00eb27713b1cadb6248/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-issue-reporting/blob/b23bb4493c439d3e05152bc167014235ba3d47fc/LICENSE)
 
 ~~~text
 MIT License
@@ -1339,11 +970,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-perception 2.0.10
+## swift-navigation 2.11.2
 
-Source: [https://github.com/pointfreeco/swift-perception@25ac73741c3436605d61eceb5207e896973918e7](https://github.com/pointfreeco/swift-perception/tree/25ac73741c3436605d61eceb5207e896973918e7)
+Source: [https://github.com/pointfreeco/swift-navigation@7e95e5e9ff0a64f6ad8bca59083f8d6ba381b6ff](https://github.com/pointfreeco/swift-navigation/tree/7e95e5e9ff0a64f6ad8bca59083f8d6ba381b6ff)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-perception/blob/25ac73741c3436605d61eceb5207e896973918e7/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-navigation/blob/7e95e5e9ff0a64f6ad8bca59083f8d6ba381b6ff/LICENSE)
+
+~~~text
+MIT License
+
+Copyright (c) 2021 Point-Free, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+~~~
+
+## swift-perception 2.0.12
+
+Source: [https://github.com/pointfreeco/swift-perception@597afd46249f4a71885b95d26b26cc5b893daf32](https://github.com/pointfreeco/swift-perception/tree/597afd46249f4a71885b95d26b26cc5b893daf32)
+
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-perception/blob/597afd46249f4a71885b95d26b26cc5b893daf32/LICENSE)
 
 ~~~text
 MIT License
@@ -1369,11 +1030,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-sharing 2.8.0
+## swift-sharing 2.10.1
 
-Source: [https://github.com/pointfreeco/swift-sharing@bc27f8322bc30f6ce7d864d137dc77a6de8b57eb](https://github.com/pointfreeco/swift-sharing/tree/bc27f8322bc30f6ce7d864d137dc77a6de8b57eb)
+Source: [https://github.com/pointfreeco/swift-sharing@3552faf8a6c18ce896ec5a72bd8c34755f0f03e0](https://github.com/pointfreeco/swift-sharing/tree/3552faf8a6c18ce896ec5a72bd8c34755f0f03e0)
 
-Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-sharing/blob/bc27f8322bc30f6ce7d864d137dc77a6de8b57eb/LICENSE)
+Upstream license file: [LICENSE](https://github.com/pointfreeco/swift-sharing/blob/3552faf8a6c18ce896ec5a72bd8c34755f0f03e0/LICENSE)
 
 ~~~text
 MIT License
@@ -1399,14 +1060,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ~~~
 
-## swift-syntax 603.0.1
+## swift-syntax 604.0.0
 
-Source: [https://github.com/swiftlang/swift-syntax@9de99a78f099e59caf2b2beec65a4c45d54b2081](https://github.com/swiftlang/swift-syntax/tree/9de99a78f099e59caf2b2beec65a4c45d54b2081)
+Source: [https://github.com/swiftlang/swift-syntax@050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf](https://github.com/swiftlang/swift-syntax/tree/050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf)
 
-Upstream license file: [LICENSE.txt](https://github.com/swiftlang/swift-syntax/blob/9de99a78f099e59caf2b2beec65a4c45d54b2081/LICENSE.txt)
+Upstream license file: [LICENSE.txt](https://github.com/swiftlang/swift-syntax/blob/050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf/LICENSE.txt)
 
 ~~~text
-                                 Apache License
+Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
@@ -1619,11 +1280,11 @@ Upstream license file: [LICENSE.txt](https://github.com/swiftlang/swift-syntax/b
     otherwise be required by Sections 4(a), 4(b) and 4(d) of the License.
 ~~~
 
-## swift-toml 2.0.0
+## swift-toml 2.1.0
 
-Source: [https://github.com/mattt/swift-toml@827506c90475e82d5a7f191f950fb3025cbdc0d6](https://github.com/mattt/swift-toml/tree/827506c90475e82d5a7f191f950fb3025cbdc0d6)
+Source: [https://github.com/mattt/swift-toml@8227201d741c82183c9b0531a7d9ec7fa9240a2f](https://github.com/mattt/swift-toml/tree/8227201d741c82183c9b0531a7d9ec7fa9240a2f)
 
-Upstream license file: [LICENSE.md](https://github.com/mattt/swift-toml/blob/827506c90475e82d5a7f191f950fb3025cbdc0d6/LICENSE.md)
+Upstream license file: [LICENSE.md](https://github.com/mattt/swift-toml/blob/8227201d741c82183c9b0531a7d9ec7fa9240a2f/LICENSE.md)
 
 ~~~text
 Copyright 2025 Mattt (https://mat.tt)
@@ -1645,36 +1306,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-~~~
-
-## xctest-dynamic-overlay 1.9.0
-
-Source: [https://github.com/pointfreeco/xctest-dynamic-overlay@dfd70507def84cb5fb821278448a262c6ff2bbad](https://github.com/pointfreeco/xctest-dynamic-overlay/tree/dfd70507def84cb5fb821278448a262c6ff2bbad)
-
-Upstream license file: [LICENSE](https://github.com/pointfreeco/xctest-dynamic-overlay/blob/dfd70507def84cb5fb821278448a262c6ff2bbad/LICENSE)
-
-~~~text
-MIT License
-
-Copyright (c) 2021 Point-Free, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 ~~~
 
 <!-- REUSE-IgnoreEnd -->

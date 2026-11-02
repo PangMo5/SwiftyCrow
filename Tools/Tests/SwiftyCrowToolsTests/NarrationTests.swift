@@ -4,25 +4,21 @@ import Foundation
 import Testing
 @testable import SwiftyCrowToolsKit
 
+// MARK: - NarrationTests
+
 @Suite("Recorded narration contracts")
 struct NarrationTests {
-  func timeline() throws -> JSON {
-    try JSON
-      .parse(
-        #"{"schemaVersion":1,"film":"tour","uiLanguage":"ko","captureEpochUptimeNanoseconds":100000,"durationSeconds":10,"events":[{"track":"chapter","id":"tour.chapter","start":0,"end":10},{"track":"caption","id":"tour.intro","start":0,"end":3},{"track":"caption","id":"tour.capture","start":3,"end":10},{"track":"keys","chord":"cmd + shift - 1","start":3.1,"end":5.1}]}"#
-      )
-  }
 
   @Test
-  func acceptsSynchronizedNarration() throws {
-    try FilmNarration.validate(timeline(), film: "tour", locale: "ko", duration: 10)
+  func `accepts synchronized narration`() throws {
+    try FilmNarration.validate(NarrationFixture.timeline(), film: "tour", locale: "ko", duration: 10)
     #expect(try FilmNarration.displayChord("cmd + shift - 1") == "⇧⌘1")
     #expect(try FilmNarration.displayChord("ctrl + alt - l") == "⌃⌥L")
   }
 
   @Test(arguments: ["duration", "epoch", "locale", "shortCaption", "overlap", "lateOpening", "fakeKey"])
-  func rejectsUnreviewableOrMisidentifiedTiming(_ fault: String) throws {
-    var value = try timeline()
+  func `rejects unreviewable or misidentified timing`(_ fault: String) throws {
+    var value = try NarrationFixture.timeline()
     var events = value["events"].array
     switch fault {
     case "duration": value["durationSeconds"] = .decimal(11)
@@ -39,15 +35,27 @@ struct NarrationTests {
   }
 
   @Test
-  func acceptsMenuOnlyDemonstrationWithoutInventedKeycasts() throws {
-    var value = try timeline()
+  func `accepts menu only demonstration without invented keycasts`() throws {
+    var value = try NarrationFixture.timeline()
     value["events"] = .array(value["events"].array.filter { $0["track"].str != "keys" })
     try FilmNarration.validate(value, film: "tour", locale: "ko", duration: 10)
   }
 
   @Test
-  func preservesLiteralASSControlCharacters() {
+  func `preserves literal ASS control characters`() {
     #expect(FilmNarration.escape(#"Path \Notes {name}"#) == #"Path \{}Notes \{name\}"#)
     #expect(FilmNarration.escape("One\nTwo") == #"One\NTwo"#)
+  }
+
+}
+
+// MARK: - NarrationFixture
+
+enum NarrationFixture {
+  static func timeline() throws -> JSON {
+    try JSON
+      .parse(
+        #"{"schemaVersion":1,"film":"tour","uiLanguage":"ko","captureEpochUptimeNanoseconds":100000,"durationSeconds":10,"events":[{"track":"chapter","id":"tour.chapter","start":0,"end":10},{"track":"caption","id":"tour.intro","start":0,"end":3},{"track":"caption","id":"tour.capture","start":3,"end":10},{"track":"keys","chord":"cmd + shift - 1","start":3.1,"end":5.1}]}"#
+      )
   }
 }

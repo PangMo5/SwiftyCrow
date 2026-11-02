@@ -16,9 +16,15 @@ enum OverlayTranslationPolicy {
     guard sources.indices.contains(index) else { return false }
     let source = sources[index]
     if
-      source.text.count == 1, source.text.unicodeScalars.allSatisfy({ $0.isASCII && CharacterSet.letters.contains($0) }),
-      source.language.script?.identifier != "Latn" { return true }
-    if source.isProtectedLiteral || source.isProtectedVisualMetadata { return true }
+      source.text.count == 1,
+      source.text.unicodeScalars.allSatisfy({ $0.isASCII && CharacterSet.letters.contains($0) }),
+      source.language.script?.identifier != "Latn"
+    {
+      return true
+    }
+    if source.isProtectedLiteral || source.isProtectedVisualMetadata {
+      return true
+    }
     if isNonlinguisticMetadata(source.text) || OCRTextSemantics.isVersionedProductName(source.text) {
       return true
     }
@@ -56,7 +62,9 @@ enum OverlayTranslationPolicy {
     }
     let source = sources[index]
     guard case .horizontal = source.layout, isCompactMetadata(source.text) else { return nil }
-    if let rhythm = phoneticCluster(at: index, in: sources) { return rhythm }
+    if let rhythm = phoneticCluster(at: index, in: sources) {
+      return rhythm
+    }
 
     let rowValues = sources.indices.filter { candidate in
       guard candidate != index, case .horizontal = sources[candidate].layout else { return false }
@@ -81,7 +89,9 @@ enum OverlayTranslationPolicy {
       }
       .min(by: { $0.gap < $1.gap })?
       .text
-      if let value { return value }
+      if let value {
+        return value
+      }
     }
 
     // Independent navigation items need their visual context without becoming
@@ -106,7 +116,8 @@ enum OverlayTranslationPolicy {
     let labels = peers.filter { candidate in
       let peer = sources[candidate]
       guard
-        !peer.isProtectedLiteral, peer.language.usesSameWritingSystem(as: source.language),
+        !peer.isProtectedLiteral,
+        peer.language.usesSameWritingSystem(as: source.language),
         source.text.split(whereSeparator: \.isWhitespace).count <= 3,
         peer.text.split(whereSeparator: \.isWhitespace).count <= 3,
         !peer.text.contains(where: { ".:!?".contains($0) }),
@@ -126,7 +137,7 @@ enum OverlayTranslationPolicy {
     }
     if labels.count >= 3 {
       return labels.sorted { sources[$0].box.minX < sources[$1].box.minX }
-        .prefix(4).map { sources[$0].text }.joined(separator: " / ")
+        .prefix(4).lazy.map { sources[$0].text }.joined(separator: " / ")
     }
 
     // A lone link/card heading can otherwise be translated as an unrelated
@@ -145,7 +156,9 @@ enum OverlayTranslationPolicy {
           && min(source.box.maxX, value.box.maxX) > max(source.box.minX, value.box.minX)
           && value.appearance.fontSizeScale >= source.appearance.fontSizeScale * 1.2
       }.max { $0.element.box.maxY < $1.element.box.maxY }?.element
-      if let heading { return heading.text }
+      if let heading {
+        return heading.text
+      }
     }
 
     return nil
@@ -178,7 +191,9 @@ enum OverlayTranslationPolicy {
         let dx = max(0, max(a.box.minX - b.box.maxX, b.box.minX - a.box.maxX)) * a.imageAspectRatio
         let dy = max(0, max(a.box.minY - b.box.maxY, b.box.minY - a.box.maxY))
         if
-          dx <= height, dy <= height, min(a.box.height, b.box.height) >= height * 0.55,
+          dx <= height,
+          dy <= height,
+          min(a.box.height, b.box.height) >= height * 0.55,
           a.appearance.background.distance(to: b.appearance.background) <= 0.06
         {
           seen.insert(other)
@@ -187,10 +202,11 @@ enum OverlayTranslationPolicy {
       }
     }
     guard
-      group.count >= 3, group.contains(where: { abs(sources[$0].rotationRadians) > 0.04 }),
+      group.count >= 3,
+      group.contains(where: { abs(sources[$0].rotationRadians) > 0.04 }),
       Set(group.map { sources[$0].text }).count >= 2
     else { return nil }
-    return group.sorted { sources[$0].box.minY < sources[$1].box.minY }.map { sources[$0].text }.joined(separator: "、")
+    return group.sorted { sources[$0].box.minY < sources[$1].box.minY }.lazy.map { sources[$0].text }.joined(separator: "、")
   }
 
   private static func isCompactMetadata(_ text: String) -> Bool {
@@ -224,7 +240,10 @@ enum OverlayTranslationPolicy {
     let rhs = rhs.standardized
     guard lhs.height > 0, rhs.height > 0 else { return false }
     let overlap = max(0, min(lhs.maxY, rhs.maxY) - max(lhs.minY, rhs.minY))
-    if overlap / min(lhs.height, rhs.height) >= 0.45 { return true }
+    if overlap / min(lhs.height, rhs.height) >= 0.45 {
+      return true
+    }
     return abs(lhs.midY - rhs.midY) <= max(lhs.height, rhs.height) * 0.65
   }
+
 }

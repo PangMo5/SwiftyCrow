@@ -25,4 +25,5 @@ struct CaptureErrorView: View {
     .animation(.easeOut(duration: 0.15), value: store.lastError)
     .animation(.easeOut(duration: 0.15), value: store.translationUnavailable)
   }
+
 }

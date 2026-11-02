@@ -77,7 +77,7 @@ struct SettingsFeature {
             for await value in updater.canCheckForUpdates() {
               await send(.canCheckForUpdatesChanged(value))
             }
-          }
+          },
         )
         .cancellable(id: CancelID.lifetime, cancelInFlight: true)
 
@@ -146,4 +146,5 @@ struct SettingsFeature {
       }
     }
   }
+
 }

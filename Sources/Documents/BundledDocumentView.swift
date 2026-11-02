@@ -22,7 +22,7 @@ struct BundledDocumentView: View {
           ContentUnavailableView(
             "Unable to Open Document",
             systemImage: "doc.badge.exclamationmark",
-            description: Text(error.message)
+            description: Text(error.message),
           )
         } else {
           ProgressView("Loading document…")
@@ -110,12 +110,14 @@ struct BundledDocumentView: View {
       .textSelection(.enabled)
       .environment(\.openURL, OpenURLAction { url in
         guard
-          url.scheme == "swiftycrow-document", let host = url.host,
+          url.scheme == "swiftycrow-document",
+          let host = url.host,
           let target = BundledDocument(rawValue: host)
         else { return .systemAction(url) }
         if target == current.document {
           let id = url.fragment.flatMap { content.anchors[$0] } ?? (url.fragment == nil ? content.blocks.first?.id : nil)
-          if let id { proxy.scrollTo(id, anchor: .top)
+          if let id {
+            proxy.scrollTo(id, anchor: .top)
             return .handled
           }
           var components = URLComponents(url: target.sourceURL, resolvingAgainstBaseURL: false)!
@@ -126,13 +128,15 @@ struct BundledDocumentView: View {
         return .handled
       })
       .onAppear {
-        if let fragment = current.fragment, let id = content.anchors[fragment] { proxy.scrollTo(id, anchor: .top) }
+        if let fragment = current.fragment, let id = content.anchors[fragment] {
+          proxy.scrollTo(id, anchor: .top)
+        }
       }
     }
     .id(current)
   }
 
-  @ViewBuilder
+  @ContentBuilder
   private func blockView(_ block: BundledDocumentBlock) -> some View {
     switch block.kind {
     case .heading(let level):
@@ -172,8 +176,12 @@ struct BundledDocumentView: View {
 
     case .text:
       HStack(alignment: .firstTextBaseline, spacing: 8) {
-        if block.isQuote { Rectangle().fill(.tertiary).frame(width: 3) }
-        if let marker = block.marker { Text(verbatim: marker).foregroundStyle(.secondary) }
+        if block.isQuote {
+          Rectangle().fill(.tertiary).frame(width: 3)
+        }
+        if let marker = block.marker {
+          Text(verbatim: marker).foregroundStyle(.secondary)
+        }
         Text(block.text).fixedSize(horizontal: false, vertical: true)
       }
       .padding(.leading, CGFloat(block.indentation) * 18)

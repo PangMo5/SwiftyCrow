@@ -16,7 +16,9 @@ enum OCRGlyphTopology {
 
   static func signature(image: CGImage, background: OverlayColor) -> Signature? {
     guard
-      image.width > 2, image.height > 2, image.width * image.height <= 65_536,
+      image.width > 2,
+      image.height > 2,
+      image.width * image.height <= 65_536,
       let context = CGContext(
         data: nil,
         width: image.width,
@@ -24,14 +26,14 @@ enum OCRGlyphTopology {
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ),
       let bytes = context.data?.assumingMemoryBound(to: UInt8.self)
     else { return nil }
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let bg = [background.red, background.green, background.blue].map { Int(($0 * 255).rounded()) }
     let contrast = (0..<image.width * image.height).map { index in
-      (0..<3).map { abs(Int(bytes[index * 4 + $0]) - bg[$0]) }.max()!
+      (0..<3).lazy.map { abs(Int(bytes[index * 4 + $0]) - bg[$0]) }.max()!
     }
     guard let maximum = contrast.max(), maximum >= 64 else { return nil }
     let observations = [0.35, 0.5, 0.65].compactMap { threshold in
@@ -70,12 +72,15 @@ enum OCRGlyphTopology {
             let ny = y + dy
             guard nx >= 0, nx < width, ny >= 0, ny < height else { continue }
             let next = ny * width + nx
-            if !seen[next], mask[next] == ink { seen[next] = true
+            if !seen[next], mask[next] == ink {
+              seen[next] = true
               queue.append(next)
             }
           } }
         }
-        if ink || !edge { result += 1 }
+        if ink || !edge {
+          result += 1
+        }
       }
       return result
     }

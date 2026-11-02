@@ -10,7 +10,7 @@ import Testing
 @MainActor
 struct OverlayVisibilityTests {
   @Test
-  func visibilityRequiresASelectedAreaAndSelectionCancellationKeepsItHidden() async {
+  func `visibility requires A selected area and selection cancellation keeps it hidden`() async {
     let initial = withDependencies {
       $0.defaultFileStorage = .inMemory
     } operation: { CaptureFeature.State() }
@@ -32,7 +32,7 @@ struct OverlayVisibilityTests {
   }
 
   @Test(arguments: [OverlayFrame.SelectionKind.region, .window], [false, true])
-  func geometryAndJSONPreserveSelectionIntent(_ kind: OverlayFrame.SelectionKind, _ selected: Bool) throws {
+  func `geometry and JSON preserve selection intent`(_ kind: OverlayFrame.SelectionKind, _ selected: Bool) throws {
     var frame = OverlayFrame(x: 20, y: 30, width: 500, height: 240, hasSelection: selected, selectionKind: kind)
     let changed = CGRect(x: 75, y: 95, width: 720, height: 400)
     frame.updateGeometry(changed)
@@ -43,7 +43,7 @@ struct OverlayVisibilityTests {
   }
 
   @Test
-  func cancellingWindowRecallAfterRestartNeverCapturesItsOldRectangle() async throws {
+  func `cancelling window recall after restart never captures its old rectangle`() async throws {
     let saved = OverlayFrame(rect: CGRect(x: 20, y: 30, width: 500, height: 240), selectionKind: .window)
     let decoded = try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(saved))
     let initial = withDependencies { $0.defaultFileStorage = .inMemory } operation: { CaptureFeature.State() }
@@ -66,7 +66,7 @@ struct OverlayVisibilityTests {
   }
 
   @Test(arguments: [OverlayFrame.SelectionKind.region, .window])
-  func recalledWindowRequiresANewExplicitTargetAfterRestart(_ choice: OverlayFrame.SelectionKind) async throws {
+  func `recalled window requires A new explicit target after restart`(_ choice: OverlayFrame.SelectionKind) async throws {
     let saved = OverlayFrame(rect: CGRect(x: 20, y: 30, width: 500, height: 240), selectionKind: .window)
     let decoded = try JSONDecoder().decode(OverlayFrame.self, from: JSONEncoder().encode(saved))
     let selected = CGRect(x: 100, y: 200, width: 320, height: 180)
@@ -103,7 +103,7 @@ struct OverlayVisibilityTests {
   }
 
   @Test
-  func existingSavedRegionsRemainUsableAfterUpdating() throws {
+  func `existing saved regions remain usable after updating`() throws {
     let legacy = Data(#"{"x":20,"y":30,"width":500,"height":240}"#.utf8)
     let frame = try JSONDecoder().decode(OverlayFrame.self, from: legacy)
     #expect(frame.hasSelection)

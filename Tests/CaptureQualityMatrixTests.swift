@@ -31,7 +31,7 @@ struct CaptureQualityMatrixTests {
   }
 
   @Test(arguments: scenarios)
-  func translatedBlocksStayReadableInsideIndependentContainers(_ item: Scenario) throws {
+  func `translated blocks stay readable inside independent containers`(_ item: Scenario) throws {
     let scale: CGFloat = item.dark ? 1.5 : 1
     let canvas = CGSize(width: 1200 * scale, height: 800 * scale)
     let originals = item.structure.blocks(item.source)
@@ -41,7 +41,7 @@ struct CaptureQualityMatrixTests {
         x: block.rect.minX / 1200,
         y: block.rect.minY / 800,
         width: block.rect.width / 1200,
-        height: block.rect.height / 800
+        height: block.rect.height / 800,
       )
       let appearance = OverlaySourceAppearance(
         background: item.dark ? .black : .white,
@@ -50,7 +50,7 @@ struct CaptureQualityMatrixTests {
         fontSizeScale: block.size / 800,
         fontWeight: block.role == .heading
           ? .bold
-          : .regular
+          : .regular,
       )
       let recognized = OCRResult.Line(
         boundingBoxNormalized: normalized,
@@ -62,17 +62,17 @@ struct CaptureQualityMatrixTests {
         appearance: appearance,
         replacementPatches: [.init(
           box: normalized,
-          appearance: appearance
+          appearance: appearance,
         )],
-        alignment: .leading
+        alignment: .leading,
       )
       var line = OverlayLine(
         id: UUID(),
         source: .init(
           recognized: recognized,
-          language: Locale.Language(identifier: item.source.code)
+          language: Locale.Language(identifier: item.source.code),
         ),
-        initialContent: .pending
+        initialContent: .pending,
       )
       if block.role != .literal {
         line.showTranslation(targets[index].text, language: Locale.Language(identifier: item.target.code))
@@ -97,7 +97,7 @@ struct CaptureQualityMatrixTests {
         appearance: placement.line.source.appearance,
         styles: [],
         width: placement.frame.width,
-        lineHeightMultiple: placement.lineHeightMultiple
+        lineHeightMultiple: placement.lineHeightMultiple,
       )
       let ranges = plan.lines.map { CTLineGetStringRange($0) }
       #expect(ranges.first?.location == 0)
@@ -111,13 +111,13 @@ struct CaptureQualityMatrixTests {
   }
 
   @Test(arguments: CaptureQualityLanguage.all)
-  func parallelMenuItemsDoNotBecomeOneSentence(_ language: CaptureQualityLanguage) {
+  func `parallel menu items do not become one sentence`(_ language: CaptureQualityLanguage) {
     let lines = language.labels.enumerated().map { i, label in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.04 + Double(i) * 0.24, y: 0.2, width: 0.2, height: 0.05),
         text: label,
         imageAspectRatio: 1.5,
-        recognitionGroupID: 1
+        recognitionGroupID: 1,
       )
     }
     let result = OCRVisualStructure.classifying(OCRResult(lines: lines)).coalescingParagraphFragments()

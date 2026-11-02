@@ -150,9 +150,9 @@ SwiftyCrow 使用 Apple 的设备端翻译框架。出现**“无法翻译”**�
 <a id="requirements"></a>
 ### 环境要求
 
-- Xcode 26.4 或更高版本，包含 Swift 6.3 和 macOS 26.4 或更新的 SDK
-- [mise](https://mise.jdx.dev)（通过 `.mise.toml` 管理 Tuist）
-- 另行安装 SwiftFormat，用于源码格式化
+- 包含 Swift 6.4.2 和 macOS 27.2 SDK 的 Xcode 27.2
+- [mise](https://mise.jdx.dev)（通过 `.mise.toml` 管理 Tuist 和 SwiftFormat）
+- 用于版本控制的 [Jujutsu](https://docs.jj-vcs.dev)（`jj`）
 
 <a id="building-from-source"></a>
 ### 从源码构建
@@ -160,11 +160,19 @@ SwiftyCrow 使用 Apple 的设备端翻译框架。出现**“无法翻译”**�
 ```sh
 export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
 export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs Tuist
-tuist install              # resolves SPM dependencies
-tuist generate             # generates the Xcode workspace
+mise install               # installs the pinned Tuist and SwiftFormat versions
+mise run generate          # resolves SPM dependencies and generates the workspace
 open SwiftyCrow.xcworkspace
 ```
+
+`.xcode-version` 选择 Xcode 27.2。mise 为此项目设置对应的 `DEVELOPER_DIR`，不会更改整台机器的 Xcode 选择。无法启用 mise shell 集成时，请使用 `mise exec -- swift ...` 或 `mise exec -- xcodebuild ...`。SDK 跟随所选 Xcode，应用支持的最低 macOS 版本仍为 26.0。
+
+运行 `mise run format` 应用 Airbnb 样式，运行 `mise run format:check` 进行检查。上游配置的修订版本记录在 `.swiftformat` 中。
+
+<a id="version-control"></a>
+### 版本控制
+
+在与 Git 共享工作目录的仓库中使用 `jj`。现有 Git 历史和 GitHub 远程仓库仍然可用。对于新克隆的仓库，先执行一次 `jj git init --colocate`，再执行 `jj bookmark track main@origin`。使用 `jj status` 和 `jj diff` 查看更改，使用 `jj new -m "description"` 开始新工作，任务书签名称使用 `pangmo5/` 前缀。使用 `jj git fetch` 更新远程信息。
 
 Debug 构建使用 Apple Development 签名。请将 `TUIST_DEVELOPMENT_TEAM` 设为开发证书所属的团队。保持签名一致，可让 macOS 在重新构建后继续保留屏幕录制授权。将这些值写入 shell 配置或本地 `.mise.local.toml`：
 

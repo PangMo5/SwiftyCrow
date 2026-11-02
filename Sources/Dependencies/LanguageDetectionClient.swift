@@ -46,7 +46,8 @@ extension LanguageDetectionClient: DependencyKey {
           weights[language, default: 0] += count
         }
         if
-          let best = weights.max(by: { $0.value < $1.value }), total > 0,
+          let best = weights.max(by: { $0.value < $1.value }),
+          total > 0,
           Double(best.value) / Double(total) >= max(0.6, minConfidence)
         {
           return Language(code: best.key.rawValue)
@@ -90,10 +91,11 @@ extension LanguageDetectionClient {
         "Hans": ["Hani"],
         "Hant": ["Hani"],
       ][script] ?? [script]
-      let pattern = scripts.map { "\\p{sc=\($0)}" }.joined(separator: "|")
+      let pattern = scripts.lazy.map { "\\p{sc=\($0)}" }.joined(separator: "|")
       let expression: NSRegularExpression
-      if let cached = expressions[pattern] { expression = cached }
-      else {
+      if let cached = expressions[pattern] {
+        expression = cached
+      } else {
         guard let parsed = try? NSRegularExpression(pattern: pattern) else { return nil }
         expressions[pattern] = parsed
         expression = parsed
@@ -105,7 +107,9 @@ extension LanguageDetectionClient {
       // language evidence. Reject an impossible script, not legitimate mixing.
       return matching > 0 ? language : nil
     }
-    if native.allSatisfy({ $0 != nil }) { return native.compactMap { $0 } }
+    if native.allSatisfy({ $0 != nil }) {
+      return native.compactMap { $0 }
+    }
     let inferred = resolveSources(for: lines.map(\.text), configured: configured)
     return lines.indices.map { native[$0] ?? inferred[$0] }
   }
@@ -131,7 +135,9 @@ extension LanguageDetectionClient {
     let kanaCount = pageScalars.count { (0x3040...0x30FF).contains($0.value) }
     let hangulCount = pageScalars.count { (0xAC00...0xD7A3).contains($0.value) }
     return texts.map { text in
-      if OCRTextSemantics.isIdentifier(text) || OCRTextSemantics.isCode(text) { return fallback }
+      if OCRTextSemantics.isIdentifier(text) || OCRTextSemantics.isCode(text) {
+        return fallback
+      }
       let scalars = text.unicodeScalars
       let latin = scalars.count { (0x41...0x5A).contains($0.value) || (0x61...0x7A).contains($0.value) }
       let letters = scalars.count { CharacterSet.letters.contains($0) }
@@ -139,9 +145,15 @@ extension LanguageDetectionClient {
       if letters > 0, han == letters {
         // An English dictionary can contain an independent Japanese/Chinese
         // headword. Low-confidence Han must never inherit a Latin source.
-        if ["ja", "zh", "ko"].contains(fallback.localeLanguage.languageCode?.identifier ?? "") { return fallback }
-        if kanaCount >= 3 { return Language(code: "ja") }
-        if hangulCount >= 12 { return Language(code: "ko") }
+        if ["ja", "zh", "ko"].contains(fallback.localeLanguage.languageCode?.identifier ?? "") {
+          return fallback
+        }
+        if kanaCount >= 3 {
+          return Language(code: "ja")
+        }
+        if hangulCount >= 12 {
+          return Language(code: "ko")
+        }
         if let detected = detect(text, 0), ["ja", "zh", "ko"].contains(detected.localeLanguage.languageCode?.identifier ?? "") {
           return detected
         }
@@ -161,8 +173,10 @@ extension LanguageDetectionClient {
       }
       if let language = detect(text, 0.65) {
         if
-          isLatinText, language != shortLatinSource,
-          let folded = text.applyingTransform(StringTransform("Latin-ASCII"), reverse: false), folded != text,
+          isLatinText,
+          language != shortLatinSource,
+          let folded = text.applyingTransform(StringTransform("Latin-ASCII"), reverse: false),
+          folded != text,
           detect(folded, 0.9) == shortLatinSource
         {
           // Use this only as language evidence. An OCR lookalike such as a
@@ -174,7 +188,9 @@ extension LanguageDetectionClient {
       }
       // A page's dominant script cannot turn an English caption into Arabic
       // or Japanese. Ask for the best hypothesis within this actual string.
-      if latin >= 3, latin == letters, let language = detect(text, 0) { return language }
+      if latin >= 3, latin == letters, let language = detect(text, 0) {
+        return language
+      }
       return fallback
     }
   }

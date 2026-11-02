@@ -40,133 +40,133 @@ struct OverlayTextFlowTests {
       sourceIsVertical: true,
       target: "en-US",
       text: "I have something important to tell you today.",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
     TranslationCase(
       name: "vertical Japanese to Arabic",
       sourceIsVertical: true,
       target: "ar",
       text: "لدي شيء مهم لأخبرك به",
-      expected: .horizontal(.rightToLeft)
+      expected: .horizontal(.rightToLeft),
     ),
     TranslationCase(
       name: "vertical Japanese to Hebrew",
       sourceIsVertical: true,
       target: "he",
       text: "יש לי משהו חשוב לומר לך",
-      expected: .horizontal(.rightToLeft)
+      expected: .horizontal(.rightToLeft),
     ),
     TranslationCase(
       name: "vertical Japanese stays vertical",
       sourceIsVertical: true,
       target: "ja",
       text: "今日は大切な話があります",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "vertical Simplified Chinese stays vertical",
       sourceIsVertical: true,
       target: "zh-Hans",
       text: "今天有重要的事情告诉你",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "vertical Korean stays vertical",
       sourceIsVertical: true,
       target: "ko",
       text: "오늘 중요한 이야기가 있어요",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "CJK dominant mixed script stays vertical",
       sourceIsVertical: true,
       target: "ja",
       text: "OKなら今すぐ始めよう",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "Latin dominant mixed script becomes horizontal",
       sourceIsVertical: true,
       target: "en-US",
       text: "Meet ゆきえ at the station",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
     TranslationCase(
       name: "mixed script tie follows English target",
       sourceIsVertical: true,
       target: "en-US",
       text: "AB世界",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
     TranslationCase(
       name: "mixed script tie follows Japanese target",
       sourceIsVertical: true,
       target: "ja",
       text: "AB世界",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "actual Japanese output overrides English metadata",
       sourceIsVertical: true,
       target: "en-US",
       text: "今日は晴れです",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "actual Latin output overrides Japanese metadata",
       sourceIsVertical: true,
       target: "ja",
       text: "SwiftyCrow",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
     TranslationCase(
       name: "Japanese punctuation falls back to target script",
       sourceIsVertical: true,
       target: "ja",
       text: "！？……",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "Japanese digits fall back to target script",
       sourceIsVertical: true,
       target: "ja",
       text: "2026",
-      expected: .vertical(.rightToLeft)
+      expected: .vertical(.rightToLeft),
     ),
     TranslationCase(
       name: "English digits fall back to target script",
       sourceIsVertical: true,
       target: "en-US",
       text: "2026",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
     TranslationCase(
       name: "Mongolian columns advance left to right",
       sourceIsVertical: true,
       target: "mn-Mong",
       text: "ᠮᠣᠩᠭᠣᠯ",
-      expected: .vertical(.leftToRight)
+      expected: .vertical(.leftToRight),
     ),
     TranslationCase(
       name: "horizontal Japanese source remains horizontal",
       sourceIsVertical: false,
       target: "ja",
       text: "今日は晴れです",
-      expected: .horizontal(.leftToRight)
+      expected: .horizontal(.leftToRight),
     ),
   ])
-  func resolvesFromDisplayedString(_ testCase: TranslationCase) {
+  func `resolves from displayed string`(_ testCase: TranslationCase) {
     var line = makeLine(vertical: testCase.sourceIsVertical, initialContent: .pending)
     line.showTranslation(
       testCase.text,
-      language: Locale.Language(identifier: testCase.target)
+      language: Locale.Language(identifier: testCase.target),
     )
     #expect(line.textFlow == testCase.expected)
     #expect(line.displayedText == testCase.text)
   }
 
   @Test
-  func pendingAndUnavailableContentPreserveSourceFlow() {
+  func `pending and unavailable content preserve source flow`() {
     var line = makeLine(vertical: true, initialContent: .pending)
     #expect(line.textFlow == .vertical(.rightToLeft))
     #expect(line.displayedText == line.source.text)
@@ -179,7 +179,7 @@ struct OverlayTextFlowTests {
   }
 
   @Test
-  func completedTranslationDoesNotLeakIntoFreshLiveTick() {
+  func `completed translation does not leak into fresh live tick`() {
     let id = UUID(0)
     var previous = makeLine(id: id, vertical: true, initialContent: .pending)
     previous.showTranslation("Previous result", language: Locale.Language(identifier: "en-US"))
@@ -192,7 +192,7 @@ struct OverlayTextFlowTests {
   }
 
   @Test
-  func blankTranslationBecomesExplicitFallback() {
+  func `blank translation becomes explicit fallback`() {
     var line = makeLine(vertical: true, initialContent: .pending)
     line.showTranslation("  \n", language: Locale.Language(identifier: "en-US"))
     #expect(line.isUnavailable)
@@ -200,7 +200,7 @@ struct OverlayTextFlowTests {
   }
 
   @Test
-  func systemHorizontalTextPreferenceOverridesVerticalCapableTranslation() {
+  func `system horizontal text preference overrides vertical capable translation`() {
     var line = makeLine(vertical: true, initialContent: .pending)
     line.showTranslation("今日は晴れです", language: Locale.Language(identifier: "ja"))
     #expect(line.textFlow == .vertical(.rightToLeft))
@@ -214,14 +214,14 @@ struct OverlayTextFlowTests {
     WrittenLanguageCase(lhs: "sr-Cyrl", rhs: "sr-Latn", expected: false),
     WrittenLanguageCase(lhs: "ko", rhs: "ja", expected: false),
   ])
-  func comparesLanguageAndScriptButIgnoresRegion(_ testCase: WrittenLanguageCase) {
+  func `compares language and script but ignores region`(_ testCase: WrittenLanguageCase) {
     let lhs = Locale.Language(identifier: testCase.lhs)
     let rhs = Locale.Language(identifier: testCase.rhs)
     #expect(lhs.usesSameWritingSystem(as: rhs) == testCase.expected)
   }
 
   @Test
-  func findsOnlyShortTateChuYokoRuns() throws {
+  func `finds only short tate chu yoko runs`() throws {
     let text = "2026年8月27日 OK ABCDE"
     let substrings = try CoreTextTypesetter.horizontalInVerticalRanges(in: text).map { range in
       let swiftRange = try #require(Range(range, in: text))
@@ -235,24 +235,25 @@ struct OverlayTextFlowTests {
   private func makeLine(
     id: UUID = UUID(0),
     vertical: Bool,
-    initialContent: OverlayLine.InitialContent
+    initialContent: OverlayLine.InitialContent,
   ) -> OverlayLine {
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.4, y: 0.2, width: vertical ? 0.08 : 0.4, height: 0.3),
       text: "今日は大切な話があります",
       rowCount: vertical ? 2 : 1,
       isVerticalBlock: vertical,
-      verticalCharScale: vertical ? 0.035 : 0
+      verticalCharScale: vertical ? 0.035 : 0,
     )
     return OverlayLine(
       id: id,
       source: OverlayLine.Source(
         recognized: recognized,
-        language: Locale.Language(identifier: "ja")
+        language: Locale.Language(identifier: "ja"),
       ),
-      initialContent: initialContent
+      initialContent: initialContent,
     )
   }
+
 }
 
 extension UUID {
@@ -273,7 +274,7 @@ extension UUID {
       0,
       0,
       0,
-      value
+      value,
     ))
   }
 }

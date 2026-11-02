@@ -21,35 +21,35 @@ extension CaptureQualityLanguage {
       heading: "Settings and privacy",
       labels: ["Overview", "Downloads", "Documentation", "Support"],
       body: "Keep the original files. Review the changes before continuing. Do not disconnect the device while an update is running.",
-      note: "The price changed from $50 to $15. The backup runs every 15 minutes."
+      note: "The price changed from $50 to $15. The backup runs every 15 minutes.",
     ),
     .init(
       code: "ko",
       heading: "설정과 개인정보",
       labels: ["개요", "다운로드", "사용 설명서", "지원"],
       body: "원본 파일을 보관하세요. 계속하기 전에 변경 사항을 확인하세요. 업데이트 중에는 기기를 분리하지 마세요.",
-      note: "가격이 50달러에서 15달러로 바뀌었습니다. 백업은 15분마다 실행됩니다."
+      note: "가격이 50달러에서 15달러로 바뀌었습니다. 백업은 15분마다 실행됩니다.",
     ),
     .init(
       code: "ja",
       heading: "設定とプライバシー",
       labels: ["概要", "ダウンロード", "ドキュメント", "サポート"],
       body: "元のファイルを保管してください。続行する前に変更内容を確認してください。更新中はデバイスを取り外さないでください。",
-      note: "価格は50ドルから15ドルに変わりました。バックアップは15分ごとに実行されます。"
+      note: "価格は50ドルから15ドルに変わりました。バックアップは15分ごとに実行されます。",
     ),
     .init(
       code: "zh-Hans",
       heading: "设置与隐私",
       labels: ["概览", "下载", "使用文档", "支持"],
       body: "请保留原始文件。继续之前，请检查更改。更新过程中请勿断开设备连接。",
-      note: "价格从50美元降至15美元。每15分钟执行一次备份。"
+      note: "价格从50美元降至15美元。每15分钟执行一次备份。",
     ),
     .init(
       code: "zh-Hant",
       heading: "設定與隱私",
       labels: ["概覽", "下載", "使用文件", "支援"],
       body: "請保留原始檔案。繼續之前，請檢查變更。更新過程中請勿中斷裝置連線。",
-      note: "價格從50美元降至15美元。每15分鐘執行一次備份。"
+      note: "價格從50美元降至15美元。每15分鐘執行一次備份。",
     ),
     .init(
       code: "ar",
@@ -57,7 +57,7 @@ extension CaptureQualityLanguage {
       labels: ["نظرة عامة", "التنزيلات", "المستندات", "الدعم"],
       body: "احتفظ بالملفات الأصلية. راجع التغييرات قبل المتابعة. لا تفصل الجهاز أثناء التحديث.",
       note: "انخفض السعر من 50 دولارًا إلى 15 دولارًا. يتم النسخ الاحتياطي كل 15 دقيقة.",
-      rtl: true
+      rtl: true,
     ),
     .init(
       code: "he",
@@ -65,21 +65,21 @@ extension CaptureQualityLanguage {
       labels: ["סקירה", "הורדות", "תיעוד", "תמיכה"],
       body: "שמרו את הקבצים המקוריים. בדקו את השינויים לפני שממשיכים. אין לנתק את המכשיר בזמן העדכון.",
       note: "המחיר ירד מ-50 דולר ל-15 דולר. הגיבוי פועל כל 15 דקות.",
-      rtl: true
+      rtl: true,
     ),
     .init(
       code: "fr",
       heading: "Paramètres et confidentialité",
       labels: ["Présentation", "Téléchargements", "Documentation", "Assistance"],
       body: "Conservez les fichiers originaux. Vérifiez les modifications avant de continuer. Ne débranchez pas l’appareil pendant la mise à jour.",
-      note: "Le prix est passé de 50 dollars à 15 dollars. La sauvegarde démarre toutes les 15 minutes."
+      note: "Le prix est passé de 50 dollars à 15 dollars. La sauvegarde démarre toutes les 15 minutes.",
     ),
     .init(
       code: "de",
       heading: "Einstellungen und Datenschutz",
       labels: ["Übersicht", "Downloads", "Dokumentation", "Hilfe"],
       body: "Bewahren Sie die Originaldateien auf. Prüfen Sie die Änderungen, bevor Sie fortfahren. Trennen Sie das Gerät während des Updates nicht.",
-      note: "Der Preis ist von 50 auf 15 Dollar gesunken. Die Sicherung wird alle 15 Minuten ausgeführt."
+      note: "Der Preis ist von 50 auf 15 Dollar gesunken. Die Sicherung wird alle 15 Minuten ausgeführt.",
     ),
   ]
 }
@@ -115,7 +115,7 @@ enum CaptureQualityStructure: String, CaseIterable, Sendable {
       _ w: CGFloat,
       _ h: CGFloat,
       _ size: CGFloat,
-      _ role: Block.Role
+      _ role: Block.Role,
     ) -> Block {
       .init(text: text, rect: CGRect(x: x, y: y, width: w, height: h), size: size, role: role)
     }
@@ -157,7 +157,7 @@ enum CaptureQualityStructure: String, CaseIterable, Sendable {
           500,
           90,
           23,
-          .literal
+          .literal,
         ),
       ] }
 

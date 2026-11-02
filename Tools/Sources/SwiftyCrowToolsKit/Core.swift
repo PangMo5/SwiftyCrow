@@ -25,7 +25,9 @@ struct ToolError: Error, CustomStringConvertible {
 }
 
 func require(_ condition: @autoclosure () throws -> Bool, _ message: String) throws {
-  if try !condition() { throw ToolError(message) }
+  if try !condition() {
+    throw ToolError(message)
+  }
 }
 
 let locales = ["en", "ko", "ja", "zh-Hans", "zh-Hant"]
@@ -73,10 +75,12 @@ func copy(_ source: URL, _ target: URL) throws {
   try require(source.exists, "Copy source is missing: \(source.path)")
   try require(
     source.resolvingSymlinksInPath() != target.resolvingSymlinksInPath(),
-    "Copy source and destination are the same: \(source.path)"
+    "Copy source and destination are the same: \(source.path)",
   )
   try target.deletingLastPathComponent().makeDirectory()
-  if target.exists { try fm.removeItem(at: target) }
+  if target.exists {
+    try fm.removeItem(at: target)
+  }
   try fm.copyItem(at: source, to: target)
 }
 
@@ -136,7 +140,9 @@ func fullMatch(_ pattern: String, _ text: String) -> Bool {
 
 func lines(_ text: String) -> [String] {
   var result = text.components(separatedBy: .newlines)
-  if result.last == "" { result.removeLast() }
+  if result.last == "" {
+    result.removeLast()
+  }
   return result
 }
 
@@ -154,14 +160,14 @@ func runProcess(
   cwd: URL? = nil,
   environment: [String: String] = [:],
   capture: Bool = false,
-  removingEnvironment: [String] = []
+  removingEnvironment: [String] = [],
 ) async throws -> String {
   try require(!arguments.isEmpty, "Missing executable")
   let executable: Executable = arguments[0].contains("/") ? .path(FilePath(arguments[0])) : .name(arguments[0])
   let argv = Subprocess.Arguments(Array(arguments.dropFirst()))
   var overrides = Dictionary(uniqueKeysWithValues: environment.map { (
     Subprocess.Environment.Key(stringLiteral: $0.key),
-    Optional($0.value)
+    Optional($0.value),
   ) })
   for key in removingEnvironment { overrides[Subprocess.Environment.Key(stringLiteral: key)] = .some(nil) }
   if capture {
@@ -171,7 +177,7 @@ func runProcess(
       environment: .inherit.updating(overrides),
       workingDirectory: cwd.map { FilePath($0.path) },
       output: .string(limit: 16 * 1024 * 1024),
-      error: .currentStandardError
+      error: .currentStandardError,
     )
     try require(result.terminationStatus == .exited(0), "\(arguments[0]): \(result.terminationStatus)")
     return result.standardOutput
@@ -182,7 +188,7 @@ func runProcess(
     environment: .inherit.updating(overrides),
     workingDirectory: cwd.map { FilePath($0.path) },
     output: .currentStandardOutput,
-    error: .currentStandardError
+    error: .currentStandardError,
   )
   try require(result.terminationStatus == .exited(0), "\(arguments[0]): \(result.terminationStatus)")
   return ""

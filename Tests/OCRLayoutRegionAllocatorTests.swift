@@ -7,7 +7,7 @@ import Testing
 
 struct OCRLayoutRegionAllocatorTests {
   @Test
-  func sourceAntialiasingDoesNotTurnRaggedTextIntoAnObstacle() {
+  func `source antialiasing does not turn ragged text into an obstacle`() {
     let boxes = [
       CGRect(x: 0.2, y: 0.1, width: 0.6, height: 0.05),
       CGRect(x: 0.3, y: 0.18, width: 0.5, height: 0.05),
@@ -21,13 +21,13 @@ struct OCRLayoutRegionAllocatorTests {
       appearance: .init(
         background: .white,
         foreground: .black,
-        confidence: 1
+        confidence: 1,
       ),
       styleRuns: boxes.enumerated().map { .init(
         range: NSRange(location: $0.offset, length: 1),
         box: $0.element,
-        inkBox: $0.element.insetBy(dx: 0.0025, dy: 0.0025)
-      ) }
+        inkBox: $0.element.insetBy(dx: 0.0025, dy: 0.0025),
+      ) },
     )
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: [line]), width: 400, height: 400) { x, y in
       boxes.contains { $0.contains(CGPoint(x: Double(x) / 400, y: Double(y) / 400)) } ? .black : .white
@@ -36,7 +36,7 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test(arguments: [false, true])
-  func paragraphCorridorsFollowThePixelsBesideAFloatingFigure(_ mirrored: Bool) throws {
+  func `paragraph corridors follow the pixels beside A floating figure`(_ mirrored: Bool) throws {
     let boxes = [
       CGRect(x: 0.5, y: 0.1, width: 0.35, height: 0.04),
       CGRect(x: 0.5, y: 0.17, width: 0.35, height: 0.04),
@@ -49,7 +49,7 @@ struct OCRLayoutRegionAllocatorTests {
       rowCount: 4,
       horizontalGlyphScale: 0.04,
       appearance: .init(background: .white, foreground: .black, confidence: 1),
-      styleRuns: boxes.enumerated().map { .init(range: NSRange(location: $0.offset, length: 1), box: $0.element) }
+      styleRuns: boxes.enumerated().map { .init(range: NSRange(location: $0.offset, length: 1), box: $0.element) },
     )
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: [line]), width: 400, height: 400) { x, y in
       let x = mirrored ? 399 - x : x
@@ -70,11 +70,11 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test
-  func liveStabilizationDoesNotRestoreAnUnverifiedOldContainer() {
+  func `live stabilization does not restore an unverified old container`() {
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.1, height: 0.05),
       text: "Settings",
-      surface: .init(box: CGRect(x: 0.05, y: 0.1, width: 0.8, height: 0.2), confidence: 1)
+      surface: .init(box: CGRect(x: 0.05, y: 0.1, width: 0.8, height: 0.2), confidence: 1),
     )
     var previous = OverlayLine.Source(recognized: line, language: Locale.Language(identifier: "en"))
     previous.textFlowRegions = [CGRect(x: 0.2, y: 0.2, width: 0.5, height: 0.1)]
@@ -89,19 +89,19 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test
-  func paragraphSpaceStopsBeforeFollowingTextOrArtwork() throws {
+  func `paragraph space stops before following text or artwork`() throws {
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
     let paragraph = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.5, height: 0.2),
       text: "这是需要完整阅读的段落。",
       imageAspectRatio: 1,
       rowCount: 2,
-      appearance: appearance
+      appearance: appearance,
     )
     let footer = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.8, width: 0.5, height: 0.05),
       text: "Footer",
-      appearance: appearance
+      appearance: appearance,
     )
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: [paragraph, footer]), width: 200, height: 200) { _, y in
       y == 100 ? .white : .black
@@ -113,13 +113,13 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test
-  func subtleCardBoundaryIsNotTreatedAsEmptyCanvas() throws {
+  func `subtle card boundary is not treated as empty canvas`() throws {
     let bg = OverlayColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.05, height: 0.2),
       text: "下载",
       imageAspectRatio: 6,
-      appearance: .init(background: bg, foreground: .black, confidence: 1)
+      appearance: .init(background: bg, foreground: .black, confidence: 1),
     )
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: [line]), width: 600, height: 100) { x, _ in
       x < 120 ? bg : OverlayColor(red: 0.97, green: 0.97, blue: 0.97, alpha: 1)
@@ -128,13 +128,13 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test(arguments: [("개요", "Overview", "ko"), ("下载", "Download", "zh-Hans"), ("設定", "Settings", "ja")])
-  func allocatedWhitespaceCannotEnlargeTranslatedTextRegions(_ item: (String, String, String)) throws {
+  func `allocated whitespace cannot enlarge translated text regions`(_ item: (String, String, String)) throws {
     let appearance = OverlaySourceAppearance(
       background: .black,
       foreground: .white,
       confidence: 1,
       fontSizeScale: 0.25,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let lines = (0..<3).map { i in
       let box = CGRect(x: 0.1 + CGFloat(i) * 0.3, y: 0.2, width: 0.05, height: 0.25)
@@ -144,7 +144,7 @@ struct OCRLayoutRegionAllocatorTests {
         imageAspectRatio: 6,
         appearance: appearance,
         replacementPatches: [.init(box: box, appearance: appearance)],
-        alignment: .leading
+        alignment: .leading,
       )
     }
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: lines), width: 600, height: 100) { _, _ in .black }
@@ -152,7 +152,7 @@ struct OCRLayoutRegionAllocatorTests {
     var translated = OverlayLine(
       id: UUID(),
       source: .init(recognized: result.lines[0], language: Locale.Language(identifier: item.2)),
-      initialContent: .pending
+      initialContent: .pending,
     )
     translated.showTranslation(item.1, language: Locale.Language(identifier: "en"))
     let placement = try #require(OverlayLayoutEngine.placements(for: [translated], in: CGSize(width: 600, height: 100)).first)
@@ -162,13 +162,13 @@ struct OCRLayoutRegionAllocatorTests {
   }
 
   @Test
-  func nonTextArtworkIsAnExpansionBoundary() throws {
+  func `non text artwork is an expansion boundary`() throws {
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
     let lines = (0..<3).map { i in OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1 + CGFloat(i) * 0.3, y: 0.2, width: 0.05, height: 0.2),
       text: "菜单",
       imageAspectRatio: 6,
-      appearance: appearance
+      appearance: appearance,
     ) }
     let result = OCRLayoutRegionAllocator.allocating(.init(lines: lines), width: 600, height: 100) { x, _ in
       x == 110 ? .white : .black

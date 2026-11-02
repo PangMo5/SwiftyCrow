@@ -150,9 +150,9 @@ SwiftyCrowはAppleのデバイス内翻訳フレームワークを使用しま�
 <a id="requirements"></a>
 ### 必要な環境
 
-- Swift 6.3とmacOS 26.4 SDK以降を含むXcode 26.4以降
-- [mise](https://mise.jdx.dev)（`.mise.toml`でTuistを管理）
-- ソースコードの書式を整えるSwiftFormatを別途インストール
+- Swift 6.4.2とmacOS 27.2 SDKを含むXcode 27.2
+- [mise](https://mise.jdx.dev)（`.mise.toml`でTuistとSwiftFormatを管理）
+- バージョン管理用の[Jujutsu](https://docs.jj-vcs.dev)（`jj`）
 
 <a id="building-from-source"></a>
 ### ソースからビルド
@@ -160,11 +160,19 @@ SwiftyCrowはAppleのデバイス内翻訳フレームワークを使用しま�
 ```sh
 export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
 export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs Tuist
-tuist install              # resolves SPM dependencies
-tuist generate             # generates the Xcode workspace
+mise install               # installs the pinned Tuist and SwiftFormat versions
+mise run generate          # resolves SPM dependencies and generates the workspace
 open SwiftyCrow.xcworkspace
 ```
+
+`.xcode-version`でXcode 27.2を選択します。miseはマシン全体のXcode選択を変更せず、このプロジェクトに対応する`DEVELOPER_DIR`を設定します。miseのシェル連携が利用できない場合は、`mise exec -- swift ...`または`mise exec -- xcodebuild ...`を使ってください。SDKは選択したXcodeに従い、アプリの最小対応macOSバージョンは26.0のままです。
+
+`mise run format`でAirbnbスタイルを適用し、`mise run format:check`で確認します。上流設定のリビジョンは`.swiftformat`に記録しています。
+
+<a id="version-control"></a>
+### バージョン管理
+
+Gitと作業ディレクトリを共有するリポジトリで`jj`を使います。既存のGit履歴とGitHubリモートは引き続き利用できます。新しくクローンした場合は、`jj git init --colocate`を一度実行してから`jj bookmark track main@origin`を実行してください。`jj status`と`jj diff`で変更を確認し、`jj new -m "description"`で作業を開始します。作業用ブックマークには`pangmo5/`の接頭辞を付け、`jj git fetch`でリモートを更新します。
 
 DebugビルドはApple Development証明書で署名します。`TUIST_DEVELOPMENT_TEAM`には開発証明書に対応するチームを指定してください。同じ署名を使い続けると、再ビルド後もmacOSが画面収録の許可を維持できます。値はシェルのプロファイルかローカルの`.mise.local.toml`に保存してください。
 

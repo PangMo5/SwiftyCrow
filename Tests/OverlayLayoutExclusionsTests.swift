@@ -9,7 +9,7 @@ import Testing
 @Suite("Retained source layout constraints")
 struct OverlayLayoutExclusionsTests {
   @Test
-  func compressedGeometryMatchesAnExhaustiveWeightedGridOracle() {
+  func `compressed geometry matches an exhaustive weighted grid oracle`() {
     let xs: [CGFloat] = [0, 17, 48, 100]
     let ys: [CGFloat] = [0, 13, 34, 60]
     let frame = CGRect(x: 0, y: 0, width: 100, height: 60)
@@ -32,7 +32,9 @@ struct OverlayLayoutExclusionsTests {
               let clear = (top..<bottom).allSatisfy { y in
                 (left..<right).allSatisfy { x in mask & (1 << (y * 3 + x)) == 0 }
               }
-              if clear { expected = max(expected, (xs[right] - xs[left]) * (ys[bottom] - ys[top])) }
+              if clear {
+                expected = max(expected, (xs[right] - xs[left]) * (ys[bottom] - ys[top]))
+              }
             }
           }
         }
@@ -43,7 +45,7 @@ struct OverlayLayoutExclusionsTests {
           in: frame,
           excluding: positive ? [] : blocked,
           allowed: positive ? permitted : [],
-          alignment: .leading
+          alignment: .leading,
         )
         #expect(abs((actual.map { $0.width * $0.height } ?? 0) - expected) < 0.000_001, "mask=\(mask), positive=\(positive)")
         if let actual {
@@ -55,29 +57,29 @@ struct OverlayLayoutExclusionsTests {
   }
 
   @Test
-  func aBottomIntrusionKeepsTheFullWidthAboveIt() {
+  func `a bottom intrusion keeps the full width above it`() {
     let frame = CGRect(x: 0, y: 0, width: 100, height: 60)
     #expect(OverlayLayoutExclusions.largestRectangle(
       in: frame,
       excluding: [CGRect(x: 30, y: 50, width: 50, height: 10)],
-      alignment: .leading
+      alignment: .leading,
     ) == CGRect(x: 0, y: 0, width: 100, height: 50))
     #expect(OverlayLayoutExclusions.largestRectangle(in: frame, excluding: [frame], alignment: .center) == nil)
   }
 
   @Test
-  func existingParagraphCorridorsRemainHardConstraints() {
+  func `existing paragraph corridors remain hard constraints`() {
     let result = OverlayLayoutExclusions.largestRectangle(
       in: CGRect(x: 0, y: 0, width: 100, height: 60),
       excluding: [CGRect(x: 50, y: 40, width: 20, height: 20)],
       allowed: [CGRect(x: 0, y: 0, width: 60, height: 30), CGRect(x: 0, y: 30, width: 100, height: 30)],
-      alignment: .leading
+      alignment: .leading,
     )
     #expect(result == CGRect(x: 0, y: 0, width: 50, height: 60))
   }
 
   @Test(arguments: [0.5, 1.0, 2.0], [CGPoint.zero, CGPoint(x: 503, y: 700)])
-  func layoutConstraintsRetainPhysicalScaleAndContext(_ scale: CGFloat, _ offset: CGPoint) throws {
+  func `layout constraints retain physical scale and context`(_ scale: CGFloat, _ offset: CGPoint) throws {
     let transform = CGAffineTransform(translationX: offset.x, y: offset.y).scaledBy(x: scale, y: scale)
     let frame = CGRect(x: 97.6446287556, y: 954.5, width: 126.363636, height: 63.25)
     let obstruction = CGRect(x: 136, y: 1008, width: 36, height: 10)
@@ -85,7 +87,7 @@ struct OverlayLayoutExclusionsTests {
     let actual = try #require(OverlayLayoutExclusions.largestRectangle(
       in: frame.applying(transform),
       excluding: [obstruction.applying(transform)],
-      alignment: .leading
+      alignment: .leading,
     ))
     #expect(abs(actual.minX - expected.minX) < 0.000_001)
     #expect(abs(actual.minY - expected.minY) < 0.000_001)
@@ -95,7 +97,7 @@ struct OverlayLayoutExclusionsTests {
 
   @MainActor
   @Test(arguments: [("ko", "히!"), ("en", "Hi!"), ("ar", "مرحبا"), ("zh-Hans", "嗨！")], [-0.25, 0, 0.25])
-  func translatedInkDoesNotPaintRetainedArtwork(_ sample: (String, String), _ angle: CGFloat) throws {
+  func `translated ink does not paint retained artwork`(_ sample: (String, String), _ angle: CGFloat) throws {
     let size = CGSize(width: 200, height: 160)
     let artwork = CGRect(x: 70, y: 100, width: 50, height: 12)
     var pixels = [UInt8](repeating: 255, count: 200 * 160 * 4)
@@ -111,12 +113,12 @@ struct OverlayLayoutExclusionsTests {
       bitsPerComponent: 8,
       bitsPerPixel: 32,
       bytesPerRow: 800,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      space: try TestGraphics.sRGBColorSpace(),
       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     ))
     let box = CGRect(x: 0.2, y: 0.2, width: 0.55, height: 0.5)
     let appearance = OverlaySourceAppearance(
@@ -124,7 +126,7 @@ struct OverlayLayoutExclusionsTests {
       foreground: .init(red: 1, green: 0, blue: 1, alpha: 1),
       confidence: 1,
       fontSizeScale: 0.48,
-      fontWeight: .bold
+      fontWeight: .bold,
     )
     var transparent = appearance
     transparent.background.alpha = 0
@@ -133,14 +135,14 @@ struct OverlayLayoutExclusionsTests {
       text: "Original",
       rotationRadians: angle,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: transparent)]
+      replacementPatches: [.init(box: box, appearance: transparent)],
     )
     let obstacle = artwork.insetBy(dx: -1, dy: -1)
     recognized.layoutExclusions = [CGRect(
       x: obstacle.minX / size.width,
       y: obstacle.minY / size.height,
       width: obstacle.width / size.width,
-      height: obstacle.height / size.height
+      height: obstacle.height / size.height,
     )]
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "ja")))
     line.showTranslation(sample.1, language: .init(identifier: sample.0))
@@ -153,7 +155,7 @@ struct OverlayLayoutExclusionsTests {
       x: artwork.minX / size.width,
       y: artwork.minY / size.height,
       width: artwork.width / size.width,
-      height: artwork.height / size.height
+      height: artwork.height / size.height,
     )
     #expect(CaptureQualityMetrics.protectedPixelChanges(original: original, rendered: rendered, rectangles: [protected]) == 0)
     if sample.0 == "ko", angle == 0 {

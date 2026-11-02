@@ -150,9 +150,9 @@ SwiftyCrow는 Apple의 기기 내 번역 프레임워크를 사용해요. **"번
 <a id="requirements"></a>
 ### 필수 환경
 
-- Swift 6.3과 macOS 26.4 SDK 이상을 포함한 Xcode 26.4 이상
-- [mise](https://mise.jdx.dev) (`.mise.toml`로 Tuist 관리)
-- 소스 코드 서식을 맞추기 위한 SwiftFormat 별도 설치
+- Swift 6.4.2와 macOS 27.2 SDK가 포함된 Xcode 27.2
+- [mise](https://mise.jdx.dev) (`.mise.toml`로 Tuist와 SwiftFormat 관리)
+- 버전 관리를 위한 [Jujutsu](https://docs.jj-vcs.dev) (`jj`)
 
 <a id="building-from-source"></a>
 ### 소스로 빌드하기
@@ -160,11 +160,19 @@ SwiftyCrow는 Apple의 기기 내 번역 프레임워크를 사용해요. **"번
 ```sh
 export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
 export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs Tuist
-tuist install              # resolves SPM dependencies
-tuist generate             # generates the Xcode workspace
+mise install               # installs the pinned Tuist and SwiftFormat versions
+mise run generate          # resolves SPM dependencies and generates the workspace
 open SwiftyCrow.xcworkspace
 ```
+
+`.xcode-version`에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 `DEVELOPER_DIR`를 설정해요. mise 셸 활성화를 사용할 수 없다면 `mise exec -- swift ...` 또는 `mise exec -- xcodebuild ...`를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.
+
+`mise run format`으로 Airbnb 스타일을 적용하고 `mise run format:check`로 검사해요. 업스트림 설정의 리비전은 `.swiftformat`에 기록돼 있어요.
+
+<a id="version-control"></a>
+### 버전 관리
+
+Git과 작업 디렉터리를 공유하는 저장소에서 `jj`를 사용해요. 기존 Git 이력과 GitHub 원격 저장소는 그대로 유지돼요. 새로 복제한 저장소에서는 `jj git init --colocate`을 한 번 실행한 뒤 `jj bookmark track main@origin`를 실행해 주세요. `jj status`와 `jj diff`로 변경을 확인하고, `jj new -m "description"`로 새 작업을 시작해요. 작업 북마크 이름에는 `pangmo5/` 접두사를 사용하고, `jj git fetch`로 원격 정보를 갱신해요.
 
 Debug 빌드는 Apple Development 인증서로 서명해요. `TUIST_DEVELOPMENT_TEAM`에 개발 인증서와 연결된 팀을 지정해 주세요. 같은 서명을 유지하면 다시 빌드해도 macOS가 화면 기록 권한을 유지할 수 있어요. 셸 프로필이나 로컬 `.mise.local.toml`에 값을 저장해 두세요.
 

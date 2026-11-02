@@ -16,13 +16,12 @@ struct SourceArtworkIsolationTests {
     var dark: Bool
     var trailing: Bool
     var square: Bool
-
   }
 
   @Test(arguments: [1, 2], OutlineVariant.all)
-  func anUntranscribedOutlinedControlCannotBeErasedWithItsLabel(
+  func `an untranscribed outlined control cannot be erased with its label`(
     _ scale: Int,
-    _ variant: OutlineVariant
+    _ variant: OutlineVariant,
   ) {
     let dark = variant.dark
     let trailing = variant.trailing
@@ -37,8 +36,12 @@ struct SourceArtworkIsolationTests {
       let px = trailing ? 122 - CGFloat(x) / CGFloat(scale) : CGFloat(x) / CGFloat(scale)
       let py = CGFloat(y) / CGFloat(scale)
       let radius = square ? max(abs(px - 28.5), abs(py - 50.5)) : hypot(px - 28.5, py - 50.5)
-      if radius >= 7.5, radius <= 9 { return foreground }
-      if px >= 45, px < 101, py >= 45, py < 56, Int(px) % 10 < 6 { return foreground }
+      if radius >= 7.5, radius <= 9 {
+        return foreground
+      }
+      if px >= 45, px < 101, py >= 45, py < 56, Int(px) % 10 < 6 {
+        return foreground
+      }
       return background
     }
     #expect(refined.text == "Label")
@@ -52,37 +55,45 @@ struct SourceArtworkIsolationTests {
   }
 
   @Test(arguments: [false, true])
-  func aLetterOOrAnOpenOutlineCannotBeRemovedAsAControl(_ open: Bool) {
+  func `a letter O or an open outline cannot be removed as A control`(_ open: Bool) {
     let box = CGRect(x: 0.1, y: 0.4, width: 0.41, height: 0.22)
     let line = OCRResult.Line(boundingBoxNormalized: box, text: "Open", styleRuns: [
       .init(range: NSRange(location: 0, length: 4), box: box)
     ])
     let refined = SourceArtworkIsolation.refine(line, width: 200, height: 100, background: .white) { x, y in
       let radius = hypot(CGFloat(x) - 28.5, CGFloat(y) - 50.5)
-      if radius >= 7.5, radius <= 9, !(open && y < 48) { return .black }
-      if (45..<101).contains(x), (open ? 45..<56 : 42..<60).contains(y), x % 10 < 6 { return .black }
+      if radius >= 7.5, radius <= 9, !(open && y < 48) {
+        return .black
+      }
+      if (45..<101).contains(x), (open ? 45..<56 : 42..<60).contains(y), x % 10 < 6 {
+        return .black
+      }
       return .white
     }
     #expect(refined == line)
   }
 
   @Test
-  func aTranscribedLetterOWithAWideWordGapRetainsItsOwner() {
+  func `a transcribed letter O with A wide word gap retains its owner`() {
     let box = CGRect(x: 0.1, y: 0.4, width: 0.41, height: 0.22)
     let line = OCRResult.Line(boundingBoxNormalized: box, text: "O label", styleRuns: [
       .init(range: NSRange(location: 0, length: 7), box: box)
     ])
     let refined = SourceArtworkIsolation.refine(line, width: 200, height: 100, background: .white) { x, y in
       let radius = hypot(CGFloat(x) - 28.5, CGFloat(y) - 50.5)
-      if radius >= 7.5, radius <= 9 { return .black }
-      if (45..<101).contains(x), (45..<56).contains(y), x % 10 < 6 { return .black }
+      if radius >= 7.5, radius <= 9 {
+        return .black
+      }
+      if (45..<101).contains(x), (45..<56).contains(y), x % 10 < 6 {
+        return .black
+      }
       return .white
     }
     #expect(refined == line)
   }
 
   @Test
-  func aColoredEmblemDoesNotBelongToThePublisherTextMask() {
+  func `a colored emblem does not belong to the publisher text mask`() {
     let box = CGRect(x: 0.1, y: 0.3, width: 0.8, height: 0.4)
     let line = OCRResult.Line(boundingBoxNormalized: box, text: "Publisher", styleRuns: [
       .init(range: NSRange(location: 0, length: 9), box: box)
@@ -91,7 +102,9 @@ struct SourceArtworkIsolationTests {
       if (20 ..< 46).contains(x), (31 ..< 69).contains(y) {
         return OverlayColor(red: 1, green: 0.2, blue: 0, alpha: 1)
       }
-      if (62 ..< 179).contains(x), (38 ..< 62).contains(y), x % 10 < 6 { return .black }
+      if (62 ..< 179).contains(x), (38 ..< 62).contains(y), x % 10 < 6 {
+        return .black
+      }
       return .white
     }
     #expect(refined.boundingBoxNormalized.minX >= 0.3)
@@ -100,7 +113,7 @@ struct SourceArtworkIsolationTests {
   }
 
   @Test
-  func aColoredRecognizedWordIsNotRemovedAsArtwork() {
+  func `a colored recognized word is not removed as artwork`() {
     let box = CGRect(x: 0.1, y: 0.3, width: 0.8, height: 0.4)
     let line = OCRResult.Line(boundingBoxNormalized: box, text: "Red text", styleRuns: [
       .init(range: NSRange(location: 0, length: 3), box: CGRect(x: 0.1, y: 0.3, width: 0.13, height: 0.4)),
@@ -110,7 +123,9 @@ struct SourceArtworkIsolationTests {
       if (20 ..< 46).contains(x), (31 ..< 69).contains(y) {
         return OverlayColor(red: 1, green: 0.2, blue: 0, alpha: 1)
       }
-      if (62 ..< 179).contains(x), (38 ..< 62).contains(y) { return .black }
+      if (62 ..< 179).contains(x), (38 ..< 62).contains(y) {
+        return .black
+      }
       return .white
     }
     #expect(refined == line)

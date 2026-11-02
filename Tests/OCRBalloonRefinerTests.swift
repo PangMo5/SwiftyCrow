@@ -13,12 +13,12 @@ struct OCRBalloonRefinerTests {
   // MARK: Internal
 
   @Test
-  func joinsPrintedWrapsWithoutSplittingHyphenatedWords() {
+  func `joins printed wraps without splitting hyphenated words`() {
     expectNoDifference(OCRBalloonRefiner.joinedRows(["A SUPER-", "ELASTIC SUIT", "FITS."]), "A SUPER-ELASTIC SUIT FITS.")
   }
 
   @Test
-  func leavesOrdinaryProseAndVerticalTextOnDocumentPath() {
+  func `leaves ordinary prose and vertical text on document path`() {
     let caps = (0..<12).map { _ in row("A COMPLETE PRINTED SENTENCE", x: 0.1, y: 0.1) }
     #expect(OCRBalloonRefiner.qualifies(caps))
     var prose = caps
@@ -31,7 +31,7 @@ struct OCRBalloonRefinerTests {
   }
 
   @Test
-  func reconstructedRegionsDoNotMergeAcrossNeighboringBalloons() {
+  func `reconstructed regions do not merge across neighboring balloons`() {
     var first = row("THE FIRST COMPLETE SENTENCE.", x: 0.1, y: 0.2)
     first.isReconstructedTextRegion = true
     var second = row("THE SECOND COMPLETE SENTENCE.", x: 0.1, y: 0.26)
@@ -41,7 +41,7 @@ struct OCRBalloonRefinerTests {
   }
 
   @Test
-  func findsSeparateInteriorsAcrossNarrowConnectors() throws {
+  func `finds separate interiors across narrow connectors`() throws {
     let image = try bubbles()
     let raster = try #require(BalloonRaster(image: image, longestSide: 1024))
     let lines = [0.28, 0.38, 0.48, 0.58].flatMap { y in
@@ -49,7 +49,7 @@ struct OCRBalloonRefinerTests {
     }
     let regions = raster.textRegions(around: lines).sorted { $0.box.minX < $1.box.minX }
     expectNoDifference(regions.count, 2)
-    guard regions.count == 2 else { return }
+    try #require(regions.count == 2)
     #expect(!regions[0].interiorBox.intersects(regions[1].interiorBox))
     #expect(regions[0].contains(CGPoint(x: 0.2, y: 0.4)))
     #expect(!regions[0].contains(CGPoint(x: 0.7, y: 0.4)))
@@ -57,7 +57,7 @@ struct OCRBalloonRefinerTests {
   }
 
   @Test
-  func pageBackgroundIsNotATextContainer() throws {
+  func `page background is not A text container`() throws {
     let context = try #require(CGContext(
       data: nil,
       width: 480,
@@ -65,7 +65,7 @@ struct OCRBalloonRefinerTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 0.95, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 480, height: 200))
@@ -76,7 +76,7 @@ struct OCRBalloonRefinerTests {
   }
 
   @Test
-  func textFitsInsideInteriorInsteadOfOverlappingAdjacentSourceBounds() throws {
+  func `text fits inside interior instead of overlapping adjacent source bounds`() throws {
     var recognized = row("A COMPLETE SENTENCE IN A BALLOON", x: 0.1, y: 0.2)
     recognized.rowCount = 4
     recognized.boundingBoxNormalized.size.height = 0.3
@@ -104,7 +104,7 @@ struct OCRBalloonRefinerTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 0.25, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 480, height: 240))
@@ -117,4 +117,5 @@ struct OCRBalloonRefinerTests {
     for x in [80, 120, 320, 360] { context.fill(CGRect(x: x, y: 95, width: 8, height: 12)) }
     return try #require(context.makeImage())
   }
+
 }

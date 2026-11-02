@@ -102,8 +102,11 @@ struct OCRResult: Equatable, Sendable {
       // A complete short emphasis span cannot speak for a longer partial or
       // unmeasured body span. Keep the composed parent style in that case.
       guard
-        !text.isEmpty, text.utf16.enumerated().allSatisfy({ offset, unit in
-          if covered.contains(offset) { return true }
+        !text.isEmpty,
+        text.utf16.enumerated().allSatisfy({ offset, unit in
+          if covered.contains(offset) {
+            return true
+          }
           guard let scalar = UnicodeScalar(unit) else { return false }
           return CharacterSet.whitespacesAndNewlines.contains(scalar)
         })
@@ -134,21 +137,27 @@ struct OCRResult: Equatable, Sendable {
   /// page's dominant Latin recognizer misread that word as Latin stems.
   static func rubyBaseWord(in base: Line, for ruby: Line) -> (range: NSRange, box: CGRect)? {
     guard
-      !base.isVerticalBlock, !ruby.isVerticalBlock, isLikelyRuby(ruby),
-      base.rowCount == 1, ruby.rowCount == 1
+      !base.isVerticalBlock,
+      !ruby.isVerticalBlock,
+      isLikelyRuby(ruby),
+      base.rowCount == 1,
+      ruby.rowCount == 1
     else { return nil }
     let rail = ruby.boundingBoxNormalized
     var words = [(range: NSRange, box: CGRect)]()
     for run in base.styleRuns.sorted(by: { $0.range.location < $1.range.location }) {
       if let last = words.last, last.box == run.box {
         words[words.count - 1].range = NSUnionRange(last.range, run.range)
-      } else { words.append((run.range, run.box)) }
+      } else {
+        words.append((run.range, run.box))
+      }
     }
     return words.filter { word in
       guard
         let range = Range(word.range, in: base.text),
         base.text[range].contains(where: \.isLetter),
-        rail.height <= word.box.height * 0.75, rail.midY < word.box.midY
+        rail.height <= word.box.height * 0.75,
+        rail.midY < word.box.midY
       else { return false }
       let overlap = max(0, min(rail.maxX, word.box.maxX) - max(rail.minX, word.box.minX))
       return overlap >= rail.width * 0.7
@@ -186,11 +195,11 @@ struct OCRResult: Equatable, Sendable {
     let verticalLinks = OCRVerticalParagraphGrouping.links(
       in: lines,
       compatible: { Self.hasCompatibleVerticalAppearance($0, $1) && !Self.hasMaterialTypographyBreak($0, $1) },
-      clearExpansion: clearVerticalExpansion
+      clearExpansion: clearVerticalExpansion,
     )
     let horizontalGroups = Dictionary(
       grouping: lines.filter { !$0.isVerticalBlock && $0.recognitionGroupID != nil },
-      by: { $0.recognitionGroupID! }
+      by: { $0.recognitionGroupID! },
     )
     let horizontalContext = horizontalGroups.mapValues { group -> HorizontalParagraphContext in
       let physicalRows = Self.horizontalVisualRows(group)
@@ -204,7 +213,7 @@ struct OCRResult: Equatable, Sendable {
         isTerminated: OCRTextSemantics.endsSentence(text),
         rowCount: physicalRows.reduce(0) { $0 + ($1.map(\.rowCount).max() ?? 1) },
         maximumRowWidth: rows.map(\.width).max() ?? 0,
-        advance: rows.count >= 3 && !advances.isEmpty ? advances[advances.count / 2] : nil
+        advance: rows.count >= 3 && !advances.isEmpty ? advances[advances.count / 2] : nil,
       )
     }
     var visited = Array(repeating: false, count: lines.count)
@@ -225,7 +234,7 @@ struct OCRResult: Equatable, Sendable {
               continuousColumnPitch: verticalLinks.contains(.init(index, candidate)),
               horizontalContext: horizontalContext,
               lhsRowBounds: rowBounds[index],
-              rhsRowBounds: rowBounds[candidate]
+              rhsRowBounds: rowBounds[candidate],
             ),
             !Self.hasInterveningRow(between: lines[index], and: lines[candidate], among: lines)
           else { continue }
@@ -325,8 +334,8 @@ struct OCRResult: Equatable, Sendable {
           surface: Self.preferredSurface(containing: box, among: fragments),
           tableCell: fragments[0].tableCell,
           recognitionLanguages: Set(fragments.flatMap(\.recognitionLanguages)).sorted(),
-          continuesToNextLine: ordered.last?.continuesToNextLine
-        )
+          continuesToNextLine: ordered.last?.continuesToNextLine,
+        ),
       )
     }
 
@@ -369,10 +378,12 @@ struct OCRResult: Equatable, Sendable {
         run.sourceFragment != nil && run.inkBox?.contains(CGPoint(x: rubyBox.midX, y: rubyBox.midY)) == true
       }
       base.orientedBox = carriesReading ? nil : base.orientedBox ?? baseBox
-      if base.replacementPatches.isEmpty { base.replacementPatches = [OverlaySourcePatch(
-        box: baseBox,
-        appearance: base.appearance
-      )] }
+      if base.replacementPatches.isEmpty {
+        base.replacementPatches = [OverlaySourcePatch(
+          box: baseBox,
+          appearance: base.appearance,
+        )]
+      }
       base.boundingBoxNormalized = baseBox.union(rubyBox)
       let annotations = ruby.replacementPatches.isEmpty
         ? [OverlaySourcePatch(box: rubyBox, appearance: ruby.appearance)]
@@ -384,7 +395,7 @@ struct OCRResult: Equatable, Sendable {
       })
       base.surface = Self.preferredSurface(
         containing: base.boundingBoxNormalized,
-        among: [base, ruby]
+        among: [base, ruby],
       ) ?? base.surface
       result[baseIndex] = base
       removed.insert(rubyIndex)
@@ -422,7 +433,8 @@ struct OCRResult: Equatable, Sendable {
       for b in lines.indices where b > a && !lines[b].isVerticalBlock && !lines[b].preventsJoining {
         guard
           !(compactPeers.contains(a) && compactPeers.contains(b)),
-          !OCRTextSemantics.isCode(lines[a].text), !OCRTextSemantics.isCode(lines[b].text),
+          !OCRTextSemantics.isCode(lines[a].text),
+          !OCRTextSemantics.isCode(lines[b].text),
           areNeighboringInlineFragments(lines[a], lines[b])
         else { continue }
         parents[root(b)] = root(a)
@@ -452,8 +464,11 @@ struct OCRResult: Equatable, Sendable {
     return lines.contains { line in
       let box = line.boundingBoxNormalized
       guard
-        line != lhs, line != rhs, !line.isVerticalBlock,
-        box.midY > top + box.height * 0.25, box.midY < bottom - box.height * 0.25,
+        line != lhs,
+        line != rhs,
+        !line.isVerticalBlock,
+        box.midY > top + box.height * 0.25,
+        box.midY < bottom - box.height * 0.25,
         box.width >= min(a.width, b.width) * 0.25
       else { return false }
       let overlap = min(right, box.maxX) - max(left, box.minX)
@@ -463,7 +478,7 @@ struct OCRResult: Equatable, Sendable {
 
   private static func preferredSurface(
     containing sourceBox: CGRect,
-    among fragments: [Line]
+    among fragments: [Line],
   ) -> OverlaySourceSurface? {
     let source = sourceBox.standardized
     let sourceArea = max(0.000_001, source.width * source.height)
@@ -493,10 +508,12 @@ struct OCRResult: Equatable, Sendable {
     continuousColumnPitch: Bool,
     horizontalContext: [Int: HorizontalParagraphContext],
     lhsRowBounds: CGRect,
-    rhsRowBounds: CGRect
+    rhsRowBounds: CGRect,
   ) -> Bool {
     guard
-      !lhs.isReconstructedTextRegion, !rhs.isReconstructedTextRegion, !lhs.preventsJoining,
+      !lhs.isReconstructedTextRegion,
+      !rhs.isReconstructedTextRegion,
+      !lhs.preventsJoining,
       !rhs.preventsJoining
     else { return false }
     guard !OCRTextSemantics.isCode(lhs.text), !OCRTextSemantics.isCode(rhs.text) else { return false }
@@ -513,7 +530,7 @@ struct OCRResult: Equatable, Sendable {
       areNeighboringHorizontalRows(
         withRowBounds(lhs, lhsRowBounds),
         withRowBounds(rhs, rhsRowBounds),
-        context: horizontalContext
+        context: horizontalContext,
       )
         || (!suppressesInlineMerge && areNeighboringInlineFragments(lhs, rhs))
     }
@@ -587,7 +604,7 @@ struct OCRResult: Equatable, Sendable {
 
   private static func mergedStyleRuns(
     in lines: [Line],
-    separators: [String]
+    separators: [String],
   ) -> [OverlaySourceStyleRun] {
     var result = [OverlaySourceStyleRun]()
     var utf16Offset = 0
@@ -608,7 +625,7 @@ struct OCRResult: Equatable, Sendable {
   private static func joinedTextAndSeparators(
     in lines: [Line],
     isVertical: Bool,
-    script: String?
+    script: String?,
   ) -> (text: String, separators: [String]) {
     let texts = lines.map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines) }
     guard let first = texts.first else { return ("", []) }
@@ -621,7 +638,7 @@ struct OCRResult: Equatable, Sendable {
           after: lines[index - 1],
           before: lines[index],
           nextText: texts[index],
-          among: lines
+          among: lines,
         )
       separators.append(separator)
       text += separator + texts[index]
@@ -633,15 +650,23 @@ struct OCRResult: Equatable, Sendable {
     after previous: Line,
     before next: Line,
     nextText: String,
-    among lines: [Line]
+    among lines: [Line],
   ) -> String {
     if
-      let last = previous.text.last, let first = nextText.first,
+      let last = previous.text.last,
+      let first = nextText.first,
       last.unicodeScalars.allSatisfy({ (0x3040...0x9FFF).contains($0.value) }),
-      first.unicodeScalars.allSatisfy({ (0x3040...0x9FFF).contains($0.value) }) { return "" }
+      first.unicodeScalars.allSatisfy({ (0x3040...0x9FFF).contains($0.value) })
+    {
+      return ""
+    }
     if
-      previous.recognitionGroupID != nil, previous.recognitionGroupID == next.recognitionGroupID,
-      let separator = previous.followingSeparator { return separator }
+      previous.recognitionGroupID != nil,
+      previous.recognitionGroupID == next.recognitionGroupID,
+      let separator = previous.followingSeparator
+    {
+      return separator
+    }
     if preservesSemanticLineBreak(after: previous, before: next, among: lines) {
       return "\n"
     }
@@ -660,7 +685,7 @@ struct OCRResult: Equatable, Sendable {
   private static func preservesSemanticLineBreak(
     after previous: Line,
     before next: Line,
-    among lines: [Line]
+    among lines: [Line],
   ) -> Bool {
     guard
       !previous.isVerticalBlock,
@@ -724,7 +749,7 @@ struct OCRResult: Equatable, Sendable {
       guard line.horizontalLineAdvanceScale > 0 else { return [] }
       return Array(
         repeating: line.horizontalLineAdvanceScale,
-        count: max(1, line.rowCount - 1)
+        count: max(1, line.rowCount - 1),
       )
     }
     let atomicRows = horizontalVisualRows(lines.filter { $0.rowCount == 1 })
@@ -770,13 +795,13 @@ struct OCRResult: Equatable, Sendable {
       guard !line.styleRuns.isEmpty else {
         return [AppearanceSample(
           appearance: line.appearance,
-          weight: CGFloat(max(1, line.text.utf16.count))
+          weight: CGFloat(max(1, line.text.utf16.count)),
         )]
       }
       return line.styleRuns.map {
         AppearanceSample(
           appearance: $0.appearance,
-          weight: CGFloat(max(1, $0.range.length))
+          weight: CGFloat(max(1, $0.range.length)),
         )
       }
     }
@@ -804,7 +829,7 @@ struct OCRResult: Equatable, Sendable {
 
   private static func appearanceClusterScore(
     for candidate: AppearanceSample,
-    among samples: [AppearanceSample]
+    among samples: [AppearanceSample],
   ) -> CGFloat {
     samples.reduce(0) { score, sample in
       guard
@@ -830,7 +855,9 @@ struct OCRResult: Equatable, Sendable {
     let sameRecognitionGroup = lhs.recognitionGroupID != nil
       && lhs.recognitionGroupID == rhs.recognitionGroupID
     let knownSharedSurface = sharesSourceSurface(lhs, rhs)
-    if !knownSharedSurface, hasMaterialTypographyBreak(lhs, rhs) { return false }
+    if !knownSharedSurface, hasMaterialTypographyBreak(lhs, rhs) {
+      return false
+    }
     let gapScale: CGFloat = sameRecognitionGroup || knownSharedSurface ? 0.75 : 0.25
     guard continuousColumnPitch || horizontalGap <= minimumWidth * gapScale else { return false }
 
@@ -846,7 +873,9 @@ struct OCRResult: Equatable, Sendable {
     let topToBottom = fragments.sorted {
       let lhs = $0.boundingBoxNormalized.standardized
       let rhs = $1.boundingBoxNormalized.standardized
-      if lhs.minY == rhs.minY { return lhs.minX < rhs.minX }
+      if lhs.minY == rhs.minY {
+        return lhs.minX < rhs.minX
+      }
       return lhs.minY < rhs.minY
     }
     var rows = [[Line]]()
@@ -896,7 +925,10 @@ struct OCRResult: Equatable, Sendable {
     guard horizontalGap * aspect <= max(a.height, b.height) * 0.6 else { return false }
     if
       lhs.recognitionGroupID != rhs.recognitionGroupID,
-      horizontalGap * aspect > max(a.height, b.height) * 0.32 { return false }
+      horizontalGap * aspect > max(a.height, b.height) * 0.32
+    {
+      return false
+    }
 
     if lhs.surface != nil, rhs.surface != nil, !sharesSourceSurface(lhs, rhs) {
       return false
@@ -918,11 +950,11 @@ struct OCRResult: Equatable, Sendable {
     if sharesSourceSurface(fragment, vertical) {
       let horizontalGap = max(
         0,
-        max(shortBox.minX, verticalBox.minX) - min(shortBox.maxX, verticalBox.maxX)
+        max(shortBox.minX, verticalBox.minX) - min(shortBox.maxX, verticalBox.maxX),
       )
       let verticalOverlap = max(
         0,
-        min(shortBox.maxY, verticalBox.maxY) - max(shortBox.minY, verticalBox.minY)
+        min(shortBox.maxY, verticalBox.maxY) - max(shortBox.minY, verticalBox.minY),
       )
       if
         horizontalGap <= min(shortBox.width, verticalBox.width) * 0.75,
@@ -937,7 +969,7 @@ struct OCRResult: Equatable, Sendable {
   private static func areNeighboringHorizontalRows(
     _ lhs: Line,
     _ rhs: Line,
-    context: [Int: HorizontalParagraphContext]
+    context: [Int: HorizontalParagraphContext],
   ) -> Bool {
     let (a, b) = OCRGeometry.alignedPair(lhs, rhs)
     guard a.width > 0, a.height > 0, b.width > 0, b.height > 0 else { return false }
@@ -948,7 +980,9 @@ struct OCRResult: Equatable, Sendable {
     let observedAdvance = [lhs.recognitionGroupID, rhs.recognitionGroupID].compactMap { $0.flatMap { context[$0]?.advance } }
       .min()
     if
-      lhs.rowCount == 1, rhs.rowCount == 1, let observedAdvance,
+      lhs.rowCount == 1,
+      rhs.rowCount == 1,
+      let observedAdvance,
       abs(a.midY - b.midY) > observedAdvance * 1.45
     {
       // A paragraph margin remains a boundary even if OCR attaches a citation
@@ -981,7 +1015,9 @@ struct OCRResult: Equatable, Sendable {
     // A native paragraph id is semantic evidence, not permission to flatten a
     // heading and subtitle. Require calibrated size and actual ink to agree on
     // the size step so short-glyph calibration noise still permits body reflow.
-    if !continuesSentence, hasObservedFontSizeBreak(lhs, rhs) { return false }
+    if !continuesSentence, hasObservedFontSizeBreak(lhs, rhs) {
+      return false
+    }
     let crossesVisionParagraphBoundary = lhs.recognitionGroupID != nil
       && rhs.recognitionGroupID != nil
       && lhs.recognitionGroupID != rhs.recognitionGroupID
@@ -1077,16 +1113,24 @@ struct OCRResult: Equatable, Sendable {
       default: 0.55
       }
     guard verticalGap <= min(rowHeightA, rowHeightB) * gapScale else { return false }
-    if nativeContinuation, sharesTextColumn { return true }
+    if nativeContinuation, sharesTextColumn {
+      return true
+    }
     if
       hangingListContinuation,
-      lhs.recognitionGroupID == rhs.recognitionGroupID { return true }
-    if continuesAcrossParagraphBoundary || continuesUnsurfacedBodyBlock { return true }
+      lhs.recognitionGroupID == rhs.recognitionGroupID
+    {
+      return true
+    }
+    if continuesAcrossParagraphBoundary || continuesUnsurfacedBodyBlock {
+      return true
+    }
     let alignmentTolerance = edgeTolerance
     // Paragraph alignment hints can be wrong for RTL text. A shared observed
     // edge is stronger evidence once typography, spacing, and group agree.
     if
-      lhs.recognitionGroupID != nil, lhs.recognitionGroupID == rhs.recognitionGroupID,
+      lhs.recognitionGroupID != nil,
+      lhs.recognitionGroupID == rhs.recognitionGroupID,
       abs(a.minX - b.minX) <= alignmentTolerance || abs(a.maxX - b.maxX) <= alignmentTolerance
     {
       return true
@@ -1115,7 +1159,7 @@ struct OCRResult: Equatable, Sendable {
 
   private static func mergedAlignment(
     for lines: [Line],
-    isVertical: Bool
+    isVertical: Bool,
   ) -> OverlayTextAlignment? {
     let fallback = lines.compactMap(\.alignment).first
     guard !isVertical, lines.count > 1 else { return fallback }
@@ -1160,8 +1204,10 @@ struct OCRResult: Equatable, Sendable {
     // occupy less than5% of a column; observed matching high-contrast colors,
     // repeated pitch and a clear corridor supply the evidence in this path.
     guard
-      a.confidence >= 0.2, b.confidence >= 0.2,
-      a.foregroundConfidence > 0, b.foregroundConfidence > 0,
+      a.confidence >= 0.2,
+      b.confidence >= 0.2,
+      a.foregroundConfidence > 0,
+      b.foregroundConfidence > 0,
       colorDistance(a.foreground, a.background) >= 0.25,
       colorDistance(b.foreground, b.background) >= 0.25
     else { return false }
@@ -1186,14 +1232,26 @@ struct OCRResult: Equatable, Sendable {
       && min(lhs.horizontalGlyphScale, rhs.horizontalGlyphScale) > 0
       && max(lhs.horizontalGlyphScale, rhs.horizontalGlyphScale) / min(lhs.horizontalGlyphScale, rhs.horizontalGlyphScale) <= 1.15
     if
-      !matchingInk, let smaller = fontScales.min(), let larger = fontScales.max(), smaller > 0,
-      larger / smaller > 1.24 { return true }
+      !matchingInk,
+      let smaller = fontScales.min(),
+      let larger = fontScales.max(),
+      smaller > 0,
+      larger / smaller > 1.24
+    {
+      return true
+    }
     guard lhsAppearance.confidence >= 0.2, rhsAppearance.confidence >= 0.2 else {
       return false
     }
-    if colorDistance(lhsAppearance.background, rhsAppearance.background) > 0.08 { return true }
-    if colorDistance(lhsAppearance.foreground, rhsAppearance.foreground) > 0.25 { return true }
-    if lhsAppearance.fontDesign != rhsAppearance.fontDesign { return true }
+    if colorDistance(lhsAppearance.background, rhsAppearance.background) > 0.08 {
+      return true
+    }
+    if colorDistance(lhsAppearance.foreground, rhsAppearance.foreground) > 0.25 {
+      return true
+    }
+    if lhsAppearance.fontDesign != rhsAppearance.fontDesign {
+      return true
+    }
 
     let weightDifference = abs(lhsAppearance.fontWeight.rawValue - rhsAppearance.fontWeight.rawValue)
     if
@@ -1294,7 +1352,7 @@ struct OCRResult: Equatable, Sendable {
   private static func areSideBySide(
     _ lhs: CGRect,
     _ rhs: CGRect,
-    requiredVerticalOverlap: CGFloat
+    requiredVerticalOverlap: CGFloat,
   ) -> Bool {
     guard lhs.width > 0, lhs.height > 0, rhs.width > 0, rhs.height > 0 else { return false }
     let minimumWidth = min(lhs.width, rhs.width)
@@ -1305,6 +1363,7 @@ struct OCRResult: Equatable, Sendable {
     let verticalOverlap = max(0, min(lhs.maxY, rhs.maxY) - max(lhs.minY, rhs.minY))
     return verticalOverlap / min(lhs.height, rhs.height) >= requiredVerticalOverlap
   }
+
 }
 
 // MARK: - OCRTextAnchor

@@ -13,7 +13,7 @@ struct ZoomableCaptureCanvasTests {
   // MARK: Internal
 
   @Test(arguments: [NSScroller.Style.legacy, .overlay])
-  func fitReturnsToFullViewportAfterScrollersAppear(style: NSScroller.Style) {
+  func `fit returns to full viewport after scrollers appear`(style: NSScroller.Style) {
     let size = CGSize(width: 670, height: 280)
     let fixture = Fixture(imageSize: size, viewportSize: size, scrollerStyle: style)
     fixture.scroll.tile()
@@ -22,7 +22,9 @@ struct ZoomableCaptureCanvasTests {
       fixture.model.zoomIn()
       fixture.scroll.tile()
       #expect(fixture.model.scale == 1.25)
-      if style == .legacy { #expect(fixture.scroll.contentSize.height < size.height) }
+      if style == .legacy {
+        #expect(fixture.scroll.contentSize.height < size.height)
+      }
       fixture.model.resetToFit()
       #expect(fixture.model.scale == 1)
       #expect(fixture.model.isFitting)
@@ -31,7 +33,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func fitTracksWindowSizeUntilUserZooms() {
+  func `fit tracks window size until user zooms`() {
     let fixture = Fixture()
     #expect(abs(fixture.model.scale - 0.375) < 0.001)
     fixture.scroll.setFrameSize(CGSize(width: 300, height: 300))
@@ -44,7 +46,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func resizingPreservesManualScaleAndViewportCenter() {
+  func `resizing preserves manual scale and viewport center`() {
     let fixture = Fixture()
     fixture.pinch(to: 1.5)
     fixture.scroll.contentView.scroll(to: CGPoint(x: 400, y: 220))
@@ -58,7 +60,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func movingAcrossDisplayScalesPreservesNativeZoom() {
+  func `moving across display scales preserves native zoom`() {
     let fixture = Fixture(backingScale: 2)
     #expect(abs(fixture.model.scale - 0.75) < 0.001)
     fixture.pinch(to: 0.75)
@@ -73,7 +75,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func fitRecentersPannedImageAndTranslationUpdatesPreserveZoom() {
+  func `fit recenters panned image and translation updates preserve zoom`() {
     let fixture = Fixture()
     fixture.pinch(to: 2)
     fixture.scroll.contentView.scroll(to: CGPoint(x: 500, y: 250))
@@ -89,7 +91,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func mousePanCannotMoveTheImagePastItsEdges() {
+  func `mouse pan cannot move the image past its edges`() {
     let fixture = Fixture()
     fixture.pinch(to: 2)
     fixture.scroll.scrollContent(to: CGPoint(x: -1000, y: -1000))
@@ -105,7 +107,7 @@ struct ZoomableCaptureCanvasTests {
   }
 
   @Test
-  func toolbarZoomStopsAtBoundsAndNewImagesRefit() {
+  func `toolbar zoom stops at bounds and new images refit`() {
     let fixture = Fixture()
     for _ in 0..<50 { fixture.model.zoomIn() }
     #expect(fixture.model.scale == 8)
@@ -133,7 +135,7 @@ struct ZoomableCaptureCanvasTests {
       backingScale: CGFloat = 1,
       imageSize: CGSize = CGSize(width: 1600, height: 800),
       viewportSize: CGSize = CGSize(width: 600, height: 400),
-      scrollerStyle: NSScroller.Style? = nil
+      scrollerStyle: NSScroller.Style? = nil,
     ) {
       model = CaptureZoomModel()
       coordinator = ZoomableCaptureCanvas<Color>.Coordinator(model: model)
@@ -178,5 +180,7 @@ struct ZoomableCaptureCanvasTests {
       scroll.setMagnification(magnification, centeredAt: CGPoint(x: 800, y: 400))
       coordinator.magnificationChanged(in: scroll)
     }
+
   }
+
 }

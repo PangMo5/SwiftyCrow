@@ -35,7 +35,7 @@ struct LiveFrame: Equatable, Sendable {
       width: image.width,
       height: image.height,
       bitsPerPixel: image.bitsPerPixel,
-      bitmapInfo: image.bitmapInfo.rawValue
+      bitmapInfo: image.bitmapInfo.rawValue,
     )
     backdrop = OverlayBackdrop(image: image)
   }
@@ -92,16 +92,18 @@ struct LiveFrame: Equatable, Sendable {
         sourceLayout: source.layout,
         sourceSurface: source.surface,
         in: imageSize,
-        displayScale: 1
+        displayScale: 1,
       )
       bounds = bounds.union(CGRect(
         x: frame.minX / imageSize.width,
         y: frame.minY / imageSize.height,
         width: frame.width / imageSize.width,
-        height: frame.height / imageSize.height
+        height: frame.height / imageSize.height,
       ))
     }
-    if let surface = source.surface { bounds = bounds.union(surface.clippingBox ?? surface.box) }
+    if let surface = source.surface {
+      bounds = bounds.union(surface.clippingBox ?? surface.box)
+    }
     return witness(for: bounds)
   }
 
@@ -113,7 +115,7 @@ struct LiveFrame: Equatable, Sendable {
       x: bounds.minX * imageSize.width,
       y: bounds.minY * imageSize.height,
       width: bounds.width * imageSize.width,
-      height: bounds.height * imageSize.height
+      height: bounds.height * imageSize.height,
     )
     .insetBy(dx: -2, dy: -2).integral.intersection(CGRect(origin: .zero, size: imageSize))
     guard !rect.isNull, !rect.isEmpty else { return nil }
@@ -133,7 +135,7 @@ struct LiveFrame: Equatable, Sendable {
       width: signature.width,
       height: signature.height,
       bitsPerPixel: signature.bitsPerPixel,
-      bitmapInfo: signature.bitmapInfo
+      bitmapInfo: signature.bitmapInfo,
     )
   }
 

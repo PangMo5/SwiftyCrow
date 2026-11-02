@@ -1,5 +1,6 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
+
 import AppKit
 import ApplicationServices
 import CoreGraphics
@@ -81,8 +82,10 @@ public enum NativeInteractionDriver {
     Thread.sleep(forTimeInterval: 0.3)
     let actual = try bounds(of: window)
     guard
-      abs(actual.minX - frame.minX) < 2, abs(actual.minY - frame.minY) < 2,
-      abs(actual.width - frame.width) < 2, abs(actual.height - frame.height) < 2
+      abs(actual.minX - frame.minX) < 2,
+      abs(actual.minY - frame.minY) < 2,
+      abs(actual.width - frame.width) < 2,
+      abs(actual.height - frame.height) < 2
     else {
       throw InteractionError("source window did not adopt requested frame: \(actual)")
     }
@@ -113,7 +116,8 @@ public enum NativeInteractionDriver {
     guard
       AXUIElementCopyAttributeValue(AXUIElementCreateSystemWide(), kAXFocusedApplicationAttribute as CFString, &value) ==
       .success,
-      let value, CFGetTypeID(value) == AXUIElementGetTypeID()
+      let value,
+      CFGetTypeID(value) == AXUIElementGetTypeID()
     else { return nil }
     var pid: pid_t = 0
     guard AXUIElementGetPid(unsafeDowncast(value, to: AXUIElement.self), &pid) == .success else { return nil }
@@ -213,7 +217,7 @@ public enum NativeInteractionDriver {
   public static func controlFrame(bundleIdentifier: String, identifier: String) throws -> CGRect {
     try bounds(of: element(
       bundleIdentifier: bundleIdentifier,
-      identifier: identifier
+      identifier: identifier,
     ))
   }
 
@@ -247,7 +251,8 @@ public enum NativeInteractionDriver {
   }
 
   public static func drag(from: CGPoint, to: CGPoint) throws {
-    if let relay = try mouseRelay() { try relay.drag(from: from, to: to)
+    if let relay = try mouseRelay() {
+      try relay.drag(from: from, to: to)
       return
     }
     try move(to: from)
@@ -259,9 +264,11 @@ public enum NativeInteractionDriver {
     var released = false
     defer {
       if
-        !released, let location = CGEvent(source: nil)?.location,
+        !released,
+        let location = CGEvent(source: nil)?.location,
         let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: location, mouseButton: .left)
-      { up.flags = []
+      {
+        up.flags = []
         up.post(tap: .cghidEventTap)
       }
     }
@@ -275,7 +282,7 @@ public enum NativeInteractionDriver {
           mouseEventSource: nil,
           mouseType: .leftMouseDragged,
           mouseCursorPosition: point,
-          mouseButton: .left
+          mouseButton: .left,
         )
       else { throw DriverError.eventSourceUnavailable }
       drag.flags = []
@@ -348,7 +355,8 @@ public enum NativeInteractionDriver {
   }
 
   public static func scroll(at point: CGPoint, pixels: Int) throws {
-    if let relay = try mouseRelay() { try relay.scroll(at: point, pixels: pixels)
+    if let relay = try mouseRelay() {
+      try relay.scroll(at: point, pixels: pixels)
       return
     }
     try move(to: point)
@@ -360,7 +368,7 @@ public enum NativeInteractionDriver {
           wheelCount: 1,
           wheel1: Int32(pixels / 12),
           wheel2: 0,
-          wheel3: 0
+          wheel3: 0,
         )
       else { throw DriverError.eventSourceUnavailable }
       event.flags = []
@@ -392,12 +400,15 @@ public enum NativeInteractionDriver {
   private static var inputValidation: (() throws -> Void)?
 
   private static func mouseRelay() throws -> HostMouseRelayClient? {
-    if relayClient == nil { relayClient = try HostMouseRelayClient.fromEnvironment() }
+    if relayClient == nil {
+      relayClient = try HostMouseRelayClient.fromEnvironment()
+    }
     return relayClient
   }
 
   private static func clickPoint(_ point: CGPoint) throws {
-    if let relay = try mouseRelay() { try relay.click(at: point)
+    if let relay = try mouseRelay() {
+      try relay.click(at: point)
       return
     }
     try move(to: point)
@@ -439,21 +450,30 @@ public enum NativeInteractionDriver {
       node = unsafeDowncast(raw, to: AXUIElement.self)
       // A popup menu floats above its owner's scroll view; scrolling that
       // view cannot reveal a submenu item and can instead close the menu.
-      if attribute(node, kAXRoleAttribute) as? String == kAXMenuRole { return }
-      if attribute(node, kAXRoleAttribute) as? String == kAXScrollAreaRole { ancestors.append(node) }
+      if attribute(node, kAXRoleAttribute) as? String == kAXMenuRole {
+        return
+      }
+      if attribute(node, kAXRoleAttribute) as? String == kAXScrollAreaRole {
+        ancestors.append(node)
+      }
     }
     for ancestor in ancestors.reversed() {
       var visible = false
       for _ in 0..<10 {
         let frame = try bounds(of: target)
         let viewport = try bounds(of: ancestor).insetBy(dx: 6, dy: 12)
-        if viewport.contains(CGPoint(x: frame.midX, y: frame.midY)) { visible = true
+        if viewport.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+          visible = true
           break
         }
         let delta: Double
-        if frame.midY > viewport.maxY { delta = -min(400, max(100, frame.maxY - viewport.maxY + 24)) }
-        else if frame.midY < viewport.minY { delta = min(400, max(100, viewport.minY - frame.minY + 24)) }
-        else { throw InteractionError("control is outside the horizontal viewport") }
+        if frame.midY > viewport.maxY {
+          delta = -min(400, max(100, frame.maxY - viewport.maxY + 24))
+        } else if frame.midY < viewport.minY {
+          delta = min(400, max(100, viewport.minY - frame.minY + 24))
+        } else {
+          throw InteractionError("control is outside the horizontal viewport")
+        }
         try move(to: CGPoint(x: viewport.midX, y: viewport.midY))
         for _ in 0..<8 {
           guard
@@ -463,7 +483,7 @@ public enum NativeInteractionDriver {
               wheelCount: 1,
               wheel1: Int32(delta / 8),
               wheel2: 0,
-              wheel3: 0
+              wheel3: 0,
             )
           else { throw DriverError.eventSourceUnavailable }
           event.flags = []
@@ -484,7 +504,9 @@ public enum NativeInteractionDriver {
     let root = AXUIElementCreateApplication(app.processIdentifier)
     let deadline = ContinuousClock.now.advanced(by: .seconds(4))
     repeat {
-      if let found = search(root, identifier: identifier, depth: 0) { return found }
+      if let found = search(root, identifier: identifier, depth: 0) {
+        return found
+      }
       Thread.sleep(forTimeInterval: 0.08)
     } while ContinuousClock.now < deadline
     throw InteractionError("native control not found: \(bundleIdentifier) / \(identifier)")
@@ -497,7 +519,9 @@ public enum NativeInteractionDriver {
         return search(element, identifier: String(identifier.dropFirst(6)), depth: depth + 1)
       }
       for child in attribute(element, kAXChildrenAttribute) as? [AXUIElement] ?? [] {
-        if let found = search(child, identifier: identifier, depth: depth + 1) { return found }
+        if let found = search(child, identifier: identifier, depth: depth + 1) {
+          return found
+        }
       }
       return nil
     }
@@ -518,10 +542,16 @@ public enum NativeInteractionDriver {
         return element
       }
     } else if let selector = selectors.first(where: { identifier.hasPrefix($0.key) }) {
-      if attribute(element, selector.value) as? String == String(identifier.dropFirst(selector.key.count)) { return element }
-    } else if attribute(element, kAXIdentifierAttribute) as? String == identifier { return element }
+      if attribute(element, selector.value) as? String == String(identifier.dropFirst(selector.key.count)) {
+        return element
+      }
+    } else if attribute(element, kAXIdentifierAttribute) as? String == identifier {
+      return element
+    }
     for child in attribute(element, kAXChildrenAttribute) as? [AXUIElement] ?? [] {
-      if let found = search(child, identifier: identifier, depth: depth + 1) { return found }
+      if let found = search(child, identifier: identifier, depth: depth + 1) {
+        return found
+      }
     }
     return nil
   }
@@ -541,19 +571,23 @@ public enum NativeInteractionDriver {
     guard
       let rawPosition = attribute(element, kAXPositionAttribute),
       let rawSize = attribute(element, kAXSizeAttribute),
-      CFGetTypeID(rawPosition) == AXValueGetTypeID(), CFGetTypeID(rawSize) == AXValueGetTypeID()
+      CFGetTypeID(rawPosition) == AXValueGetTypeID(),
+      CFGetTypeID(rawSize) == AXValueGetTypeID()
     else { throw InteractionError("control has no accessible bounds") }
     var position = CGPoint.zero
     var size = CGSize.zero
     guard
       AXValueGetValue(unsafeDowncast(rawPosition, to: AXValue.self), .cgPoint, &position),
-      AXValueGetValue(unsafeDowncast(rawSize, to: AXValue.self), .cgSize, &size), size.width > 0, size.height > 0
+      AXValueGetValue(unsafeDowncast(rawSize, to: AXValue.self), .cgSize, &size),
+      size.width > 0,
+      size.height > 0
     else { throw InteractionError("control has invalid bounds") }
     return CGRect(origin: position, size: size)
   }
 
   private static func move(to point: CGPoint) throws {
-    if let relay = try mouseRelay() { try relay.move(to: point)
+    if let relay = try mouseRelay() {
+      try relay.move(to: point)
       return
     }
     guard let start = CGEvent(source: nil)?.location else { throw DriverError.eventSourceUnavailable }
@@ -569,6 +603,7 @@ public enum NativeInteractionDriver {
       Thread.sleep(forTimeInterval: 0.012)
     }
   }
+
 }
 
 // MARK: - InteractionError

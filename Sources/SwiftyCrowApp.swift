@@ -82,8 +82,11 @@ private struct CaptureCommands: Commands {
       Button("Live translation") { store.send(.liveSelectRequested) }
       Divider()
       Button { store.send(.toggleLiveRequested) } label: {
-        if store.isLive { Text("Pause translation") }
-        else { Text("Resume translation") }
+        if store.isLive {
+          Text("Pause translation")
+        } else {
+          Text("Resume translation")
+        }
       }
       .disabled(!store.overlayActive)
       Button("Close overlay") { store.send(.dismissOverlay) }
@@ -209,13 +212,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       lastError: store.capture.lastError,
       sourceWindowID: store.capture.sourceWindowID,
       sourceWindowFrame: store.capture.sourceWindowID == nil ? nil : store.capture.overlayFrame.rect,
-      captureGeneration: store.capture.captureGeneration
+      captureGeneration: store.capture.captureGeneration,
     )
   }
 
   private func syncOverlay(_ state: OverlayRenderState) async {
     await overlay.render(state)
   }
+
 }
 
 extension ProcessInfo {
@@ -263,7 +267,6 @@ private struct OpenSettingsCommandButton: View {
   }
 
   @Environment(\.openWindow) private var openWindow
-
 }
 
 // MARK: - Regular-while-open
@@ -306,4 +309,5 @@ enum WindowActivation {
   // MARK: Private
 
   private static var openCount = 0
+
 }

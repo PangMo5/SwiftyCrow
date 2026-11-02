@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import cmark_gfm
 import Foundation
+import Markdown
+import SwiftSoup
 #if canImport(FoundationXML)
 import FoundationXML
 #endif
-import cmark_gfm
-import Markdown
-import SwiftSoup
 
 // MARK: - MarkdownStructure
 
@@ -19,8 +19,12 @@ struct MarkdownStructure {
     var headings = [Int]()
     var code = Set<Int>()
     func visit(_ node: any Markup) {
-      if node is Heading, let range = node.range { headings.append(range.lowerBound.line - 1) }
-      if node is CodeBlock, let range = node.range { code.formUnion((range.lowerBound.line - 1)...(range.upperBound.line - 1)) }
+      if node is Heading, let range = node.range {
+        headings.append(range.lowerBound.line - 1)
+      }
+      if node is CodeBlock, let range = node.range {
+        code.formUnion((range.lowerBound.line - 1)...(range.upperBound.line - 1))
+      }
       for child in node.children { visit(child) }
     }
     visit(Document(parsing: source))
@@ -72,9 +76,15 @@ struct ReleaseMetadata {
       for (index, line) in sections.enumerated() {
         let heading = String(sourceLines[line].dropFirst(3))
         let sectionVersion = matches(#"^v?(\d+\.\d+\.\d+)"#, heading).first?[1]
-        if sectionVersion == version { started = true }
-        if !started { continue }
-        if sectionVersion?.split(separator: ".").prefix(2).joined(separator: ".") != minor { break }
+        if sectionVersion == version {
+          started = true
+        }
+        if !started {
+          continue
+        }
+        if sectionVersion?.split(separator: ".").prefix(2).joined(separator: ".") != minor {
+          break
+        }
         let end = index + 1 < sections.count ? sections[index + 1] : sourceLines.count
         collected.append(sourceLines[line..<end].joined(separator: "\n"))
       }
@@ -84,7 +94,9 @@ struct ReleaseMetadata {
       let base = URL(string: "https://github.com/PangMo5/SwiftyCrow/blob/main/")!.appendingPathComponent(relative)
       for anchor in try html.select("a[href]") {
         let href = try anchor.attr("href")
-        if let url = URL(string: href, relativeTo: base)?.absoluteURL { try anchor.attr("href", url.absoluteString) }
+        if let url = URL(string: href, relativeTo: base)?.absoluteURL {
+          try anchor.attr("href", url.absoluteString)
+        }
       }
       notes.append((locale, try html.body()?.html() ?? ""))
     }
@@ -102,7 +114,8 @@ struct ReleaseMetadata {
       notes.allSatisfy({ locale, text in
         existing.contains { $0.attribute(forName: "xml:lang")?.stringValue == locale && $0.stringValue == text }
       })
-    { print("Localized appcast descriptions already match")
+    {
+      print("Localized appcast descriptions already match")
       return
     }
     for description in existing { description.detach() }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import ApplicationServices
@@ -22,17 +22,20 @@ public enum DriverError: Error, Equatable, CustomStringConvertible {
     case .notTrusted:
       "this process is not trusted for Accessibility, so no key events were posted — "
         + "grant it in System Settings > Privacy & Security > Accessibility"
+
     case .eventSourceUnavailable:
       "CGEventSource(stateID: .hidSystemState) returned nil; no key events were posted"
+
     case .eventCreationFailed(let keyCode):
       "CGEvent could not be created for key code \(keyCode)"
+
     case .noModifiersToHold:
       "hold needs at least one modifier — a switcher session stays open only while a modifier is down"
+
     case .noKeysToTap:
       "hold needs at least one key to tap"
     }
   }
-
 }
 
 // MARK: - HeldKeys
@@ -80,7 +83,9 @@ private enum HeldKeys {
   static func drop(code: CGKeyCode) {
     lock.lock()
     defer { lock.unlock() }
-    if let index = entries.lastIndex(where: { $0.code == code }) { entries.remove(at: index) }
+    if let index = entries.lastIndex(where: { $0.code == code }) {
+      entries.remove(at: index)
+    }
   }
 
   /// Takes everything still held, in press order. Emptying the ledger is what
@@ -100,7 +105,7 @@ private enum HeldKeys {
 
   /// Reached from the main thread and from whichever thread handles a signal,
   /// so `lock` guards every access.
-  private nonisolated(unsafe) static var entries: [Entry] = []
+  private nonisolated(unsafe) static var entries = [Entry]()
 
 }
 
@@ -116,7 +121,9 @@ public enum KeyDriver {
   /// Whether this process may post events at all. Everything here refuses to
   /// run when it is false — a demo that records nothing happening is worse
   /// than a demo that stops with an error.
-  public static var isTrusted: Bool { AXIsProcessTrusted() }
+  public static var isTrusted: Bool {
+    AXIsProcessTrusted()
+  }
 
   /// Taps one chord: key down with the modifier flags set, hold, key up with
   /// the same flags. Carbon hotkeys (`RegisterEventHotKey`, which is what
@@ -148,7 +155,7 @@ public enum KeyDriver {
     modifiers: CGEventFlags,
     tapping keys: [CGKeyCode],
     gapMilliseconds: Int,
-    holdAfterMilliseconds: Int
+    holdAfterMilliseconds: Int,
   ) throws {
     guard !modifiers.isEmpty else { throw DriverError.noModifiersToHold }
     guard !keys.isEmpty else { throw DriverError.noKeysToTap }
@@ -167,7 +174,9 @@ public enum KeyDriver {
         sleep(milliseconds: tapHoldMilliseconds)
         try post(keyCode: key, keyDown: false, flags: HeldKeys.flags, source: source)
         HeldKeys.drop(code: key)
-        if index < keys.count - 1 { sleep(milliseconds: gapMilliseconds) }
+        if index < keys.count - 1 {
+          sleep(milliseconds: gapMilliseconds)
+        }
       }
       sleep(milliseconds: holdAfterMilliseconds)
     } catch {
@@ -175,6 +184,15 @@ public enum KeyDriver {
       throw error
     }
     releaseHeldKeys(using: source)
+  }
+
+  /// Arrow keys carry keypad/function identity in addition to held modifiers.
+  /// Dropping those bits made Carbon shortcuts ignore otherwise correct arrow events.
+  public nonisolated static func eventFlags(for keyCode: CGKeyCode, modifiers: CGEventFlags) -> CGEventFlags {
+    switch keyCode {
+    case 123...126: modifiers.union([.maskNumericPad, .maskSecondaryFn])
+    default: modifiers
+    }
   }
 
   // MARK: Fileprivate
@@ -228,7 +246,7 @@ public enum KeyDriver {
   private static let tapHoldMilliseconds = 24
 
   /// Written once, from the main thread, by the first call that posts anything.
-  private nonisolated(unsafe) static var releaseGuardSources: [DispatchSourceSignal] = []
+  private nonisolated(unsafe) static var releaseGuardSources = [DispatchSourceSignal]()
 
   /// Ctrl-C during a hold is the one interrupt that outlives the process: the
   /// modifier it leaves down stays down system-wide until a physical key
@@ -267,20 +285,11 @@ public enum KeyDriver {
     return source
   }
 
-  /// Arrow keys carry keypad/function identity in addition to held modifiers.
-  /// Dropping those bits made Carbon shortcuts ignore otherwise correct arrow events.
-  public nonisolated static func eventFlags(for keyCode: CGKeyCode, modifiers: CGEventFlags) -> CGEventFlags {
-    switch keyCode {
-    case 123...126: modifiers.union([.maskNumericPad, .maskSecondaryFn])
-    default: modifiers
-    }
-  }
-
   private static func post(
     keyCode: CGKeyCode,
     keyDown: Bool,
     flags: CGEventFlags,
-    source: CGEventSource
+    source: CGEventSource,
   ) throws {
     guard let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: keyDown) else {
       throw DriverError.eventCreationFailed(keyCode)

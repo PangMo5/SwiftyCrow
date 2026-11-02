@@ -26,7 +26,7 @@ enum SourceRestorationBuilder {
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
@@ -51,7 +51,7 @@ enum SourceRestorationBuilder {
         x: bounds.minX * CGFloat(image.width),
         y: bounds.minY * CGFloat(image.height),
         width: bounds.width * CGFloat(image.width),
-        height: bounds.height * CGFloat(image.height)
+        height: bounds.height * CGFloat(image.height),
       ).integral)
     }
     let lines = await CaptureAnalysisExecutor.map(inputs) { input in
@@ -61,7 +61,7 @@ enum SourceRestorationBuilder {
           readingBounds: input.readingBounds,
           width: image.width,
           height: image.height,
-          pixels: bytes.bindMemory(to: UInt8.self)
+          pixels: bytes.bindMemory(to: UInt8.self),
         )
       }
     }
@@ -120,11 +120,13 @@ enum SourceRestorationBuilder {
     readingBounds: CGRect,
     width: Int,
     height: Int,
-    pixels: UnsafeBufferPointer<UInt8>
+    pixels: UnsafeBufferPointer<UInt8>,
   ) -> OCRResult.Line {
     guard
-      !Task.isCancelled, !line.preservesSource,
-      !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text)
+      !Task.isCancelled,
+      !line.preservesSource,
+      !OCRTextSemantics.isCode(line.text),
+      !OCRTextSemantics.isIdentifier(line.text)
     else { return line }
     func color(_ x: Int, _ y: Int) -> Pixel {
       let i = (y * width + x) * 4
@@ -144,7 +146,7 @@ enum SourceRestorationBuilder {
       for x in stride(
         from: max(0, Int(bounds.minX * CGFloat(width))),
         to: min(width, Int(bounds.maxX * CGFloat(width))),
-        by: 3
+        by: 3,
       ) {
         samples.append(color(x, y).luminance)
       }
@@ -181,7 +183,7 @@ enum SourceRestorationBuilder {
       ? [OverlaySourcePatch(
         box: line.boundingBoxNormalized,
         appearance: line.appearance,
-        clippingBox: line.replacementPatches.compactMap(\.clippingBox).first
+        clippingBox: line.replacementPatches.compactMap(\.clippingBox).first,
       )]
       : line.replacementPatches + missingAnnotationPatches(for: line, width: width, height: height, color: color)
     result.replacementPatches = patches
@@ -192,13 +194,15 @@ enum SourceRestorationBuilder {
         x: patch.box.minX * CGFloat(width),
         y: patch.box.minY * CGFloat(height),
         width: patch.box.width * CGFloat(width),
-        height: patch.box.height * CGFloat(height)
+        height: patch.box.height * CGFloat(height),
       ).integral
     }
     for j in patches.indices {
       var patch = patches[j]
       guard !patch.erasesDistinctSurface || textured else { continue }
-      if textured { patch.erasesDistinctSurface = false }
+      if textured {
+        patch.erasesDistinctSurface = false
+      }
       let fg = components(patch.appearance.foreground)
       let bg = components(patch.appearance.background)
       let foregrounds = Array(Set([fg] + line.styleRuns.filter {
@@ -212,7 +216,7 @@ enum SourceRestorationBuilder {
         x: box.minX * CGFloat(width),
         y: box.minY * CGFloat(height),
         width: box.width * CGFloat(width),
-        height: box.height * CGFloat(height)
+        height: box.height * CGFloat(height),
       ).integral
       let measuredGlyph = line.isVerticalBlock
         ? line.verticalCharScale * CGFloat(width)
@@ -233,34 +237,34 @@ enum SourceRestorationBuilder {
         x: 0,
         y: 0,
         width: width,
-        height: height
+        height: height,
       )).integral
       if let clip = patch.clippingBox {
         rect = rect.intersection(CGRect(
           x: clip.minX * CGFloat(width),
           y: clip.minY * CGFloat(height),
           width: clip.width * CGFloat(width),
-          height: clip.height * CGFloat(height)
+          height: clip.height * CGFloat(height),
         ))
         guard !rect.isNull else { continue }
         rect = CGRect(
           x: ceil(rect.minX),
           y: ceil(rect.minY),
           width: max(0, floor(rect.maxX) - ceil(rect.minX)),
-          height: max(0, floor(rect.maxY) - ceil(rect.minY))
+          height: max(0, floor(rect.maxY) - ceil(rect.minY)),
         )
       }
       let candidateOutline = outlineRange(
         width: Int(rect.width),
         height: Int(rect.height),
-        foreground: fg
+        foreground: fg,
       ) { color(Int(rect.minX) + $0, Int(rect.minY) + $1) }
       if candidateOutline == nil {
         // No opposite-polarity range exists on this material. Keep the
         // ordinary working tile instead of scanning a larger empty margin.
         rect = rect.intersection(original.insetBy(
           dx: -CGFloat(minimumAnalysisMargin),
-          dy: -CGFloat(minimumAnalysisMargin)
+          dy: -CGFloat(minimumAnalysisMargin),
         ))
       }
       let x0 = Int(rect.minX)
@@ -321,7 +325,7 @@ enum SourceRestorationBuilder {
         vertical: line.isVerticalBlock,
         glyphExtent: glyphExtent,
         imageWidth: width,
-        imageHeight: height
+        imageHeight: height,
       ) { x, y in
         let pixel = color(x, y)
         return distance(pixel, bg) >= max(8, contrast / 8)
@@ -352,11 +356,14 @@ enum SourceRestorationBuilder {
           let point = CGPoint(x: x0 + x, y: y0 + y)
           guard
             textOwners.contains(where: { $0.contains(point) }),
-            point.x >= 0, point.x < CGFloat(width), point.y >= 0, point.y < CGFloat(height)
+            point.x >= 0,
+            point.x < CGFloat(width),
+            point.y >= 0,
+            point.y < CGFloat(height)
           else { return false }
           let pixel = color(Int(point.x), Int(point.y))
           return foregrounds.contains { distance(pixel, $0) < distance($0, bg) / 2 && distance($0, bg) >= 30 }
-        }
+        },
       )
       // Resampling spreads the glyph edge beyond the high-contrast ink.
       // Exclude that fringe before estimating background variation, too:
@@ -389,7 +396,7 @@ enum SourceRestorationBuilder {
             x: box.minX / CGFloat(width),
             y: box.minY / CGFloat(height),
             width: box.width / CGFloat(width),
-            height: box.height / CGFloat(height)
+            height: box.height / CGFloat(height),
           )
         }
       }
@@ -418,7 +425,7 @@ enum SourceRestorationBuilder {
         x: CGFloat(x0 + minX) / CGFloat(width),
         y: CGFloat(y0 + minY) / CGFloat(height),
         width: CGFloat(maxX - minX) / CGFloat(width),
-        height: CGFloat(maxY - minY) / CGFloat(height)
+        height: CGFloat(maxY - minY) / CGFloat(height),
       )
       patch.renderingBox = maskBounds
       // The spread of non-glyph pixels distinguishes texture from a flat
@@ -438,8 +445,9 @@ enum SourceRestorationBuilder {
           bitsPerComponent: 8,
           bytesPerRow: w * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ), let destination = tile.data
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
+        ),
+        let destination = tile.data
       {
         let out = destination.bindMemory(to: UInt8.self, capacity: w * h * 4)
         tile.clear(CGRect(x: 0, y: 0, width: w, height: h))
@@ -472,10 +480,12 @@ enum SourceRestorationBuilder {
             let median = Pixel(
               r: cluster.map(\.r).sorted()[cluster.count / 2],
               g: cluster.map(\.g).sorted()[cluster.count / 2],
-              b: cluster.map(\.b).sorted()[cluster.count / 2]
+              b: cluster.map(\.b).sorted()[cluster.count / 2],
             )
             localMaterial = distance(median, bg) <= 18 ? median : nil
-          } else { localMaterial = nil }
+          } else {
+            localMaterial = nil
+          }
         } else if let surface = materialSurface {
           // Sample the established plane's perimeter, away from this glyph's
           // antialiasing and away from the exterior material. A varying plane
@@ -494,25 +504,35 @@ enum SourceRestorationBuilder {
           }
           if left <= right, top <= bottom {
             for x in left...right { append(x, top)
-              if bottom != top { append(x, bottom) }
+              if bottom != top {
+                append(x, bottom)
+              }
             }
-            if top + 1 < bottom { for y in top + 1..<bottom {
-              append(left, y)
-              if right != left { append(right, y) }
-            } }
+            if top + 1 < bottom {
+              for y in top + 1..<bottom {
+                append(left, y)
+                if right != left {
+                  append(right, y)
+                }
+              }
+            }
           }
           if samples.count >= 8 {
             let median = Pixel(
               r: samples.map(\.r).sorted()[samples.count / 2],
               g: samples.map(\.g).sorted()[samples.count / 2],
-              b: samples.map(\.b).sorted()[samples.count / 2]
+              b: samples.map(\.b).sorted()[samples.count / 2],
             )
             localMaterial = distance(median, bg) <= 18
               && samples.count(where: { distance($0, median) <= 3 }) * 10 >= samples.count * 9
               ? median
               : nil
-          } else { localMaterial = nil }
-        } else { localMaterial = nil }
+          } else {
+            localMaterial = nil
+          }
+        } else {
+          localMaterial = nil
+        }
         func belongsToLocalMaterial(_ pixel: Pixel) -> Bool {
           localMaterial.map { distance(pixel, $0) <= 3 } ?? true
         }
@@ -534,7 +554,10 @@ enum SourceRestorationBuilder {
             if
               (max(0, y - 1)...min(h - 1, y + 1)).contains(where: { ny in
                 (max(0, x - 1)...min(w - 1, x + 1)).contains { nx in priorInk[ny * w + nx] }
-              }) { ink[k] = true }
+              })
+            {
+              ink[k] = true
+            }
           }
         }
         if materialSurface == nil, let localMaterial, outline == nil {
@@ -544,13 +567,13 @@ enum SourceRestorationBuilder {
             let delta = SIMD3(
               Float(pixel.r - localMaterial.r),
               Float(pixel.g - localMaterial.g),
-              Float(pixel.b - localMaterial.b)
+              Float(pixel.b - localMaterial.b),
             )
             let transition = foregrounds.contains { foreground in
               let direction = SIMD3(
                 Float(foreground.r - localMaterial.r),
                 Float(foreground.g - localMaterial.g),
-                Float(foreground.b - localMaterial.b)
+                Float(foreground.b - localMaterial.b),
               )
               let length = (direction * direction).sum()
               guard length > 0 else { return false }
@@ -569,7 +592,7 @@ enum SourceRestorationBuilder {
           height: h,
           mask: ink,
           barriers: protection,
-          allowsExteriorSamples: true
+          allowsExteriorSamples: true,
         ) { x, y in
           let sourceX = x0 + x
           let sourceY = y0 + y
@@ -584,7 +607,8 @@ enum SourceRestorationBuilder {
           let candidate = color(sourceX, sourceY)
           // Neighboring text and opposite-polarity decoration are not material.
           guard
-            distance(candidate, bg) < backgroundTolerance, belongsToLocalMaterial(candidate),
+            distance(candidate, bg) < backgroundTolerance,
+            belongsToLocalMaterial(candidate),
             outline?.contains(candidate.luminance) != true,
             outline?.isStrokeTransition(candidate.luminance) != true
           else { return nil }
@@ -598,12 +622,14 @@ enum SourceRestorationBuilder {
           out[index * 4 + 2] = UInt8(clamping: Int(color.z.rounded()))
           out[index * 4 + 3] = 255
         }
-        if unresolved > 0 { result.needsReview = true }
+        if unresolved > 0 {
+          result.needsReview = true
+        }
         patch.renderingBox = CGRect(
           x: rect.minX / CGFloat(width),
           y: rect.minY / CGFloat(height),
           width: rect.width / CGFloat(width),
-          height: rect.height / CGFloat(height)
+          height: rect.height / CGFloat(height),
         )
         patch.restorationPNG = tile.makeImage()?.pngData
       }
@@ -652,7 +678,7 @@ enum SourceRestorationBuilder {
     width: Int,
     height: Int,
     foreground: Pixel,
-    color: (Int, Int) -> Pixel
+    color: (Int, Int) -> Pixel,
   ) -> OutlineRange? {
     guard width > 4, height > 4 else { return nil }
     var perimeter = [Int]()
@@ -681,7 +707,7 @@ enum SourceRestorationBuilder {
       range = OutlineRange(
         threshold: threshold,
         isLight: true,
-        strokeThreshold: center - max(8, abs(center - foreground.luminance) / 8)
+        strokeThreshold: center - max(8, abs(center - foreground.luminance) / 8),
       )
     } else if foreground.luminance > median + 40 {
       let contrast = foreground.luminance - perimeter[perimeter.count / 10]
@@ -694,9 +720,11 @@ enum SourceRestorationBuilder {
       range = OutlineRange(
         threshold: threshold,
         isLight: false,
-        strokeThreshold: center + max(8, abs(center - foreground.luminance) / 8)
+        strokeThreshold: center + max(8, abs(center - foreground.luminance) / 8),
       )
-    } else { return nil }
+    } else {
+      return nil
+    }
 
     return range
   }
@@ -714,7 +742,7 @@ enum SourceRestorationBuilder {
     radius: Int,
     contactDistance: Int,
     color: (Int, Int) -> Pixel?,
-    ownsInk: (Int, Int) -> Bool
+    ownsInk: (Int, Int) -> Bool,
   ) -> OutlineRange? {
     guard let range else { return nil }
 
@@ -745,7 +773,9 @@ enum SourceRestorationBuilder {
           }
         }
       }
-      if component.count >= 3 { components.append((component, bounded)) }
+      if component.count >= 3 {
+        components.append((component, bounded))
+      }
     }
     guard !components.isEmpty else { return nil }
     // Outline thickness starts at the stroke's antialiased edge, not its
@@ -789,11 +819,15 @@ enum SourceRestorationBuilder {
           {
             let p = Point(x: x, y: y)
             let owned: Bool
-            if let cached = ownedInk[p] { owned = cached }
-            else { owned = ownsInk(x, y)
+            if let cached = ownedInk[p] {
+              owned = cached
+            } else {
+              owned = ownsInk(x, y)
               ownedInk[p] = owned
             }
-            if owned { return true }
+            if owned {
+              return true
+            }
           }
         }
       }
@@ -851,7 +885,9 @@ enum SourceRestorationBuilder {
       for x in 0..<width {
         let index = y * width + x
         guard values[index] > 0 else { continue }
-        if x > 0 { values[index] = min(values[index], values[index - 1] + 1) }
+        if x > 0 {
+          values[index] = min(values[index], values[index - 1] + 1)
+        }
         if y > 0 {
           for nx in max(0, x - 1)...min(width - 1, x + 1) {
             values[index] = min(values[index], values[(y - 1) * width + nx] + 1)
@@ -863,7 +899,9 @@ enum SourceRestorationBuilder {
       for x in stride(from: width - 1, through: 0, by: -1) {
         let index = y * width + x
         guard values[index] > 0 else { continue }
-        if x < width - 1 { values[index] = min(values[index], values[index + 1] + 1) }
+        if x < width - 1 {
+          values[index] = min(values[index], values[index + 1] + 1)
+        }
         if y < height - 1 {
           for nx in max(0, x - 1)...min(width - 1, x + 1) {
             values[index] = min(values[index], values[(y + 1) * width + nx] + 1)
@@ -890,7 +928,7 @@ enum SourceRestorationBuilder {
     glyphExtent: CGFloat,
     imageWidth: Int,
     imageHeight: Int,
-    isForeground: (Int, Int) -> Bool
+    isForeground: (Int, Int) -> Bool,
   ) -> [Bool]? {
     // Most text patches never reach an edge. Visit their perimeter directly,
     // instead of rescanning every interior glyph/background pixel twice.
@@ -914,11 +952,15 @@ enum SourceRestorationBuilder {
     let upper = (vertical ? readingBounds.maxY : readingBounds.maxX) - axisOrigin
     let start = max(0, Int(ceil(lower - 0.5)))
     let end = min(axisLength, Int(ceil(upper - 0.5)))
-    if start < end { for position in start..<end { ownedAxis[position] = true } }
+    if start < end {
+      for position in start..<end { ownedAxis[position] = true }
+    }
     for axis in 0..<axisLength where !ownedAxis[axis] {
       for cross in 0..<crossLength {
         let index = vertical ? axis * width + cross : cross * width + axis
-        if ink[index] { boundary.append(index) }
+        if ink[index] {
+          boundary.append(index)
+        }
       }
     }
     guard boundary.contains(where: { ink[$0] }) else { return nil }
@@ -943,7 +985,9 @@ enum SourceRestorationBuilder {
         let y = index / width
         minimumAxis = min(minimumAxis, vertical ? y : x)
         maximumAxis = max(maximumAxis, vertical ? y : x)
-        if x == 0 || y == 0 || x == width - 1 || y == height - 1 { endpoints.append(index) }
+        if x == 0 || y == 0 || x == width - 1 || y == height - 1 {
+          endpoints.append(index)
+        }
         touchesLeft = touchesLeft || x == 0
         touchesRight = touchesRight || x == width - 1
         touchesTop = touchesTop || y == 0
@@ -954,7 +998,8 @@ enum SourceRestorationBuilder {
         for ny in max(0, y - 1)...min(height - 1, y + 1) {
           for nx in max(0, x - 1)...min(width - 1, x + 1) {
             let next = ny * width + nx
-            if ink[next], !visited[next] { visited[next] = true
+            if ink[next], !visited[next] {
+              visited[next] = true
               component.append(next)
             }
           }
@@ -974,10 +1019,12 @@ enum SourceRestorationBuilder {
           glyphExtent: glyphExtent,
           imageWidth: imageWidth,
           imageHeight: imageHeight,
-          isForeground: isForeground
+          isForeground: isForeground,
         )
       {
-        if protected == nil { protected = [Bool](repeating: false, count: ink.count) }
+        if protected == nil {
+          protected = [Bool](repeating: false, count: ink.count)
+        }
         for index in component { ink[index] = false
           protected![index] = true
         }
@@ -996,7 +1043,7 @@ enum SourceRestorationBuilder {
     glyphExtent: CGFloat,
     imageWidth: Int,
     imageHeight: Int,
-    isForeground: (Int, Int) -> Bool
+    isForeground: (Int, Int) -> Bool,
   ) -> Bool {
     guard glyphExtent.isFinite, glyphExtent > 0 else { return false }
     let reach = max(2, Int(ceil(glyphExtent)))
@@ -1019,13 +1066,20 @@ enum SourceRestorationBuilder {
       // edge is not evidence of artwork: the stroke must actually continue
       // beyond the sampled area as well as beyond the original text owner.
       if
-        outside >= CGFloat(reach), outsideTile >= CGFloat(max(2, reach / 2)), owners.allSatisfy({ owner in
+        outside >= CGFloat(reach),
+        outsideTile >= CGFloat(max(2, reach / 2)),
+        owners.allSatisfy({ owner in
           max(owner.minX - CGFloat(x), CGFloat(x) - owner.maxX, owner.minY - CGFloat(y), CGFloat(y) - owner.maxY) >=
             CGFloat(reach)
-        }) { return true }
+        })
+      {
+        return true
+      }
       for ny in max(Int(search.minY), y - 1)...min(Int(search.maxY) - 1, y + 1) {
         for nx in max(Int(search.minX), x - 1)...min(Int(search.maxX) - 1, x + 1) {
-          if nx >= x0, nx < x0 + width, ny >= y0, ny < y0 + height { continue }
+          if nx >= x0, nx < x0 + width, ny >= y0, ny < y0 + height {
+            continue
+          }
           let next = ny * imageWidth + nx
           guard visited.insert(next).inserted, isForeground(nx, ny) else { continue }
           queue.append(next)
@@ -1042,7 +1096,7 @@ enum SourceRestorationBuilder {
     for line: OCRResult.Line,
     width: Int,
     height: Int,
-    color: (Int, Int) -> Pixel
+    color: (Int, Int) -> Pixel,
   ) -> [OverlaySourcePatch] {
     let annotations = line.replacementPatches.filter(\.isAnnotation)
     guard line.isVerticalBlock, line.verticalCharScale > 0, !annotations.isEmpty else { return [] }
@@ -1055,7 +1109,7 @@ enum SourceRestorationBuilder {
         x: annotation.box.minX * CGFloat(width),
         y: bounds.minY * CGFloat(height),
         width: min(glyph * 0.65, annotation.box.width * CGFloat(width)),
-        height: bounds.height * CGFloat(height)
+        height: bounds.height * CGFloat(height),
       ).integral.intersection(CGRect(x: 0, y: 0, width: width, height: height))
       guard !rail.isNull, rail.width >= 2, rail.height >= 2 else { continue }
       let x0 = Int(rail.minX)
@@ -1094,19 +1148,24 @@ enum SourceRestorationBuilder {
           }
         }
         guard
-          component.count >= 3, rect.minX > 0, rect.maxX < CGFloat(w),
-          rect.height <= glyph * 0.7, rect.width <= glyph * 0.6,
+          component.count >= 3,
+          rect.minX > 0,
+          rect.maxX < CGFloat(w),
+          rect.height <= glyph * 0.7,
+          rect.width <= glyph * 0.6,
           CGFloat(component.count) < glyph * glyph * 0.25
         else { continue }
         let box = CGRect(
           x: (CGFloat(x0) + rect.minX) / CGFloat(width),
           y: (CGFloat(y0) + rect.minY) / CGFloat(height),
           width: rect.width / CGFloat(width),
-          height: rect.height / CGFloat(height)
+          height: rect.height / CGFloat(height),
         )
         guard !(annotations + patches).contains(where: { $0.box.contains(CGPoint(x: box.midX, y: box.midY)) }) else { continue }
         patches.append(.init(box: box, appearance: annotation.appearance, isAnnotation: true))
-        if patches.count >= 64 { return patches }
+        if patches.count >= 64 {
+          return patches
+        }
       }
     }
     return patches
@@ -1116,11 +1175,12 @@ enum SourceRestorationBuilder {
     Pixel(
       r: Int(c.red * 255),
       g: Int(c.green * 255),
-      b: Int(c.blue * 255)
+      b: Int(c.blue * 255),
     )
   }
 
   private static func distance(_ a: Pixel, _ b: Pixel) -> Int {
     max(abs(a.r - b.r), abs(a.g - b.g), abs(a.b - b.b))
   }
+
 }

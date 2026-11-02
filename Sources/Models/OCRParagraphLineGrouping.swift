@@ -40,7 +40,9 @@ enum OCRParagraphLineGrouping {
       }
       starts.append(match)
       ends.append(match.map { $0 + text.count })
-      if let match { cursor = match + text.count }
+      if let match {
+        cursor = match + text.count
+      }
     }
     return lineTranscripts.indices.map { i in
       guard i + 1 < starts.count, let end = ends[i], let start = starts[i + 1], end > 0, start >= end else { return nil }
@@ -51,7 +53,7 @@ enum OCRParagraphLineGrouping {
 
   static func segmentIndices(
     paragraphTranscript: String,
-    lineTranscripts: [String]
+    lineTranscripts: [String],
   ) -> [Int] {
     guard !lineTranscripts.isEmpty else { return [] }
     let segments = paragraphTranscript
@@ -93,4 +95,5 @@ enum OCRParagraphLineGrouping {
   private static func normalized(_ value: String) -> String {
     value.filter { !$0.isWhitespace && !$0.isNewline }
   }
+
 }

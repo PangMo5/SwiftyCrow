@@ -13,19 +13,21 @@ struct TranslationModelResolverTests {
     .appleIntelligenceNotEnabled,
     .modelNotReady,
   ])
-  func installedTraditionalModelsCannotAuthorizeHighFidelity(_ reason: SystemLanguageModel.Availability.UnavailableReason) {
+  func `installed traditional models cannot authorize high fidelity`(_ reason: SystemLanguageModel.Availability
+    .UnavailableReason)
+  {
     #expect(throws: TranslationModelResolver.ModelError.self) {
       try TranslationModelResolver.validateAppleIntelligence(.unavailable(reason))
     }
   }
 
   @Test
-  func readyAppleIntelligencePassesTheDevicePreflight() throws {
+  func `ready apple intelligence passes the device preflight`() throws {
     try TranslationModelResolver.validateAppleIntelligence(.available)
   }
 
   @Test
-  func onlyModelErrorsBecomeDownloadOrUnsupportedGuidance() {
+  func `only model errors become download or unsupported guidance`() {
     let source = Locale.Language(identifier: "ko")
     let target = Locale.Language(identifier: "en")
     #expect(TranslationModelResolver

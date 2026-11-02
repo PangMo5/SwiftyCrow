@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AppKit
@@ -51,7 +51,7 @@ public struct DisplayInfo: Sendable {
     displayID: CGDirectDisplayID,
     pointSize: CGSize,
     pointPixelScale: CGFloat,
-    localizedName: String
+    localizedName: String,
   ) {
     self.index = index
     self.displayID = displayID
@@ -86,7 +86,7 @@ public struct StartedDisplay: Sendable {
     pixelWidth: Int,
     pixelHeight: Int,
     codec: String,
-    outputURL: URL
+    outputURL: URL,
   ) {
     self.index = index
     self.displayID = displayID
@@ -116,6 +116,8 @@ public struct StartedDisplay: Sendable {
 /// Display discovery and selection.
 public enum DisplayCatalog {
 
+  // MARK: Public
+
   /// `SCShareableContent.current` enumerates offscreen windows as well and is
   /// measurably slower; a display filter never needs them.
   public static func shareableContent() async throws -> SCShareableContent {
@@ -132,7 +134,7 @@ public enum DisplayCatalog {
         displayID: display.displayID,
         pointSize: CGSize(width: display.width, height: display.height),
         pointPixelScale: CGFloat(filter.pointPixelScale),
-        localizedName: names[display.displayID] ?? "Display \(display.displayID)"
+        localizedName: names[display.displayID] ?? "Display \(display.displayID)",
       )
     }
   }
@@ -141,7 +143,7 @@ public enum DisplayCatalog {
   /// logs, `--display <index>`, and the `-1`/`-2` file suffixes all agree.
   public static func select(
     _ selection: DisplaySelection,
-    from displays: [SCDisplay]
+    from displays: [SCDisplay],
   ) throws -> [(index: Int, display: SCDisplay)] {
     guard !displays.isEmpty else {
       throw RecorderError.noDisplaysAvailable
@@ -149,12 +151,14 @@ public enum DisplayCatalog {
     switch selection {
     case .all:
       return displays.enumerated().map { (index: $0.offset + 1, display: $0.element) }
+
     case .main:
       let mainID = CGMainDisplayID()
       guard let offset = displays.firstIndex(where: { $0.displayID == mainID }) else {
         throw RecorderError.mainDisplayUnavailable
       }
       return [(index: offset + 1, display: displays[offset])]
+
     case .index(let index):
       guard index >= 1, index <= displays.count else {
         throw RecorderError.displayIndexOutOfRange(index: index, count: displays.count)
@@ -251,7 +255,7 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
     outputURL: URL,
     options: RecorderOptions,
     excludedApplications: [SCRunningApplication],
-    onFailure: @escaping @Sendable (any Error) -> Void
+    onFailure: @escaping @Sendable (any Error) -> Void,
   ) {
     self.index = index
     self.outputURL = outputURL
@@ -265,7 +269,7 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
     let filter = SCContentFilter(
       display: display,
       excludingApplications: excludedApplications,
-      exceptingWindows: []
+      exceptingWindows: [],
     )
     let scale = CGFloat(filter.pointPixelScale)
     let rect = filter.contentRect
@@ -281,7 +285,7 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
     configuration = DisplayRecorder.makeConfiguration(width: width, height: height, options: options)
     captureQueue = DispatchQueue(
       label: "dev.pangmo5.demolab.recorder.capture.display-\(index)",
-      qos: .userInitiated
+      qos: .userInitiated,
     )
     super.init()
   }
@@ -296,6 +300,13 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
   public let pixelWidth: Int
   public let pixelHeight: Int
 
+  /// Resolves once this stream has produced a frame. `false` means the budget
+  /// ran out with the stream live but silent, which is a note rather than a
+  /// failure: the caller must not begin a scene without an encoded frame.
+  public var firstFrameUptime: UInt64? {
+    lock.withLock { writer?.firstFrameUptime }
+  }
+
   public func start() async throws -> StartedDisplay {
     let writer = try CadenceWriter(
       outputURL: outputURL,
@@ -304,7 +315,7 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
       fps: options.fps,
       requestedCodec: options.codec,
       bitrateMbps: options.bitrateMbps,
-      label: "display-\(index)"
+      label: "display-\(index)",
     )
     let stream = SCStream(filter: filter, configuration: configuration, delegate: self)
     try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: captureQueue)
@@ -331,14 +342,9 @@ public final class DisplayRecorder: NSObject, SCStreamOutput, SCStreamDelegate, 
       pixelWidth: pixelWidth,
       pixelHeight: pixelHeight,
       codec: writer.codec,
-      outputURL: outputURL
+      outputURL: outputURL,
     )
   }
-
-  /// Resolves once this stream has produced a frame. `false` means the budget
-  /// ran out with the stream live but silent, which is a note rather than a
-  /// failure: the caller must not begin a scene without an encoded frame.
-  public var firstFrameUptime: UInt64? { lock.withLock { writer?.firstFrameUptime } }
 
   public func awaitFirstFrame() async -> Bool {
     // `withLock`, not lock/unlock: `NSLock.lock()` is unavailable from an async
@@ -487,10 +493,10 @@ public final class RecordingSession: @unchecked Sendable {
 
   public var outputOffsets: [String: Double] {
     lock.withLock {
-      guard let origin = recorders.compactMap(\.firstFrameUptime).min() else {return [:]}
+      guard let origin = recorders.compactMap(\.firstFrameUptime).min() else { return [:] }
       return Dictionary(uniqueKeysWithValues: recorders.compactMap { recorder in
-        guard let uptime = recorder.firstFrameUptime else {return nil}
-        return (recorder.outputURL.lastPathComponent, Double(uptime-origin)/1_000_000_000)
+        guard let uptime = recorder.firstFrameUptime else { return nil }
+        return (recorder.outputURL.lastPathComponent, Double(uptime - origin) / 1_000_000_000)
       })
     }
   }
@@ -505,11 +511,11 @@ public final class RecordingSession: @unchecked Sendable {
     let urls = DisplayCatalog.outputURLs(
       base: options.output,
       indices: selected.map(\.index),
-      suffixed: options.display == .all
+      suffixed: options.display == .all,
     )
 
-    var started: [StartedDisplay] = []
-    var live: [DisplayRecorder] = []
+    var started = [StartedDisplay]()
+    var live = [DisplayRecorder]()
     for (offset, selection) in selected.enumerated() {
       let recorder = DisplayRecorder(
         display: selection.display,
@@ -517,7 +523,7 @@ public final class RecordingSession: @unchecked Sendable {
         outputURL: urls[offset],
         options: options,
         excludedApplications: ownProcess,
-        onFailure: onFailure
+        onFailure: onFailure,
       )
       started.append(try await recorder.start())
       live.append(recorder)
@@ -543,8 +549,8 @@ public final class RecordingSession: @unchecked Sendable {
       return started
     }
 
-    var summaries: [RecordingSummary] = []
-    var failures: [String] = []
+    var summaries = [RecordingSummary]()
+    var failures = [String]()
     for recorder in recorders {
       do {
         summaries.append(try await recorder.stop())
@@ -559,7 +565,7 @@ public final class RecordingSession: @unchecked Sendable {
 
   private let options: RecorderOptions
   private let lock = NSLock()
-  private var recorders: [DisplayRecorder] = []
+  private var recorders = [DisplayRecorder]()
 
 }
 
@@ -611,17 +617,17 @@ public final class RecorderController: @unchecked Sendable {
 
   private let session: RecordingSession
 
-  private var signalSources: [DispatchSourceSignal] = []
+  private var signalSources = [DispatchSourceSignal]()
   private var durationTimer: DispatchSourceTimer?
   private var isRunning = false
   private var stopRequested = false
   private var isStopping = false
   private var pidfileWritten: URL?
 
-  private var recordedOutputs: [String] = []
-  private var recordedFailures: [String] = []
+  private var recordedOutputs = [String]()
+  private var recordedFailures = [String]()
   private var recordedStopReason: String?
-  private var recordedStatistics: [String: [String: Int]] = [:]
+  private var recordedStatistics = [String: [String: Int]]()
   private var recordedFrameCount = 0
   private var recordedDroppedCount = 0
   private var recordedDuration = 0.0
@@ -670,12 +676,20 @@ public final class RecorderController: @unchecked Sendable {
       if let pidfile = options.pidfile, let uptime = session.firstFrameUptime {
         let ready = pidfile.deletingPathExtension().appendingPathExtension("ready.json")
         try JSONSerialization.data(withJSONObject: [
-          "firstFrameUptimeNanoseconds": uptime, "outputOffsets": session.outputOffsets,
+          "firstFrameUptimeNanoseconds": uptime,
+          "outputOffsets": session.outputOffsets,
           "displays": Dictionary(uniqueKeysWithValues: started.map { display in
-            (display.outputURL.lastPathComponent, ["id": Double(display.displayID), "x": CGDisplayBounds(display.displayID).minX, "y": CGDisplayBounds(display.displayID).minY])
+            (
+              display.outputURL.lastPathComponent,
+              [
+                "id": Double(display.displayID),
+                "x": CGDisplayBounds(display.displayID).minX,
+                "y": CGDisplayBounds(display.displayID).minY,
+              ],
+            )
           }),
         ])
-          .write(to: ready, options: .atomic)
+        .write(to: ready, options: .atomic)
       }
       writePidfile()
       fflush(stdout)
@@ -701,12 +715,14 @@ public final class RecorderController: @unchecked Sendable {
 
   private func isAccessError(_ error: any Error) -> Bool {
     guard let recorderError = error as? RecorderError else { return false }
-    if case .noScreenRecordingAccess = recorderError { return true }
+    if case .noScreenRecordingAccess = recorderError {
+      return true
+    }
     return false
   }
 
   private func installSignalSources() {
-    var sources: [DispatchSourceSignal] = []
+    var sources = [DispatchSourceSignal]()
     for number in [SIGINT, SIGTERM] {
       // The dispatch source only sees the signal if the default disposition,
       // which would kill us mid-file, is disarmed first.
@@ -783,7 +799,10 @@ public final class RecorderController: @unchecked Sendable {
     // one file per display, and the longest of them is the take's duration.
     recordedOutputs = result.summaries.map(\.outputURL.path)
     recordedStatistics = Dictionary(uniqueKeysWithValues: result.summaries.map {
-      ($0.outputURL.lastPathComponent, ["frames": $0.frameCount, "dropped": $0.droppedFrameCount, "width": $0.width, "height": $0.height])
+      (
+        $0.outputURL.lastPathComponent,
+        ["frames": $0.frameCount, "dropped": $0.droppedFrameCount, "width": $0.width, "height": $0.height],
+      )
     })
     recordedFailures.append(contentsOf: result.failures)
     recordedFrameCount = result.summaries.reduce(0) { $0 + $1.frameCount }
@@ -816,7 +835,7 @@ public final class RecorderController: @unchecked Sendable {
     do {
       try FileManager.default.createDirectory(
         at: pidfile.deletingLastPathComponent(),
-        withIntermediateDirectories: true
+        withIntermediateDirectories: true,
       )
       try Data("\(getpid())\n".utf8).write(to: pidfile, options: .atomic)
       lock.lock()
@@ -850,7 +869,9 @@ public final class RecorderController: @unchecked Sendable {
   /// Only the first stop is the real one; later ones are shutdown noise.
   private func noteStopReason(_ reason: String) {
     lock.lock()
-    if recordedStopReason == nil { recordedStopReason = reason }
+    if recordedStopReason == nil {
+      recordedStopReason = reason
+    }
     lock.unlock()
   }
 
@@ -875,18 +896,22 @@ public final class RecorderController: @unchecked Sendable {
       "outputs": outputs,
       "error": NSNull(),
       "stopReason": NSNull(),
-      "outputStatistics": lock.withLock {recordedStatistics},
+      "outputStatistics": lock.withLock { recordedStatistics },
       "frames": frames,
       "dropped": dropped,
       "durationSeconds": duration,
     ]
-    if !failures.isEmpty { payload["error"] = failures.joined(separator: "; ") }
-    if let stopReason { payload["stopReason"] = stopReason }
+    if !failures.isEmpty {
+      payload["error"] = failures.joined(separator: "; ")
+    }
+    if let stopReason {
+      payload["stopReason"] = stopReason
+    }
     do {
       let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
       try FileManager.default.createDirectory(
         at: resultFile.deletingLastPathComponent(),
-        withIntermediateDirectories: true
+        withIntermediateDirectories: true,
       )
       // `.atomic` is a write to a sibling temp file plus a rename, so a caller
       // racing this exit reads the whole file or no file, never half of one.

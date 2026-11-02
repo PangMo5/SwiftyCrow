@@ -15,7 +15,7 @@ struct OCRClient {
   var recognizeCapture: @Sendable (
     _ image: CGImage,
     _ language: Language,
-    _ textReady: @Sendable (OCRResult) async -> Void
+    _ textReady: @Sendable (OCRResult) async -> Void,
   ) async throws -> OCRResult
 }
 
@@ -26,7 +26,7 @@ extension OCRClient: DependencyKey {
     recognizeText: { image, language in try await OCRPipeline.recognize(image, language: language) },
     recognizeCapture: { image, language, textReady in
       try await OCRPipeline.recognize(image, language: language, textReady: textReady)
-    }
+    },
   )
 }
 

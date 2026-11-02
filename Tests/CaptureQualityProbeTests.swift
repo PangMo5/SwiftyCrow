@@ -11,7 +11,7 @@ import Testing
 struct CaptureQualityProbeTests {
 
   @Test
-  func renderRealCaptures() async throws {
+  func `render real captures`() async throws {
     let root = URL(fileURLWithPath: try #require(ProcessInfo.processInfo.environment["SWIFTYCROW_QUALITY_ROOT"]))
     let run = ProcessInfo.processInfo.environment["SWIFTYCROW_QUALITY_RUN"] ?? "baseline"
     let output = root.appendingPathComponent(run)
@@ -29,4 +29,5 @@ struct CaptureQualityProbeTests {
       }
     }
   }
+
 }

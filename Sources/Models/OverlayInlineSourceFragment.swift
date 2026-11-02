@@ -13,10 +13,15 @@ struct OverlayInlineSourceFragment: Equatable, Hashable, Sendable {
 
   init?(pixels: Data, width: Int, height: Int, descent: CGFloat, referenceFontSize: CGFloat, kind: Kind = .arithmetic) {
     guard
-      width > 0, height > 0, width <= Int.max / 4 / height,
+      width > 0,
+      height > 0,
+      width <= Int.max / 4 / height,
       pixels.count == width * height * 4,
-      descent.isFinite, descent >= (kind == .annotation ? -CGFloat(height) * 2 : 0), descent <= CGFloat(height),
-      referenceFontSize.isFinite, referenceFontSize > 0
+      descent.isFinite,
+      descent >= (kind == .annotation ? -CGFloat(height) * 2 : 0),
+      descent <= CGFloat(height),
+      referenceFontSize.isFinite,
+      referenceFontSize > 0
     else { return nil }
     self.pixels = pixels
     self.width = width
@@ -42,7 +47,9 @@ struct OverlayInlineSourceFragment: Equatable, Hashable, Sendable {
 
   var image: CGImage? {
     guard
-      width > 0, height > 0, width <= Int.max / 4 / height,
+      width > 0,
+      height > 0,
+      width <= Int.max / 4 / height,
       pixels.count == width * height * 4,
       let provider = CGDataProvider(data: pixels as CFData)
     else { return nil }
@@ -57,7 +64,8 @@ struct OverlayInlineSourceFragment: Equatable, Hashable, Sendable {
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     )
   }
+
 }

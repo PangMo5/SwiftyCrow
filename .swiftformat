@@ -1,26 +1,32 @@
-# Based on https://github.com/airbnb/swift airbnb.swiftformat
+# Airbnb Swift style, synced from commit 341e15448fce4c28aa8d36af171f39ab98b2913b (2026-10-29).
+# https://github.com/airbnb/swift/blob/341e15448fce4c28aa8d36af171f39ab98b2913b/Sources/AirbnbSwiftFormatTool/airbnb.swiftformat
+--min-version 0.64.5
 
-# Exclude generated / vendored sources
---exclude Carthage,Pods,.build,Derived,DerivedData,Tuist/.build
-
-# options
---swift-version 6.0
+# Preserve the repository's SPDX headers.
 # REUSE-IgnoreStart
 --header "SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors\n// SPDX-License-Identifier: AGPL-3.0-only"
 # REUSE-IgnoreEnd
+--rules fileHeader
+
+# Exclude checkout directories for common package managers
+--exclude Carthage,Pods,.build,.swiftpm,.jj,Derived,DerivedData,Tuist/.build
+
+# options
+--swift-version 6.4
+--language-mode 5
 --self remove # redundantSelf
---import-grouping testable-bottom # sortedImports
+--import-grouping access-control,alpha,attributes-last # sortedImports
 --trailing-commas multi-element-lists # trailingCommas
 --trim-whitespace always # trailingSpace
---indent 2 # indent
---ifdef no-indent # indent
---indent-strings true # indent
+--indent 2 #indent
+--ifdef no-indent #indent
+--indent-strings true #indent
 --wrap-arguments before-first # wrapArguments
 --wrap-parameters before-first # wrapArguments
 --wrap-collections before-first # wrapArguments
 --wrap-conditions before-first # wrapArguments
---wrap-return-type never # wrapArguments
---wrap-effects never # wrapArguments
+--wrap-return-type never #wrapArguments
+--wrap-effects never #wrapArguments
 --closing-paren balanced # wrapArguments
 --call-site-paren balanced # wrapArguments
 --wrap-type-aliases before-first # wrapArguments
@@ -37,12 +43,12 @@
 --organize-types class,struct,enum,extension,actor,protocol # organizeDeclarations
 --visibility-order beforeMarks,instanceLifecycle,open,public,package,internal,fileprivate,private # organizeDeclarations
 --type-order nestedType,staticProperty,staticPropertyWithBody,classPropertyWithBody,swiftUIPropertyWrapper,instanceProperty,instancePropertyWithBody,staticMethod,classMethod,instanceMethod # organizeDeclarations
---sort-swiftui-properties first-appearance-sort # organizeDeclarations
---type-body-marks remove # organizeDeclarations
+--sort-swiftui-properties first-appearance-sort #organizeDeclarations
+--type-body-marks remove #organizeDeclarations
 --extension-acl on-declarations # extensionAccessControl
 --pattern-let inline # hoistPatternLet
 --property-types inferred # redundantType, propertyTypes
---type-blank-lines preserve # blankLinesAtStartOfScope, blankLinesAtEndOfScope
+--type-blank-lines consistent # blankLinesAtStartOfScope, blankLinesAtEndOfScope
 --empty-braces spaced # emptyBraces
 --ranges preserve # spaceAroundOperators
 --operator-func no-space # spaceAroundOperators
@@ -50,10 +56,15 @@
 --else-position same-line # elseOnSameLine
 --guard-else next-line # elseOnSameLine
 --single-line-for-each convert # preferForLoop
+--single-line-ternary preserve # ifExpressions
 --short-optionals always # typeSugar
 --semicolons never # semicolons
 --doc-comments preserve # docComments
---prefer-synthesized-init-for-internal-structs View,ViewBuilder # redundantMemberwiseInit
+--prefer-synthesized-init-for-internal-structs View,ViewModifier # redundantMemberwiseInit
+# Parameterized tests use conditional assertions, not unconditional preconditions.
+# SwiftFormat 0.64.5 also corrupts array conditions when converting trailing ifs.
+--guard-like-if-statements preserve # noGuardInTests
+--prefer-content-builder true # contentBuilder
 
 # Customized default modifier order to put `override` after access control
 --modifier-order private,fileprivate,internal,package,public,open,private(set),fileprivate(set),internal(set),package(set),public(set),open(set),override,final,dynamic,optional,required,convenience,indirect,isolated,nonisolated,nonisolated(unsafe),lazy,weak,unowned,unowned(safe),unowned(unsafe),static,class,borrowing,consuming,mutating,nonmutating,prefix,infix,postfix,async # modifierOrder
@@ -62,7 +73,6 @@
 --max-width 130 # wrap
 
 # rules
---rules fileHeader
 --rules anyObjectProtocol
 --rules blankLinesBetweenScopes
 --rules consecutiveSpaces
@@ -74,6 +84,7 @@
 --rules indent
 --rules markTypes
 --rules organizeDeclarations
+--rules redundantBackticks
 --rules redundantParens
 --rules redundantReturn
 --rules redundantSelf
@@ -129,9 +140,12 @@
 --rules sortTypealiases
 --rules preferForLoop
 --rules conditionalAssignment
+--rules ifExpressions
 --rules wrapMultilineConditionalAssignment
 --rules wrapFunctionBodies
 --rules wrapPropertyBodies
+--rules wrapIfStatementBodies
+--rules wrapIfExpressionBodies
 --rules void
 --rules blankLineAfterSwitchCase
 --rules consistentSwitchCaseSpacing
@@ -139,13 +153,30 @@
 --rules propertyTypes
 --rules blankLinesBetweenChainedFunctions
 --rules preferCountWhere
+--rules isEmpty
+--rules preferFlatMap
+--rules preferContains
+--rules preferFirstWhere
+--rules preferLazyMap
+--rules preferMinOverSorted
+--rules preferSwiftStringAPI
+--rules swiftTestingTestCaseNames
+--rules redundantSwiftTestingSuite
+--rules preferStructSwiftTestingSuites
 --rules modifiersOnSameLine
+--rules noForceTryInTests
+--rules noForceUnwrapInTests
 --rules redundantThrows
 --rules redundantAsync
+--rules redundantExtendedLifetime
+--rules noGuardInTests
+--rules testSuiteAccessControl
+--rules validateTestCases
 --rules redundantMemberwiseInit
 --rules redundantBreak
 --rules redundantTypedThrows
 --rules preferFinalClasses
 --rules simplifyGenericConstraints
 --rules redundantEmptyView
---rules redundantViewBuilder
+--rules contentBuilder
+--rules redundantSwiftUIGroup

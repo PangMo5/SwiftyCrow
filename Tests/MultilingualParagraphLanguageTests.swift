@@ -7,9 +7,11 @@ import Testing
 
 struct MultilingualParagraphLanguageTests {
   @Test
-  func neighboringDocumentsCannotChangeAnAmbiguousLabelsLanguage() {
+  func `neighboring documents cannot change an ambiguous labels language`() {
     let client = LanguageDetectionClient(detect: { text, _ in
-      if text == "e" { return nil }
+      if text == "e" {
+        return nil
+      }
       return Language(code: text.contains("English") ? "en" : "ja")
     })
     let japanese = [
@@ -20,7 +22,7 @@ struct MultilingualParagraphLanguageTests {
       boundingBoxNormalized: .zero,
       text: "English prose belongs to a separate source document.",
       recognitionLanguages: ["en"],
-      recognitionContextID: 1
+      recognitionContextID: 1,
     )
     let standalone = client.resolveRecognizedSources(for: japanese, configured: .auto)
     let combined = client.resolveRecognizedSources(for: japanese + [english], configured: .auto)
@@ -31,7 +33,7 @@ struct MultilingualParagraphLanguageTests {
   }
 
   @Test
-  func nativeLanguageEvidenceOverridesAnAmbiguousShortTextGuess() {
+  func `native language evidence overrides an ambiguous short text guess`() {
     let client = LanguageDetectionClient(detect: { _, _ in Language(code: "hr") })
     let line = OCRResult.Line(boundingBoxNormalized: .zero, text: "QG", recognitionLanguages: ["en"])
     #expect(client.resolveRecognizedSources(for: [line], configured: .auto).first?.code == "en")
@@ -41,14 +43,14 @@ struct MultilingualParagraphLanguageTests {
   }
 
   @Test(arguments: ["th", "ja", "ar"])
-  func nativeLanguageMustAgreeWithTheObservedScript(_ hint: String) {
+  func `native language must agree with the observed script`(_ hint: String) {
     let client = LanguageDetectionClient(detect: { _, _ in Language(code: "en") })
     let line = OCRResult.Line(boundingBoxNormalized: .zero, text: "size", recognitionLanguages: [hint])
     #expect(client.resolveRecognizedSources(for: [line], configured: .auto).first?.code == "en")
   }
 
   @Test
-  func hanHeadwordUsesJapanesePronunciationContextInsteadOfEnglishPageLanguage() {
+  func `han headword uses japanese pronunciation context instead of english page language`() {
     let texts = [
       "相槌",
       "The following entry describes a Japanese noun. Read the examples and pronunciation below.",
@@ -63,7 +65,7 @@ struct MultilingualParagraphLanguageTests {
   }
 
   @Test
-  func embeddedFrenchAndKoreanQuotesDoNotTurnEnglishProseIntoFrench() {
+  func `embedded french and korean quotes do not turn english prose into french`() {
     let text = """
       The low-latency model still translates Le prix est passé de 50 dollars à 15 dollars. \
       as 가격이 $50에서 $15로 상승했습니다.. This reverses the direction implied by the numbers. \
@@ -79,15 +81,15 @@ struct MultilingualParagraphLanguageTests {
   @Test(arguments: [
     (
       "de",
-      "Bewahren Sie die Originaldateien auf. Überprüfen Sie alle Änderungen, bevor Sie fortfahren. Die Schaltfläche trägt die Aufschrift Download now. Trennen Sie das Gerät während der Aktualisierung nicht vom Computer."
+      "Bewahren Sie die Originaldateien auf. Überprüfen Sie alle Änderungen, bevor Sie fortfahren. Die Schaltfläche trägt die Aufschrift Download now. Trennen Sie das Gerät während der Aktualisierung nicht vom Computer.",
     ),
     ("ko", "원본 파일을 보관하세요. 변경 사항을 확인한 다음 계속 진행하세요. 버튼에는 Download now라고 적혀 있어요. 업데이트가 진행되는 동안 기기를 분리하지 마세요."),
     (
       "fr",
-      "Conservez les fichiers originaux. Vérifiez les modifications avant de continuer. Le bouton indique Download now. Ne déconnectez pas votre appareil pendant la mise à jour."
+      "Conservez les fichiers originaux. Vérifiez les modifications avant de continuer. Le bouton indique Download now. Ne déconnectez pas votre appareil pendant la mise à jour.",
     ),
   ])
-  func pageLanguageIsNotAssumedToBeEnglish(_ sample: (String, String)) {
+  func `page language is not assumed to be english`(_ sample: (String, String)) {
     #expect(LanguageDetectionClient.liveValue.detect(sample.1, 0.65)?.localeLanguage.languageCode?.identifier == sample.0)
   }
 }

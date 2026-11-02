@@ -43,7 +43,9 @@ struct PermissionRelaunchNotice: View {
       Text("Relaunch to apply permission changes. If setup is open, you will return to the same step and language choice.")
         .font(.callout).foregroundStyle(.secondary)
       Button("Relaunch SwiftyCrow", action: relaunch).disabled(isRelaunching)
-      if let error { Text(error).font(.caption).foregroundStyle(.red) }
+      if let error {
+        Text(error).font(.caption).foregroundStyle(.red)
+      }
     }
   }
 }

@@ -31,7 +31,7 @@ enum OCRInlineScriptRecovery {
           x: box.minX * CGFloat(image.width),
           y: box.minY * CGFloat(image.height),
           width: box.width * CGFloat(image.width),
-          height: box.height * CGFloat(image.height)
+          height: box.height * CGFloat(image.height),
         )
         .insetBy(dx: -3, dy: -3).integral.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
         let started = ContinuousClock.now
@@ -41,11 +41,12 @@ enum OCRInlineScriptRecovery {
           crop: crop,
           minimumGlyphHeight: box.height * CGFloat(image.height),
           preferredScale: 2,
-          usesLanguageCorrection: false
+          usesLanguageCorrection: false,
         )
         Log.ocr.log("Inline script crop completed in \(started.duration(to: .now).loggedSeconds, privacy: .public)s")
         guard
-          candidates.count == 1, let candidate = candidates.first,
+          candidates.count == 1,
+          let candidate = candidates.first,
           span.isRubyBase
           ? acceptsRubyBase(candidate.text, confidence: candidate.recognitionConfidence)
           : accepts(candidate.text, confidence: candidate.recognitionConfidence)
@@ -76,8 +77,10 @@ enum OCRInlineScriptRecovery {
 
   static func suspiciousSpans(in line: OCRResult.Line, among lines: [OCRResult.Line] = []) -> [Span] {
     guard
-      !line.isVerticalBlock, !line.preservesSource,
-      !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text)
+      !line.isVerticalBlock,
+      !line.preservesSource,
+      !OCRTextSemantics.isCode(line.text),
+      !OCRTextSemantics.isIdentifier(line.text)
     else { return [] }
     let text = line.text as NSString
     var words = [Span]()
@@ -85,7 +88,9 @@ enum OCRInlineScriptRecovery {
       guard NSMaxRange(run.range) <= text.length else { continue }
       if let last = words.last, last.box == run.box {
         words[words.count - 1].range = NSUnionRange(last.range, run.range)
-      } else { words.append(Span(range: run.range, box: run.box)) }
+      } else {
+        words.append(Span(range: run.range, box: run.box))
+      }
     }
     let rubyRanges = Set(lines.compactMap { OCRResult.rubyBaseWord(in: line, for: $0)?.range })
     words = words.map { span in
@@ -96,13 +101,18 @@ enum OCRInlineScriptRecovery {
     let suspicious = words.filter { span in
       let value = text.substring(with: span.range)
       guard !value.unicodeScalars.contains(where: isNonLatinLetter) else { return false }
-      if span.isRubyBase { return true }
+      if span.isRubyBase {
+        return true
+      }
       if
         value.count > 1,
         value.range(
           of: #"^(?:\p{Latin}[\p{Latin}\p{M}]*[.,;:!?]?|[+-]?\d+(?:[.,]\d+)*%?)$"#,
-          options: .regularExpression
-        ) != nil { return false }
+          options: .regularExpression,
+        ) != nil
+      {
+        return false
+      }
       let symbols = value.unicodeScalars
         .count { !CharacterSet.alphanumerics.contains($0) && !CharacterSet.whitespaces.contains($0) }
       let isolatedFragment = value == "&" || value == "|" || value == "[" || value == "]"
@@ -118,12 +128,15 @@ enum OCRInlineScriptRecovery {
     for span in suspicious {
       if
         let last = spans.last,
-        !last.isRubyBase, !span.isRubyBase,
+        !last.isRubyBase,
+        !span.isRubyBase,
         (span.box.minX - last.box.maxX) * line.imageAspectRatio < max(span.box.height, last.box.height) * 0.7,
         span.range.location - NSMaxRange(last.range) <= 2
       {
         spans[spans.count - 1] = Span(range: NSUnionRange(last.range, span.range), box: last.box.union(span.box))
-      } else { spans.append(span) }
+      } else {
+        spans.append(span)
+      }
     }
     return spans.filter { text.substring(with: $0.range).contains(where: { $0.isLetter || $0.isNumber }) }
   }
@@ -138,13 +151,17 @@ enum OCRInlineScriptRecovery {
   private static func replacingSpan(
     _ span: Span,
     in runs: [OverlaySourceStyleRun],
-    with candidate: OCRResult.Line
+    with candidate: OCRResult.Line,
   ) -> [OverlaySourceStyleRun] {
     let delta = candidate.text.utf16.count - span.range.length
     return runs.compactMap { run in
-      if NSIntersectionRange(run.range, span.range).length > 0 { return nil }
+      if NSIntersectionRange(run.range, span.range).length > 0 {
+        return nil
+      }
       var run = run
-      if run.range.location >= NSMaxRange(span.range) { run.range.location += delta }
+      if run.range.location >= NSMaxRange(span.range) {
+        run.range.location += delta
+      }
       return run
     } + candidate.styleRuns.map { run in
       var run = run
@@ -152,4 +169,5 @@ enum OCRInlineScriptRecovery {
       return run
     }
   }
+
 }

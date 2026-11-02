@@ -9,15 +9,17 @@ enum LiveSourceIdentity {
   static func sources(
     _ current: [OverlayLine.Source],
     previous: [OverlayLine],
-    verifiedBounds: [UUID: CGRect]
+    verifiedBounds: [UUID: CGRect],
   ) -> [OverlayLine.Source] {
     var available = previous.indices.filter { verifiedBounds[previous[$0].id] != nil && !previous[$0].source.needsReview }
     var output = current.map { candidate in
       let match = available.first { index in
         let old = previous[index].source
         guard
-          old.language == candidate.language, old.isProtectedLiteral == candidate.isProtectedLiteral,
-          let bounds = verifiedBounds[previous[index].id], bounds.contains(candidate.box)
+          old.language == candidate.language,
+          old.isProtectedLiteral == candidate.isProtectedLiteral,
+          let bounds = verifiedBounds[previous[index].id],
+          bounds.contains(candidate.box)
         else { return false }
         switch (old.layout, candidate.layout) {
         case (.horizontal, .horizontal): break

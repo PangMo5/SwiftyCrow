@@ -15,12 +15,15 @@ enum OCRObservationRows {
     return rows.indices.map { index in
       var row = rows[index]
       guard
-        !row.isVerticalBlock, abs(row.rotationRadians) < 0.025,
-        let ink = owned[index], ink.height < row.boundingBoxNormalized.height * 0.85,
+        !row.isVerticalBlock,
+        abs(row.rotationRadians) < 0.025,
+        let ink = owned[index],
+        ink.height < row.boundingBoxNormalized.height * 0.85,
         ink.width >= row.boundingBoxNormalized.width * 0.8,
         rows.indices.contains(where: { other in
           guard
-            other != index, let neighbor = owned[other],
+            other != index,
+            let neighbor = owned[other],
             neighbor.midY < ink.minY || neighbor.midY > ink.maxY
           else { return false }
           let overlap = row.boundingBoxNormalized.intersection(neighbor)
@@ -39,7 +42,7 @@ enum OCRObservationRows {
     let text = line.text as NSString
     let matches = try! NSRegularExpression(pattern: #"[^\r\n]+"#).matches(
       in: line.text,
-      range: NSRange(location: 0, length: text.length)
+      range: NSRange(location: 0, length: text.length),
     )
     let rows = matches.compactMap { match -> OCRResult.Line? in
       let value = text.substring(with: match.range).trimmingCharacters(in: .whitespaces)

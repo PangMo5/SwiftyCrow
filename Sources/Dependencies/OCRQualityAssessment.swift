@@ -21,7 +21,8 @@ enum OCRQualityAssessment {
         continue
       }
       guard
-        !OCRTextSemantics.isCode(text), !OCRTextSemantics.isIdentifier(text),
+        !OCRTextSemantics.isCode(text),
+        !OCRTextSemantics.isIdentifier(text),
         !result.lines[i].preservesSource,
         let code = languages[i].localeLanguage.languageCode?.identifier,
         let spellingLanguage = NSSpellChecker.shared.availableLanguages.first(where: {
@@ -37,14 +38,16 @@ enum OCRQualityAssessment {
       func isUnknown(_ word: String) -> Bool {
         let normalized = (word as NSString).lowercased(with: Locale(identifier: spellingLanguage))
         let key = spellingLanguage + ":" + normalized
-        if let cached = dictionary[key] { return cached }
+        if let cached = dictionary[key] {
+          return cached
+        }
         let unknown = NSSpellChecker.shared.checkSpelling(
           of: normalized,
           startingAt: 0,
           language: spellingLanguage,
           wrap: false,
           inSpellDocumentWithTag: 0,
-          wordCount: nil
+          wordCount: nil,
         ).location != NSNotFound
         dictionary[key] = unknown
         return unknown

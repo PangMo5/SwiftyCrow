@@ -20,7 +20,7 @@ struct MediaManifestTests {
     "review.md",
     "DemoLab/Localization/Films.json",
   ])
-  func rejectsChangedEvidenceWithoutReplacingTheManifest(_ changed: String) throws {
+  func `rejects changed evidence without replacing the manifest`(_ changed: String) throws {
     let fixture = try ReviewFixture()
     defer { try? fm.removeItem(at: fixture.root) }
     try fixture.assemble()

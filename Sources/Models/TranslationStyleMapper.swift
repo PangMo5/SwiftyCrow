@@ -35,18 +35,22 @@ enum TranslationStyleMapper {
     let plain = String(source.characters)
     let spans = sourceSpans(in: source)
     guard
-      !spans.isEmpty, plain.count <= 2_000,
+      !spans.isEmpty,
+      plain.count <= 2_000,
       plain.range(of: #"</?s\d+>"#, options: .regularExpression) == nil
     else { return nil }
     var request = ""
     for run in source.runs {
       let text = String(source.characters[run.range])
       if
-        let id = spans.firstIndex(where: { $0.link == run.link }), !spans[id].isLiteral,
+        let id = spans.firstIndex(where: { $0.link == run.link }),
+        !spans[id].isLiteral,
         links == nil || links!.contains(spans[id].link)
       {
         request += "<s\(id)>\(text)</s\(id)>"
-      } else { request += text }
+      } else {
+        request += text
+      }
     }
     return request
   }
@@ -91,7 +95,8 @@ enum TranslationStyleMapper {
     }
     let spans = sourceSpans(in: source)
     guard
-      spans.count == 1, spans.allSatisfy({ !$0.isLiteral && !$0.isSourceFragment }),
+      spans.count == 1,
+      spans.allSatisfy({ !$0.isLiteral && !$0.isSourceFragment }),
       let parsed = contextualSpans(response, allowed: spans.count),
       parsed.spans.count == spans.count,
       Set(parsed.spans.map(\.id)).count == spans.count
@@ -121,14 +126,14 @@ enum TranslationStyleMapper {
     target: String,
     response: String,
     alternatives: [URL: String] = [:],
-    preserving: AttributedString? = nil
+    preserving: AttributedString? = nil,
   ) -> Alignment {
     let spans = sourceSpans(in: source)
     guard let parsed = contextualSpans(response, allowed: spans.count) else { return align(
       source: source,
       target: target,
       alternatives: alternatives,
-      preserving: preserving
+      preserving: preserving,
     ) }
     let contextualAlternatives = Dictionary(uniqueKeysWithValues: parsed.spans.map { (spans[$0.id].link, $0.text) })
     var result = align(
@@ -136,7 +141,7 @@ enum TranslationStyleMapper {
       target: target,
       alternatives: alternatives,
       contextualAlternatives: contextualAlternatives,
-      preserving: preserving
+      preserving: preserving,
     )
     guard !result.unmatched.isEmpty else { return result }
     let a = Array(parsed.text)
@@ -144,11 +149,15 @@ enum TranslationStyleMapper {
     guard !a.isEmpty, !b.isEmpty, max(a.count, b.count) <= 3_000 else { return result }
     let difference = b.difference(from: a)
     let removed = Set(difference.removals.map { change in
-      if case .remove(let offset, _, _) = change { return offset }
+      if case .remove(let offset, _, _) = change {
+        return offset
+      }
       return -1
     })
     let inserted = Set(difference.insertions.map { change in
-      if case .insert(let offset, _, _) = change { return offset }
+      if case .insert(let offset, _, _) = change {
+        return offset
+      }
       return -1
     })
     // Permit local inflection/word-choice changes only when most of the full
@@ -158,10 +167,12 @@ enum TranslationStyleMapper {
     var i = 0
     var j = 0
     while i < a.count, j < b.count {
-      if removed.contains(i) { i += 1
+      if removed.contains(i) {
+        i += 1
         continue
       }
-      if inserted.contains(j) { j += 1
+      if inserted.contains(j) {
+        j += 1
         continue
       }
       guard a[i] == b[j] else { return result }
@@ -173,7 +184,8 @@ enum TranslationStyleMapper {
     var remaining = [Span]()
     for span in result.unmatched {
       guard
-        !span.isLiteral, let id = spans.firstIndex(where: { $0.link == span.link }),
+        !span.isLiteral,
+        let id = spans.firstIndex(where: { $0.link == span.link }),
         let context = parsed.spans.first(where: { $0.id == id }),
         let range = Range(context.range, in: parsed.text)
       else { remaining.append(span)
@@ -202,8 +214,13 @@ enum TranslationStyleMapper {
         }
       }
       guard
-        let lower, let upper, lower >= 0, upper <= b.count, lower < upper,
-        upper - lower <= max(6, (end - start) * 2), upper - lower >= max(1, (end - start) / 2),
+        let lower,
+        let upper,
+        lower >= 0,
+        upper <= b.count,
+        lower < upper,
+        upper - lower <= max(6, (end - start) * 2),
+        upper - lower >= max(1, (end - start) / 2),
         let lo = AttributedString.Index(targetIndices[lower], within: result.target),
         let hi = AttributedString.Index(targetIndices[upper], within: result.target),
         result.target[lo..<hi].runs.allSatisfy({ $0.link == nil })
@@ -221,7 +238,7 @@ enum TranslationStyleMapper {
     target: String,
     alternatives: [URL: String] = [:],
     contextualAlternatives: [URL: String] = [:],
-    preserving: AttributedString? = nil
+    preserving: AttributedString? = nil,
   ) -> Alignment {
     let spans = sourceSpans(in: source)
     var attributedTarget = preserving.flatMap { String($0.characters) == target ? $0 : nil } ?? AttributedString(target)
@@ -240,7 +257,9 @@ enum TranslationStyleMapper {
     }
     var unmatched = [Span]()
     for span in spans {
-      if anchoredLinks.contains(span.link) { continue }
+      if anchoredLinks.contains(span.link) {
+        continue
+      }
       let terms = [
         span.text,
         span.isLiteral ? nil : alternatives[span.link],
@@ -251,7 +270,9 @@ enum TranslationStyleMapper {
       .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
       let candidates = terms.flatMap { term in
-        if span.isSourceFragment { return canonicalRanges(of: term, in: target) }
+        if span.isSourceFragment {
+          return canonicalRanges(of: term, in: target)
+        }
         return span.isLiteral ? ranges(of: term, in: target, options: []) : ranges(of: term, in: target)
       }
       .filter { candidate in !occupied.contains(where: { $0.overlaps(candidate) }) }
@@ -287,7 +308,7 @@ enum TranslationStyleMapper {
     source: AttributedString,
     target: String,
     native: AttributedString?,
-    preserving: AttributedString?
+    preserving: AttributedString?,
   ) -> Alignment {
     var result = align(source: source, target: target, preserving: preserving)
     guard let native, String(native.characters) == target else { return result }
@@ -302,7 +323,9 @@ enum TranslationStyleMapper {
         guard !piece.isEmpty else { continue }
         if let previous = ranges.last, target[previous.upperBound..<piece.startIndex].allSatisfy(\.isWhitespace) {
           ranges[ranges.count - 1] = previous.lowerBound..<piece.endIndex
-        } else { ranges.append(piece.startIndex..<piece.endIndex) }
+        } else {
+          ranges.append(piece.startIndex..<piece.endIndex)
+        }
       }
       guard
         ranges.count == 1,
@@ -336,7 +359,9 @@ enum TranslationStyleMapper {
         let range = NSRange(location: offset, length: original.utf16.count)
         offset += range.length
         for scalar in original.precomposedStringWithCompatibilityMapping.unicodeScalars {
-          if CharacterSet.whitespacesAndNewlines.contains(scalar) || CharacterSet.controlCharacters.contains(scalar) { continue }
+          if CharacterSet.whitespacesAndNewlines.contains(scalar) || CharacterSet.controlCharacters.contains(scalar) {
+            continue
+          }
           let mapped: Unicode.Scalar =
             switch scalar.value {
             case 0x2010...0x2014,
@@ -352,7 +377,9 @@ enum TranslationStyleMapper {
             default:
               if let number = Character(String(scalar)).wholeNumberValue, (0...9).contains(number) {
                 Unicode.Scalar(48 + number)!
-              } else { scalar }
+              } else {
+                scalar
+              }
             }
           result.append((mapped, range))
         }
@@ -378,23 +405,41 @@ enum TranslationStyleMapper {
       guard zip(query, haystack[start..<end]).allSatisfy({ $0 == $1.scalar }) else { continue }
       // Do not match 3-1 inside 13-10. CJK particles are not part of a
       // mathematical identifier and may directly follow a numeric expression.
-      if start > 0, haystack[start - 1].range == haystack[start].range { continue }
-      if end < haystack.count, haystack[end - 1].range == haystack[end].range { continue }
+      if start > 0, haystack[start - 1].range == haystack[start].range {
+        continue
+      }
+      if end < haystack.count, haystack[end - 1].range == haystack[end].range {
+        continue
+      }
       if
-        start > 0, identifier(query[0]), identifier(haystack[start - 1].scalar), touches(
+        start > 0,
+        identifier(query[0]),
+        identifier(haystack[start - 1].scalar),
+        touches(
           haystack[start - 1].range,
-          haystack[start].range
-        ) { continue }
+          haystack[start].range,
+        )
+      {
+        continue
+      }
       if
-        end < haystack.count, identifier(query[query.count - 1]), identifier(haystack[end].scalar), touches(
+        end < haystack.count,
+        identifier(query[query.count - 1]),
+        identifier(haystack[end].scalar),
+        touches(
           haystack[end - 1].range,
-          haystack[end].range
-        ) { continue }
+          haystack[end].range,
+        )
+      {
+        continue
+      }
       let range = NSRange(
         location: haystack[start].range.location,
-        length: NSMaxRange(haystack[end - 1].range) - haystack[start].range.location
+        length: NSMaxRange(haystack[end - 1].range) - haystack[start].range.location,
       )
-      if let range = Range(range, in: text) { matches.append(range) }
+      if let range = Range(range, in: text) {
+        matches.append(range)
+      }
     }
     return matches
   }
@@ -439,16 +484,20 @@ enum TranslationStyleMapper {
         link: link,
         text: String(source.characters[run.range]),
         sourceMidpoint: Double(lower + upper) / 2 / Double(count),
-        isLiteral: run.inlinePresentationIntent?.contains(.code) == true
+        isLiteral: run.inlinePresentationIntent?.contains(.code) == true,
       )
     }
   }
 
   private static func ranges(of needle: String, in text: String) -> [Range<String.Index>] {
     let exact = ranges(of: needle, in: text, options: [])
-    if !exact.isEmpty { return exact }
+    if !exact.isEmpty {
+      return exact
+    }
     let folded = ranges(of: needle, in: text, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive])
-    if !folded.isEmpty { return folded }
+    if !folded.isEmpty {
+      return folded
+    }
     return punctuationSpacedRanges(of: needle, in: text)
   }
 
@@ -470,7 +519,9 @@ enum TranslationStyleMapper {
         while index < characters.count, horizontalSpace(characters[index]) { index += 1 }
         let nextToBracket = (start > 0 && brackets.contains(characters[start - 1]))
           || (index < characters.count && brackets.contains(characters[index]))
-        if !nextToBracket { pattern += #"\h++"# }
+        if !nextToBracket {
+          pattern += #"\h++"#
+        }
         continue
       }
       let escaped = NSRegularExpression.escapedPattern(for: String(character))
@@ -496,7 +547,7 @@ enum TranslationStyleMapper {
       let range = text.range(
         of: needle,
         options: options,
-        range: cursor ..< text.endIndex
+        range: cursor ..< text.endIndex,
       )
     {
       result.append(range)
@@ -511,4 +562,5 @@ enum TranslationStyleMapper {
     let upper = text.distance(from: text.startIndex, to: range.upperBound)
     return Double(lower + upper) / 2 / Double(count)
   }
+
 }

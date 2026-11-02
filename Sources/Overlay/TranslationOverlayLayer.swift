@@ -17,7 +17,7 @@ struct TranslationOverlayLayer: View {
 
   init(
     lines: [OverlayLine],
-    prefersHorizontalTextLayout preferenceOverride: Bool? = nil
+    prefersHorizontalTextLayout preferenceOverride: Bool? = nil,
   ) {
     self.lines = lines
     followsSystemHorizontalTextPreference = preferenceOverride == nil
@@ -35,7 +35,7 @@ struct TranslationOverlayLayer: View {
       OverlayCanvas(
         lines: lines,
         size: proxy.size,
-        prefersHorizontalTextLayout: prefersHorizontalTextLayout
+        prefersHorizontalTextLayout: prefersHorizontalTextLayout,
       )
       .equatable()
     }
@@ -71,7 +71,7 @@ private struct OverlayCanvas: View, Equatable {
     let placements = OverlayLayoutEngine.placements(
       for: lines,
       in: size,
-      prefersHorizontalTextLayout: prefersHorizontalTextLayout
+      prefersHorizontalTextLayout: prefersHorizontalTextLayout,
     )
     ZStack(alignment: .topLeading) {
       if
@@ -79,7 +79,7 @@ private struct OverlayCanvas: View, Equatable {
           lines: lines,
           size: size,
           scale: displayScale,
-          prefersHorizontalTextLayout: prefersHorizontalTextLayout
+          prefersHorizontalTextLayout: prefersHorizontalTextLayout,
         )
       {
         Image(decorative: image, scale: displayScale)

@@ -13,7 +13,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
 
   public static let configuration = CommandConfiguration(
     commandName: "swiftycrow-tools",
-    abstract: "Validate and build SwiftyCrow localizations, documents, sites, and demo exports."
+    abstract: "Validate and build SwiftyCrow localizations, documents, sites, and demo exports.",
   )
 
   public mutating func run() async throws {
@@ -28,25 +28,25 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
       try await RecordingBatch(workspace: workspace).record(
         source: URL(fileURLWithPath: required(source, "--source")),
         output: URL(fileURLWithPath: required(output, "--output")),
-        check: check
+        check: check,
       )
 
     case .selectTakes:
       try TakeLibrary(workspace: workspace).select(
         source: URL(fileURLWithPath: required(source, "--source")),
-        output: URL(fileURLWithPath: required(output, "--output"))
+        output: URL(fileURLWithPath: required(output, "--output")),
       )
 
     case .prepareReview:
       try await TakeLibrary(workspace: workspace).prepare(
         source: URL(fileURLWithPath: required(source, "--source")),
-        output: URL(fileURLWithPath: required(output, "--output"))
+        output: URL(fileURLWithPath: required(output, "--output")),
       )
 
     case .exportBatch:
       try await TakeLibrary(workspace: workspace).export(
         source: URL(fileURLWithPath: required(source, "--source")),
-        output: URL(fileURLWithPath: required(mediaRoot, "--media-root"))
+        output: URL(fileURLWithPath: required(mediaRoot, "--media-root")),
       )
 
     case .mergeReviewBundle:
@@ -54,19 +54,19 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         selection: URL(fileURLWithPath: required(source, "--source")),
         mediaRoot: URL(fileURLWithPath: required(mediaRoot, "--media-root")),
         output: URL(fileURLWithPath: required(output, "--output")),
-        base: baseReview.map { URL(fileURLWithPath: $0) }
+        base: baseReview.map { URL(fileURLWithPath: $0) },
       )
 
     case .verifyMedia:
       try ReviewBundle(workspace: workspace).verify(
         JSON.read(URL(fileURLWithPath: required(source, "--source"))),
-        portable: portable
+        portable: portable,
       )
 
     case .installAssets:
       try ReviewBundle(workspace: workspace).install(
         source: URL(fileURLWithPath: required(source, "--source")),
-        output: URL(fileURLWithPath: required(output, "--output"))
+        output: URL(fileURLWithPath: required(output, "--output")),
       )
 
     case .checkRelease:
@@ -81,7 +81,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         output: URL(fileURLWithPath: required(output, "--output")),
         version: version,
         locale: locale,
-        mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) }
+        mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) },
       )
 
     case .collectDocs: try checks.collect("docs")
@@ -99,13 +99,13 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
     case .appcastNotes:
       try ReleaseMetadata(workspace: workspace).embedNotes(
         file: URL(fileURLWithPath: required(output, "--output")),
-        version: required(version, "--version")
+        version: required(version, "--version"),
       )
 
     case .auditVideo:
       try await VideoAudit(workspace: workspace).audit(
         source: URL(fileURLWithPath: required(source, "--source")),
-        output: URL(fileURLWithPath: required(output, "--output"))
+        output: URL(fileURLWithPath: required(output, "--output")),
       )
 
     case .exportVideo:
@@ -116,14 +116,14 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
         locale: required(locale, "--locale"),
         posterSeconds: posterSeconds,
         review: URL(fileURLWithPath: required(reviewReport, "--review-report")),
-        mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) }
+        mediaRoot: mediaRoot.map { URL(fileURLWithPath: $0) },
       )
 
     case .renderNarration:
       let timeline = try JSON.read(URL(fileURLWithPath: required(source, "--source")))
       let rendered = try await FilmNarration(workspace: workspace).render(
         timeline: timeline,
-        locale: required(locale, "--locale")
+        locale: required(locale, "--locale"),
       )
       try URL(fileURLWithPath: required(output, "--output")).write(rendered)
     }
@@ -135,8 +135,10 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
     case recordLocales = "record-locales"
     case selectTakes = "select-takes"
     case prepareReview = "prepare-review"
-    case exportBatch = "export-batch", mergeReviewBundle = "merge-review-bundle"
-    case verifyMedia = "verify-media", installAssets = "install-assets"
+    case exportBatch = "export-batch"
+    case mergeReviewBundle = "merge-review-bundle"
+    case verifyMedia = "verify-media"
+    case installAssets = "install-assets"
     case checkRelease = "check-release"
     case check
     case docs
@@ -144,8 +146,11 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
     case serve
     case collectDocs = "collect-docs"
     case collectWeb = "collect-web"
-    case checkApp = "check-app", syncApp = "sync-app"
-    case exportVideo = "export-video", appcastNotes = "appcast-notes", auditVideo = "audit-video"
+    case checkApp = "check-app"
+    case syncApp = "sync-app"
+    case exportVideo = "export-video"
+    case appcastNotes = "appcast-notes"
+    case auditVideo = "audit-video"
     case renderNarration = "render-narration"
   }
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import CoreGraphics
@@ -19,7 +19,9 @@ enum ExitCode {
 struct UsageError: Error, CustomStringConvertible {
   let message: String
 
-  var description: String { message }
+  var description: String {
+    message
+  }
 }
 
 // MARK: - Arguments
@@ -66,10 +68,12 @@ struct Arguments {
 
   // MARK: Internal
 
-  private(set) var positional: [String] = []
+  private(set) var positional = [String]()
   private(set) var verbose = false
 
-  func string(_ name: String) -> String? { values[name] }
+  func string(_ name: String) -> String? {
+    values[name]
+  }
 
   func int(_ name: String, default fallback: Int, minimum: Int) throws -> Int {
     guard let raw = values[name] else { return fallback }
@@ -103,7 +107,7 @@ struct Arguments {
 
   // MARK: Private
 
-  private var values: [String: String] = [:]
+  private var values = [String: String]()
 
 }
 
@@ -189,17 +193,24 @@ enum DemoKey {
     guard let command = arguments.first else { throw UsageError(message: "no command given") }
     let rest = Array(arguments.dropFirst())
     switch command {
-    case "--help", "-h", "help":
+    case "--help",
+         "-h",
+         "help":
       print(help)
       return ExitCode.ok
+
     case "press":
       return try press(try Arguments(rest, allowed: ["hold-ms", "repeat", "gap-ms"]))
+
     case "hold":
       return try hold(try Arguments(rest, allowed: ["keys", "gap-ms", "release-after-ms"]))
+
     case "pointer":
       return try pointer(try Arguments(rest, allowed: ["display", "x", "y"]))
+
     case "check":
       return check(try Arguments(rest, allowed: []))
+
     default:
       throw UsageError(message: "unknown command \"\(command)\"")
     }
@@ -211,7 +222,7 @@ enum DemoKey {
     let repeats = try arguments.int("repeat", default: 1, minimum: 1)
     let gapMilliseconds = try arguments.int("gap-ms", default: 80, minimum: 0)
 
-    var notes: [String] = []
+    var notes = [String]()
     let chord = try ChordParser.parse(text, notes: &notes)
     if arguments.verbose {
       notes.forEach(note)
@@ -219,7 +230,9 @@ enum DemoKey {
     }
     for index in 0..<repeats {
       try KeyDriver.press(chord, holdMilliseconds: holdMilliseconds)
-      if index < repeats - 1 { wait(milliseconds: gapMilliseconds) }
+      if index < repeats - 1 {
+        wait(milliseconds: gapMilliseconds)
+      }
     }
     return ExitCode.ok
   }
@@ -236,8 +249,8 @@ enum DemoKey {
     guard !modifiers.isEmpty else {
       throw UsageError(message: "\"\(text)\" names no modifier to hold")
     }
-    var notes: [String] = []
-    var keys: [CGKeyCode] = []
+    var notes = [String]()
+    var keys = [CGKeyCode]()
     for entry in list.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) where !entry.isEmpty {
       let chord = try ChordParser.parse(entry, notes: &notes)
       // The switcher holds one modifier set for the whole session, so a tap
@@ -261,7 +274,7 @@ enum DemoKey {
       modifiers: modifiers,
       tapping: keys,
       gapMilliseconds: gapMilliseconds,
-      holdAfterMilliseconds: releaseAfterMilliseconds
+      holdAfterMilliseconds: releaseAfterMilliseconds,
     )
     return ExitCode.ok
   }
@@ -273,7 +286,9 @@ enum DemoKey {
     let display = try arguments.int("display", default: 0, minimum: 0)
     let unitX = try arguments.unit("x", default: 0.5)
     let unitY = try arguments.unit("y", default: 0.5)
-    if arguments.verbose { note("pointer -> display \(display) at (\(unitX), \(unitY))") }
+    if arguments.verbose {
+      note("pointer -> display \(display) at (\(unitX), \(unitY))")
+    }
     try Pointer.warp(toDisplayIndex: display, unitX: unitX, unitY: unitY)
     return ExitCode.ok
   }
@@ -281,7 +296,9 @@ enum DemoKey {
   private static func check(_ arguments: Arguments) -> Int32 {
     let trusted = KeyDriver.isTrusted
     print(trusted ? "accessibility: trusted" : "accessibility: not trusted")
-    if arguments.verbose { note("binary: \(executablePath)") }
+    if arguments.verbose {
+      note("binary: \(executablePath)")
+    }
     if !trusted {
       complain("grant Accessibility in System Settings > Privacy & Security > Accessibility for: \(executablePath)")
     }

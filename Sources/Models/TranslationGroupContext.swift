@@ -19,14 +19,18 @@ struct TranslationGroupContext: Hashable, Sendable {
 
   var attributedRequest: AttributedString? {
     guard
-      !topic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, topic.count <= 120,
-      !topic.contains(where: { ";；؛\n\r".contains($0) }), (2...12).contains(labels.count),
+      !topic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      topic.count <= 120,
+      !topic.contains(where: { ";；؛\n\r".contains($0) }),
+      (2...12).contains(labels.count),
       labels.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.count <= 40
           && !$0.contains(where: { ":：;；؛\n\r".contains($0) }) })
     else { return nil }
     var result = AttributedString(topic + ": ")
     for (index, label) in labels.enumerated() {
-      if index > 0 { result += AttributedString("; ") }
+      if index > 0 {
+        result += AttributedString("; ")
+      }
       var value = AttributedString(label)
       value.link = Self.link(index)
       result += value
@@ -54,15 +58,18 @@ struct TranslationGroupContext: Hashable, Sendable {
       Column(
         context: sources[$0].recognitionContextID,
         table: sources[$0].tableCell!.table,
-        column: sources[$0].tableCell!.column
+        column: sources[$0].tableCell!.column,
       )
     }
     var result = [Int: Member]()
     for indices in columns.values {
       let ordered = indices.sorted { sources[$0].tableCell!.row < sources[$1].tableCell!.row }
       guard
-        let header = ordered.first, let cell = sources[header].tableCell,
-        cell.row == 0, cell.rowSpan == 1, cell.columnSpan == 1,
+        let header = ordered.first,
+        let cell = sources[header].tableCell,
+        cell.row == 0,
+        cell.rowSpan == 1,
+        cell.columnSpan == 1,
         sources[header].appearance.fontWeight.rawValue >= OverlayFontWeight.medium.rawValue,
         isLabel(sources[header])
       else { continue }
@@ -131,15 +138,20 @@ struct TranslationGroupContext: Hashable, Sendable {
       guard Set(group.map { sources[$0].text }).count >= 3 else { continue }
       let bounds = group.reduce(CGRect.null) { $0.union(sources[$1].box) }
       let height = group.map { sources[$0].box.height }.sorted()[group.count / 2]
-      let size = group.map { sources[$0].appearance.fontSizeScale }.max() ?? 0
+      let size = group.lazy.map { sources[$0].appearance.fontSizeScale }.max() ?? 0
       let caption = sources.indices.filter { index in
         let source = sources[index]
         guard
-          !group.contains(index), source.tableCell == nil,
+          !group.contains(index),
+          source.tableCell == nil,
           source.recognitionContextID == sources[seed].recognitionContextID,
           source.language.maximalIdentifier == sources[seed].language.maximalIdentifier,
-          !source.needsReview, !source.preservesSource, !source.isProtectedLiteral,
-          source.text.count >= 3, source.text.count <= 120, source.text.contains(where: \.isLetter),
+          !source.needsReview,
+          !source.preservesSource,
+          !source.isProtectedLiteral,
+          source.text.count >= 3,
+          source.text.count <= 120,
+          source.text.contains(where: \.isLetter),
           case .horizontal(rows: 1) = source.layout,
           (size > 0 && source.appearance.fontSizeScale >= size * 1.25) || source.appearance.fontWeight == .bold,
           abs(source.box.minY - bounds.minY) <= height * 3
@@ -151,7 +163,7 @@ struct TranslationGroupContext: Hashable, Sendable {
         abs(sources[$0].box.midX - bounds.midX) + abs(sources[$0].box.minY - bounds.minY)
           < abs(sources[$1].box.midX - bounds.midX) + abs(sources[$1].box.minY - bounds.minY)
       }
-      let topic = caption.map { sources[$0].text } ?? group.map { sources[$0].text }.joined(separator: ", ")
+      let topic = caption.map { sources[$0].text } ?? group.lazy.map { sources[$0].text }.joined(separator: ", ")
       assign(group, topic: topic, sources: sources, to: &result)
     }
     return result
@@ -167,7 +179,7 @@ struct TranslationGroupContext: Hashable, Sendable {
     let indices = sources.indices.filter { sources[$0].tableCell != nil }
     let tables = Dictionary(grouping: indices) { Table(
       context: sources[$0].recognitionContextID,
-      table: sources[$0].tableCell!.table
+      table: sources[$0].tableCell!.table,
     ) }
     var result = [Int: Member]()
     for members in tables.values {
@@ -175,9 +187,14 @@ struct TranslationGroupContext: Hashable, Sendable {
       let headers = members.filter { index in
         let source = sources[index]
         guard
-          let cell = source.tableCell, cell.row == firstRow, cell.rowSpan == 1, cell.columnSpan == 1,
+          let cell = source.tableCell,
+          cell.row == firstRow,
+          cell.rowSpan == 1,
+          cell.columnSpan == 1,
           case .horizontal(rows: 1) = source.layout,
-          !source.preservesSource, !source.isProtectedLiteral, source.text.contains(where: \.isLetter),
+          !source.preservesSource,
+          !source.isProtectedLiteral,
+          source.text.contains(where: \.isLetter),
           source.appearance.fontWeight.rawValue >= OverlayFontWeight.medium.rawValue,
           TranslationLiteralPlan(source.attributedTextForTranslation()) == nil
         else { return false }
@@ -194,17 +211,22 @@ struct TranslationGroupContext: Hashable, Sendable {
       guard bodyRows.values.count(where: { Set($0.map { sources[$0].tableCell!.column }).intersection(columns).count >= 2 }) >= 2
       else { continue }
       let headerBounds = headers.reduce(CGRect.null) { $0.union(sources[$1].tableCell!.box) }
-      let height = headers.map { sources[$0].box.height }.max() ?? 0
+      let height = headers.lazy.map { sources[$0].box.height }.max() ?? 0
       guard height > 0 else { continue }
       let caption = sources.enumerated().filter { index, source in
         guard
-          !members.contains(index), source.tableCell == nil,
+          !members.contains(index),
+          source.tableCell == nil,
           source.recognitionContextID == sources[headers[0]].recognitionContextID,
-          !source.preservesSource, !source.isProtectedLiteral,
+          !source.preservesSource,
+          !source.isProtectedLiteral,
           source.language.maximalIdentifier == sources[headers[0]].language.maximalIdentifier,
           case .horizontal(rows: 1) = source.layout,
-          source.text.count >= 4, source.text.count <= 120, source.text.contains(where: \.isLetter),
-          source.box.height <= height * 1.4, source.box.maxY <= headerBounds.minY,
+          source.text.count >= 4,
+          source.text.count <= 120,
+          source.text.contains(where: \.isLetter),
+          source.box.height <= height * 1.4,
+          source.box.maxY <= headerBounds.minY,
           headerBounds.minY - source.box.maxY <= height * 4,
           min(source.box.maxX, headerBounds.maxX) > max(source.box.minX, headerBounds.minX)
         else { return false }
@@ -220,7 +242,8 @@ struct TranslationGroupContext: Hashable, Sendable {
 
   func targets(from response: AttributedString?) -> [String]? {
     guard
-      attributedRequest != nil, let response,
+      attributedRequest != nil,
+      let response,
       let separator = response.characters.lastIndex(where: { ":：".contains($0) })
     else { return nil }
     let characters = response.characters
@@ -246,7 +269,10 @@ struct TranslationGroupContext: Hashable, Sendable {
       let runs = response[lower..<upper].runs
       let owners = Set(runs.compactMap(\.link))
       guard
-        owners.count == 1, let owner = owners.first, let index = links[owner], result[index] == nil,
+        owners.count == 1,
+        let owner = owners.first,
+        let index = links[owner],
+        result[index] == nil,
         runs.allSatisfy({ run in
           run.link == owner || characters[run.range].allSatisfy { $0.isWhitespace || $0.isPunctuation }
         })
@@ -275,7 +301,9 @@ struct TranslationGroupContext: Hashable, Sendable {
     guard a.recognitionContextID == b.recognitionContextID, a.language.maximalIdentifier == b.language.maximalIdentifier else {
       return false
     }
-    if let first = a.tableCell, let second = b.tableCell, first.table != second.table { return false }
+    if let first = a.tableCell, let second = b.tableCell, first.table != second.table {
+      return false
+    }
     let height = max(a.box.height, b.box.height)
     guard
       min(a.box.height, b.box.height) >= height * 0.7,
@@ -285,7 +313,9 @@ struct TranslationGroupContext: Hashable, Sendable {
       a.appearance.background.distance(to: b.appearance.background) <= 0.06
     else { return false }
     let sizes = [a.appearance.fontSizeScale, b.appearance.fontSizeScale]
-    if sizes.min()! > 0, sizes.max()! / sizes.min()! > 1.25 { return false }
+    if sizes.min()! > 0, sizes.max()! / sizes.min()! > 1.25 {
+      return false
+    }
     if let first = a.surface, let second = b.surface {
       let x = first.clippingBox ?? first.box
       let y = second.clippingBox ?? second.box
@@ -306,4 +336,5 @@ struct TranslationGroupContext: Hashable, Sendable {
   private static func link(_ index: Int) -> URL {
     URL(string: "swiftycrow-context://item/\(index)")!
   }
+
 }

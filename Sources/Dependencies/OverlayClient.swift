@@ -93,7 +93,9 @@ extension OverlayClient: DependencyKey {
     // actor. Create it lazily the first time the client is used there.
     nonisolated(unsafe) var controller: OverlayWindowController?
     let resolve: @MainActor @Sendable () -> OverlayWindowController = {
-      if let controller { return controller }
+      if let controller {
+        return controller
+      }
       let new = OverlayWindowController()
       controller = new
       return new
@@ -109,7 +111,7 @@ extension OverlayClient: DependencyKey {
           }
           continuation.onTermination = { _ in task.cancel() }
         }
-      }
+      },
     )
   }()
 }

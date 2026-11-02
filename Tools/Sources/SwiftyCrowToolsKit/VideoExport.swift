@@ -21,7 +21,7 @@ struct VideoExport {
         "json",
         file.path,
       ],
-      capture: true
+      capture: true,
     )
     let streams = try JSON.parse(output)["streams"].array
     try require(streams.count == 1, "Expected one video stream")
@@ -37,7 +37,7 @@ struct VideoExport {
     try require(scene["film"].str == film && scene["uiLanguage"].str == locale, "Recording does not match film and locale")
     try require(
       scene["translationSource"].str == pair.source && scene["translationTarget"].str == pair.target,
-      "Recorded language pair differs from the film"
+      "Recorded language pair differs from the film",
     )
     try require(review.exists, "Visual review evidence is required")
     let stats = try JSON.read(source.replacingExtension("json"))
@@ -53,7 +53,7 @@ struct VideoExport {
     let ready = try JSON.read(source.deletingLastPathComponent().at("capture-demo.ready.json"))
     try require(
       timeline["captureEpochUptimeNanoseconds"] == ready["firstFrameUptimeNanoseconds"],
-      "Narration does not use the first captured frame epoch"
+      "Narration does not use the first captured frame epoch",
     )
     var hostClockEvidence = JSON.null
     if !ready["hostFirstFrameUptimeNanoseconds"].isNull {
@@ -69,7 +69,7 @@ struct VideoExport {
           && stats["hostRecorderSHA256"].str.count == 64
           && stats["hostRecorderSHA256"] == hostReady["hostRecorderSHA256"]
           && stats["geometryUnchanged"] == .bool(true),
-        "Host recording lacks aligned clocks, stable geometry or executable provenance"
+        "Host recording lacks aligned clocks, stable geometry or executable provenance",
       )
       hostClockEvidence = try .object([
         ("clock", clock),
@@ -80,7 +80,7 @@ struct VideoExport {
     }
     try require(
       timeline["scenariosSHA256"].str.count == 64 && timeline["scenariosSHA256"] == scene["scenariosSHA256"],
-      "Narration scenarios differ from the recording"
+      "Narration scenarios differ from the recording",
     )
     try require(posterSeconds >= 0 && posterSeconds < original["duration"].double, "Poster must be inside the take")
     let directory = (mediaRoot ?? workspace.root.at("DemoLab/Edits/media")).at(locale)
@@ -90,7 +90,7 @@ struct VideoExport {
     let subtitles = directory.at("\(film).ass")
     try require(
       !movie.exists && !poster.exists && !subtitles.exists,
-      "Export already exists; choose whether to replace it explicitly"
+      "Export already exists; choose whether to replace it explicitly",
     )
     let scratch = fm.temporaryDirectory.at("swiftycrow-export-" + UUID().uuidString)
     try scratch.makeDirectory()
@@ -99,14 +99,14 @@ struct VideoExport {
       timeline: timeline,
       locale: locale,
       width: original["width"].int,
-      height: original["height"].int
+      height: original["height"].int,
     )
     try scratch.at("film.ass").write(narration)
     let encoder = ProcessInfo.processInfo.environment["SWIFTYCROW_FFMPEG"] ?? "ffmpeg"
     let filters = try await runProcess([encoder, "-hide_banner", "-filters"], capture: true)
     try require(
       filters.contains(" ass "),
-      "Video export requires FFmpeg with libass; set SWIFTYCROW_FFMPEG to a libass-enabled binary"
+      "Video export requires FFmpeg with libass; set SWIFTYCROW_FFMPEG to a libass-enabled binary",
     )
     try await runProcess([
       encoder,
@@ -182,7 +182,7 @@ struct VideoExport {
         "presentation",
         .string(
           "Localized chapter, stage captions, and actual recorded input chords burned over the complete camera take; no cuts, speed changes, or replacement app pixels."
-        )
+        ),
       ),
       ("encoderVersion", .string(await runProcess([encoder, "-version"], capture: true))),
       ("visualReviewEvidence", .string(relativePath(review, from: workspace.root))),

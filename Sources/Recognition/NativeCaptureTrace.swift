@@ -33,7 +33,7 @@ enum NativeCaptureTrace {
       }
       try JSONSerialization.data(
         withJSONObject: ["size": [size.width, size.height], "lines": records, "protectedFrames": protected.map(box)],
-        options: [.prettyPrinted, .sortedKeys]
+        options: [.prettyPrinted, .sortedKeys],
       ).write(to: directory.appendingPathComponent("input.json"))
     } catch {
       Log.ocr.error("Native render trace failed: \(String(describing: error), privacy: .public)")
@@ -43,11 +43,12 @@ enum NativeCaptureTrace {
   static func capture(
     _ image: CGImage,
     language: Language,
-    textReady: @Sendable (OCRResult) async -> Void
+    textReady: @Sendable (OCRResult) async -> Void,
   ) async throws -> OCRResult? {
     guard
       OCRPipeline.traceObserver == nil,
-      let path = ProcessInfo.processInfo.environment["SWIFTYCROW_NATIVE_TRACE_ROOT"], !path.isEmpty
+      let path = ProcessInfo.processInfo.environment["SWIFTYCROW_NATIVE_TRACE_ROOT"],
+      !path.isEmpty
     else { return nil }
     let directory = URL(fileURLWithPath: path).appendingPathComponent(UUID().uuidString, isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -100,5 +101,6 @@ enum NativeCaptureTrace {
     }
     try JSONSerialization.data(withJSONObject: records, options: [.prettyPrinted, .sortedKeys]).write(to: url)
   }
+
 }
 #endif

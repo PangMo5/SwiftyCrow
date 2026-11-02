@@ -20,8 +20,12 @@ enum OCRInlineGlyphRecovery {
 
   static func spans(in line: OCRResult.Line) -> [Span] {
     guard
-      !line.preservesSource, !line.isVerticalBlock, !line.needsReview, line.tableCell == nil,
-      abs(line.rotationRadians) < 0.05, line.text.split(whereSeparator: \.isWhitespace).count >= 6
+      !line.preservesSource,
+      !line.isVerticalBlock,
+      !line.needsReview,
+      line.tableCell == nil,
+      abs(line.rotationRadians) < 0.05,
+      line.text.split(whereSeparator: \.isWhitespace).count >= 6
     else { return [] }
     var result = [Span]()
     for patch in line.replacementPatches where patch.erasesDistinctSurface {
@@ -33,7 +37,8 @@ enum OCRInlineGlyphRecovery {
       guard let first = runs.first else { continue }
       let range = runs.dropFirst().reduce(first.range) { NSUnionRange($0, $1.range) }
       guard
-        let stringRange = Range(range, in: line.text), eligible(String(line.text[stringRange])),
+        let stringRange = Range(range, in: line.text),
+        eligible(String(line.text[stringRange])),
         !line.styleRuns.contains(where: { run in
           NSIntersectionRange(run.range, range).length > 0 && !runs.contains(run)
         })
@@ -59,7 +64,7 @@ enum OCRInlineGlyphRecovery {
     original: String,
     observed: OCRGlyphTopology.Signature,
     candidates: [VisionTextRecognizer.TextCandidate],
-    references: (String) -> Set<OCRGlyphTopology.Signature> = SourceTypography.glyphTopologies
+    references: (String) -> Set<OCRGlyphTopology.Signature> = SourceTypography.glyphTopologies,
   ) -> String? {
     let originalEvidence = references(original)
     guard contradicts(originalEvidence, observed: observed) else { return nil }
@@ -80,7 +85,7 @@ enum OCRInlineGlyphRecovery {
     language: Language,
     recognize: @Sendable (CGImage, CGRect, Language) async throws -> [VisionTextRecognizer.TextCandidate] = {
       try await VisionTextRecognizer.inlineCandidates(in: $0, crop: $1, language: $2)
-    }
+    },
   ) async throws -> OCRResult {
     var result = result
     var requests = 0
@@ -134,7 +139,7 @@ enum OCRInlineGlyphRecovery {
 
   private static func contradicts(
     _ references: Set<OCRGlyphTopology.Signature>,
-    observed: OCRGlyphTopology.Signature
+    observed: OCRGlyphTopology.Signature,
   ) -> Bool {
     // Downsampling can merge a dot into its stem or close a small counter.
     // Missing features cannot disprove the original OCR. Require positively
@@ -149,4 +154,5 @@ enum OCRInlineGlyphRecovery {
       $0.isASCII && (CharacterSet.alphanumerics.contains($0) || "_-./".unicodeScalars.contains($0))
     }
   }
+
 }

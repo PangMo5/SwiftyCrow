@@ -50,7 +50,9 @@ extension RegionSelectorClient: DependencyKey {
     // The controller touches AppKit, so build it lazily on the main actor.
     nonisolated(unsafe) var controller: RegionSelectorController?
     let resolve: @MainActor @Sendable () -> RegionSelectorController = {
-      if let controller { return controller }
+      if let controller {
+        return controller
+      }
       let new = RegionSelectorController()
       controller = new
       return new
@@ -126,7 +128,7 @@ private final class RegionSelectorController {
         contentRect: screen.frame,
         styleMask: [.borderless, .nonactivatingPanel],
         backing: .buffered,
-        defer: false
+        defer: false,
       )
       panel.title = String(localized: "Capture")
       panel.level = .screenSaver
@@ -146,7 +148,9 @@ private final class RegionSelectorController {
       panels.append(panel)
       views.append(view)
       panel.orderFrontRegardless()
-      if screen.frame.contains(cursor) { keyPanel = panel }
+      if screen.frame.contains(cursor) {
+        keyPanel = panel
+      }
     }
 
     self.continuation = continuation
@@ -261,6 +265,7 @@ private final class RegionSelectorController {
     continuation?.resume(returning: target)
     continuation = nil
   }
+
 }
 
 // MARK: - SelectorPanel
@@ -366,9 +371,9 @@ private final class SelectionView: NSView {
         x: min(start.x, point.x),
         y: min(start.y, point.y),
         width: abs(point.x - start.x),
-        height: abs(point.y - start.y)
+        height: abs(point.y - start.y),
       ),
-      options: .alignAllEdgesNearest
+      options: .alignAllEdgesNearest,
     )
     needsDisplay = true
   }
@@ -389,7 +394,7 @@ private final class SelectionView: NSView {
       x: screen.frame.minX + selection.minX,
       y: screen.frame.minY + selection.minY,
       width: selection.width,
-      height: selection.height
+      height: selection.height,
     )
     controller.reportRegion(global)
   }
@@ -448,4 +453,5 @@ private final class SelectionView: NSView {
     NSColor.controlAccentColor.setStroke()
     border.stroke()
   }
+
 }

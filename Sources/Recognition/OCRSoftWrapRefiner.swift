@@ -15,14 +15,15 @@ enum OCRSoftWrapRefiner {
     var result = lines
     let groups = Dictionary(
       grouping: lines.indices.filter { lines[$0].recognitionGroupID != nil && !lines[$0].isVerticalBlock },
-      by: { lines[$0].recognitionGroupID! }
+      by: { lines[$0].recognitionGroupID! },
     )
     var requests = 0
     for id in groups.keys.sorted() {
       let indices = groups[id]!.sorted { lines[$0].boundingBoxNormalized.minY < lines[$1].boundingBoxNormalized.minY }
       let rows = indices.map { lines[$0] }
       guard
-        (2...8).contains(rows.count), rows.allSatisfy({ row in
+        (2...8).contains(rows.count),
+        rows.allSatisfy({ row in
           abs(sin(row.rotationRadians)) * row.boundingBoxNormalized.width * CGFloat(image.width)
             <= max(2, row.boundingBoxNormalized.height * CGFloat(image.height) * 0.15)
         }),
@@ -46,7 +47,9 @@ enum OCRSoftWrapRefiner {
         }
       }
       requests += 1
-      if requests == 4 { break }
+      if requests == 4 {
+        break
+      }
     }
     return result
   }
@@ -75,7 +78,7 @@ enum OCRSoftWrapRefiner {
         x: b.minX * CGFloat(image.width),
         y: b.minY * CGFloat(image.height),
         width: b.width * CGFloat(image.width),
-        height: b.height * CGFloat(image.height)
+        height: b.height * CGFloat(image.height),
       )
     }
     guard let first = boxes.first, boxes.allSatisfy({ abs($0.minX - first.minX) < first.height * 0.5 }) else { return nil }
@@ -83,8 +86,11 @@ enum OCRSoftWrapRefiner {
     var background: CGColor?
     for (i, box) in boxes.enumerated() {
       var rect = box
-      if i + 1 < boxes.count { rect.size.height = min(rect.height, (box.midY + boxes[i + 1].midY) / 2 - rect.minY) }
-      if i > 0 { let top = max(rect.minY, (box.midY + boxes[i - 1].midY) / 2)
+      if i + 1 < boxes.count {
+        rect.size.height = min(rect.height, (box.midY + boxes[i + 1].midY) / 2 - rect.minY)
+      }
+      if i > 0 {
+        let top = max(rect.minY, (box.midY + boxes[i - 1].midY) / 2)
         rect.size.height = rect.maxY - top
         rect.origin.y = top
       }
@@ -97,23 +103,26 @@ enum OCRSoftWrapRefiner {
           bitsPerComponent: 8,
           bytesPerRow: crop.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { return nil }
       ctx.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
       guard let pixels = ctx.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
       let bg = (0..<3).map { Int(pixels[$0]) }
-      if background == nil { background = CGColor(
-        red: CGFloat(bg[0]) / 255,
-        green: CGFloat(bg[1]) / 255,
-        blue: CGFloat(bg[2]) / 255,
-        alpha: 1
-      ) }
+      if background == nil {
+        background = CGColor(
+          red: CGFloat(bg[0]) / 255,
+          green: CGFloat(bg[1]) / 255,
+          blue: CGFloat(bg[2]) / 255,
+          alpha: 1,
+        )
+      }
       var left = crop.width
       var right = -1
       for x in 0..<crop.width { for y in 0..<crop.height {
         let offset = (y * crop.width + x) * 4
-        if (0..<3).reduce(0, { $0 + abs(Int(pixels[offset + $1]) - bg[$1]) }) > 102 { left = min(left, x)
+        if (0..<3).reduce(0, { $0 + abs(Int(pixels[offset + $1]) - bg[$1]) }) > 102 {
+          left = min(left, x)
           right = max(right, x)
         }
       }}
@@ -135,7 +144,7 @@ enum OCRSoftWrapRefiner {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     ctx.setFillColor(background!)
@@ -147,4 +156,5 @@ enum OCRSoftWrapRefiner {
     }
     return ctx.makeImage()
   }
+
 }

@@ -16,7 +16,7 @@ struct LiveCapturePipelineTests {
   // MARK: Internal
 
   @Test
-  func identicalPixelsSkipOCRAndChangedPixelsCoalesceUntilDismissal() async throws {
+  func `identical pixels skip OCR and changed pixels coalesce until dismissal`() async throws {
     let first = try LiveFrame(image: image(gray: 0.2))
     let identical = try LiveFrame(image: image(gray: 0.2))
     let noisy = try LiveFrame(image: image(gray: 0.22))
@@ -66,7 +66,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func discardedSettingsResponseRetiresOCRBeforeSettingsReturn() async throws {
+  func `discarded settings response retires OCR before settings return`() async throws {
     let first = try LiveFrame(image: image(gray: 0.2))
     let noisy = try LiveFrame(image: image(gray: 0.22))
     let continuations = LockIsolated<[AsyncThrowingStream<OCRResult, any Error>.Continuation]>([])
@@ -106,7 +106,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func continuousPixelChangesKeepTranslationAndPublishLatestOCR() async throws {
+  func `continuous pixel changes keep translation and publish latest OCR`() async throws {
     let first = try LiveFrame(image: image(gray: 0.2))
     let second = try LiveFrame(image: image(gray: 0.9))
     let third = try LiveFrame(image: image(gray: 0.1))
@@ -122,7 +122,7 @@ struct LiveCapturePipelineTests {
       source: Locale.Language(identifier: "en").maximalIdentifier,
       strategy: .lowLatency,
       target: "ko",
-      text: "Hello"
+      text: "Hello",
     )] = .init(text: "안녕하세요")
     let continuations = LockIsolated<[AsyncThrowingStream<OCRResult, any Error>.Continuation]>([])
     let recognizedFrames = LockIsolated<[LiveFrame.Signature]>([])
@@ -135,7 +135,9 @@ struct LiveCapturePipelineTests {
         recognizedFrames.withValue { $0.append(signature) }
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
           continuation.onTermination = { reason in
-            if case .cancelled = reason { cancellations.withValue { $0 += 1 } }
+            if case .cancelled = reason {
+              cancellations.withValue { $0 += 1 }
+            }
           }
           continuations.withValue { $0.append(continuation) }
         }
@@ -196,7 +198,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func exactIdentityIncludesEveryPixelAndExcludesRowPadding() throws {
+  func `exact identity includes every pixel and excludes row padding`() throws {
     func frame(padding: UInt8, changed: UInt8 = 10) throws -> LiveFrame {
       var pixels = [UInt8](repeating: padding, count: 32)
       for row in 0..<2 {
@@ -221,7 +223,7 @@ struct LiveCapturePipelineTests {
         provider: provider,
         decode: nil,
         shouldInterpolate: false,
-        intent: .defaultIntent
+        intent: .defaultIntent,
       ))
       return try LiveFrame(image: image)
     }
@@ -235,7 +237,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func captureLoopKeepsSamplingWhileOCRIsSuspended() async throws {
+  func `capture loop keeps sampling while OCR is suspended`() async throws {
     let clock = TestClock()
     let pixels = try image(gray: 0.4)
     let captures = LockIsolated(0)
@@ -268,7 +270,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func scrollInvalidatesBothLateOCRAndLateTranslations() async throws {
+  func `scroll invalidates both late OCR and late translations`() async throws {
     var initial = state()
     initial.overlayLines = [line()]
     initial.isTranslating = true
@@ -292,14 +294,14 @@ struct LiveCapturePipelineTests {
       generation: 8,
       lineID: line().id,
       key: .init(source: "en", strategy: .lowLatency, target: "ko", text: "Hello"),
-      translation: .init(text: "안녕하세요")
+      translation: .init(text: "안녕하세요"),
     ))
     expectNoDifference(store.state, afterScroll)
     await store.send(.dismissOverlay)
   }
 
   @Test
-  func firstFrameWithoutRecognitionContextHidesOldMasks() async throws {
+  func `first frame without recognition context hides old masks`() async throws {
     var initial = state()
     var translated = line()
     translated.showTranslation("안녕하세요", language: Locale.Language(identifier: "ko"))
@@ -316,7 +318,7 @@ struct LiveCapturePipelineTests {
     await store.send(.liveFrameResponse(
       generation: 0,
       frame: store.state.overlayFrame,
-      result: .success(try LiveFrame(image: image(gray: 0.8)))
+      result: .success(try LiveFrame(image: image(gray: 0.8))),
     ))
     #expect(store.state.overlayLines.isEmpty)
     #expect(store.state.isCapturing)
@@ -326,7 +328,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func imageSizeChangeClearsTranslationAndCancelsOldRecognition() async throws {
+  func `image size change clears translation and cancels old recognition`() async throws {
     let first = try LiveFrame(image: image(gray: 0.2))
     var initial = state()
     initial.recognitionFrame = first
@@ -341,7 +343,9 @@ struct LiveCapturePipelineTests {
         calls.withValue { $0 += 1 }
         let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
           continuation.onTermination = { reason in
-            if case .cancelled = reason { cancellations.withValue { $0 += 1 } }
+            if case .cancelled = reason {
+              cancellations.withValue { $0 += 1 }
+            }
           }
         }
         for try await result in stream { return result }
@@ -353,7 +357,7 @@ struct LiveCapturePipelineTests {
     await store.send(.liveFrameResponse(
       generation: 0,
       frame: frame,
-      result: .success(try LiveFrame(image: image(gray: 0.9)))
+      result: .success(try LiveFrame(image: image(gray: 0.9))),
     ))
     for _ in 0..<100 where calls.value < 1 { await Task.yield() }
     #expect(!store.state.overlayLines.isEmpty)
@@ -361,7 +365,7 @@ struct LiveCapturePipelineTests {
     await store.send(.liveFrameResponse(
       generation: 0,
       frame: frame,
-      result: .success(try LiveFrame(image: image(gray: 0.9, width: 64)))
+      result: .success(try LiveFrame(image: image(gray: 0.9, width: 64))),
     ))
     for _ in 0..<100 where calls.value < 2 || cancellations.value < 1 { await Task.yield() }
     expectNoDifference(calls.value, 2)
@@ -377,7 +381,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func emptyOCRRetiresTranslationAndRejectsItsLateResponse() async {
+  func `empty OCR retires translation and rejects its late response`() async {
     var initial = state()
     initial.overlayLines = [line()]
     initial.isTranslating = true
@@ -396,7 +400,7 @@ struct LiveCapturePipelineTests {
       generation: 8,
       lineID: line().id,
       key: .init(source: "en", strategy: .lowLatency, target: "ko", text: "Hello"),
-      translation: .init(text: "안녕하세요")
+      translation: .init(text: "안녕하세요"),
     ))
     expectNoDifference(store.state, cleared)
     await store.send(.dismissOverlay)
@@ -404,7 +408,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func failureClearsStaleContentAndAllowsIdenticalFrameRetry() async throws {
+  func `failure clears stale content and allows identical frame retry`() async throws {
     var initial = state()
     initial.overlayLines = [line()]
     initial.lastFrameSignature = try LiveFrame(image: image(gray: 0.4)).signature
@@ -413,7 +417,7 @@ struct LiveCapturePipelineTests {
     await store.send(.liveFrameResponse(
       generation: 0,
       frame: store.state.overlayFrame,
-      result: .failure(ScreenCaptureError.emptyRegion)
+      result: .failure(ScreenCaptureError.emptyRegion),
     ))
     #expect(store.state.overlayLines.isEmpty)
     #expect(store.state.lastFrameSignature == nil)
@@ -422,7 +426,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func requestGeometryUsesOriginalSnapshotSoSmallDriftCannotAccumulate() {
+  func `request geometry uses original snapshot so small drift cannot accumulate`() {
     let original = line().source
     let size = CGSize(width: 1000, height: 600)
     var drifted = original
@@ -436,7 +440,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func materialOCRMovementReplacesInFlightTranslationRequest() async {
+  func `material OCR movement replaces in flight translation request`() async {
     var initial = state()
     let original = line()
     initial.overlayLines = [original]
@@ -446,7 +450,7 @@ struct LiveCapturePipelineTests {
       strategy: .lowLatency,
       target: "ko",
       imageSize: CGSize(width: 1000, height: 600),
-      sources: [original.id: original.source]
+      sources: [original.id: original.source],
     )
     let requests = LockIsolated(0)
     let store = TestStore(initialState: initial) { CaptureFeature() } withDependencies: {
@@ -472,7 +476,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func cadenceAdaptsToChangesAndBacksOffAfterFailures() throws {
+  func `cadence adapts to changes and backs off after failures`() throws {
     let first = try LiveFrame(image: image(gray: 0.2)).signature
     let changed = try LiveFrame(image: image(gray: 0.7)).signature
     var cadence = LiveCaptureCadence()
@@ -489,7 +493,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func legacyCaptureIntervalIsIgnoredAndNotWrittenBack() throws {
+  func `legacy capture interval is ignored and not written back`() throws {
     let settings = try TOMLDecoder().decode(AppSettings.self, from: """
       [capture]
       interval = 99.0
@@ -503,7 +507,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func liveWindowSelectionCapturesItsIdentityInsteadOfTheDisplayRectangle() async throws {
+  func `live window selection captures its identity instead of the display rectangle`() async throws {
     let pixels = try image(gray: 0.4)
     let selected = CGRect(x: 40, y: 50, width: 320, height: 160)
     let calls = LockIsolated<[CGWindowID]>([])
@@ -535,7 +539,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func sourceWindowMovementRetiresOldFrameWorkWithoutChangingSelection() async throws {
+  func `source window movement retires old frame work without changing selection`() async throws {
     var initial = state()
     initial.isLive = false
     initial.sourceWindowID = 42
@@ -564,7 +568,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func unavailableWindowSuspendsCaptureUntilTheSameWindowReturns() async throws {
+  func `unavailable window suspends capture until the same window returns`() async throws {
     let clock = TestClock()
     let pixels = try image(gray: 0.3)
     let frame = CGRect(x: 10, y: 20, width: 320, height: 160)
@@ -595,7 +599,7 @@ struct LiveCapturePipelineTests {
   }
 
   @Test
-  func closingTheSelectedWindowDoesNotRecallItsOldScreenRectangle() async {
+  func `closing the selected window does not recall its old screen rectangle`() async {
     var initial = state()
     initial.sourceWindowID = 42
     let store = TestStore(initialState: initial) { CaptureFeature() }
@@ -630,7 +634,7 @@ struct LiveCapturePipelineTests {
     OverlayLine(
       id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
       source: .init(recognized: capture().result.lines[0], language: Locale.Language(identifier: "en")),
-      initialContent: .pending
+      initialContent: .pending,
     )
   }
 
@@ -648,10 +652,11 @@ struct LiveCapturePipelineTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: gray, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: width, height: 16))
     return try #require(context.makeImage())
   }
+
 }
