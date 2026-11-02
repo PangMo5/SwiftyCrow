@@ -14,7 +14,7 @@ struct OverlayFrame: Codable, Equatable, Sendable {
     width: Double,
     height: Double,
     hasSelection: Bool = true,
-    selectionKind: SelectionKind = .region
+    selectionKind: SelectionKind = .region,
   ) {
     self.x = x
     self.y = y
@@ -30,7 +30,7 @@ struct OverlayFrame: Codable, Equatable, Sendable {
       y: rect.origin.y,
       width: rect.size.width,
       height: rect.size.height,
-      selectionKind: selectionKind
+      selectionKind: selectionKind,
     )
   }
 
@@ -58,7 +58,7 @@ struct OverlayFrame: Codable, Equatable, Sendable {
       let size = CGSize(width: 520, height: 280)
       let origin = CGPoint(
         x: screen.frame.midX - size.width / 2,
-        y: screen.frame.midY - size.height / 2
+        y: screen.frame.midY - size.height / 2,
       )
       return OverlayFrame(x: origin.x, y: origin.y, width: size.width, height: size.height, hasSelection: false)
     }
@@ -83,4 +83,5 @@ struct OverlayFrame: Codable, Equatable, Sendable {
     width = rect.size.width
     height = rect.size.height
   }
+
 }

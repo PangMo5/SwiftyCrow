@@ -16,12 +16,14 @@ enum CaptureQualityMetrics {
         x: box.minX * canvas.width,
         y: box.minY * canvas.height,
         width: box.width * canvas.width,
-        height: box.height * canvas.height
+        height: box.height * canvas.height,
       )
       let ink: [CGRect] =
         if case .horizontal = placement.flow {
           HorizontalTextRenderer.paintedBounds(for: placement).map { $0.applying(placement.transform) }
-        } else { [placement.visualFrame] }
+        } else {
+          [placement.visualFrame]
+        }
       return ink.allSatisfy { boundary.insetBy(dx: -0.00001, dy: -0.00001).contains($0) }
         ? nil
         : "Target crossed original text box: \(placement.line.source.text)"
@@ -32,17 +34,26 @@ enum CaptureQualityMetrics {
     expected.compactMap { expectation in
       let values = expectation.region
       guard
-        values.count == 4, values.allSatisfy(\.isFinite), values[0] >= 0, values[1] >= 0,
-        values[2] > 0, values[3] > 0, values[0] + values[2] <= 1, values[1] + values[3] <= 1,
+        values.count == 4,
+        values.allSatisfy(\.isFinite),
+        values[0] >= 0,
+        values[1] >= 0,
+        values[2] > 0,
+        values[3] > 0,
+        values[0] + values[2] <= 1,
+        values[1] + values[3] <= 1,
         !expectation.sourcePrefix.isEmpty
       else { return "Invalid source-fragment expectation" }
       let bounds = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
       let owners = lines.filter { $0.source.text.hasPrefix(expectation.sourcePrefix) }
       guard
-        owners.count == 1, let line = owners.first, line.shouldReplaceSourcePixels,
+        owners.count == 1,
+        let line = owners.first,
+        line.shouldReplaceSourcePixels,
         line.source.styleRuns.contains(where: { run in
           guard
-            let fragment = run.sourceFragment, let ink = run.inkBox,
+            let fragment = run.sourceFragment,
+            let ink = run.inkBox,
             ink.insetBy(dx: -1e-9, dy: -1e-9).contains(bounds)
           else { return false }
           return line.displayedStyleRuns.contains { $0.sourceFragment == fragment }
@@ -55,11 +66,18 @@ enum CaptureQualityMetrics {
   static func restoredBackgroundIssues(_ image: CGImage, expected: [CaptureBackgroundExpectation]) -> [String] {
     expected.flatMap { item -> [String] in
       guard
-        item.region.count == 4, item.color.count == 3,
-        item.color.allSatisfy({ (0...255).contains($0) }), item.maximumChannelError >= 0,
-        item.region[0] >= 0, item.region[1] >= 0, item.region[2] > 0, item.region[3] > 0,
-        item.region[0] <= image.width, item.region[1] <= image.height,
-        item.region[2] <= image.width - item.region[0], item.region[3] <= image.height - item.region[1]
+        item.region.count == 4,
+        item.color.count == 3,
+        item.color.allSatisfy({ (0...255).contains($0) }),
+        item.maximumChannelError >= 0,
+        item.region[0] >= 0,
+        item.region[1] >= 0,
+        item.region[2] > 0,
+        item.region[3] > 0,
+        item.region[0] <= image.width,
+        item.region[1] <= image.height,
+        item.region[2] <= image.width - item.region[0],
+        item.region[3] <= image.height - item.region[1]
       else { return ["Invalid restored-background expectation"] }
       let region = CGRect(x: item.region[0], y: item.region[1], width: item.region[2], height: item.region[3])
       guard
@@ -71,7 +89,7 @@ enum CaptureQualityMetrics {
           bitsPerComponent: 8,
           bytesPerRow: crop.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         ),
         let bytes = context.data?.assumingMemoryBound(to: UInt8.self)
       else { return ["Could not inspect restored background"] }
@@ -79,9 +97,11 @@ enum CaptureQualityMetrics {
       var changed = 0
       var maximum = 0
       for index in 0..<crop.width * crop.height {
-        let error = (0..<3).map { abs(Int(bytes[index * 4 + $0]) - item.color[$0]) }.max()!
+        let error = (0..<3).lazy.map { abs(Int(bytes[index * 4 + $0]) - item.color[$0]) }.max()!
         maximum = max(maximum, error)
-        if error > item.maximumChannelError { changed += 1 }
+        if error > item.maximumChannelError {
+          changed += 1
+        }
       }
       return changed == 0 ? [] : ["Restored background differs in \(changed) pixels; maximum channel error \(maximum)"]
     }
@@ -102,7 +122,7 @@ enum CaptureQualityMetrics {
           width: fragment.width,
           height: fragment.height,
           descent: fragment.descent,
-          referenceFontSize: fragment.referenceFontSize
+          referenceFontSize: fragment.referenceFontSize,
         )
       }
       return run
@@ -113,7 +133,8 @@ enum CaptureQualityMetrics {
   static func translationIssues(_ lines: [OverlayLine], expected: [CaptureTranslationExpectation]) -> [String] {
     expected.flatMap { item -> [String] in
       guard
-        !item.sourcePrefix.isEmpty, !(item.targetIncludes + item.targetExcludes).isEmpty,
+        !item.sourcePrefix.isEmpty,
+        !(item.targetIncludes + item.targetExcludes).isEmpty,
         (item.targetIncludes + item.targetExcludes).allSatisfy({ !$0.isEmpty })
       else { return ["Invalid translation expectation"] }
       let matching = lines.filter { $0.source.text.hasPrefix(item.sourcePrefix) }
@@ -150,12 +171,14 @@ enum CaptureQualityMetrics {
   static func fontScaleIssues(
     _ placements: [OverlayPlacement],
     canvas: CGSize,
-    expected: [CaptureFontExpectation]
+    expected: [CaptureFontExpectation],
   ) -> [String] {
     expected.flatMap { expectation -> [String] in
       guard
-        canvas.height > 0, !expectation.source.isEmpty,
-        expectation.minimum > 0, expectation.maximum >= expectation.minimum,
+        canvas.height > 0,
+        !expectation.source.isEmpty,
+        expectation.minimum > 0,
+        expectation.maximum >= expectation.minimum,
         expectation.maximum.isFinite
       else { return ["Invalid font-scale expectation"] }
       let owners = placements.filter {
@@ -185,12 +208,15 @@ enum CaptureQualityMetrics {
       guard !owners.isEmpty else { return ["Missing prose subject: \(token)"] }
       return owners.compactMap { line in
         let protected: Bool =
-          if line.source.isProtectedLiteral { true }
-          else if let attributed = line.source.attributedTextForTranslation() {
+          if line.source.isProtectedLiteral {
+            true
+          } else if let attributed = line.source.attributedTextForTranslation() {
             attributed.runs.contains {
               $0.inlinePresentationIntent?.contains(.code) == true && contains(String(attributed.characters[$0.range]))
             }
-          } else { false }
+          } else {
+            false
+          }
         return protected ? "Ordinary prose was protected as literal: \(token) in \(line.source.text)" : nil
       }
     }
@@ -231,7 +257,9 @@ enum CaptureQualityMetrics {
                 ? count(String(attributed.characters[run.range]))
                 : 0)
             }
-          } else { 0 }
+          } else {
+            0
+          }
         guard classified >= occurrences else { return "Literal was not classified: \(literal) in \(line.source.text)" }
         let retained = line.displayedStyleRuns.reduce(0) { total, run in
           guard let range = Range(run.range, in: line.displayedText) else { return total }
@@ -255,7 +283,9 @@ enum CaptureQualityMetrics {
       for placement in placements where !region.insetBy(dx: -1, dy: -1).contains(placement.sourceFrame) {
         let overlap = placement.frame.intersection(region.applying(placement.transform.inverted()))
         guard
-          !overlap.isNull, !overlap.isEmpty, case .horizontal = placement.flow,
+          !overlap.isNull,
+          !overlap.isEmpty,
+          case .horizontal = placement.flow,
           !placement.visualFrame.intersection(region).isNull
         else { continue }
         guard let image = HorizontalTextRenderer.image(for: placement, scale: 1) else {
@@ -273,7 +303,7 @@ enum CaptureQualityMetrics {
             bitsPerComponent: 8,
             bytesPerRow: crop.width * 4,
             space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
           ),
           let data = context.data
         else { issues.append("Cannot inspect foreign region \(index): \(placement.line.source.text)")
@@ -285,13 +315,16 @@ enum CaptureQualityMetrics {
           guard pixels[i * 4 + 3] > 2 else { return false }
           let local = CGPoint(
             x: placement.frame.minX + cropBounds.minX + CGFloat(i % crop.width) + 0.5,
-            y: placement.frame.minY + cropBounds.minY + CGFloat(i / crop.width) + 0.5
+            y: placement.frame.minY + cropBounds.minY + CGFloat(i / crop.width) + 0.5,
           )
           return region.contains(local.applying(placement.transform))
         }
         if
           painted >
-          0 { issues.append("\(painted) translation pixels crossed foreign region \(index): \(placement.line.source.text)") }
+          0
+        {
+          issues.append("\(painted) translation pixels crossed foreign region \(index): \(placement.line.source.text)")
+        }
       }
     }
     return issues
@@ -358,7 +391,9 @@ enum CaptureQualityMetrics {
         }
         paragraphOwners.insert(owner)
       }
-      if !owners.isDisjoint(with: paragraphOwners) { issues.append("Independent paragraphs merged: \(paragraph)") }
+      if !owners.isDisjoint(with: paragraphOwners) {
+        issues.append("Independent paragraphs merged: \(paragraph)")
+      }
       owners.formUnion(paragraphOwners)
     }
     return issues
@@ -378,7 +413,9 @@ enum CaptureQualityMetrics {
     var issues = [String]()
     for (token, count) in expected.sorted(by: { $0.key < $1.key }) where !token.isEmpty {
       let observed = texts.reduce(0) { $0 + $1.components(separatedBy: token).count - 1 }
-      if observed != count { issues.append("Source occurrence count: \(token), expected \(count), observed \(observed)") }
+      if observed != count {
+        issues.append("Source occurrence count: \(token), expected \(count), observed \(observed)")
+      }
     }
     for token in forbidden where !token.isEmpty && texts.contains(where: { $0.contains(token) }) {
       issues.append("Forbidden source text: \(token)")
@@ -392,7 +429,9 @@ enum CaptureQualityMetrics {
       let line = placement.line
       if case .horizontal = placement.flow {
         let plan = HorizontalTextRenderer.plan(for: placement)
-        if !plan.fits(placement.frame.size) { issues.append("Incomplete or clipped text: \(line.source.text)") }
+        if !plan.fits(placement.frame.size) {
+          issues.append("Incomplete or clipped text: \(line.source.text)")
+        }
       } else if
         !CoreTextTypesetter.fits(
           text: line.displayedText,
@@ -405,7 +444,7 @@ enum CaptureQualityMetrics {
           in: placement.frame.size,
           verticalWrapping: placement.verticalWrapping,
           styles: line.displayedStyleRuns,
-          isUnderlined: line.source.appearance.isUnderlined
+          isUnderlined: line.source.appearance.isUnderlined,
         )
       {
         issues.append("Incomplete or clipped vertical text: \(line.source.text)")
@@ -472,7 +511,7 @@ enum CaptureQualityMetrics {
           bitsPerComponent: 8,
           bytesPerRow: image.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { return nil }
       context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
@@ -489,7 +528,9 @@ enum CaptureQualityMetrics {
       guard x1 > x0, y1 > y0 else { continue }
       for y in y0..<y1 { for x in x0..<x1 {
         let offset = (y * original.width + x) * 4
-        if (0..<3).contains(where: { abs(Int(before[offset + $0]) - Int(after[offset + $0])) > 3 }) { changed += 1 }
+        if (0..<3).contains(where: { abs(Int(before[offset + $0]) - Int(after[offset + $0])) > 3 }) {
+          changed += 1
+        }
       }}
     }
     return changed

@@ -26,8 +26,10 @@ enum BackgroundTexture {
         guard material[i].w != 0 else { continue }
         for distance in distances {
           guard
-            material[i - distance].w != 0, material[i + distance].w != 0,
-            material[i - distance * width].w != 0, material[i + distance * width].w != 0
+            material[i - distance].w != 0,
+            material[i + distance].w != 0,
+            material[i - distance * width].w != 0,
+            material[i + distance * width].w != 0
           else { continue }
           let residual = material[i] - (material[i - distance] + material[i + distance] +
             material[i - distance * width] + material[i + distance * width]) / 4
@@ -77,7 +79,9 @@ enum BackgroundTexture {
     for y in 0..<height {
       var row = 0
       for x in 0..<width {
-        if material[y * width + x].w != 0 { row += 1 }
+        if material[y * width + x].w != 0 {
+          row += 1
+        }
         let i = (y + 1) * countStride + x + 1
         validCounts[i] = validCounts[i - countStride] + row
       }
@@ -107,10 +111,12 @@ enum BackgroundTexture {
             material[i - distance * width] + material[i + distance * width]) / 4
           magnitude = max(magnitude, Self.magnitude(laplacian))
           let value = SIMD3(Double(laplacian.x), Double(laplacian.y), Double(laplacian.z))
-          if distance == 1 { frequency[label].fine += value
+          if distance == 1 {
+            frequency[label].fine += value
             frequency[label].energy.x += (value * value).sum()
           }
-          if distance == radius { frequency[label].coarse += value
+          if distance == radius {
+            frequency[label].coarse += value
             frequency[label].energy.y += (value * value).sum()
           }
         }
@@ -184,7 +190,7 @@ enum BackgroundTexture {
         index: y * width + x,
         mean: Color(Float(mean.x), Float(mean.y), Float(mean.z)),
         horizontal: Color(Float(dx.x), Float(dx.y), Float(dx.z)),
-        vertical: Color(Float(dy.x), Float(dy.y), Float(dy.z))
+        vertical: Color(Float(dy.x), Float(dy.y), Float(dy.z)),
       )
     }
     var catalogs = [[Patch]](repeating: [], count: domains.count)
@@ -211,7 +217,7 @@ enum BackgroundTexture {
         label: label,
         pixels: domains[label],
         patches: patches,
-        radius: radii[label]
+        radius: radii[label],
       )
     }
   }
@@ -246,7 +252,7 @@ enum BackgroundTexture {
     label: Int,
     pixels: [Int],
     patches: [Patch],
-    radius: Int
+    radius: Int,
   ) {
     let blockSide = radius * 2 - 1
     let columns = (width + blockSide - 1) / blockSide
@@ -270,16 +276,24 @@ enum BackgroundTexture {
     for i in pixels {
       let x = i % width
       for dx in -2..<3 where x + dx >= 0 && x + dx < width && labels[i + dx] == label {
-        if dx == -2, labels[i - 1] != label { continue }
-        if dx == 2, labels[i + 1] != label { continue }
+        if dx == -2, labels[i - 1] != label {
+          continue
+        }
+        if dx == 2, labels[i + 1] != label {
+          continue
+        }
         temporary[positions[i]] += field[i + dx] * weights[dx + 2]
       }
     }
     for i in pixels {
       let y = i / width
       for dy in -2..<3 where y + dy >= 0 && y + dy < height && labels[i + dy * width] == label {
-        if dy == -2, labels[i - width] != label { continue }
-        if dy == 2, labels[i + width] != label { continue }
+        if dy == -2, labels[i - width] != label {
+          continue
+        }
+        if dy == 2, labels[i + width] != label {
+          continue
+        }
         base[positions[i]] += temporary[positions[i + dy * width]] * weights[dy + 2]
       }
       base[positions[i]] /= base[positions[i]].w
@@ -299,13 +313,15 @@ enum BackgroundTexture {
         for dx in -radius..<(radius + 1) where x + dx >= 0 && x + dx < width {
           let i = (y + dy) * width + x + dx
           guard labels[i] == label else { continue }
-          if abs(dx) < radius, abs(dy) < radius, mask[i] { targets.append((i, dx, dy)) }
+          if abs(dx) < radius, abs(dy) < radius, mask[i] {
+            targets.append((i, dx, dy))
+          }
           if !mask[i] || filled[positions[i]] {
             samples.append((
               dx,
               dy,
               Color(base[positions[i]].x, base[positions[i]].y, base[positions[i]].z),
-              Color(field[i].x, field[i].y, field[i].z)
+              Color(field[i].x, field[i].y, field[i].z),
             ))
           }
         }
@@ -321,7 +337,9 @@ enum BackgroundTexture {
           let pixel = donorY * width + donorX
           if labels[pixel] == label {
             let candidate = lookup[positions[pixel]]
-            if candidate >= 0 { candidates.append(candidate) }
+            if candidate >= 0 {
+              candidates.append(candidate)
+            }
           }
         }
       }
@@ -346,7 +364,8 @@ enum BackgroundTexture {
           let error = low + residual(patch, dx, dy) - actual
           score += (error * error).sum()
         }
-        if score < bestScore { best = candidate
+        if score < bestScore {
+          best = candidate
           bestScore = score
         }
       }
@@ -363,4 +382,5 @@ enum BackgroundTexture {
       }
     }
   }
+
 }

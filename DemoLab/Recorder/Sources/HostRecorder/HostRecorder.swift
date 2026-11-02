@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AppKit
@@ -45,13 +45,17 @@ private final class WindowCapture: NSObject, SCStreamOutput, SCStreamDelegate, @
 
   func stream(_: SCStream, didOutputSampleBuffer sample: CMSampleBuffer, of type: SCStreamOutputType) {
     guard
-      type == .screen, sample.isValid, sample.imageBuffer != nil,
+      type == .screen,
+      sample.isValid,
+      sample.imageBuffer != nil,
       let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
       let raw = attachments.first?[.status] as? Int,
-      let status = SCFrameStatus(rawValue: raw), status == .complete || status == .started
+      let status = SCFrameStatus(rawValue: raw),
+      status == .complete || status == .started
     else { return }
     writer.submit(sample)
   }
+
 }
 
 // MARK: - HostService
@@ -82,14 +86,16 @@ private actor HostService {
     guard
       let window = content.windows.first(where: {
         $0.windowID == viewport.windowID && $0.owningApplication?.processID == viewport.ownerPID && $0.title == viewport.title
-      }), let display = content.displays.first(where: { $0.displayID == viewport.displayID })
+      }),
+      let display = content.displays.first(where: { $0.displayID == viewport.displayID })
     else {
       throw UsageError("Owned VM window is unavailable")
     }
     let source = CGRect(x: viewport.x, y: viewport.y, width: viewport.width, height: viewport.height)
       .offsetBy(dx: display.frame.minX, dy: display.frame.minY)
     guard
-      window.frame.contains(source), display.frame.contains(source),
+      window.frame.contains(source),
+      display.frame.contains(source),
       abs(viewport.width * viewport.scale - 1920) < 0.001,
       abs(viewport.height * viewport.scale - 1200) < 0.001
     else {
@@ -114,7 +120,7 @@ private actor HostService {
       fps: 30,
       requestedCodec: .hevc,
       bitrateMbps: 8,
-      label: "host-owned-VM"
+      label: "host-owned-VM",
     )
     let capture = WindowCapture(writer: writer)
     let config = SCStreamConfiguration()
@@ -194,15 +200,17 @@ private actor HostService {
     fflush(stdout)
     while true {
       if let started = takeStarted, Double(DispatchTime.now().uptimeNanoseconds - started) / 1e9 > 120 {
-        if let takeID { _ = try await stop(id: takeID) }
+        if let takeID {
+          _ = try await stop(id: takeID)
+        }
         throw UsageError("Guest did not stop the take within 120 seconds")
       }
       let requests = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
         .filter { $0.lastPathComponent.hasSuffix(".request.json") }.sorted { $0.path < $1.path }
       for requestURL in requests {
-        let responseURL = root.appendingPathComponent(requestURL.lastPathComponent.replacingOccurrences(
-          of: ".request.json",
-          with: ".response.json"
+        let responseURL = root.appendingPathComponent(requestURL.lastPathComponent.replacing(
+          ".request.json",
+          with: ".response.json",
         ))
         do {
           guard
@@ -218,13 +226,16 @@ private actor HostService {
           try write(response, to: responseURL)
         } catch {
           try write(["error": String(describing: error)], to: responseURL)
-          if capture != nil { throw error }
+          if capture != nil {
+            throw error
+          }
         }
         try FileManager.default.removeItem(at: requestURL)
       }
       try await Task.sleep(for: .milliseconds(5))
     }
   }
+
 }
 
 private func write(_ object: [String: Any], to url: URL) throws {
@@ -243,11 +254,11 @@ enum HostRecorderMain {
     do {
       let viewport = try JSONDecoder().decode(
         Viewport.self,
-        from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
+        from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1])),
       )
       let hash = SHA256.hash(data: try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[0]))).map { String(
         format: "%02x",
-        $0
+        $0,
       ) }.joined()
       let service = HostService(root: URL(fileURLWithPath: CommandLine.arguments[2]), viewport: viewport, binaryHash: hash)
       Task {

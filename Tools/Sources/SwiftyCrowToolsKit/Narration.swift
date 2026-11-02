@@ -29,14 +29,16 @@ struct FilmNarration {
       try require(["chapter", "caption", "keys"].contains(track), "Unknown narration track")
       try require(
         start.isFinite && end.isFinite && start >= 0 && end > start && end <= duration + 0.04,
-        "Narration event is outside the movie"
+        "Narration event is outside the movie",
       )
       if track == "keys" {
         try require(!event["chord"].str.isEmpty && event["id"].isNull, "Keycasts must come from actual input chords")
         _ = try displayChord(event["chord"].str)
       } else {
         try require(event["id"].str.hasPrefix(film + "."), "Narration cue belongs to another film")
-        if track == "caption" { try require(end - start >= 2.4, "Caption disappears before it can be read: \(event["id"].str)") }
+        if track == "caption" {
+          try require(end - start >= 2.4, "Caption disappears before it can be read: \(event["id"].str)")
+        }
       }
     }
     for track in ["chapter", "caption", "keys"] {
@@ -44,7 +46,9 @@ struct FilmNarration {
       for pair in zip(ordered, ordered.dropFirst()) {
         try require(pair.0["end"].double <= pair.1["start"].double + 0.01, "Overlapping \(track) cues")
       }
-      if track != "keys" { try require(ordered.first?["start"].double ?? .infinity <= 1.5, "Opening \(track) arrives late") }
+      if track != "keys" {
+        try require(ordered.first?["start"].double ?? .infinity <= 1.5, "Opening \(track) arrives late")
+      }
     }
     // Menu-driven films may not use a shortcut. Any displayed keycast must
     // still correspond to the recorded input and pass the checks above.
@@ -78,8 +82,9 @@ struct FilmNarration {
       "forwarddelete": "⌦",
     ]
     let displayed: String
-    if let value = names[key] { displayed = value }
-    else {
+    if let value = names[key] {
+      displayed = value
+    } else {
       try require(key.count == 1 || fullMatch("f(?:[1-9]|1[0-3])", key), "Unknown recorded key: \(key)")
       displayed = key.uppercased()
     }
@@ -87,11 +92,11 @@ struct FilmNarration {
   }
 
   static func escape(_ text: String) -> String {
-    var value = text.replacingOccurrences(of: "{", with: "\\{").replacingOccurrences(of: "}", with: "\\}")
+    var value = text.replacing("{", with: "\\{").replacing("}", with: "\\}")
     value = value.replacingOccurrences(of: "\\\\([nNh])", with: "\\\\{}$1", options: .regularExpression)
-    return value.replacingOccurrences(of: "\r\n", with: "\\N").replacingOccurrences(of: "\n", with: "\\N").replacingOccurrences(
-      of: "\r",
-      with: "\\N"
+    return value.replacing("\r\n", with: "\\N").replacing("\n", with: "\\N").replacing(
+      "\r",
+      with: "\\N",
     )
   }
 
@@ -108,12 +113,13 @@ struct FilmNarration {
     }
     try require(
       result.count >= 2 && result[0].components(separatedBy: ",").map(normalized).contains(normalized(family)),
-      "Required narration font is unavailable: \(family)"
+      "Required narration font is unavailable: \(family)",
     )
     let ranges = try result[1].split(whereSeparator: \.isWhitespace).map { range -> ClosedRange<UInt32> in
       let bounds = range.split(separator: "-")
       guard
-        let low = UInt32(bounds[0], radix: 16), let high = UInt32(bounds.last!, radix: 16),
+        let low = UInt32(bounds[0], radix: 16),
+        let high = UInt32(bounds.last!, radix: 16),
         low <= high
       else { throw ToolError("Invalid font character range") }
       return low...high
@@ -123,7 +129,7 @@ struct FilmNarration {
     })
     try require(
       missing.isEmpty,
-      "\(family) lacks narration glyphs: \(missing.sorted { $0.value < $1.value }.map(String.init).joined())"
+      "\(family) lacks narration glyphs: \(missing.sorted { $0.value < $1.value }.map(String.init).joined())",
     )
   }
 
@@ -157,7 +163,7 @@ struct FilmNarration {
     try await Self.requireFont(font, texts: captions)
     try await Self.requireFont(
       "Menlo",
-      texts: events.filter { $0["track"].str == "keys" }.map { try Self.displayChord($0["chord"].str) }
+      texts: events.filter { $0["track"].str == "keys" }.map { try Self.displayChord($0["chord"].str) },
     )
     let blocks = matches(#":root\s*\{([^}]+)\}"#, try workspace.root.at("web/style.css").text())
     try require(blocks.count >= 2, "Website dark palette is missing")
@@ -186,7 +192,7 @@ struct FilmNarration {
       _ left: Int,
       _ right: Int,
       _ bottom: Int,
-      boxed: Bool = true
+      boxed: Bool = true,
     ) -> String {
       "Style: \(name),\(family),\(scaled(size)),&H00\(color),&H00\(color),&H40141414,&H40141414,\(bold),0,0,0,100,100,0,0,\(boxed ? 3 : 1),\(boxed ? 10 : 0),0,\(alignment),\(scaled(left)),\(scaled(right)),\(scaled(bottom)),1"
     }
@@ -237,7 +243,8 @@ struct FilmNarration {
       }
       let text: String
       let name: String
-      if track == "keys" { name = "Keys"
+      if track == "keys" {
+        name = "Keys"
         text = try Self.escape(Self.displayChord(event["chord"].str))
       } else {
         name = track == "chapter" ? "Chapter" : "Caption"

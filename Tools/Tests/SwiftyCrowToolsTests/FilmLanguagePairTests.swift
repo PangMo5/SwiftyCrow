@@ -5,21 +5,18 @@ import Testing
 
 @Suite("Demo output follows the page language")
 struct FilmLanguagePairTests {
-  func film(locale: String, source: String, target: String) -> JSON {
-    .object([("languagePairs", .object([(locale, .object([
-      ("sourceLanguage", .string(source)), ("translationLanguage", .string(target))
-    ]))]))])
-  }
+
+  // MARK: Internal
 
   @Test(arguments: ["en", "ja", "zh-Hans", "zh-Hant"])
-  func rejectsKoreanOutputBehindLocalizedUI(_ locale: String) {
+  func `rejects korean output behind localized UI`(_ locale: String) {
     #expect(throws: ToolError.self) {
       try FilmLanguagePair(film: film(locale: locale, source: "en-US", target: "ko-KR"), locale: locale)
     }
   }
 
   @Test
-  func distinguishesChineseScripts() throws {
+  func `distinguishes chinese scripts`() throws {
     #expect(throws: ToolError.self) {
       try FilmLanguagePair(film: film(locale: "zh-Hant", source: "en-US", target: "zh-CN"), locale: "zh-Hant")
     }
@@ -28,10 +25,20 @@ struct FilmLanguagePairTests {
   }
 
   @Test
-  func acceptsRegionalAliasButRejectsUntranslatedSource() throws {
+  func `accepts regional alias but rejects untranslated source`() throws {
     _ = try FilmLanguagePair(film: film(locale: "en", source: "ko-KR", target: "en-GB"), locale: "en")
     #expect(throws: ToolError.self) {
       try FilmLanguagePair(film: film(locale: "ja", source: "ja-JP", target: "ja-JP"), locale: "ja")
     }
   }
+
+  // MARK: Private
+
+  private func film(locale: String, source: String, target: String) -> JSON {
+    .object([("languagePairs", .object([(locale, .object([
+      ("sourceLanguage", .string(source)),
+      ("translationLanguage", .string(target)),
+    ]))]))])
+  }
+
 }

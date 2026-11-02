@@ -15,7 +15,9 @@ struct TranslationLiteralPlan: Sendable {
     for run in source.runs where run.inlinePresentationIntent?.contains(.code) == true {
       if let previous = ranges.last, previous.upperBound == run.range.lowerBound {
         ranges[ranges.count - 1] = previous.lowerBound..<run.range.upperBound
-      } else { ranges.append(run.range) }
+      } else {
+        ranges.append(run.range)
+      }
     }
     guard !ranges.isEmpty else { return nil }
     let plain = String(source.characters)
@@ -95,4 +97,5 @@ struct TranslationLiteralPlan: Sendable {
 
   private let markerPrefix: String
   private let literals: [String: AttributedString]
+
 }

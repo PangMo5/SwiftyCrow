@@ -19,7 +19,7 @@ enum OCRBalloonRefiner {
     guard verticalColumns.count >= 3 || qualifies(lines) else { return lines }
     let rasterSide = OCRGeometry.analysisRasterLongestSide(
       for: verticalColumns.isEmpty ? lines : verticalColumns,
-      imageSize: CGSize(width: image.width, height: image.height)
+      imageSize: CGSize(width: image.width, height: image.height),
     )
     guard let raster = BalloonRaster(image: image, longestSide: rasterSide) else { return lines }
     if verticalColumns.count >= 3 {
@@ -34,7 +34,8 @@ enum OCRBalloonRefiner {
         guard
           contained.contains(where: { $0.recognitionConfidence < 0.3 ||
               ($0.isVerticalBlock && $0.text.unicodeScalars.contains(where: { $0.isASCII && CharacterSet.letters.contains($0) }))
-          }), let crop = raster.maskedCrop(of: image, region: region)
+          }),
+          let crop = raster.maskedCrop(of: image, region: region)
         else { continue }
         try Task.checkCancellation()
         let hint = language.isAuto
@@ -56,7 +57,7 @@ enum OCRBalloonRefiner {
           box: region.interiorBox,
           confidence: 1,
           clippingBox: region.box,
-          clippingRows: region.spans
+          clippingRows: region.spans,
         )
         line.recognitionGroupID = groupBase + index
         return line
@@ -76,7 +77,7 @@ enum OCRBalloonRefiner {
         x: pixelRect.minX / CGFloat(image.width),
         y: pixelRect.minY / CGFloat(image.height),
         width: pixelRect.width / CGFloat(image.width),
-        height: pixelRect.height / CGFloat(image.height)
+        height: pixelRect.height / CGFloat(image.height),
       )
       var request = RecognizeTextRequest()
       request.recognitionLevel = .accurate
@@ -95,7 +96,7 @@ enum OCRBalloonRefiner {
           x: sourceRect.minX + box.minX * sourceRect.width,
           y: sourceRect.minY + (1 - box.maxY) * sourceRect.height,
           width: box.width * sourceRect.width,
-          height: box.height * sourceRect.height
+          height: box.height * sourceRect.height,
         )
         return (candidate.string, mapped)
       }.sorted { lhs, rhs in
@@ -119,7 +120,12 @@ enum OCRBalloonRefiner {
         horizontalInkScale: glyphHeight,
         replacementPatches: rows.map { OverlaySourcePatch(box: $0.1) },
         alignment: .center,
-        surface: OverlaySourceSurface(box: region.interiorBox, confidence: 1, clippingBox: region.box, clippingRows: region.spans)
+        surface: OverlaySourceSurface(
+          box: region.interiorBox,
+          confidence: 1,
+          clippingBox: region.box,
+          clippingRows: region.spans,
+        ),
       )
       line.isReconstructedTextRegion = true
       replacements.append((region, line))
@@ -171,7 +177,10 @@ enum OCRBalloonRefiner {
         let a = old.boundingBoxNormalized
         let intersection = a.intersection(b)
         guard
-          old.isVerticalBlock, !intersection.isNull, b.width > 0, b.height > 0,
+          old.isVerticalBlock,
+          !intersection.isNull,
+          b.width > 0,
+          b.height > 0,
           intersection.width * intersection.height / (b.width * b.height) >= 0.7,
           abs(a.midX - b.midX) <= max(a.width, b.width) * 0.55,
           candidate.text.count >= max(1, old.text.count / 2),
@@ -197,14 +206,14 @@ enum OCRBalloonRefiner {
       x: rect.minX / imageSize.width,
       y: rect.minY / imageSize.height,
       width: rect.width / imageSize.width,
-      height: rect.height / imageSize.height
+      height: rect.height / imageSize.height,
     )
     func map(_ box: CGRect) -> CGRect {
       CGRect(
         x: region.minX + box.minX * region.width,
         y: region.minY + box.minY * region.height,
         width: box.width * region.width,
-        height: box.height * region.height
+        height: box.height * region.height,
       )
     }
     var line = line
@@ -228,6 +237,7 @@ enum OCRBalloonRefiner {
     }
     return line
   }
+
 }
 
 // MARK: - BalloonRegion
@@ -248,7 +258,9 @@ struct BalloonRegion {
         right = min(right, spans[end].maxX)
         guard right > left else { break }
         let candidate = CGRect(x: left, y: spans[start].minY, width: right - left, height: spans[end].maxY - spans[start].minY)
-        if candidate.width * candidate.height > best.width * best.height { best = candidate }
+        if candidate.width * candidate.height > best.width * best.height {
+          best = candidate
+        }
       }
     }
     return best.insetBy(dx: min(best.width * 0.04, 0.004), dy: min(best.height * 0.04, 0.003))
@@ -259,7 +271,7 @@ struct BalloonRegion {
       x: box.minX * CGFloat(image.width),
       y: box.minY * CGFloat(image.height),
       width: box.width * CGFloat(image.width),
-      height: box.height * CGFloat(image.height)
+      height: box.height * CGFloat(image.height),
     ).integral
   }
 
@@ -289,7 +301,7 @@ struct BalloonRaster {
         bitsPerComponent: 8,
         bytesPerRow: width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -322,7 +334,9 @@ struct BalloonRaster {
     let minimumCoreArea = max(4, Int(ceil(glyph * glyph * 0.65)))
     var result = [BalloonRegion]()
     for component in components where component.count >= minimumArea {
-      if Task.isCancelled { break }
+      if Task.isCancelled {
+        break
+      }
       let xs = component.map { $0 % width }
       let ys = component.map { $0 / width }
       let x0 = xs.min()!
@@ -415,7 +429,7 @@ struct BalloonRaster {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
@@ -445,7 +459,7 @@ struct BalloonRaster {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     enlarged.interpolationQuality = .high
@@ -457,10 +471,18 @@ struct BalloonRaster {
 
   private static func neighbors(_ i: Int, width: Int, height: Int) -> [Int] {
     var result = [Int]()
-    if i % width > 0 { result.append(i - 1) }
-    if i % width + 1 < width { result.append(i + 1) }
-    if i >= width { result.append(i - width) }
-    if i + width < width * height { result.append(i + width) }
+    if i % width > 0 {
+      result.append(i - 1)
+    }
+    if i % width + 1 < width {
+      result.append(i + 1)
+    }
+    if i >= width {
+      result.append(i - width)
+    }
+    if i + width < width * height {
+      result.append(i + width)
+    }
     return result
   }
 
@@ -489,7 +511,7 @@ struct BalloonRaster {
       x: CGFloat(x) / CGFloat(self.width),
       y: CGFloat(y) / CGFloat(self.height),
       width: CGFloat(width) / CGFloat(self.width),
-      height: CGFloat(height) / CGFloat(self.height)
+      height: CGFloat(height) / CGFloat(self.height),
     )
   }
 

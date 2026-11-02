@@ -1,23 +1,21 @@
 // SPDX-FileCopyrightText: 2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 import Foundation
+import Testing
+@testable import SwiftyCrowToolsKit
 #if canImport(FoundationXML)
 import FoundationXML
 #endif
-import Testing
-@testable import SwiftyCrowToolsKit
 
 // MARK: - ReleaseMetadataTests
 
 @Suite("Localized release metadata")
 struct ReleaseMetadataTests {
-  var workspace: Workspace {
-    Workspace(root: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-      .deletingLastPathComponent().deletingLastPathComponent())
-  }
+
+  // MARK: Internal
 
   @Test
-  func publicationRequiresADateWhileReviewCanUseVersionedDrafts() throws {
+  func `publication requires A date while review can use versioned drafts`() throws {
     let root = fm.temporaryDirectory.at("release-draft-" + UUID().uuidString)
     defer { try? fm.removeItem(at: root) }
     let workspace = Workspace(root: root)
@@ -33,7 +31,7 @@ struct ReleaseMetadataTests {
   }
 
   @Test
-  func preparedReleaseNotesExistInEveryLocaleAndMissingVersionFails() throws {
+  func `prepared release notes exist in every locale and missing version fails`() throws {
     let notes = try ReleaseMetadata(workspace: workspace).localizedNotes(version: "2.10.0")
     #expect(notes.count == locales.count)
     #expect(notes.allSatisfy { $0.1.contains("2.10.0") && $0.1.contains("⇧⌘1") })
@@ -41,7 +39,7 @@ struct ReleaseMetadataTests {
   }
 
   @Test
-  func notesCoverEveryLocaleAndPreserveTheSignedEnclosure() throws {
+  func `notes cover every locale and preserve the signed enclosure`() throws {
     let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try temporary.makeDirectory()
     defer { try? FileManager.default.removeItem(at: temporary) }
@@ -69,7 +67,7 @@ struct ReleaseMetadataTests {
   }
 
   @Test
-  func byteRangesUsedByVideoPlayersAreBounded() throws {
+  func `byte ranges used by video players are bounded`() throws {
     #expect(try PreviewRange.resolve("bytes=0-1", size: 100) == 0...1)
     #expect(try PreviewRange.resolve("bytes=-10", size: 100) == 90...99)
     #expect(try PreviewRange.resolve("bytes=20-", size: 100) == 20...99)
@@ -78,4 +76,12 @@ struct ReleaseMetadataTests {
     #expect(throws: ToolError.self) { try PreviewRange.resolve("bytes=-0", size: 100) }
     #expect(throws: ToolError.self) { try PreviewRange.resolve("bytes=1-2,5-6", size: 100) }
   }
+
+  // MARK: Private
+
+  private var workspace: Workspace {
+    Workspace(root: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+      .deletingLastPathComponent().deletingLastPathComponent())
+  }
+
 }

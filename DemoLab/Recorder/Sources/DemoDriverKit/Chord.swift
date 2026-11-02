@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import Carbon
@@ -52,15 +52,16 @@ public enum ChordError: Error, Equatable, CustomStringConvertible {
     switch self {
     case .emptyInput:
       "empty shortcut string"
+
     case .unknownKey(let name):
       "unknown key \"\(name)\" — expected a-z, 0-9, one of ` - = [ ] \\ ; ' , . / "
         + "or a named key (return, enter, tab, space, delete, escape, help, home, end, "
         + "pageup, pagedown, forwarddelete, left, right, up, down, f1-f13)"
+
     case .unknownModifier(let token):
       "unknown modifier \"\(token)\" — expected cmd/command, shift, alt/opt/option, or ctrl/control"
     }
   }
-
 }
 
 // MARK: - KeyCodes
@@ -119,10 +120,12 @@ public enum KeyCodes {
           &deadKeyState,
           characters.count,
           &length,
-          &characters
+          &characters,
         )
         guard status == noErr, length > 0 else { continue }
-        if String(utf16CodeUnits: characters, count: length) == wanted { return CGKeyCode(code) }
+        if String(utf16CodeUnits: characters, count: length) == wanted {
+          return CGKeyCode(code)
+        }
       }
       return nil
     }
@@ -133,21 +136,86 @@ public enum KeyCodes {
   /// QWERTY positions of the printable keys, copied from Tatami's own table so
   /// a config string and a demo keystroke can never drift apart.
   private static let characterKeys: [String: CGKeyCode] = [
-    "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9,
-    "b": 11, "q": 12, "w": 13, "e": 14, "r": 15, "y": 16, "t": 17,
-    "1": 18, "2": 19, "3": 20, "4": 21, "6": 22, "5": 23, "=": 24, "9": 25,
-    "7": 26, "-": 27, "8": 28, "0": 29, "]": 30, "o": 31, "u": 32, "[": 33,
-    "i": 34, "p": 35, "l": 37, "j": 38, "'": 39, "k": 40,
-    ";": 41, "\\": 42, ",": 43, "/": 44, "n": 45, "m": 46, ".": 47, "`": 50,
+    "a": 0,
+    "s": 1,
+    "d": 2,
+    "f": 3,
+    "h": 4,
+    "g": 5,
+    "z": 6,
+    "x": 7,
+    "c": 8,
+    "v": 9,
+    "b": 11,
+    "q": 12,
+    "w": 13,
+    "e": 14,
+    "r": 15,
+    "y": 16,
+    "t": 17,
+    "1": 18,
+    "2": 19,
+    "3": 20,
+    "4": 21,
+    "6": 22,
+    "5": 23,
+    "=": 24,
+    "9": 25,
+    "7": 26,
+    "-": 27,
+    "8": 28,
+    "0": 29,
+    "]": 30,
+    "o": 31,
+    "u": 32,
+    "[": 33,
+    "i": 34,
+    "p": 35,
+    "l": 37,
+    "j": 38,
+    "'": 39,
+    "k": 40,
+    ";": 41,
+    "\\": 42,
+    ",": 43,
+    "/": 44,
+    "n": 45,
+    "m": 46,
+    ".": 47,
+    "`": 50,
   ]
 
   /// Keys whose virtual code does not move between keyboard layouts.
   private static let namedKeys: [String: CGKeyCode] = [
-    "return": 36, "enter": 76, "tab": 48, "space": 49, "delete": 51, "escape": 53,
-    "help": 114, "home": 115, "pageup": 116, "forwarddelete": 117, "end": 119,
-    "pagedown": 121, "left": 123, "right": 124, "down": 125, "up": 126,
-    "f1": 122, "f2": 120, "f3": 99, "f4": 118, "f5": 96, "f6": 97, "f7": 98,
-    "f8": 100, "f9": 101, "f10": 109, "f11": 103, "f12": 111, "f13": 105,
+    "return": 36,
+    "enter": 76,
+    "tab": 48,
+    "space": 49,
+    "delete": 51,
+    "escape": 53,
+    "help": 114,
+    "home": 115,
+    "pageup": 116,
+    "forwarddelete": 117,
+    "end": 119,
+    "pagedown": 121,
+    "left": 123,
+    "right": 124,
+    "down": 125,
+    "up": 126,
+    "f1": 122,
+    "f2": 120,
+    "f3": 99,
+    "f4": 118,
+    "f5": 96,
+    "f6": 97,
+    "f7": 98,
+    "f8": 100,
+    "f9": 101,
+    "f10": 109,
+    "f11": 103,
+    "f12": 111,
+    "f13": 105,
   ]
 
   /// Friendly aliases, matching Tatami's table exactly. Note `del`: Tatami maps
@@ -187,7 +255,7 @@ public enum ChordParser {
   // MARK: Public
 
   public static func parse(_ text: String) throws -> Chord {
-    var notes: [String] = []
+    var notes = [String]()
     return try parse(text, notes: &notes)
   }
 
@@ -244,11 +312,20 @@ public enum ChordParser {
     var flags: CGEventFlags = []
     for token in part.split(whereSeparator: { $0 == "+" || $0 == "-" }) {
       switch token.trimmingCharacters(in: .whitespaces) {
-      case "cmd", "command", "⌘": flags.insert(.maskCommand)
-      case "shift", "⇧": flags.insert(.maskShift)
-      case "alt", "opt", "option", "⌥": flags.insert(.maskAlternate)
-      case "ctrl", "control", "⌃": flags.insert(.maskControl)
-      case "", "fn": continue
+      case "cmd",
+           "command",
+           "⌘": flags.insert(.maskCommand)
+      case "shift",
+           "⇧": flags.insert(.maskShift)
+      case "alt",
+           "opt",
+           "option",
+           "⌥": flags.insert(.maskAlternate)
+      case "ctrl",
+           "control",
+           "⌃": flags.insert(.maskControl)
+      case "",
+           "fn": continue
       default: throw ChordError.unknownModifier(String(token))
       }
     }

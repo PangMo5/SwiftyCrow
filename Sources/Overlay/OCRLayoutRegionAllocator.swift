@@ -17,8 +17,11 @@ enum OCRLayoutRegionAllocator {
       let line = result.lines[index]
       let box = line.boundingBoxNormalized
       guard
-        !line.isVerticalBlock, abs(line.rotationRadians) < 0.025,
-        !line.preservesSource,!OCRTextSemantics.isCode(line.text),!OCRTextSemantics.isIdentifier(line.text)
+        !line.isVerticalBlock,
+        abs(line.rotationRadians) < 0.025,
+        !line.preservesSource,
+        !OCRTextSemantics.isCode(line.text),
+        !OCRTextSemantics.isIdentifier(line.text)
       else { continue }
       var left: CGFloat = 0
       var right: CGFloat = 1
@@ -26,8 +29,12 @@ enum OCRLayoutRegionAllocator {
         let peer = result.lines[otherIndex].boundingBoxNormalized
         let overlap = min(box.maxY, peer.maxY) - max(box.minY, peer.minY)
         guard overlap > min(box.height, peer.height) * 0.5 else { continue }
-        if peer.maxX <= box.minX { left = max(left, (peer.maxX + box.minX) / 2) }
-        if peer.minX >= box.maxX { right = min(right, (box.maxX + peer.minX) / 2) }
+        if peer.maxX <= box.minX {
+          left = max(left, (peer.maxX + box.minX) / 2)
+        }
+        if peer.minX >= box.maxX {
+          right = min(right, (box.maxX + peer.minX) / 2)
+        }
       }
       let y0 = max(0, Int(box.minY * CGFloat(height)))
       let y1 = min(height, Int(ceil(box.maxY * CGFloat(height))))
@@ -39,7 +46,7 @@ enum OCRLayoutRegionAllocator {
           return max(
             abs(color.red - line.appearance.background.red),
             abs(color.green - line.appearance.background.green),
-            abs(color.blue - line.appearance.background.blue)
+            abs(color.blue - line.appearance.background.blue),
           ) < 0.025
         }
       }
@@ -56,7 +63,8 @@ enum OCRLayoutRegionAllocator {
         for otherIndex in result.lines.indices where otherIndex != index {
           let peer = result.lines[otherIndex].boundingBoxNormalized
           guard
-            peer.minY >= box.maxY, peer.maxX > CGFloat(leftEdge) / CGFloat(width),
+            peer.minY >= box.maxY,
+            peer.maxX > CGFloat(leftEdge) / CGFloat(width),
             peer.minX < CGFloat(rightEdge) / CGFloat(width)
           else { continue }
           bottom = min(bottom, (box.maxY + peer.minY) / 2)
@@ -67,7 +75,7 @@ enum OCRLayoutRegionAllocator {
             return max(
               abs(color.red - line.appearance.background.red),
               abs(color.green - line.appearance.background.green),
-              abs(color.blue - line.appearance.background.blue)
+              abs(color.blue - line.appearance.background.blue),
             ) < 0.025
           }
           guard empty else { break }
@@ -78,14 +86,14 @@ enum OCRLayoutRegionAllocator {
         x: CGFloat(leftEdge) / CGFloat(width),
         y: box.minY,
         width: CGFloat(max(0, rightEdge - leftEdge)) / CGFloat(width),
-        height: max(box.height, CGFloat(bottomEdge) / CGFloat(height) - box.minY)
+        height: max(box.height, CGFloat(bottomEdge) / CGFloat(height) - box.minY),
       )
       output.lines[index].textFlowRegions = flowRegions(
         for: line,
         within: output.lines[index].layoutBounds!,
         width: width,
         height: height,
-        sample: sample
+        sample: sample,
       )
     }
     return output
@@ -102,7 +110,7 @@ enum OCRLayoutRegionAllocator {
     within available: CGRect,
     width: Int,
     height: Int,
-    sample: (Int, Int) -> OverlayColor?
+    sample: (Int, Int) -> OverlayColor?,
   ) -> [CGRect] {
     guard line.rowCount >= 3 else { return [] }
     let boxes = line.styleRuns.map { $0.inkBox ?? $0.box }.filter { !$0.isEmpty && !$0.isNull }
@@ -111,8 +119,12 @@ enum OCRLayoutRegionAllocator {
       if
         let index = rows.lastIndex(where: { row in
           min(row.maxY, box.maxY) - max(row.minY, box.minY) >= min(row.height, box.height) * 0.5
-        }) { rows[index] = rows[index].union(box) }
-      else { rows.append(box) }
+        })
+      {
+        rows[index] = rows[index].union(box)
+      } else {
+        rows.append(box)
+      }
     }
     guard rows.count >= 3 else { return [] }
     let regions = rows.indices.map { index -> CGRect in
@@ -130,7 +142,9 @@ enum OCRLayoutRegionAllocator {
         guard (0..<width).contains(x), y1 > y0 else { return false }
         return (y0..<y1).allSatisfy { y in
           let point = CGPoint(x: (CGFloat(x) + 0.5) / CGFloat(width), y: (CGFloat(y) + 0.5) / CGFloat(height))
-          if owned.contains(where: { $0.contains(point) }) { return true }
+          if owned.contains(where: { $0.contains(point) }) {
+            return true
+          }
           guard let color = sample(x, y) else { return false }
           let background = line.appearance.background
           return max(abs(color.red - background.red), abs(color.green - background.green), abs(color.blue - background.blue)) <
@@ -145,7 +159,7 @@ enum OCRLayoutRegionAllocator {
         x: CGFloat(left) / CGFloat(width),
         y: top,
         width: CGFloat(right - left) / CGFloat(width),
-        height: bottom - top
+        height: bottom - top,
       )
     }
     let scale = line.horizontalGlyphScale > 0
@@ -153,8 +167,9 @@ enum OCRLayoutRegionAllocator {
       : line.boundingBoxNormalized.height / CGFloat(rows.count)
     let varyingEdge = max(
       (regions.map(\.minX).max()! - regions.map(\.minX).min()!),
-      (regions.map(\.maxX).max()! - regions.map(\.maxX).min()!)
+      regions.map(\.maxX).max()! - regions.map(\.maxX).min()!,
     ) * line.imageAspectRatio
     return varyingEdge > scale * 1.5 ? regions : []
   }
+
 }

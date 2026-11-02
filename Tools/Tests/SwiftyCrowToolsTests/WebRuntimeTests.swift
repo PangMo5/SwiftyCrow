@@ -32,11 +32,13 @@ struct WebRuntimeTests {
   }
 
   @Test
-  func allHistoriesPreserveTagsAndSubsectionAnchors() throws {
+  func `all histories preserve tags and subsection anchors`() throws {
     let docs = DocumentBuilder(workspace: Workspace(root: root))
     for locale in locales {
       var markdown = try docs.stripNavigation(docs.destination("CHANGELOG.md", locale).text())
-      if locale == "en" { markdown = try docs.anchorHeadings(markdown, docs.headings(markdown)) }
+      if locale == "en" {
+        markdown = try docs.anchorHeadings(markdown, docs.headings(markdown))
+      }
       let sourceLines = lines(markdown)
       let releaseCount = MarkdownStructure(markdown).headingLines.count(where: { sourceLines[$0].hasPrefix("## ") })
       let context = try render(markdown)
@@ -53,7 +55,7 @@ struct WebRuntimeTests {
   }
 
   @Test
-  func versionedDraftHasNoPublicTagLink() throws {
+  func `versioned draft has no public tag link`() throws {
     let context = try render("<a id=\"2100-unreleased\"></a>\n## 2.10.0（未リリース）\n\n- Draft notes\n")
     #expect(context.evaluateScript("container.children.length")?.toInt32() == 1)
     #expect(context.evaluateScript("container.children[0].innerHTML.includes('2.10.0')")?.toBool() == true)
@@ -61,14 +63,14 @@ struct WebRuntimeTests {
   }
 
   @Test
-  func headingLikeCodeStaysInsideReleaseBody() throws {
+  func `heading like code stays inside release body`() throws {
     let context = try render("<a id=\"unreleased\"></a>\n## 출시 예정\n\n```md\n## Example heading\n<a id=\"sample\"></a>\n```\n")
     #expect(context.evaluateScript("container.children.length")?.toInt32() == 1)
     #expect(context.evaluateScript("container.children[0].innerHTML.includes('## Example heading')")?.toBool() == true)
   }
 
   @Test
-  func failedRequestUsesLocaleCopyAndUsableLink() throws {
+  func `failed request uses locale copy and usable link`() throws {
     let context = try render("", ok: false)
     #expect(context.evaluateScript("container.children[0].textContent")?.toString() == "불러오지 못했어요. ")
     #expect(context.evaluateScript("container.children[0].children[0].textContent")?.toString() == "GitHub에서 읽기")

@@ -53,7 +53,7 @@ enum InlineSourceFragmentRenderer {
           if NSMaxRange(range) > NSMaxRange(replacement.source) {
             pieces.append(NSRange(
               location: NSMaxRange(replacement.source),
-              length: NSMaxRange(range) - NSMaxRange(replacement.source)
+              length: NSMaxRange(range) - NSMaxRange(replacement.source),
             ))
           }
           return pieces
@@ -73,7 +73,7 @@ enum InlineSourceFragmentRenderer {
     _ fragment: OverlayInlineSourceFragment,
     to text: NSMutableAttributedString,
     range: NSRange,
-    fontSize: CGFloat
+    fontSize: CGFloat,
   ) -> Bool {
     guard range.length == 1, fontSize.isFinite, fontSize > 0 else { return false }
     let run = Run(fragment, fontSize: fontSize)
@@ -82,7 +82,7 @@ enum InlineSourceFragmentRenderer {
       dealloc: { Unmanaged<Run>.fromOpaque($0).release() },
       getAscent: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().ascent },
       getDescent: { max(0, Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().descent) },
-      getWidth: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().width }
+      getWidth: { Unmanaged<Run>.fromOpaque($0).takeUnretainedValue().width },
     )
     let pointer = Unmanaged.passRetained(run).toOpaque()
     guard let delegate = CTRunDelegateCreate(&callbacks, pointer) else {
@@ -146,6 +146,7 @@ enum InlineSourceFragmentRenderer {
     var descent: CGFloat {
       fragment.descent * scale
     }
+
   }
 
   private static let fragmentKey = NSAttributedString.Key("SwiftyCrowSourceFragment")
@@ -159,4 +160,5 @@ enum InlineSourceFragmentRenderer {
       return (run, CGRect(x: position.x, y: position.y - run.descent, width: run.width, height: run.ascent + run.descent))
     }
   }
+
 }

@@ -35,7 +35,7 @@ enum JapaneseRubyOCRCorrector {
         x: b.minX * imageSize.width,
         y: b.minY * imageSize.height,
         width: (b.width + rubyMargin) * imageSize.width,
-        height: b.height * imageSize.height
+        height: b.height * imageSize.height,
       ).insetBy(dx: -2, dy: -2).integral.intersection(CGRect(origin: .zero, size: imageSize))
     }
     // Normalize onto the image's pixel grid before adding context. Tiny
@@ -49,13 +49,13 @@ enum JapaneseRubyOCRCorrector {
       x: left,
       y: top,
       width: right - left,
-      height: bottom - top
+      height: bottom - top,
     ).insetBy(dx: -2, dy: -2).intersection(CGRect(origin: .zero, size: imageSize))
   }
 
   static func preferredVerticalCorrection(
     original: String,
-    candidates: [OCRResult.Line]
+    candidates: [OCRResult.Line],
   ) -> (candidate: OCRResult.Line, text: String)? {
     candidates.compactMap { candidate -> (candidate: OCRResult.Line, text: String)? in
       let corrected = candidate.text == original
@@ -63,18 +63,20 @@ enum JapaneseRubyOCRCorrector {
         : preferredCorrection(
           original: original,
           candidate: candidate.text,
-          confidence: candidate.recognitionConfidence
+          confidence: candidate.recognitionConfidence,
         )
       return corrected.map { (candidate, $0) }
     }.max {
-      if $0.text.count != $1.text.count { return $0.text.count < $1.text.count }
+      if $0.text.count != $1.text.count {
+        return $0.text.count < $1.text.count
+      }
       return $0.candidate.recognitionConfidence < $1.candidate.recognitionConfidence
     }
   }
 
   static func applyingVerticalCorrection(
     _ correction: (candidate: OCRResult.Line, text: String),
-    to source: OCRResult.Line
+    to source: OCRResult.Line,
   ) -> OCRResult.Line {
     let candidate = correction.candidate
     var result = source
@@ -85,13 +87,15 @@ enum JapaneseRubyOCRCorrector {
     result.recognitionConfidence = correction.text == source.text
       ? max(source.recognitionConfidence, candidate.recognitionConfidence)
       : candidate.recognitionConfidence
-    if !candidate.recognitionLanguages.isEmpty { result.recognitionLanguages = candidate.recognitionLanguages }
+    if !candidate.recognitionLanguages.isEmpty {
+      result.recognitionLanguages = candidate.recognitionLanguages
+    }
     return result
   }
 
   static func correcting(
     _ lines: [OCRResult.Line],
-    in image: CGImage
+    in image: CGImage,
   ) async throws -> [OCRResult.Line] {
     let wrapped = try await correctingShortWrappedColumns(lines, in: image)
     let lines = try await correctingVerticalColumns(wrapped, in: image)
@@ -110,7 +114,7 @@ enum JapaneseRubyOCRCorrector {
             > quality(current, comparedWith: lines[current.lineIndex].text)
             ? candidate
             : current
-        }
+        },
       )
     }
 
@@ -122,14 +126,14 @@ enum JapaneseRubyOCRCorrector {
         let corrected = preferredCorrection(
           original: originalText,
           candidate: candidate.text,
-          confidence: candidate.confidence
+          confidence: candidate.confidence,
         )
       else { continue }
       result[index].text = corrected
       result[index].styleRuns = remappedStyleRuns(
         result[index].styleRuns,
         from: originalText,
-        to: corrected
+        to: corrected,
       )
       correctionCount += 1
     }
@@ -145,7 +149,7 @@ enum JapaneseRubyOCRCorrector {
     original: String,
     candidate: String,
     confidence: Float,
-    independentlyConfirmed: Bool = false
+    independentlyConfirmed: Bool = false,
   ) -> String? {
     let original = original.trimmingCharacters(in: .whitespacesAndNewlines)
     let candidate = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -177,7 +181,7 @@ enum JapaneseRubyOCRCorrector {
   static func remappedStyleRuns(
     _ runs: [OverlaySourceStyleRun],
     from original: String,
-    to corrected: String
+    to corrected: String,
   ) -> [OverlaySourceStyleRun] {
     let original = original as NSString
     let corrected = corrected as NSString
@@ -192,12 +196,12 @@ enum JapaneseRubyOCRCorrector {
       while searchLocation < corrected.length {
         let search = NSRange(
           location: searchLocation,
-          length: corrected.length - searchLocation
+          length: corrected.length - searchLocation,
         )
         let match = corrected.range(
           of: token,
           options: [.caseInsensitive, .widthInsensitive],
-          range: search
+          range: search,
         )
         guard match.location != NSNotFound else { break }
         if !occupied.contains(where: { NSIntersectionRange($0, match).length > 0 }) {
@@ -243,8 +247,10 @@ enum JapaneseRubyOCRCorrector {
       let lower = occupied[end...].count(where: { $0 })
       if
         end - start >= minimumGap,
-        upper >= max(5, height / 8), lower >= height / 3,
-        upper * 4 <= lower * 3, end < height / 2
+        upper >= max(5, height / 8),
+        lower >= height / 3,
+        upper * 4 <= lower * 3,
+        end < height / 2
       {
         return CGFloat(max(0, end - 1)) / CGFloat(height)
       }
@@ -272,17 +278,18 @@ enum JapaneseRubyOCRCorrector {
           width: box.width * CGFloat(image.width),
           height: min(
             advance,
-            box.height * CGFloat(image.height) - CGFloat(index) * advance
-          )
+            box.height * CGFloat(image.height) - CGFloat(index) * advance,
+          ),
         )
         .insetBy(dx: -2, dy: 0).integral.intersection(canvas)
         guard let cell = image.cropping(to: rect) else { return nil }
         cells.append(cell)
       }
     }
-    let pitch = Int(ceil(columns.map { $0.verticalCharScale * CGFloat(image.width) }.max() ?? 0))
+    let pitch = Int(ceil(columns.lazy.map { $0.verticalCharScale * CGFloat(image.width) }.max() ?? 0))
     guard
-      let cellWidth = cells.map(\.width).max(), let cellHeight = cells.map(\.height).max(),
+      let cellWidth = cells.map(\.width).max(),
+      let cellHeight = cells.map(\.height).max(),
       let context = CGContext(
         data: nil,
         width: pitch * cells.count + cellWidth,
@@ -290,7 +297,7 @@ enum JapaneseRubyOCRCorrector {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.setFillColor(CGColor(gray: 1, alpha: 1))
@@ -304,8 +311,9 @@ enum JapaneseRubyOCRCorrector {
           bitsPerComponent: 8,
           bytesPerRow: cell.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ), let raw = glyph.data
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
+        ),
+        let raw = glyph.data
       else { return nil }
       glyph.draw(cell, in: CGRect(x: 0, y: 0, width: cell.width, height: cell.height))
       let bytes = raw.assumingMemoryBound(to: UInt8.self)
@@ -354,7 +362,7 @@ enum JapaneseRubyOCRCorrector {
 
   private static func correctingShortWrappedColumns(
     _ lines: [OCRResult.Line],
-    in image: CGImage
+    in image: CGImage,
   ) async throws -> [OCRResult.Line] {
     var result = lines
     var removed = Set<Int>()
@@ -381,10 +389,10 @@ enum JapaneseRubyOCRCorrector {
           x: 0,
           y: 0,
           width: strip.width,
-          height: strip.height
+          height: strip.height,
         ),
         minimumGlyphHeight: peer.verticalCharScale * CGFloat(image.width),
-        preferredScale: 2
+        preferredScale: 2,
       )
       let candidates = fresh.filter { candidate in
         candidate.recognitionConfidence >= 0.45 && candidate.text.count > peer.text.count
@@ -408,7 +416,7 @@ enum JapaneseRubyOCRCorrector {
       repaired.recognitionConfidence = candidate.recognitionConfidence
       repaired.styleRuns = [.init(
         range: NSRange(location: 0, length: repaired.text.utf16.count),
-        box: repaired.boundingBoxNormalized
+        box: repaired.boundingBoxNormalized,
       )]
       repaired.spacingAnchors = []
       repaired.replacementPatches = (peer.replacementPatches.isEmpty
@@ -443,7 +451,7 @@ enum JapaneseRubyOCRCorrector {
         crop: crop,
         minimumGlyphHeight: line
           .verticalCharScale * CGFloat(image.width),
-        preferredScale: 2
+        preferredScale: 2,
       )
       let observations = OCRResult(lines: recognized).absorbingRubyAnnotations().lines
       let fragments = OCRVerticalColumnRecovery.fragments(for: line, candidates: observations)
@@ -456,7 +464,7 @@ enum JapaneseRubyOCRCorrector {
             x: b.minX * CGFloat(image.width),
             y: b.minY * CGFloat(image.height),
             width: b.width * CGFloat(image.width),
-            height: b.height * CGFloat(image.height)
+            height: b.height * CGFloat(image.height),
           )
           .insetBy(dx: -2, dy: -2).integral.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
           let fresh = try await VisionTextRecognizer.additionalText(
@@ -465,7 +473,7 @@ enum JapaneseRubyOCRCorrector {
             crop: crop,
             minimumGlyphHeight: line
               .verticalCharScale * CGFloat(image.width),
-            preferredScale: 2
+            preferredScale: 2,
           )
           return OCRResult(lines: fresh).absorbingRubyAnnotations().lines.first { $0.text == fragment.text }
         }
@@ -479,7 +487,7 @@ enum JapaneseRubyOCRCorrector {
             original: line.text,
             candidate: combined.text,
             confidence: combined.recognitionConfidence,
-            independentlyConfirmed: true
+            independentlyConfirmed: true,
           )
         guard let corrected else {
           result[index].needsReview = true
@@ -506,7 +514,7 @@ enum JapaneseRubyOCRCorrector {
   private static func input(
     for line: OCRResult.Line,
     index: Int,
-    image: CGImage
+    image: CGImage,
   ) -> Input? {
     guard !line.isVerticalBlock, line.text.count >= 3 else { return nil }
     guard containsJapaneseText(line.text) else { return nil }
@@ -522,19 +530,19 @@ enum JapaneseRubyOCRCorrector {
       x: max(0, box.minX - box.height * 0.08),
       y: box.minY + box.height * fraction,
       width: min(1 - box.minX, box.width + box.height * 0.16),
-      height: box.height * (1 - fraction)
+      height: box.height * (1 - fraction),
     )
     let imageBounds = CGRect(
       x: 0,
       y: 0,
       width: CGFloat(image.width),
-      height: CGFloat(image.height)
+      height: CGFloat(image.height),
     )
     let pixels = CGRect(
       x: baseBox.minX * CGFloat(image.width),
       y: baseBox.minY * CGFloat(image.height),
       width: baseBox.width * CGFloat(image.width),
-      height: baseBox.height * CGFloat(image.height)
+      height: baseBox.height * CGFloat(image.height),
     ).integral.intersection(imageBounds)
     guard !pixels.isNull, !pixels.isEmpty, let crop = image.cropping(to: pixels) else {
       return nil
@@ -547,7 +555,7 @@ enum JapaneseRubyOCRCorrector {
       x: box.minX * CGFloat(image.width),
       y: box.minY * CGFloat(image.height),
       width: box.width * CGFloat(image.width),
-      height: box.height * CGFloat(image.height)
+      height: box.height * CGFloat(image.height),
     ).integral
     guard
       let crop = image.cropping(to: rect),
@@ -558,7 +566,7 @@ enum JapaneseRubyOCRCorrector {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
@@ -589,7 +597,7 @@ enum JapaneseRubyOCRCorrector {
       let box = observation.boundingRegion.boundingBox.cgRect
       let center = CGPoint(
         x: box.midX * CGFloat(sheet.image.width),
-        y: box.midY * CGFloat(sheet.image.height)
+        y: box.midY * CGFloat(sheet.image.height),
       )
       guard
         let slot = sheet.slots.first(where: {
@@ -601,7 +609,7 @@ enum JapaneseRubyOCRCorrector {
           lineIndex: slot.lineIndex,
           text: recognized.string,
           confidence: recognized.confidence,
-          rank: rank
+          rank: rank,
         ))
       }
     }
@@ -624,7 +632,7 @@ enum JapaneseRubyOCRCorrector {
     let scaledSizes = inputs.map {
       CGSize(
         width: CGFloat($0.crop.width * imageScale),
-        height: CGFloat($0.crop.height * imageScale)
+        height: CGFloat($0.crop.height * imageScale),
       )
     }
     guard let maximumWidth = scaledSizes.map(\.width).max() else { return nil }
@@ -640,7 +648,7 @@ enum JapaneseRubyOCRCorrector {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.setFillColor(CGColor(gray: 1, alpha: 1))
@@ -680,7 +688,7 @@ enum JapaneseRubyOCRCorrector {
         current.append(min(
           current[rhsIndex] + 1,
           previous[rhsIndex + 1] + 1,
-          previous[rhsIndex] + (lhsCharacter == rhsCharacter ? 0 : 1)
+          previous[rhsIndex] + (lhsCharacter == rhsCharacter ? 0 : 1),
         ))
       }
       previous = current
@@ -747,4 +755,5 @@ enum JapaneseRubyOCRCorrector {
       }
     }
   }
+
 }

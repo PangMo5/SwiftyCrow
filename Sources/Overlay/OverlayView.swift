@@ -42,7 +42,7 @@ struct OverlayView: View {
         RoundedRectangle(cornerRadius: 22, style: .continuous)
           .strokeBorder(
             frameOnly ? AnyShapeStyle(.tint) : AnyShapeStyle(.white.opacity(0.35)),
-            lineWidth: frameOnly ? 2.5 : 1.5
+            lineWidth: frameOnly ? 2.5 : 1.5,
           )
       }
       .overlay(alignment: .topLeading) {
@@ -56,7 +56,7 @@ struct OverlayView: View {
             .frame(
               width: OverlayChromeMetrics.moveHandleSize.width,
               height: OverlayChromeMetrics.moveHandleSize.height,
-              alignment: .topLeading
+              alignment: .topLeading,
             )
             .contentShape(.rect)
             .gesture(WindowDragGesture())
@@ -68,7 +68,7 @@ struct OverlayView: View {
             CaptureWarningButton(
               needsReview: lines.contains(where: { $0.source.needsReview }),
               translationUnavailable: translationUnavailable,
-              message: lastError
+              message: lastError,
             )
           }
           // A small spinner while the overlay is busy (capturing / OCR or
@@ -123,7 +123,7 @@ struct OverlayView: View {
     showMoveHandle
   }
 
-  @ViewBuilder
+  @ContentBuilder
   private var bodyContent: some View {
     if frameOnly {
       // Region marker only — the translation lives in the detached window.
@@ -135,6 +135,7 @@ struct OverlayView: View {
       Color.clear
     }
   }
+
 }
 
 // MARK: - CaptureWarningButton
@@ -230,7 +231,7 @@ private struct LiveHandleLabel: View {
         .opacity(isLive && pulse ? 0.35 : 1)
         .animation(
           isLive ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default,
-          value: pulse
+          value: pulse,
         )
       Text("LIVE")
         .font(.system(size: 10, weight: .bold, design: .rounded))

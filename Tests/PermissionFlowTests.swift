@@ -14,7 +14,7 @@ struct PermissionFlowTests {
   // MARK: Internal
 
   @Test
-  func permissionFlowSavesDraftBeforePromptAndSettings() async {
+  func `permission flow saves draft before prompt and settings`() async {
     let events = LockIsolated<[String]>([])
     let store = TestStore(initialState: state()) { OnboardingFeature() } withDependencies: {
       $0.appRelaunch.prepare = { events.withValue { $0.append("saved") } }
@@ -36,7 +36,7 @@ struct PermissionFlowTests {
   }
 
   @Test
-  func systemRelaunchRestoresManuallyReopenedSetupAndItsDraft() async {
+  func `system relaunch restores manually reopened setup and its draft`() async {
     let storage = UserDefaults.inMemory
     let initial = withDependencies {
       $0.defaultFileStorage = .inMemory
@@ -63,7 +63,7 @@ struct PermissionFlowTests {
   }
 
   @Test
-  func failedRelaunchLeavesSetupOpenWithTheDraftIntact() async {
+  func `failed relaunch leaves setup open with the draft intact`() async {
     struct Failure: LocalizedError { var errorDescription: String? {
       "Relaunch failed"
     } }
@@ -84,7 +84,7 @@ struct PermissionFlowTests {
   }
 
   @Test
-  func captureDenialClosesCachedPermissionUntilTheNextProcess() async {
+  func `capture denial closes cached permission until the next process`() async {
     let center = NotificationCenter()
     let notifications = LockIsolated(0)
     let token = center

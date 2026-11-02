@@ -11,6 +11,7 @@ mode=$1
 output=$2
 shift 2
 repo=$(cd "$(dirname "$0")/../.." && pwd)
+source "$repo/scripts/xcode-env.sh"
 products="$repo/DerivedData/Build/Products/Debug"
 app="$products/SwiftyCrow.app"
 module="$app/Contents/MacOS/SwiftyCrow.debug.dylib"
@@ -55,8 +56,8 @@ else
   else
     while IFS= read -r source; do sources+=("$source"); done < <(rg --files "$repo/Tests" -g '*.swift' | LC_ALL=C sort)
   fi
-  platform="$(xcode-select -p)/Platforms/MacOSX.platform/Developer"
-  plugins="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing"
+  platform="$DEVELOPER_DIR/Platforms/MacOSX.platform/Developer"
+  plugins="$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing"
   ditto "$platform/Library/Frameworks/Testing.framework" "$output/Contents/Frameworks/Testing.framework"
   cp "$platform/usr/lib/lib_TestingInterop.dylib" "$output/Contents/MacOS/lib_TestingInterop.dylib"
   flags=(-Onone -D DEBUG -F "$platform/Library/Frameworks" -plugin-path "$plugins")
@@ -83,8 +84,8 @@ swiftc -parse-as-library -target arm64-apple-macos26.0 -swift-version 5 \
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier dev.PangMo5.SwiftyCrow.quality.$mode" "$output/Contents/Info.plist"
 codesign --force --deep --sign - "$output"
 shasum -a 256 "$output/Contents/MacOS/$executable" >> "$evidence/source-hashes.txt"
-git -C "$repo" rev-parse HEAD > "$evidence/revision.txt"
-git -C "$repo" diff --no-ext-diff --binary > "$evidence/worktree.patch"
+jj -R "$repo" log -r @ --no-graph -T 'commit_id ++ "\n"' > "$evidence/revision.txt"
+jj -R "$repo" diff --from 'trunk()' --git > "$evidence/worktree.patch"
 codesign --force --sign - "$output"
 codesign --verify --deep --strict "$output"
 echo "$output"

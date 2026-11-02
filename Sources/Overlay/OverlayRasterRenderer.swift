@@ -17,16 +17,21 @@ enum OverlayRasterRenderer {
     lines: [OverlayLine],
     size: CGSize,
     scale: CGFloat = 1,
-    prefersHorizontalTextLayout: Bool
+    prefersHorizontalTextLayout: Bool,
   ) -> CGImage? {
     guard
-      size.width > 0, size.height > 0, scale > 0, size.width.isFinite, size.height.isFinite,
+      size.width > 0,
+      size.height > 0,
+      scale > 0,
+      size.width.isFinite,
+      size.height.isFinite,
       scale.isFinite
     else { return nil }
     let pixelWidth = ceil(size.width * scale)
     let pixelHeight = ceil(size.height * scale)
     guard
-      pixelWidth < CGFloat(Int.max), pixelHeight < CGFloat(Int.max),
+      pixelWidth < CGFloat(Int.max),
+      pixelHeight < CGFloat(Int.max),
       pixelWidth * pixelHeight < CGFloat(Int.max / 4)
     else { return nil }
     let width = Int(pixelWidth)
@@ -39,16 +44,18 @@ enum OverlayRasterRenderer {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.scaleBy(x: scale, y: scale)
     context.interpolationQuality = .high
-    if let source { context.draw(source, in: CGRect(origin: .zero, size: size)) }
+    if let source {
+      context.draw(source, in: CGRect(origin: .zero, size: size))
+    }
     let placements = OverlayLayoutEngine.placements(
       for: lines,
       in: size,
-      prefersHorizontalTextLayout: prefersHorizontalTextLayout
+      prefersHorizontalTextLayout: prefersHorizontalTextLayout,
     )
     let frames = OverlayLayoutEngine.protectedSourceFrames(for: lines, placements: placements, in: size, displayScale: scale)
     let allowed = OverlayLayoutEngine.sourceProtectionPath(frames: frames, in: size)
@@ -64,7 +71,7 @@ enum OverlayRasterRenderer {
           sourceLayout: placement.line.source.layout,
           sourceSurface: surface,
           in: size,
-          displayScale: scale
+          displayScale: scale,
         )
         context.saveGState()
         if let surface {
@@ -77,9 +84,9 @@ enum OverlayRasterRenderer {
                   x: row.minX * size.width,
                   y: row.minY * size.height,
                   width: row.width * size.width,
-                  height: row.height * size.height
+                  height: row.height * size.height,
                 ),
-                height: size.height
+                height: size.height,
               ))
             }
             context.addPath(path)
@@ -90,7 +97,7 @@ enum OverlayRasterRenderer {
               roundedRect: bottomLeft(boundary, height: size.height),
               cornerWidth: radius,
               cornerHeight: radius,
-              transform: nil
+              transform: nil,
             ))
             context.clip()
           }
@@ -104,7 +111,7 @@ enum OverlayRasterRenderer {
           guard
             let fill = CGColor(
               colorSpace: context.colorSpace!,
-              components: [color.red, color.green, color.blue, color.alpha]
+              components: [color.red, color.green, color.blue, color.alpha],
             )
           else { return nil }
           context.setFillColor(fill)
@@ -134,7 +141,7 @@ enum OverlayRasterRenderer {
           foreground: appearance.foreground,
           baseBackground: appearance.background,
           styles: placement.line.displayedStyleRuns,
-          isUnderlined: appearance.isUnderlined
+          isUnderlined: appearance.isUnderlined,
         )
       }
       context.saveGState()
@@ -145,7 +152,7 @@ enum OverlayRasterRenderer {
         x: -placement.frame.width / 2,
         y: -placement.frame.height / 2,
         width: placement.frame.width,
-        height: placement.frame.height
+        height: placement.frame.height,
       )
       context.clip(to: local)
       switch placement.flow {

@@ -8,10 +8,10 @@ import Testing
 
 struct OCRDocumentRegionTests {
   @Test
-  func localDetectionCannotLoseGlobalEvidenceOrClaimAnotherInput() {
+  func `local detection cannot lose global evidence or claim another input`() {
     let input = OCRDocumentRegion.Input(
       bounds: CGRect(x: 100, y: 200, width: 400, height: 300),
-      ownership: [CGRect(x: 100, y: 200, width: 400, height: 300)]
+      ownership: [CGRect(x: 100, y: 200, width: 400, height: 300)],
     )
     let global = [
       CGRect(x: 0.12, y: 0.22, width: 0.08, height: 0.02),
@@ -23,7 +23,7 @@ struct OCRDocumentRegionTests {
       in: input,
       imageSize: CGSize(width: 1000, height: 1000),
       global: global,
-      local: local
+      local: local,
     )
     #expect(result.count == 2)
     #expect(result.first == local.first)
@@ -31,7 +31,7 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func detachedContentSurfacesKeepTheirWholeExtent() throws {
+  func `detached content surfaces keep their whole extent`() throws {
     let size = CGSize(width: 3424, height: 1060)
     let context = try #require(CGContext(
       data: nil,
@@ -40,7 +40,7 @@ struct OCRDocumentRegionTests {
       bitsPerComponent: 8,
       bytesPerRow: 3424 * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 0.15, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -58,15 +58,15 @@ struct OCRDocumentRegionTests {
     CGRect(x: 41, y: 39, width: 1390, height: 978),
     CGRect(x: 893, y: 217, width: 731, height: 517),
   ])
-  func sourceResolutionRemovesOnlyBackdropOutsideTheContent(_ page: CGRect) throws {
+  func `source resolution removes only backdrop outside the content`(_ page: CGRect) throws {
     let context = try #require(CGContext(
       data: nil,
       width: 3424,
       height: 1060,
       bitsPerComponent: 8,
       bytesPerRow: 3424 * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     // Use image-pixel coordinates (top-left origin), matching CGImage crops.
     context.translateBy(x: 0, y: 1060)
@@ -90,7 +90,7 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func requestBudgetKeepsEveryDetectionAndIsIndependentOfInputOrder() {
+  func `request budget keeps every detection and is independent of input order`() {
     let rows = (0..<25).map { index in
       CGRect(x: Double(index % 5) * 0.2 + 0.04, y: Double(index / 5) * 0.2 + 0.04, width: 0.02, height: 0.01)
     }
@@ -101,33 +101,33 @@ struct OCRDocumentRegionTests {
     #expect(inputs == OCRDocumentRegion.inputs(
       imageSize: size,
       detectedText: rows.reversed(),
-      surfaceBounds: surfaces.reversed()
+      surfaceBounds: surfaces.reversed(),
     ))
     for row in rows {
       let pixels = CGRect(
         x: row.minX * size.width,
         y: row.minY * size.height,
         width: row.width * size.width,
-        height: row.height * size.height
+        height: row.height * size.height,
       )
       #expect(inputs.contains { $0.bounds.contains(pixels) })
     }
   }
 
   @Test
-  func nativeStructureIDsAreNamespacedAcrossRequests() {
+  func `native structure I ds are namespaced across requests`() {
     let a = CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.2)
     let b = CGRect(x: 0.6, y: 0.1, width: 0.2, height: 0.2)
     let cell = OCRTableCell(table: 0, row: 2, column: 3, box: b)
     let first = VisionTextRecognizer.Document(
       lines: [.init(boundingBoxNormalized: a, text: "First", recognitionGroupID: 17)],
       containers: [a],
-      tableCells: [.init(table: 9, row: 1, column: 1, box: a)]
+      tableCells: [.init(table: 9, row: 1, column: 1, box: a)],
     )
     let second = VisionTextRecognizer.Document(
       lines: [.init(boundingBoxNormalized: b, text: "Second", recognitionGroupID: 3, tableCell: cell)],
       containers: [b],
-      tableCells: [cell]
+      tableCells: [cell],
     )
     let combined = VisionTextRecognizer.combining(first, second)
     #expect(combined.lines.map(\.recognitionGroupID) == [17, 21])
@@ -138,14 +138,14 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func isolatedToolbarAndDocumentHaveIndependentOwners() throws {
+  func `isolated toolbar and document have independent owners`() throws {
     let size = CGSize(width: 3424, height: 1060)
     let body = CGRect(x: 1450.0 / 3424, y: 650.0 / 1060, width: 800.0 / 3424, height: 18.0 / 1060)
     let title = CGRect(x: 330.0 / 3424, y: 40.0 / 1060, width: 400.0 / 3424, height: 28.0 / 1060)
     let inputs = OCRDocumentRegion.inputs(
       imageSize: size,
       detectedText: [body, title],
-      surfaceBounds: [CGRect(x: 1300, y: 170, width: 1000, height: 880)]
+      surfaceBounds: [CGRect(x: 1300, y: 170, width: 1000, height: 880)],
     )
     let bodyOwner = try #require(OCRDocumentRegion.owner(of: body, in: inputs, imageSize: size))
     let titleOwner = try #require(OCRDocumentRegion.owner(of: title, in: inputs, imageSize: size))
@@ -155,7 +155,7 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func cropBudgetDependsOnProjectedGlyphResolution() {
+  func `crop budget depends on projected glyph resolution`() {
     let rows = Array(repeating: CGRect(x: 0.3, y: 0.2, width: 0.3, height: 0.018), count: 8)
     #expect(OCRDocumentRegion.needsCropping(imageSize: CGSize(width: 3424, height: 1060), detectedText: rows))
     #expect(!OCRDocumentRegion.needsCropping(imageSize: CGSize(width: 1200, height: 820), detectedText: rows))
@@ -164,14 +164,14 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func unknownTextIsNotExcludedByDetectorBlindSpots() throws {
+  func `unknown text is not excluded by detector blind spots`() throws {
     let size = CGSize(width: 3424, height: 1060)
     let detected = CGRect(x: 0.45, y: 0.4, width: 0.1, height: 0.02)
     let missed = CGRect(x: 0.05, y: 0.8, width: 0.1, height: 0.02)
     let inputs = OCRDocumentRegion.inputs(
       imageSize: size,
       detectedText: [detected],
-      surfaceBounds: [CGRect(x: 1300, y: 200, width: 1000, height: 700)]
+      surfaceBounds: [CGRect(x: 1300, y: 200, width: 1000, height: 700)],
     )
     let owner = try #require(OCRDocumentRegion.owner(of: missed, in: inputs, imageSize: size))
     #expect(inputs[owner].bounds.contains(CGRect(x: 171.2, y: 848, width: 342.4, height: 21.2)))
@@ -179,13 +179,13 @@ struct OCRDocumentRegionTests {
   }
 
   @Test
-  func emptyDetectionStillReadsTheWholeCapture() {
+  func `empty detection still reads the whole capture`() {
     let canvas = CGRect(x: 0, y: 0, width: 3200, height: 1600)
     #expect(OCRDocumentRegion.inputs(imageSize: canvas.size, detectedText: []) == [.init(bounds: canvas, ownership: [canvas])])
   }
 
   @Test(arguments: [false, true])
-  func croppedObservationsRetainAllRawSourceGeometry(_ vertical: Bool) throws {
+  func `cropped observations retain all raw source geometry`(_ vertical: Bool) throws {
     let local = CGRect(x: 0.25, y: 0.25, width: 0.5, height: 0.25)
     let range = NSRange(location: 0, length: 4)
     var line = OCRResult.Line(
@@ -205,7 +205,7 @@ struct OCRDocumentRegionTests {
       alignment: .trailing,
       tableCell: .init(table: 2, row: 3, column: 1, box: local),
       recognitionLanguages: ["ja"],
-      continuesToNextLine: true
+      continuesToNextLine: true,
     )
     var appearance = OverlaySourceAppearance.fallback
     appearance.fontSizeScale = 0.08
@@ -223,7 +223,7 @@ struct OCRDocumentRegionTests {
     let mapped = OCRDocumentRegion.remap(
       .init(lines: [line], containers: [local], tableCells: [.init(table: 2, row: 3, column: 1, box: local)]),
       crop: CGRect(x: 800, y: 200, width: 1600, height: 600),
-      imageSize: CGSize(width: 3200, height: 1600)
+      imageSize: CGSize(width: 3200, height: 1600),
     )
     let result = try #require(mapped.lines.first)
     let expected = CGRect(x: 0.375, y: 0.21875, width: 0.25, height: 0.09375)
@@ -257,7 +257,7 @@ struct OCRDocumentRegionTests {
       confidence: 1,
       clippingBox: expected,
       cornerRadiusFraction: 0.2,
-      clippingRows: [expected]
+      clippingRows: [expected],
     ))
     #expect(result.verticalCharScale == 0.0625)
     #expect(result.imageAspectRatio == 2)

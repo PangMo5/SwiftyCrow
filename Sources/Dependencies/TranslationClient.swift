@@ -59,8 +59,8 @@ enum TranslationTextStructure {
     guard sourceLimit > 0 else { return target }
 
     let normalized = target
-      .replacingOccurrences(of: "\r\n", with: "\n")
-      .replacingOccurrences(of: "\r", with: "\n")
+      .replacing("\r\n", with: "\n")
+      .replacing("\r", with: "\n")
     var result = ""
     var consecutiveNewlines = 0
     for character in normalized {
@@ -104,6 +104,7 @@ enum TranslationTextStructure {
     }
     return maximum
   }
+
 }
 
 // MARK: - TranslationClient
@@ -118,7 +119,7 @@ struct TranslationClient {
     _ lines: [TranslationLine],
     _ source: Locale.Language,
     _ target: Locale.Language,
-    _ strategy: TranslationStrategy
+    _ strategy: TranslationStrategy,
   ) -> AsyncThrowingStream<TranslationLine, any Error> = { _, _, _, _ in
     AsyncThrowingStream { $0.finish() }
   }
@@ -140,9 +141,13 @@ extension TranslationClient: DependencyKey {
         })
         let contextualLines = Dictionary(grouping: lines.filter { line in
           guard
-            #available(macOS 26.4, *), literalPlans[line.id] == nil, line.trailingContext == nil,
-            let member = line.groupContext, member.context.labels.indices.contains(member.index),
-            member.context.labels[member.index] == line.text, member.context.attributedRequest != nil
+            #available(macOS 26.4, *),
+            literalPlans[line.id] == nil,
+            line.trailingContext == nil,
+            let member = line.groupContext,
+            member.context.labels.indices.contains(member.index),
+            member.context.labels[member.index] == line.text,
+            member.context.attributedRequest != nil
           else { return false }
           return true
         }) { $0.groupContext!.context }
@@ -197,7 +202,7 @@ extension TranslationClient: DependencyKey {
                 }
                 let normalizedTarget = TranslationTextStructure.matchingSourceBreaks(
                   translatedLabel,
-                  source: sourceLine.text
+                  source: sourceLine.text,
                 )
                 let nativeMetadata = metadata.flatMap { String($0.characters) == normalizedTarget ? $0 : nil }
                 let restored: AttributedString
@@ -209,8 +214,11 @@ extension TranslationClient: DependencyKey {
                   }
                   restored = decoded
                   anchoredTargets[id] = decoded
-                } else { restored = nativeMetadata ?? AttributedString(normalizedTarget)
-                  if nativeMetadata != nil { anchoredTargets[id] = restored }
+                } else {
+                  restored = nativeMetadata ?? AttributedString(normalizedTarget)
+                  if nativeMetadata != nil {
+                    anchoredTargets[id] = restored
+                  }
                 }
                 let targetText = String(restored.characters)
                 var attributedTarget = anchoredTargets[id]
@@ -219,12 +227,14 @@ extension TranslationClient: DependencyKey {
                   let alignment = TranslationStyleMapper.align(
                     source: attributedSource,
                     target: targetText,
-                    preserving: anchoredTargets[id]
+                    preserving: anchoredTargets[id],
                   )
                   attributedTarget = alignment.target
                   requiresSourceAlignment = alignment.hasUnmappedSourceFragments
                   anchoredTargets[id] = alignment.target
-                  if !alignment.unmatched.isEmpty { styledTargets[id] = targetText }
+                  if !alignment.unmatched.isEmpty {
+                    styledTargets[id] = targetText
+                  }
                 }
                 // Optional styles do not delay prose. Captured pixels require
                 // complete target ownership before their source can be erased.
@@ -238,7 +248,9 @@ extension TranslationClient: DependencyKey {
                   guard let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)) else { continue }
                   if #available(macOS 26.4, *) {
                     try accept(response.targetText, id: id, metadata: response.attributedTargetText)
-                  } else { try accept(response.targetText, id: id) }
+                  } else {
+                    try accept(response.targetText, id: id)
+                  }
                 }
               }
               if #available(macOS 26.4, *) {
@@ -265,7 +277,7 @@ extension TranslationClient: DependencyKey {
                   linesByID: linesByID,
                   session: session,
                   continuation: continuation,
-                  preserving: anchoredTargets
+                  preserving: anchoredTargets,
                 )
               }
               let elapsed = clock.now - started
@@ -310,7 +322,7 @@ extension TranslationClient: DependencyKey {
     _ targets: [UUID: String],
     linesByID: [UUID: TranslationLine],
     preserving: [UUID: AttributedString],
-    translate: (AttributedString) async throws -> AttributedString?
+    translate: (AttributedString) async throws -> AttributedString?,
   ) async throws -> [UUID: AttributedString] {
     var anchors = preserving
     for (id, target) in targets {
@@ -323,17 +335,22 @@ extension TranslationClient: DependencyKey {
         let literalPlan = TranslationLiteralPlan(source)
         let response = try await translate(literalPlan?.requestAttributedText ?? source)
         let native: AttributedString? =
-          if let literalPlan { response.flatMap { literalPlan.restoring($0) } }
-          else { response }
+          if let literalPlan {
+            response.flatMap { literalPlan.restoring($0) }
+          } else {
+            response
+          }
         try Task.checkCancellation()
         anchors[id] = TranslationStyleMapper.alignNativeStyles(
           source: source,
           target: target,
           native: native,
-          preserving: anchors[id]
+          preserving: anchors[id],
         ).target
       } catch {
-        if error is CancellationError { throw error }
+        if error is CancellationError {
+          throw error
+        }
         try Task.checkCancellation()
         Log.translation.error("Optional native style alignment failed: \(String(describing: error), privacy: .public)")
       }
@@ -348,7 +365,7 @@ extension TranslationClient: DependencyKey {
     linesByID: [UUID: TranslationLine],
     session: TranslationSession,
     continuation: AsyncThrowingStream<TranslationLine, any Error>.Continuation,
-    preserving: [UUID: AttributedString]
+    preserving: [UUID: AttributedString],
   ) async throws {
     var anchors = preserving
     if #available(macOS 26.4, *) {
@@ -385,7 +402,7 @@ extension TranslationClient: DependencyKey {
         source: source,
         target: target,
         alternatives: alternatives[id] ?? [:],
-        preserving: anchors[id]
+        preserving: anchors[id],
       )
       anchors[id] = alignment.target
       if !alignment.hasUnmappedSourceFragments {
@@ -405,7 +422,8 @@ extension TranslationClient: DependencyKey {
       try Task.checkCancellation()
       guard
         let id = response.clientIdentifier.flatMap(UUID.init(uuidString:)),
-        let source = linesByID[id]?.attributedText, let target = targets[id]
+        let source = linesByID[id]?.attributedText,
+        let target = targets[id]
       else { continue }
       if let formatted = TranslationStyleMapper.contextualTranslation(source: source, response: response.targetText) {
         continuation.yield(TranslationLine(id: id, text: String(formatted.characters), attributedText: formatted))
@@ -416,7 +434,7 @@ extension TranslationClient: DependencyKey {
         target: target,
         response: response.targetText,
         alternatives: alternatives[id] ?? [:],
-        preserving: anchors[id]
+        preserving: anchors[id],
       )
       if !alignment.unmatched.isEmpty {
         Log.translation.debug("Could not align \(alignment.unmatched.count, privacy: .public) contextual style runs")
@@ -428,6 +446,7 @@ extension TranslationClient: DependencyKey {
       }
     }
   }
+
 }
 
 extension DependencyValues {

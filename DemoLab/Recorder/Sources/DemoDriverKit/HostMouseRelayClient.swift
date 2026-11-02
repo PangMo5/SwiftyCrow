@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import CoreGraphics
@@ -19,9 +19,12 @@ public final class HostMouseRelayClient: @unchecked Sendable {
     descriptor = Darwin.socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
     guard descriptor >= 0 else { throw InteractionError("Could not create host mouse socket: \(errno)") }
     var retained = false
-    defer { if !retained { Darwin.close(descriptor)
-      descriptor = -1
-    } }
+    defer {
+      if !retained {
+        Darwin.close(descriptor)
+        descriptor = -1
+      }
+    }
     var one: Int32 = 1
     _ = setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout.size(ofValue: one)))
     _ = setsockopt(descriptor, IPPROTO_TCP, TCP_NODELAY, &one, socklen_t(MemoryLayout.size(ofValue: one)))
@@ -58,7 +61,11 @@ public final class HostMouseRelayClient: @unchecked Sendable {
     retained = true
   }
 
-  deinit { if descriptor >= 0 { Darwin.close(descriptor) } }
+  deinit {
+    if descriptor >= 0 {
+      Darwin.close(descriptor)
+    }
+  }
 
   // MARK: Public
 
@@ -72,7 +79,6 @@ public final class HostMouseRelayClient: @unchecked Sendable {
     public let host: String
     public let port: UInt16
     public let token: String
-
   }
 
   public static let environmentKey = "SWIFTYCROW_HOST_MOUSE_CONFIG"
@@ -127,18 +133,22 @@ public final class HostMouseRelayClient: @unchecked Sendable {
     operation: String,
     point: CGPoint? = nil,
     end: CGPoint? = nil,
-    pixels: Int? = nil
+    pixels: Int? = nil,
   ) throws -> [String: Any] {
     try lock.withLock {
       let id = UUID().uuidString
       var request: [String: Any] = ["id": id, "token": configuration.token, "operation": operation]
-      if let point { request["x"] = point.x
+      if let point {
+        request["x"] = point.x
         request["y"] = point.y
       }
-      if let end { request["toX"] = end.x
+      if let end {
+        request["toX"] = end.x
         request["toY"] = end.y
       }
-      if let pixels { request["pixels"] = pixels }
+      if let pixels {
+        request["pixels"] = pixels
+      }
       var bytes = try JSONSerialization.data(withJSONObject: request, options: [.sortedKeys])
       bytes.append(10)
       try bytes.withUnsafeBytes { raw in
@@ -154,7 +164,9 @@ public final class HostMouseRelayClient: @unchecked Sendable {
       while response.count < 65_536 {
         let count = Darwin.recv(descriptor, &byte, 1, 0)
         guard count == 1 else { throw InteractionError("Host input response read failed: \(errno)") }
-        if byte == 10 { break }
+        if byte == 10 {
+          break
+        }
         response.append(byte)
       }
       guard
@@ -168,4 +180,5 @@ public final class HostMouseRelayClient: @unchecked Sendable {
       return value
     }
   }
+
 }

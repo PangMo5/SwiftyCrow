@@ -62,9 +62,15 @@ enum OCRCandidateReconciler {
     let existingOwner = candidate.preservesSource && candidate.tableCell != nil
     // Recognition confidence describes spelling, not permission to reclassify
     // a structured source value as prose. Keep its original-pixel ownership.
-    if sameValue, nativeOwner != existingOwner { return nativeOwner }
-    if sameRow, other.recognitionConfidence > candidate.recognitionConfidence + 0.15 { return true }
-    if sameRow, candidate.recognitionConfidence > other.recognitionConfidence + 0.15 { return false }
+    if sameValue, nativeOwner != existingOwner {
+      return nativeOwner
+    }
+    if sameRow, other.recognitionConfidence > candidate.recognitionConfidence + 0.15 {
+      return true
+    }
+    if sameRow, candidate.recognitionConfidence > other.recognitionConfidence + 0.15 {
+      return false
+    }
     // A crop may return a prefix or suffix alongside the complete row.
     // Spatial alignment plus the shared edge identifies the same glyphs in
     // Latin, CJK, and RTL scripts; spelling equality alone cannot do this.
@@ -74,24 +80,41 @@ enum OCRCandidateReconciler {
     // confidence. Shared text plus coincident row edges identifies that clipped
     // hypothesis; retain the taller, complete glyph observation.
     if
-      sameRow, sharedEdge, text != replacement, a.height < b.height * 0.65,
+      sameRow,
+      sharedEdge,
+      text != replacement,
+      a.height < b.height * 0.65,
       other.recognitionConfidence >= 0.8,
-      other.recognitionConfidence >= candidate.recognitionConfidence - 0.05 { return true }
+      other.recognitionConfidence >= candidate.recognitionConfidence - 0.05
+    {
+      return true
+    }
     let leadingEdgesAlign = min(abs(a.minX - b.minX), abs(a.maxX - b.maxX)) * max(0.01, candidate.imageAspectRatio)
       <= max(a.height, b.height) * 0.6
     if
-      !candidate.isVerticalBlock, candidate.rowCount == 1, other.rowCount == 1,
-      coverage >= 0.65, a.width < b.width * 0.75,
+      !candidate.isVerticalBlock,
+      candidate.rowCount == 1,
+      other.rowCount == 1,
+      coverage >= 0.65,
+      a.width < b.width * 0.75,
       min(a.height, b.height) / max(a.height, b.height) >= 0.65,
       abs(a.midY - b.midY) <= max(a.height, b.height) * 0.3,
-      sharedEdge, leadingEdgesAlign,
-      replacement.contains(text) || other.recognitionConfidence >= candidate.recognitionConfidence - 0.1 { return true }
+      sharedEdge,
+      leadingEdgesAlign,
+      replacement.contains(text) || other.recognitionConfidence >= candidate.recognitionConfidence - 0.1
+    {
+      return true
+    }
     guard coverage >= 0.82 else { return false }
-    if replacement.count > text.count, replacement.contains(text) { return true }
+    if replacement.count > text.count, replacement.contains(text) {
+      return true
+    }
     guard replacement == text else { return false }
     let area = a.width * a.height
     let otherArea = b.width * b.height
-    if abs(otherArea - area) < 0.000001 { return otherIndex < index }
+    if abs(otherArea - area) < 0.000001 {
+      return otherIndex < index
+    }
     return otherArea < area
   }
 
@@ -99,4 +122,5 @@ enum OCRCandidateReconciler {
     text.precomposedStringWithCanonicalMapping.lowercased().unicodeScalars
       .filter { CharacterSet.alphanumerics.contains($0) }.map(String.init).joined()
   }
+
 }

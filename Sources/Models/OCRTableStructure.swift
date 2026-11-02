@@ -35,7 +35,11 @@ enum OCRTableStructure {
   /// outside that exact table/column must not inherit the role.
   static func isSymbolColumnValue(_ line: OCRResult.Line, among lines: [OCRResult.Line]) -> Bool {
     guard
-      let cell = line.tableCell, cell.row > 0, cell.rowSpan == 1, cell.columnSpan == 1, (1...40).contains(line.text.count),
+      let cell = line.tableCell,
+      cell.row > 0,
+      cell.rowSpan == 1,
+      cell.columnSpan == 1,
+      (1...40).contains(line.text.count),
       line.text.unicodeScalars.allSatisfy({ $0.isASCII && (CharacterSet.alphanumerics.contains($0) || $0 == "_") })
     else { return false }
     let columnValues = lines.filter { other in
@@ -45,7 +49,9 @@ enum OCRTableStructure {
           (!other.text.isEmpty && other.text.allSatisfy(\.isNumber)))
     }
     guard Set(columnValues.compactMap(\.tableCell?.row)).count >= 2 else { return false }
-    if columnValues.contains(where: { OCRTextSemantics.isAlphanumericIdentifier($0.text) }) { return true }
+    if columnValues.contains(where: { OCRTextSemantics.isAlphanumericIdentifier($0.text) }) {
+      return true
+    }
     // Narrow stems can all be read as digits. A neighboring symbol column
     // supplies independent evidence only in the same observed numeric rows.
     let rows = Set(columnValues.compactMap(\.tableCell?.row))
@@ -77,7 +83,9 @@ enum OCRTableStructure {
   static func classifyingObservedCells(_ result: OCRResult, cells: [OCRTableCell]) -> OCRResult {
     guard !cells.isEmpty else { return result }
     let candidates: [OCRTableCell?] = result.lines.map { line in
-      if let cell = line.tableCell { return cell }
+      if let cell = line.tableCell {
+        return cell
+      }
       guard line.rowCount == 1, !line.isVerticalBlock, !line.styleRuns.isEmpty else { return nil }
       var covered = IndexSet()
       var ink = CGRect.null
@@ -89,7 +97,9 @@ enum OCRTableStructure {
       let text = line.text as NSString
       guard
         (0..<text.length).allSatisfy({ offset in
-          if covered.contains(offset) { return true }
+          if covered.contains(offset) {
+            return true
+          }
           guard let scalar = UnicodeScalar(text.character(at: offset)) else { return false }
           return CharacterSet.whitespacesAndNewlines.contains(scalar)
         })
@@ -100,9 +110,12 @@ enum OCRTableStructure {
     let assigned = OCRResult(lines: result.lines.enumerated().map { index, source in
       var line = source
       guard
-        line.tableCell == nil, let cell = candidates[index], candidates.count(where: {
+        line.tableCell == nil,
+        let cell = candidates[index],
+        candidates.count(where: {
           $0.map { $0.table == cell.table && $0.row == cell.row && $0.column == cell.column } == true
-        }) == 1, !result.lines.enumerated().contains(where: { otherIndex, other in
+        }) == 1,
+        !result.lines.enumerated().contains(where: { otherIndex, other in
           guard otherIndex != index else { return false }
           let overlap = other.boundingBoxNormalized.intersection(cell.box)
           return !overlap.isNull && !overlap.isEmpty
@@ -152,5 +165,4 @@ enum OCRTableStructure {
       return line
     })
   }
-
 }

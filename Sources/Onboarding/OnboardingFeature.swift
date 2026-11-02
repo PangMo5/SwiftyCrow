@@ -121,7 +121,7 @@ struct OnboardingFeature {
           }
           .cancellable(id: CancelID.changes, cancelInFlight: true),
           .run { [languages] send in await send(.languagesLoaded(languages.supported(false))) }
-            .cancellable(id: CancelID.languages, cancelInFlight: true)
+            .cancellable(id: CancelID.languages, cancelInFlight: true),
         )
 
       case .becameActive:
@@ -200,7 +200,7 @@ struct OnboardingFeature {
           id: state.modelCheckID,
           source: state.modelSource,
           target: state.target,
-          strategy: state.settings.translation.strategy
+          strategy: state.settings.translation.strategy,
         )
         state.modelCheck = request
         state.modelReadiness = .checking
@@ -213,8 +213,10 @@ struct OnboardingFeature {
 
       case .modelReadinessLoaded(let request, let result):
         guard
-          state.isPresented, state.modelCheck == request,
-          state.modelSource == request.source, state.target == request.target,
+          state.isPresented,
+          state.modelCheck == request,
+          state.modelSource == request.source,
+          state.target == request.target,
           state.settings.translation.strategy == request.strategy
         else { return .none }
         state.modelReadiness = result
@@ -258,7 +260,7 @@ struct OnboardingFeature {
           .cancel(id: CancelID.access),
           .cancel(id: CancelID.languages),
           .cancel(id: CancelID.changes),
-          .cancel(id: CancelID.models)
+          .cancel(id: CancelID.models),
         )
       }
     }

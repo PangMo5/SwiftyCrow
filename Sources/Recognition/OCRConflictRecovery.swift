@@ -31,7 +31,9 @@ enum OCRConflictRecovery {
           }
         }
       }
-      if group.count > 1 { clusters.append(group) }
+      if group.count > 1 {
+        clusters.append(group)
+      }
     }
     // Include a clipped neighboring fragment once an actual overlap has
     // established a conflict. Cropping through that fragment would otherwise
@@ -39,18 +41,20 @@ enum OCRConflictRecovery {
     let strongMembers = Set(clusters.flatMap { $0 })
     for index in candidates where !strongMembers.contains(index) {
       let best = clusters.indices.compactMap { group -> (Int, CGFloat)? in
-        let score = clusters[group].map { overlap(lines[index].boundingBoxNormalized, lines[$0].boundingBoxNormalized) }
+        let score = clusters[group].lazy.map { overlap(lines[index].boundingBoxNormalized, lines[$0].boundingBoxNormalized) }
           .max() ?? 0
         return score > 0 ? (group, score) : nil
       }.max { $0.1 < $1.1 }
-      if let best { clusters[best.0].append(index) }
+      if let best {
+        clusters[best.0].append(index)
+      }
     }
     guard !clusters.isEmpty else { return lines }
     var removed = Set<Int>()
     var recovered = [OCRResult.Line]()
     for group in clusters.prefix(4) {
       let hint = language.isAuto
-        ? LanguageDetectionClient.liveValue.detect(group.map { lines[$0].text }.joined(separator: " "), 0.65) ?? language
+        ? LanguageDetectionClient.liveValue.detect(group.lazy.map { lines[$0].text }.joined(separator: " "), 0.65) ?? language
         : language
       let boxes = group.map { lines[$0].boundingBoxNormalized }
       let box = boxes.dropFirst().reduce(boxes[0]) { $0.union($1) }
@@ -68,13 +72,13 @@ enum OCRConflictRecovery {
         3,
         compact
           ? glyphs[glyphs.count / 2]
-          : min(box.width * CGFloat(image.width), box.height * CGFloat(image.height)) * 0.18
+          : min(box.width * CGFloat(image.width), box.height * CGFloat(image.height)) * 0.18,
       )
       let crop = CGRect(
         x: box.minX * CGFloat(image.width),
         y: box.minY * CGFloat(image.height),
         width: box.width * CGFloat(image.width),
-        height: box.height * CGFloat(image.height)
+        height: box.height * CGFloat(image.height),
       )
       .insetBy(dx: -pad, dy: -pad).integral.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
       try Task.checkCancellation()
@@ -83,10 +87,11 @@ enum OCRConflictRecovery {
         language: hint,
         crop: crop,
         minimumGlyphHeight: min(crop.width, crop.height) / 3,
-        preferredScale: 2
+        preferredScale: 2,
       )
       guard
-        !fresh.isEmpty, fresh.allSatisfy({ $0.recognitionConfidence >= 0.45 }),
+        !fresh.isEmpty,
+        fresh.allSatisfy({ $0.recognitionConfidence >= 0.45 }),
         fresh.map(\.text).joined().count >= group.map({ lines[$0].text.count }).max()!,
         coversOwners(boxes, with: fresh.map(\.boundingBoxNormalized)),
         fresh.indices.allSatisfy({ a in fresh.indices.allSatisfy { b in

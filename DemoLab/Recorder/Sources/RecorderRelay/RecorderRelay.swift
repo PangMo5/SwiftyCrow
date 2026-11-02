@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import DemoDriverKit
@@ -56,7 +56,9 @@ private final class Relay: @unchecked Sendable {
       throw UsageError("Malformed host response")
     }
     try FileManager.default.removeItem(at: output)
-    if let error = response["error"] as? String { throw UsageError(error) }
+    if let error = response["error"] as? String {
+      throw UsageError(error)
+    }
     return response
   }
 
@@ -71,7 +73,9 @@ private final class Relay: @unchecked Sendable {
 
   func run() throws {
     guard
-      options.fps == 30, options.codec == .hevc, options.bitrateMbps == 8,
+      options.fps == 30,
+      options.codec == .hevc,
+      options.bitrateMbps == 8,
       let pidfile = options.pidfile
     else { throw UsageError("Host relay requires 30 fps HEVC 8 Mbps and a pidfile") }
     guard
@@ -98,7 +102,11 @@ private final class Relay: @unchecked Sendable {
     }
     var hostReady = try request("start")
     var active = true
-    defer { if active { _ = try? request("stop", timeout: 30) } }
+    defer {
+      if active {
+        _ = try? request("stop", timeout: 30)
+      }
+    }
     guard let hostEpoch = hostReady["firstFrameUptimeNanoseconds"] as? NSNumber
     else { throw UsageError("Host has no first frame") }
     let guestEpoch = hostEpoch.doubleValue + before.guestMinusHost
@@ -141,6 +149,7 @@ private final class Relay: @unchecked Sendable {
     try write(result, to: options.output.deletingPathExtension().appendingPathExtension("json"))
     print("Host recording finalized with clock alignment verified")
   }
+
 }
 
 private func write(_ object: [String: Any], to url: URL) throws {

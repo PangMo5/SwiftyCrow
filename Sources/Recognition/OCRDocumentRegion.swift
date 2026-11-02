@@ -38,7 +38,7 @@ enum OCRDocumentRegion {
         bitsPerComponent: 8,
         bytesPerRow: width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return [] }
     context.interpolationQuality = .none
@@ -84,7 +84,7 @@ enum OCRDocumentRegion {
         x: CGFloat(left) * canvas.width / CGFloat(width),
         y: CGFloat(top) * canvas.height / CGFloat(height),
         width: CGFloat(right - left + 1) * canvas.width / CGFloat(width),
-        height: CGFloat(bottom - top + 1) * canvas.height / CGFloat(height)
+        height: CGFloat(bottom - top + 1) * canvas.height / CGFloat(height),
       )
       guard
         min(box.width, box.height) >= 80,
@@ -97,7 +97,7 @@ enum OCRDocumentRegion {
         in: image,
         background: edge.color,
         horizontalBand: Int(ceil(canvas.width / CGFloat(width) * 2)) + 2,
-        verticalBand: Int(ceil(canvas.height / CGFloat(height) * 2)) + 2
+        verticalBand: Int(ceil(canvas.height / CGFloat(height) * 2)) + 2,
       ))
     }
     return surfaces.sorted { $0.width * $0.height > $1.width * $1.height }
@@ -108,8 +108,10 @@ enum OCRDocumentRegion {
   /// a request, even when text or surface detection is incomplete.
   static func inputs(imageSize: CGSize, detectedText: [CGRect], surfaceBounds: [CGRect] = []) -> [Input] {
     guard
-      imageSize.width.isFinite, imageSize.height.isFinite,
-      imageSize.width > 0, imageSize.height > 0
+      imageSize.width.isFinite,
+      imageSize.height.isFinite,
+      imageSize.width > 0,
+      imageSize.height > 0
     else { return [] }
     let canvas = CGRect(origin: .zero, size: imageSize)
     let rows = detectedText.filter {
@@ -119,12 +121,18 @@ enum OCRDocumentRegion {
         x: $0.minX * imageSize.width,
         y: $0.minY * imageSize.height,
         width: $0.width * imageSize.width,
-        height: $0.height * imageSize.height
+        height: $0.height * imageSize.height,
       ).intersection(canvas)
     }.filter { !$0.isNull && !$0.isEmpty }.sorted {
-      if $0.minY != $1.minY { return $0.minY < $1.minY }
-      if $0.minX != $1.minX { return $0.minX < $1.minX }
-      if $0.width != $1.width { return $0.width < $1.width }
+      if $0.minY != $1.minY {
+        return $0.minY < $1.minY
+      }
+      if $0.minX != $1.minX {
+        return $0.minX < $1.minX
+      }
+      if $0.width != $1.width {
+        return $0.width < $1.width
+      }
       return $0.height < $1.height
     }
     var remaining = [canvas]
@@ -132,14 +140,19 @@ enum OCRDocumentRegion {
     for surface in surfaceBounds.sorted(by: {
       let a = $0.width * $0.height
       let b = $1.width * $1.height
-      if a != b { return a > b }
-      if $0.minX != $1.minX { return $0.minX < $1.minX }
+      if a != b {
+        return a > b
+      }
+      if $0.minX != $1.minX {
+        return $0.minX < $1.minX
+      }
       return $0.minY < $1.minY
     }) {
       guard
         result.count < 3,
         [surface.minX, surface.minY, surface.width, surface.height].allSatisfy(\.isFinite),
-        surface.width > 0, surface.height > 0
+        surface.width > 0,
+        surface.height > 0
       else { continue }
       let bounds = surface.integral.intersection(canvas)
       guard !bounds.isNull, !bounds.isEmpty else { continue }
@@ -153,7 +166,9 @@ enum OCRDocumentRegion {
       result.append(.init(bounds: bounds, ownership: owned))
       for piece in owned { remaining = remaining.flatMap { subtracting(piece, from: $0) } }
     }
-    if !remaining.isEmpty { result.append(.init(bounds: canvas, ownership: remaining)) }
+    if !remaining.isEmpty {
+      result.append(.init(bounds: canvas, ownership: remaining))
+    }
     return result
   }
 
@@ -168,7 +183,7 @@ enum OCRDocumentRegion {
     in input: Input,
     imageSize: CGSize,
     global: [CGRect],
-    local: [CGRect]
+    local: [CGRect],
   ) -> [CGRect] {
     let bounds = input.bounds
     guard bounds.width > 0, bounds.height > 0, imageSize.width > 0, imageSize.height > 0 else { return [] }
@@ -177,15 +192,17 @@ enum OCRDocumentRegion {
         x: (box.minX * imageSize.width - bounds.minX) / bounds.width,
         y: (box.minY * imageSize.height - bounds.minY) / bounds.height,
         width: box.width * imageSize.width / bounds.width,
-        height: box.height * imageSize.height / bounds.height
+        height: box.height * imageSize.height / bounds.height,
       )
     }
     let localInput = Input(
       bounds: CGRect(origin: .zero, size: bounds.size),
-      ownership: input.ownership.map { $0.offsetBy(dx: -bounds.minX, dy: -bounds.minY) }
+      ownership: input.ownership.map { $0.offsetBy(dx: -bounds.minX, dy: -bounds.minY) },
     )
     let owned = local.filter { owner(of: $0, in: [localInput], imageSize: bounds.size) == 0 }
-    if bounds == CGRect(origin: .zero, size: imageSize), local == global { return owned }
+    if bounds == CGRect(origin: .zero, size: imageSize), local == global {
+      return owned
+    }
     return owned + OCRCoverage.uncovered(mapped, by: owned)
   }
 
@@ -196,14 +213,14 @@ enum OCRDocumentRegion {
       x: crop.minX / imageSize.width,
       y: crop.minY / imageSize.height,
       width: crop.width / imageSize.width,
-      height: crop.height / imageSize.height
+      height: crop.height / imageSize.height,
     )
     func box(_ value: CGRect) -> CGRect {
       CGRect(
         x: region.minX + value.minX * region.width,
         y: region.minY + value.minY * region.height,
         width: value.width * region.width,
-        height: value.height * region.height
+        height: value.height * region.height,
       )
     }
     func appearance(_ value: OverlaySourceAppearance) -> OverlaySourceAppearance {
@@ -273,7 +290,7 @@ enum OCRDocumentRegion {
     in image: CGImage,
     background: OverlayColor,
     horizontalBand: Int,
-    verticalBand: Int
+    verticalBand: Int,
   ) -> CGRect {
     let red = UInt8((background.red * 255).rounded())
     let green = UInt8((background.green * 255).rounded())
@@ -288,8 +305,9 @@ enum OCRDocumentRegion {
           bitsPerComponent: 8,
           bytesPerRow: crop.width * 4,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ), let bytes = raster.data?.assumingMemoryBound(to: UInt8.self)
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
+        ),
+        let bytes = raster.data?.assumingMemoryBound(to: UInt8.self)
       else { return nil }
       raster.interpolationQuality = .none
       raster.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
@@ -314,30 +332,31 @@ enum OCRDocumentRegion {
       let left = offset(
         in: CGRect(x: bounds.minX, y: bounds.minY, width: horizontal, height: bounds.height),
         rows: false,
-        reversed: false
+        reversed: false,
       ),
       let right = offset(
         in: CGRect(x: bounds.maxX - horizontal, y: bounds.minY, width: horizontal, height: bounds.height),
         rows: false,
-        reversed: true
+        reversed: true,
       ),
       let top = offset(
         in: CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: vertical),
         rows: true,
-        reversed: false
+        reversed: false,
       ),
       let bottom = offset(
         in: CGRect(x: bounds.minX, y: bounds.maxY - vertical, width: bounds.width, height: vertical),
         rows: true,
-        reversed: true
+        reversed: true,
       ),
-      bounds.width > CGFloat(left + right), bounds.height > CGFloat(top + bottom)
+      bounds.width > CGFloat(left + right),
+      bounds.height > CGFloat(top + bottom)
     else { return bounds }
     return CGRect(
       x: bounds.minX + CGFloat(left),
       y: bounds.minY + CGFloat(top),
       width: bounds.width - CGFloat(left + right),
-      height: bounds.height - CGFloat(top + bottom)
+      height: bounds.height - CGFloat(top + bottom),
     )
   }
 

@@ -52,7 +52,7 @@ struct ShortcutRecorder: View {
   @Dependency(\.globalShortcuts) private var globalShortcuts
 
   /// Match the native capsule appearance used by the settings controls.
-  @ViewBuilder
+  @ContentBuilder
   private var field: some View {
     let representable = RecorderRepresentable(
       hotKey: hotKey,
@@ -63,7 +63,7 @@ struct ShortcutRecorder: View {
         presentedConflict = owner.map { ShortcutConflictPresentation(owner: $0) }
       },
       onRecordingChanged: { globalShortcuts.setEnabled(!$0) },
-      onChange: onChange
+      onChange: onChange,
     )
     if #available(macOS 26.0, *) {
       representable.glassEffect(.regular, in: Capsule())
@@ -71,6 +71,7 @@ struct ShortcutRecorder: View {
       representable.background(.ultraThinMaterial, in: Capsule())
     }
   }
+
 }
 
 // MARK: - RecorderRepresentable
@@ -220,7 +221,7 @@ final class RecorderField: NSView {
       let ring = NSBezierPath(
         roundedRect: bounds.insetBy(dx: 1, dy: 1),
         xRadius: bounds.height / 2,
-        yRadius: bounds.height / 2
+        yRadius: bounds.height / 2,
       )
       ring.lineWidth = 2
       NSColor.controlAccentColor.setStroke()
@@ -259,7 +260,7 @@ final class RecorderField: NSView {
       color: color,
       bold: bold,
       leadingSymbol: leadingSymbol,
-      horizontalInset: 8
+      horizontalInset: 8,
     )
   }
 
@@ -309,7 +310,7 @@ final class RecorderField: NSView {
       windowObserver = NotificationCenter.default.addObserver(
         forName: NSWindow.didResignKeyNotification,
         object: window,
-        queue: .main
+        queue: .main,
       ) { [weak self] _ in
         MainActor.assumeIsolated { self?.stopRecording() }
       }
@@ -321,7 +322,8 @@ final class RecorderField: NSView {
       NotificationCenter.default.removeObserver(windowObserver)
       self.windowObserver = nil
     }
-    if let monitor { NSEvent.removeMonitor(monitor)
+    if let monitor {
+      NSEvent.removeMonitor(monitor)
       self.monitor = nil
     }
     isRecording = false
@@ -330,10 +332,18 @@ final class RecorderField: NSView {
   /// Carbon modifier masks (cmd 256, shift 512, option 2048, control 4096).
   private func carbonModifiers(_ flags: NSEvent.ModifierFlags) -> Int {
     var carbon = 0
-    if flags.contains(.command) { carbon |= 256 }
-    if flags.contains(.shift) { carbon |= 512 }
-    if flags.contains(.option) { carbon |= 2048 }
-    if flags.contains(.control) { carbon |= 4096 }
+    if flags.contains(.command) {
+      carbon |= 256
+    }
+    if flags.contains(.shift) {
+      carbon |= 512
+    }
+    if flags.contains(.option) {
+      carbon |= 2048
+    }
+    if flags.contains(.control) {
+      carbon |= 4096
+    }
     return carbon
   }
 
@@ -408,7 +418,7 @@ private final class ShortcutConflictPresenter {
       userInfo: [
         .announcement: message,
         .priority: NSAccessibilityPriorityLevel.high.rawValue,
-      ]
+      ],
     )
     onPresentationChanged?(owner)
 
@@ -441,6 +451,7 @@ private final class ShortcutConflictPresenter {
   private weak var view: NSView?
   private var previousAccessibilityValue: Any?
   private var resetTask: Task<Void, Never>?
+
 }
 
 // MARK: - ShortcutConflictPresentation
@@ -457,7 +468,7 @@ extension View {
     popover(
       item: item,
       attachmentAnchor: .rect(.bounds),
-      arrowEdge: .trailing
+      arrowEdge: .trailing,
     ) { presentation in
       ShortcutConflictPopover(owner: presentation.owner)
     }
@@ -473,7 +484,7 @@ private struct ShortcutConflictPopover: View {
     Label {
       Text(
         "This shortcut is already used by \(owner).",
-        comment: "Shortcut recorder conflict. The variable is the action already using the shortcut."
+        comment: "Shortcut recorder conflict. The variable is the action already using the shortcut.",
       )
       .fixedSize(horizontal: false, vertical: true)
     } icon: {
@@ -492,7 +503,7 @@ private func drawRecorderStatus(
   color: NSColor,
   bold: Bool,
   leadingSymbol: String?,
-  horizontalInset: CGFloat
+  horizontalInset: CGFloat,
 ) {
   let style = NSMutableParagraphStyle()
   style.alignment = .center
@@ -524,13 +535,13 @@ private func drawRecorderStatus(
         x: originX,
         y: (bounds.height - iconSize) / 2,
         width: iconSize,
-        height: iconSize
+        height: iconSize,
       ),
       from: .zero,
       operation: .sourceOver,
       fraction: 1,
       respectFlipped: true,
-      hints: nil
+      hints: nil,
     )
   }
 
@@ -540,8 +551,8 @@ private func drawRecorderStatus(
       x: textX,
       y: (bounds.height - textSize.height) / 2,
       width: textWidth,
-      height: textSize.height
+      height: textSize.height,
     ),
-    withAttributes: attributes
+    withAttributes: attributes,
   )
 }

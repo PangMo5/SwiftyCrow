@@ -33,11 +33,16 @@ enum OCRSpatialOwnership {
       var upper: CGFloat = 1
       for edge in boundaries {
         if abs(edge.b) < 0.000_001 {
-          if edge.a * x < edge.c { return nil }
+          if edge.a * x < edge.c {
+            return nil
+          }
         } else {
           let y = (edge.c - edge.a * x) / edge.b
-          if edge.b > 0 { lower = max(lower, y) }
-          else { upper = min(upper, y) }
+          if edge.b > 0 {
+            lower = max(lower, y)
+          } else {
+            upper = min(upper, y)
+          }
         }
       }
       return lower <= upper ? lower...upper : nil
@@ -68,7 +73,7 @@ enum OCRSpatialOwnership {
       result.boundaries.append(.init(
         a: -sin(angle) * aspect * direction,
         b: cos(angle) * direction,
-        c: (box.midY + next.midY) / 2 * direction
+        c: (box.midY + next.midY) / 2 * direction,
       ))
     }
     return result

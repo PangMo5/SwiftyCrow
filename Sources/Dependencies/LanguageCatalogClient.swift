@@ -16,7 +16,6 @@ struct LanguageCatalogClient {
   var supported: @Sendable (_ intersectedWithOCR: Bool) async -> [Language] = { _ in [] }
   var readiness: @Sendable (_ source: Language, _ target: Language, _ strategy: TranslationStrategy) async
     -> LanguageReadiness = { _, _, _ in .unchecked }
-
 }
 
 // MARK: DependencyKey
@@ -28,7 +27,9 @@ extension LanguageCatalogClient: DependencyKey {
     },
     readiness: { source, target, strategy in
       guard !source.isAuto, !target.isAuto else { return .unchecked }
-      if source.localeLanguage.usesSameWritingSystem(as: target.localeLanguage) { return .sameLanguage }
+      if source.localeLanguage.usesSameWritingSystem(as: target.localeLanguage) {
+        return .sameLanguage
+      }
       if #available(macOS 26.4, *) {
         let status = await LanguageAvailability(preferredStrategy: strategy.sessionStrategy)
           .status(from: source.localeLanguage, to: target.localeLanguage)
@@ -36,7 +37,7 @@ extension LanguageCatalogClient: DependencyKey {
       }
       let status = await LanguageAvailability().status(from: source.localeLanguage, to: target.localeLanguage)
       return LanguageReadiness.resolve(selected: status)
-    }
+    },
   )
 }
 

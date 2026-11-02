@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AVFoundation
@@ -21,7 +21,7 @@ public struct RecordingSummary: Sendable {
     frameCount: Int,
     capturedFrameCount: Int,
     droppedFrameCount: Int,
-    duration: Double
+    duration: Double,
   ) {
     self.outputURL = outputURL
     self.width = width
@@ -80,7 +80,7 @@ public final class CadenceWriter: @unchecked Sendable {
     fps: Int,
     requestedCodec: RecordingCodec = .hevc,
     bitrateMbps: Double?,
-    label: String
+    label: String,
   ) throws {
     self.outputURL = outputURL
     self.width = width
@@ -95,7 +95,7 @@ public final class CadenceWriter: @unchecked Sendable {
 
     try FileManager.default.createDirectory(
       at: outputURL.deletingLastPathComponent(),
-      withIntermediateDirectories: true
+      withIntermediateDirectories: true,
     )
     if FileManager.default.fileExists(atPath: outputURL.path) {
       try FileManager.default.removeItem(at: outputURL)
@@ -110,7 +110,7 @@ public final class CadenceWriter: @unchecked Sendable {
       width: width,
       height: height,
       fps: fps,
-      bitrateMbps: bitrateMbps
+      bitrateMbps: bitrateMbps,
     )
     guard writer.canApply(outputSettings: settings, forMediaType: .video) else {
       throw RecorderError.codecUnavailable(codec: requestedCodec, width: width, height: height)
@@ -140,6 +140,12 @@ public final class CadenceWriter: @unchecked Sendable {
   /// `hevc` or `h264`, whichever the writer accepted.
   public let codec: String
 
+  /// Startup succeeds only after the first encoded frame. The bounded wait
+  /// turns a stalled capture stream into an explicit failure before any action.
+  public var firstFrameUptime: UInt64? {
+    lock.withLock { startUptime }
+  }
+
   /// Starts the writer and the cadence clock. Call once, after capture is live.
   public func start() throws {
     guard writer.startWriting() else {
@@ -151,7 +157,7 @@ public final class CadenceWriter: @unchecked Sendable {
     timer.schedule(
       deadline: .now(),
       repeating: .nanoseconds(1_000_000_000 / fps),
-      leeway: .nanoseconds(0)
+      leeway: .nanoseconds(0),
     )
     timer.setEventHandler { [weak self] in
       self?.tick()
@@ -172,15 +178,15 @@ public final class CadenceWriter: @unchecked Sendable {
     lock.unlock()
   }
 
-  /// Startup succeeds only after the first encoded frame. The bounded wait
-  /// turns a stalled capture stream into an explicit failure before any action.
-  public var firstFrameUptime: UInt64? { lock.withLock { startUptime } }
-
   public func awaitFirstFrame(timeout: Duration = .seconds(3)) async -> Bool {
     let deadline = ContinuousClock.now.advanced(by: timeout)
     while true {
-      if lock.withLock({ appendedFrameCount > 0 }) { return true }
-      if lock.withLock({ failureReason != nil }) { return false }
+      if lock.withLock({ appendedFrameCount > 0 }) {
+        return true
+      }
+      if lock.withLock({ failureReason != nil }) {
+        return false
+      }
       guard ContinuousClock.now < deadline else { return false }
       try? await Task.sleep(for: .milliseconds(10))
     }
@@ -223,7 +229,9 @@ public final class CadenceWriter: @unchecked Sendable {
         writer.cancelWriting()
         throw RecorderError.writerFailed(failure)
       }
-      if state.0 { break }
+      if state.0 {
+        break
+      }
       guard ContinuousClock.now < drainDeadline else {
         fail("Encoder did not drain collected frames within 5 seconds")
         encoderQueue.sync(flags: .barrier) { }
@@ -247,7 +255,10 @@ public final class CadenceWriter: @unchecked Sendable {
     for diagnostic in cadenceDiagnostics { StandardError.write(diagnostic) }
     for diagnostic in copyPool.slowOperations { StandardError.write(diagnostic) }
     StandardError.write("copy slow_operation_threshold_seconds=0.005 omitted_slow_operations=\(copyPool.omittedSlowOperations)")
-    StandardError.write("cadence totals skipped_slots=\(accounting.skippedFrameCount) rejected_slots=\(accounting.rejectedFrameCount) encoder_backpressure_periods=\(backpressurePeriods) maximum_queue_depth=\(maximumQueueDepth) queue_capacity=\(copyPool.capacity) pool_allocation_limit=\(copyPool.allocationLimit)")
+    StandardError
+      .write(
+        "cadence totals skipped_slots=\(accounting.skippedFrameCount) rejected_slots=\(accounting.rejectedFrameCount) encoder_backpressure_periods=\(backpressurePeriods) maximum_queue_depth=\(maximumQueueDepth) queue_capacity=\(copyPool.capacity) pool_allocation_limit=\(copyPool.allocationLimit)"
+      )
 
     guard let start, frames > 0 else {
       // Finalizing here would write a .mov with no video samples, which reads as
@@ -272,7 +283,7 @@ public final class CadenceWriter: @unchecked Sendable {
       frameCount: frames,
       capturedFrameCount: captured,
       droppedFrameCount: dropped,
-      duration: CMTimeGetSeconds(CMTimeSubtract(end, start))
+      duration: CMTimeGetSeconds(CMTimeSubtract(end, start)),
     )
   }
 
@@ -296,7 +307,7 @@ public final class CadenceWriter: @unchecked Sendable {
   private var startUptime: UInt64?
   private var lastPresentationTime = CMTime.zero
   private var accounting = CadenceAccounting()
-  private var cadenceDiagnostics: [String] = []
+  private var cadenceDiagnostics = [String]()
   private var pendingFrames: BoundedFrameQueue<MetalCopiedFrame>
   private var encoderDrainScheduled = false
   private var maximumQueueDepth = 0
@@ -313,7 +324,7 @@ public final class CadenceWriter: @unchecked Sendable {
     width: Int,
     height: Int,
     fps: Int,
-    bitrateMbps: Double?
+    bitrateMbps: Double?,
   ) -> [String: Any] {
     let bitrate = bitrateMbps.map { Int($0 * 1_000_000) }
       ?? defaultBitrate(width: width, height: height, fps: fps, codec: codec)
@@ -355,7 +366,7 @@ public final class CadenceWriter: @unchecked Sendable {
     codec == .hevc ? "hevc" : "h264"
   }
 
-  private static func reason(_ error: (any Error)?) -> String {
+  private static func reason(_ error: any Error?) -> String {
     guard let error else { return "no error reported" }
     return StandardError.describe(error)
   }
@@ -411,7 +422,9 @@ public final class CadenceWriter: @unchecked Sendable {
         encoderDrainScheduled = true
         return true
       }
-      if schedule { encoderQueue.async { [weak self] in self?.drainEncoder() } }
+      if schedule {
+        encoderQueue.async { [weak self] in self?.drainEncoder() }
+      }
     } catch {
       lock.withLock { accounting.rejectReservedFrame() }
       fail("Could not preserve cadence frame \(target): \(error)")
@@ -434,9 +447,11 @@ public final class CadenceWriter: @unchecked Sendable {
       case .pending:
         encoderQueue.asyncAfter(deadline: .now() + .milliseconds(5)) { [weak self] in self?.drainEncoder() }
         return
+
       case .failed(let reason):
         fail(reason)
         return
+
       case .completed:
         break
       }
@@ -454,7 +469,10 @@ public final class CadenceWriter: @unchecked Sendable {
       }
       let start = lock.withLock { () -> CMTime in
         if let waitedFrom = backpressureStart {
-          cadenceDiagnostics.append("encoder resumed wait_seconds=\(Double(now &- waitedFrom) / 1_000_000_000) queue_depth=\(pendingFrames.count)")
+          cadenceDiagnostics
+            .append(
+              "encoder resumed wait_seconds=\(Double(now &- waitedFrom) / 1_000_000_000) queue_depth=\(pendingFrames.count)"
+            )
           backpressureStart = nil
         }
         return startPTS ?? .zero
@@ -488,7 +506,9 @@ public final class CadenceWriter: @unchecked Sendable {
       failureReason = reason
       return true
     }
-    if firstFailure { StandardError.write("DemoRecorder: \(reason)") }
+    if firstFailure {
+      StandardError.write("DemoRecorder: \(reason)")
+    }
   }
 
 }

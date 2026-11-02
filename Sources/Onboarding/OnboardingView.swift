@@ -76,84 +76,84 @@ struct OnboardingView: View {
     .background(.thinMaterial)
   }
 
+  @ContentBuilder
   private var welcome: some View {
-    Group {
-      heading(
-        "Read any text on your screen.",
-        detail: "Translate the text on your screen without leaving the app you're using."
-      )
-      lesson(
-        "Capture translation",
-        icon: "viewfinder",
-        detail: "Select part of your screen, read the translation, and copy text or a translated image."
-      )
-      lesson(
-        "Live translation",
-        icon: "captions.bubble",
-        detail: "Choose an area once. Keep translating the text inside as it changes."
-      )
-      Label("No account or API key needed.", systemImage: "checkmark.shield")
-        .font(.callout).foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
+    heading(
+      "Read any text on your screen.",
+      detail: "Translate the text on your screen without leaving the app you're using.",
+    )
+    lesson(
+      "Capture translation",
+      icon: "viewfinder",
+      detail: "Select part of your screen, read the translation, and copy text or a translated image.",
+    )
+    lesson(
+      "Live translation",
+      icon: "captions.bubble",
+      detail: "Choose an area once. Keep translating the text inside as it changes.",
+    )
+    Label("No account or API key needed.", systemImage: "checkmark.shield")
+      .font(.callout).foregroundStyle(.secondary)
+      .frame(maxWidth: .infinity, alignment: .center)
   }
 
+  @ContentBuilder
   private var preparation: some View {
-    Group {
-      heading("Prepare your first translation.", detail: "Allow screen access and choose the language you want to read.")
-      ScreenRecordingPermissionRow(
-        granted: store.hasScreenRecording,
-        isRequesting: store.isRequestingAccess,
-        grant: { store.send(.grantAccessTapped) },
-        openSettings: { store.send(.openAccessSettingsTapped) }
-      )
-      .setupCard()
-      if !store.hasScreenRecording {
-        PermissionRelaunchNotice(isRelaunching: store.isRelaunching, error: store.relaunchError) { store.send(.relaunchTapped) }
-          .setupCard()
-      }
-      VStack(alignment: .leading, spacing: 12) {
-        Picker("Translate into", selection: Binding(get: { store.target }, set: { store.send(.targetChanged($0)) })) {
-          if !store.targetLanguages.contains(store.target) {
-            Text(store.target.displayName).tag(store.target)
-          }
-          ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
-        }
-        Picker(
-          "Source language to check",
-          selection: Binding(get: { store.modelSource }, set: { store.send(.modelSourceChanged($0)) })
-        ) {
-          if !store.targetLanguages.contains(store.modelSource) { Text(store.modelSource.displayName).tag(store.modelSource) }
-          ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
-        }
-        languageReadiness
-        Text("This checks only this language pair. Your source-language setting stays unchanged.")
-          .font(.caption).foregroundStyle(.secondary)
-        if store.modelReadiness.needsLanguageDownload {
-          Text(
-            "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
-          )
-          .font(.callout).foregroundStyle(.secondary)
-          VStack(alignment: .leading, spacing: 6) {
-            Text("1. Open Language & Region below.")
-            Text("2. Choose Translation Languages at the bottom.")
-            Text("3. Download both languages, then return here.")
-          }
-          .font(.callout)
-        }
-        Button("Open Language & Region…") { openLanguageSettings() }
-        Button("Check downloads again") { store.send(.checkModelsTapped) }
-          .disabled(store.modelReadiness == .checking)
-      }
-      .setupCard()
+    heading("Prepare your first translation.", detail: "Allow screen access and choose the language you want to read.")
+    ScreenRecordingPermissionRow(
+      granted: store.hasScreenRecording,
+      isRequesting: store.isRequestingAccess,
+      grant: { store.send(.grantAccessTapped) },
+      openSettings: { store.send(.openAccessSettingsTapped) },
+    )
+    .setupCard()
+    if !store.hasScreenRecording {
+      PermissionRelaunchNotice(isRelaunching: store.isRelaunching, error: store.relaunchError) { store.send(.relaunchTapped) }
+        .setupCard()
     }
+    VStack(alignment: .leading, spacing: 12) {
+      Picker("Translate into", selection: Binding(get: { store.target }, set: { store.send(.targetChanged($0)) })) {
+        if !store.targetLanguages.contains(store.target) {
+          Text(store.target.displayName).tag(store.target)
+        }
+        ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
+      }
+      Picker(
+        "Source language to check",
+        selection: Binding(get: { store.modelSource }, set: { store.send(.modelSourceChanged($0)) }),
+      ) {
+        if !store.targetLanguages.contains(store.modelSource) {
+          Text(store.modelSource.displayName).tag(store.modelSource)
+        }
+        ForEach(store.targetLanguages) { language in Text(language.displayName).tag(language) }
+      }
+      languageReadiness
+      Text("This checks only this language pair. Your source-language setting stays unchanged.")
+        .font(.caption).foregroundStyle(.secondary)
+      if store.modelReadiness.needsLanguageDownload {
+        Text(
+          "Download the languages you want to translate from and into. For English → Korean, download both English and Korean."
+        )
+        .font(.callout).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+          Text("1. Open Language & Region below.")
+          Text("2. Choose Translation Languages at the bottom.")
+          Text("3. Download both languages, then return here.")
+        }
+        .font(.callout)
+      }
+      Button("Open Language & Region…") { openLanguageSettings() }
+      Button("Check downloads again") { store.send(.checkModelsTapped) }
+        .disabled(store.modelReadiness == .checking)
+    }
+    .setupCard()
   }
 
   private var modelCheckKey: String {
     "\(store.modelSource.id)|\(store.target.id)|\(store.settings.translation.strategy)"
   }
 
-  @ViewBuilder
+  @ContentBuilder
   private var languageReadiness: some View {
     switch store.modelReadiness {
     case .unchecked:
@@ -179,56 +179,54 @@ struct OnboardingView: View {
     }
   }
 
+  @ContentBuilder
   private var shortcuts: some View {
-    Group {
-      heading("Translate with a shortcut.", detail: "Start a translation from any app without opening the menu bar.")
-      VStack(spacing: 18) {
-        ShortcutSettingRow("Capture translation", \.selectRegion)
-        Divider()
-        ShortcutSettingRow("Live overlay (select a region)", \.liveOverlay)
-        Divider()
-        ShortcutSettingRow("Show / hide overlay (last region)", \.toggleLiveOverlay)
-      }
-      .setupCard()
-      Text("Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it.")
-        .font(.callout).foregroundStyle(.secondary)
-      Text("Changes are saved immediately. You can change all shortcuts later in Settings.")
-        .font(.caption).foregroundStyle(.secondary)
+    heading("Translate with a shortcut.", detail: "Start a translation from any app without opening the menu bar.")
+    VStack(spacing: 18) {
+      ShortcutSettingRow("Capture translation", \.selectRegion)
+      Divider()
+      ShortcutSettingRow("Live overlay (select a region)", \.liveOverlay)
+      Divider()
+      ShortcutSettingRow("Show / hide overlay (last region)", \.toggleLiveOverlay)
     }
+    .setupCard()
+    Text("Click a shortcut and press the keys you want. Press Escape to cancel, or use × to clear it.")
+      .font(.callout).foregroundStyle(.secondary)
+    Text("Changes are saved immediately. You can change all shortcuts later in Settings.")
+      .font(.caption).foregroundStyle(.secondary)
   }
 
+  @ContentBuilder
   private var ready: some View {
-    Group {
-      heading(
-        "Your next translation is in the menu bar.",
-        detail: "SwiftyCrow stays at the top of your screen, ready whenever you need it."
-      )
-      HStack {
-        Text("SwiftyCrow").font(.headline)
-        Spacer()
-        Image(nsImage: SwiftyCrowIcon.menuBarImage)
-          .foregroundStyle(.primary)
-          .padding(9)
-          .background(Color.accentColor.opacity(0.12), in: .rect(cornerRadius: 8))
-        Image(systemName: "wifi")
-        Image(systemName: "battery.100percent")
-      }
-      .padding(18)
-      .background(.thinMaterial, in: .rect(cornerRadius: 14))
-      lesson(
-        "Start with a capture",
-        icon: "cursorarrow.rays",
-        detail: "Click the menu bar icon and choose Capture translation. Drag over text, or press Space to select a whole window."
-      )
-      lesson(
-        "Come back anytime",
-        icon: "questionmark.circle",
-        detail: "Open Quick Setup again from the menu bar. Languages and shortcuts are always available in Settings."
-      )
-      if !store.hasScreenRecording {
-        Label("You can finish setup now and allow screen access before your first capture.", systemImage: "info.circle")
-          .font(.caption).foregroundStyle(.secondary)
-      }
+    heading(
+      "Your next translation is in the menu bar.",
+      detail: "SwiftyCrow stays at the top of your screen, ready whenever you need it.",
+    )
+    HStack {
+      Text("SwiftyCrow").font(.headline)
+      Spacer()
+      Image(nsImage: SwiftyCrowIcon.menuBarImage)
+        .foregroundStyle(.primary)
+        .padding(9)
+        .background(Color.accentColor.opacity(0.12), in: .rect(cornerRadius: 8))
+      Image(systemName: "wifi")
+      Image(systemName: "battery.100percent")
+    }
+    .padding(18)
+    .background(.thinMaterial, in: .rect(cornerRadius: 14))
+    lesson(
+      "Start with a capture",
+      icon: "cursorarrow.rays",
+      detail: "Click the menu bar icon and choose Capture translation. Drag over text, or press Space to select a whole window.",
+    )
+    lesson(
+      "Come back anytime",
+      icon: "questionmark.circle",
+      detail: "Open Quick Setup again from the menu bar. Languages and shortcuts are always available in Settings.",
+    )
+    if !store.hasScreenRecording {
+      Label("You can finish setup now and allow screen access before your first capture.", systemImage: "info.circle")
+        .font(.caption).foregroundStyle(.secondary)
     }
   }
 
@@ -237,7 +235,9 @@ struct OnboardingView: View {
       Button("Set up later") { store.send(.skipTapped) }
         .buttonStyle(.plain).foregroundStyle(.secondary)
       Spacer()
-      if store.step != .welcome { Button("Back") { store.send(.backTapped) } }
+      if store.step != .welcome {
+        Button("Back") { store.send(.backTapped) }
+      }
       if store.step == .ready {
         Button("Finish") { store.send(.finishTapped(startCapture: false)) }
         if store.hasScreenRecording {
@@ -269,6 +269,7 @@ struct OnboardingView: View {
     }
     .setupCard()
   }
+
 }
 
 extension OnboardingFeature.Step {

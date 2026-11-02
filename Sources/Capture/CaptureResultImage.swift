@@ -47,7 +47,7 @@ struct CaptureResultImage: View, Equatable {
         imageData: imageData,
         imageSize: imageSize,
         lines: lines,
-        prefersHorizontalTextLayout: prefersHorizontalTextLayout
+        prefersHorizontalTextLayout: prefersHorizontalTextLayout,
       )
       renderedImage = image
       renderFailed = image == nil
@@ -69,12 +69,15 @@ struct CaptureResultImage: View, Equatable {
     imageData: Data?,
     imageSize: CGSize,
     lines: [OverlayLine],
-    prefersHorizontalTextLayout: Bool? = nil
+    prefersHorizontalTextLayout: Bool? = nil,
   ) -> CGImage? {
     guard
-      let imageData, let source = OverlayRasterRenderer.image(imageData),
-      imageSize.width.isFinite, imageSize.height.isFinite,
-      imageSize.width > 0, imageSize.height > 0
+      let imageData,
+      let source = OverlayRasterRenderer.image(imageData),
+      imageSize.width.isFinite,
+      imageSize.height.isFinite,
+      imageSize.width > 0,
+      imageSize.height > 0
     else { return nil }
     #if DEBUG
     NativeCaptureTrace.renderInput(imageData: imageData, lines: lines, size: imageSize)
@@ -83,7 +86,7 @@ struct CaptureResultImage: View, Equatable {
       source: source,
       lines: lines,
       size: imageSize,
-      prefersHorizontalTextLayout: prefersHorizontalTextLayout ?? AccessibilitySettings.prefersHorizontalTextLayout
+      prefersHorizontalTextLayout: prefersHorizontalTextLayout ?? AccessibilitySettings.prefersHorizontalTextLayout,
     )
   }
 
@@ -108,4 +111,5 @@ struct CaptureResultImage: View, Equatable {
   private var input: Input {
     Input(imageData: imageData, imageSize: imageSize, lines: lines, prefersHorizontalTextLayout: prefersHorizontalTextLayout)
   }
+
 }

@@ -12,7 +12,7 @@ struct SourceAppearancePolarityTests {
   // MARK: Internal
 
   @Test
-  func citationBracketsDoNotChangeTheParagraphToAMonospacedFont() async throws {
+  func `citation brackets do not change the paragraph to A monospaced font`() async throws {
     let context = try makeContext(width: 400, height: 80)
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 400, height: 80))
@@ -24,14 +24,14 @@ struct SourceAppearancePolarityTests {
       .init(
         boundingBoxNormalized: box,
         text: text,
-        styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)]
+        styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)],
       )
     ]), from: try #require(context.makeImage()))
     #expect(result.lines.first?.appearance.fontDesign == .standard)
   }
 
   @Test
-  func aSingleCJKLexicalRunRetainsItsInternalLinkColor() async throws {
+  func `a single CJK lexical run retains its internal link color`() async throws {
     let context = try makeContext(width: 240, height: 80)
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 240, height: 80))
@@ -44,18 +44,18 @@ struct SourceAppearancePolarityTests {
     let text = "文章链接正文"
     let anchors = (0..<6).map { OCRTextAnchor(
       range: NSRange(location: $0, length: 1),
-      box: CGRect(x: Double(10 + $0 * 35) / 240, y: 0.3, width: 27.0 / 240, height: 0.4)
+      box: CGRect(x: Double(10 + $0 * 35) / 240, y: 0.3, width: 27.0 / 240, height: 0.4),
     ) }
     let box = anchors.dropFirst().reduce(anchors[0].box) { $0.union($1.box) }
     let line = OCRResult.Line(
       boundingBoxNormalized: box,
       text: text,
       styleRuns: [.init(range: NSRange(location: 0, length: 6), box: box)],
-      spacingAnchors: anchors
+      spacingAnchors: anchors,
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let actual = try #require(result.lines.first)
     let blue = actual.styleRuns.filter { $0.appearance.foreground.blue - $0.appearance.foreground.red > 0.3 }
@@ -64,7 +64,7 @@ struct SourceAppearancePolarityTests {
   }
 
   @Test
-  func paddedHeadingRangeDoesNotEnlargeItsBracketedEditControl() async throws {
+  func `padded heading range does not enlarge its bracketed edit control`() async throws {
     let context = try makeContext(width: 240, height: 100)
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 240, height: 100))
@@ -75,17 +75,17 @@ struct SourceAppearancePolarityTests {
     let runs = [(0, 2, 18.0, 74.0), (2, 1, 108.0, 10.0), (3, 2, 119.0, 24.0), (5, 1, 145.0, 12.0)].map {
       OverlaySourceStyleRun(
         range: NSRange(location: $0.0, length: $0.1),
-        box: CGRect(x: $0.2 / 240, y: 0.3, width: $0.3 / 240, height: 0.4)
+        box: CGRect(x: $0.2 / 240, y: 0.3, width: $0.3 / 240, height: 0.4),
       )
     }
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.07, y: 0.3, width: 0.6, height: 0.4),
       text: "标题〔编辑〕",
-      styleRuns: runs
+      styleRuns: runs,
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [source]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     #expect(result.lines.map(\.text) == ["标题", "〔编辑〕"])
     let heading = try #require(result.lines.first)
@@ -95,7 +95,7 @@ struct SourceAppearancePolarityTests {
   }
 
   @Test
-  func aGradientFillIsOneSurfaceAcrossHistogramBuckets() async throws {
+  func `a gradient fill is one surface across histogram buckets`() async throws {
     let context = try makeContext(width: 160, height: 160)
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 160, height: 160))
@@ -120,11 +120,11 @@ struct SourceAppearancePolarityTests {
       orientedBox: box,
       isVerticalBlock: true,
       replacementPatches: [.init(box: box), .init(box: rubyBox)],
-      styleRuns: [.init(range: NSRange(location: 0, length: 2), box: box)]
+      styleRuns: [.init(range: NSRange(location: 0, length: 2), box: box)],
     )
     let result = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: .init(lines: [line]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     let appearance = try #require(result.lines.first?.appearance)
     #expect(appearance.background.red > 0.85)
@@ -139,7 +139,7 @@ struct SourceAppearancePolarityTests {
   }
 
   @Test
-  func nearbyArtworkDoesNotInvertTheTextSurface() async throws {
+  func `nearby artwork does not invert the text surface`() async throws {
     let context = try makeContext(width: 220, height: 120)
     context.setFillColor(CGColor(gray: 0, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 220, height: 120))
@@ -171,7 +171,8 @@ struct SourceAppearancePolarityTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
   }
+
 }

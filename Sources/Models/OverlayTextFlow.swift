@@ -25,7 +25,11 @@ enum OverlayTextFlow: Equatable, Sendable {
   case vertical(OverlayColumnProgression)
 
   var inlineDirection: OverlayInlineDirection? {
-    if case .horizontal(let direction) = self { direction } else { nil }
+    if case .horizontal(let direction) = self {
+      direction
+    } else {
+      nil
+    }
   }
 }
 
@@ -54,7 +58,7 @@ enum OverlayTextFlowResolver {
   static func translatedFlow(
     text: String,
     language: Locale.Language,
-    replacing sourceLayout: OverlaySourceLayout
+    replacing sourceLayout: OverlaySourceLayout,
   ) -> OverlayTextFlow {
     let evidence = scriptEvidence(in: text)
     guard case .vertical = sourceLayout else {
@@ -98,7 +102,7 @@ enum OverlayTextFlowResolver {
       in: text.startIndex ..< text.endIndex,
       unit: .word,
       scheme: .script,
-      options: [.omitWhitespace, .omitPunctuation]
+      options: [.omitWhitespace, .omitPunctuation],
     ) { tag, range in
       guard let script = tag?.rawValue, !commonScripts.contains(script) else { return true }
       let count = text[range].unicodeScalars.reduce(into: 0) { result, scalar in
@@ -135,7 +139,7 @@ enum OverlayTextFlowResolver {
 
   private static func inlineDirection(
     for language: Locale.Language,
-    dominantScript: String?
+    dominantScript: String?,
   ) -> OverlayInlineDirection {
     let directionalLanguage = dominantScript.map { script in
       let inferred = Locale.Language(identifier: "und-\(script)")
@@ -146,7 +150,7 @@ enum OverlayTextFlowResolver {
 
   private static func columnProgression(
     for language: Locale.Language,
-    script: String?
+    script: String?,
   ) -> OverlayColumnProgression {
     switch language.lineLayoutDirection {
     case .leftToRight:
@@ -160,6 +164,7 @@ enum OverlayTextFlowResolver {
       script == "Mong" ? .leftToRight : .rightToLeft
     }
   }
+
 }
 
 // MARK: - ScriptEvidence
@@ -204,6 +209,7 @@ struct ScriptEvidence: Equatable, Sendable {
     let candidates = counts.filter { $0.value == maximum }.map(\.key)
     return candidates.count == 1 ? candidates[0] : nil
   }
+
 }
 
 extension OverlayTextFlowResolver {

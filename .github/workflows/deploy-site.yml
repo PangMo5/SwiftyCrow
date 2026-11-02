@@ -32,7 +32,7 @@ jobs:
     outputs:
       should-deploy: ${{ steps.release.outputs.should-deploy }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Check latest release
         id: release
@@ -54,7 +54,7 @@ jobs:
       - uses: swift-actions/setup-swift@v2
         if: steps.release.outputs.should-deploy == 'true'
         with:
-          swift-version: "6.2"
+          swift-version: "6.4.2"
 
       - name: Install video metadata tools
         if: steps.release.outputs.should-deploy == 'true'
@@ -85,7 +85,7 @@ jobs:
         if: steps.release.outputs.should-deploy == 'true'
         run: cp web/_headers "$RUNNER_TEMP/site/_headers"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.release.outputs.should-deploy == 'true'
         with:
           name: site
@@ -104,15 +104,15 @@ jobs:
       name: cloudflare
       url: https://swiftycrow.pangmo5.dev
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: site
           path: dist
       - name: Deploy static assets
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: "4.131.2"
+          wranglerVersion: "4.156.1"
           command: deploy

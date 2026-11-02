@@ -11,33 +11,43 @@ struct BackgroundReconstructionTests {
   // MARK: Internal
 
   @Test
-  func rejectedExteriorPixelsCannotBeSkippedToBorrowAnotherMaterial() {
+  func `rejected exterior pixels cannot be skipped to borrow another material`() {
     var colors = [SIMD3<Float>]()
     let unresolved = BackgroundReconstruction.fill(
       width: 3,
       height: 1,
       mask: [true, true, false],
       barriers: nil,
-      allowsExteriorSamples: true
+      allowsExteriorSamples: true,
     ) { x, y in
-      if x == 2, y == 0 { return SIMD3(repeating: 180) }
-      if x < -1, y == 0 { return SIMD3(240, 100, 100) }
+      if x == 2, y == 0 {
+        return SIMD3(repeating: 180)
+      }
+      if x < -1, y == 0 {
+        return SIMD3(240, 100, 100)
+      }
       return nil
-    } write: { _, value in if let value { colors.append(value) } }
+    } write: {
+      _, value in if let value {
+        colors.append(value)
+      }
+    }
     #expect(unresolved == 0)
     #expect(colors.count == 2)
     #expect(colors.allSatisfy { $0 == SIMD3(repeating: 180) })
   }
 
   @Test
-  func aShortProtectedLineCannotBeJumpedByTheTextureFilter() {
+  func `a short protected line cannot be jumped by the texture filter`() {
     let width = 80
     let height = 80
     let mask = (0..<width * height).map { i in (24..<40).contains(i % width) && (16..<64).contains(i / width) }
     let source = (0..<width * height).map { i -> SIMD4<Float> in
       let x = i % width
       let y = i / width
-      if x == 40, (8..<72).contains(y) { return .zero }
+      if x == 40, (8..<72).contains(y) {
+        return .zero
+      }
       let value: Float = (x < 40 ? 180 : 40) + Self.grain(x: x, y: y, scale: 1)
       return SIMD4(value, value, value, 1)
     }
@@ -52,7 +62,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test(arguments: [1, 2, 3], [false, true])
-  func stochasticMaterialRetainsGrainAndIllumination(scale: Int, chromatic: Bool) {
+  func `stochastic material retains grain and illumination`(scale: Int, chromatic: Bool) {
     let width = 120
     let height = 96
     let mask = (0..<width * height).map { i in
@@ -71,9 +81,11 @@ struct BackgroundReconstructionTests {
       mask: mask,
       barriers: nil,
       allowsExteriorSamples: false,
-      sample: surface
+      sample: surface,
     ) { i, value in
-      if let value { result[i] = value }
+      if let value {
+        result[i] = value
+      }
     }
     #expect(unresolved == 0)
     var expected = [Double]()
@@ -108,7 +120,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func textureCannotModifyRetainedOrUnresolvedPixels() {
+  func `texture cannot modify retained or unresolved pixels`() {
     let width = 64
     let height = 48
     let mask = (0..<width * height).map { i in (20..<44).contains(i % width) && (16..<32).contains(i / width) }
@@ -130,7 +142,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func separateSurfacesCannotExchangeTexture() {
+  func `separate surfaces cannot exchange texture`() {
     let width = 129
     let height = 48
     let mask = (0..<width * height).map { i in
@@ -159,7 +171,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test(arguments: [1, 2, 3])
-  func curvedIlluminationDoesNotBecomeAxisAlignedBands(scale: Int) {
+  func `curved illumination does not become axis aligned bands`(scale: Int) {
     let width = 80 * scale
     let height = 50 * scale
     let mask = (0..<width * height).map { index in
@@ -181,7 +193,7 @@ struct BackgroundReconstructionTests {
       mask: mask,
       barriers: nil,
       allowsExteriorSamples: false,
-      sample: field
+      sample: field,
     ) { index, color in
       guard let color else { Issue.record("Expected a bounded material solution")
         return
@@ -194,7 +206,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func aBoundarySpeckDiffusesWithoutAHorizontalStripe() {
+  func `a boundary speck diffuses without A horizontal stripe`() {
     let columns = 24
     let rows = 14
     let impulseRow = 7
@@ -211,7 +223,7 @@ struct BackgroundReconstructionTests {
       height: height,
       mask: mask,
       barriers: nil,
-      allowsExteriorSamples: false
+      allowsExteriorSamples: false,
     ) { x, y in
       SIMD3<Float>(repeating: x == 0 && y == impulseRow ? 240 : 200)
     } write: { i, color in
@@ -237,15 +249,19 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func unmaskedNonmaterialDoesNotJoinTwoSurfaces() {
+  func `unmasked nonmaterial does not join two surfaces`() {
     let mask = [false, false, true, true, false, false, false]
     var colors = [SIMD3<Float>]()
     let unresolved = BackgroundReconstruction
       .fill(width: 7, height: 1, mask: mask, barriers: nil, allowsExteriorSamples: false) { x, _ in
-        if x == 4 { return nil }
+        if x == 4 {
+          return nil
+        }
         return x < 4 ? SIMD3(180, 180, 180) : SIMD3(240, 100, 100)
       } write: { _, value in
-        if let value { colors.append(value) }
+        if let value {
+          colors.append(value)
+        }
       }
     #expect(unresolved == 0)
     #expect(colors.count == 2)
@@ -253,7 +269,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func samplesAcrossAProtectedBoundaryCannotTintTheOtherMaterial() {
+  func `samples across A protected boundary cannot tint the other material`() {
     let width = 9
     let mask = [false, false, true, true, false, false, false, false, false]
     let barriers = [false, false, false, false, true, false, false, false, false]
@@ -270,7 +286,7 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func unavailableMaterialIsExplicitAndNeverInventedFromMaskedInk() {
+  func `unavailable material is explicit and never invented from masked ink`() {
     var unresolvedIndices = [Int]()
     let unresolved = BackgroundReconstruction.fill(
       width: 3,
@@ -278,7 +294,7 @@ struct BackgroundReconstructionTests {
       mask: [true, true, false, false, true, false],
       barriers: nil,
       allowsExteriorSamples: true,
-      sample: { _, _ in nil }
+      sample: { _, _ in nil },
     ) { index, color in
       #expect(color == nil)
       unresolvedIndices.append(index)
@@ -288,14 +304,14 @@ struct BackgroundReconstructionTests {
   }
 
   @Test
-  func aFullyMaskedTileCanUseVerifiedExteriorSamples() {
+  func `a fully masked tile can use verified exterior samples`() {
     var colors = [SIMD3<Float>]()
     let unresolved = BackgroundReconstruction.fill(
       width: 3,
       height: 3,
       mask: [Bool](repeating: true, count: 9),
       barriers: nil,
-      allowsExteriorSamples: true
+      allowsExteriorSamples: true,
     ) { x, y in
       guard x < 0 || x >= 3 || y < 0 || y >= 3 else { return nil }
       return SIMD3(200 + Float(x) * 2, 190 + Float(y) * 3, 180)

@@ -13,15 +13,19 @@ enum OCRVisualSpacing {
     _ result: OCRResult,
     width: Int,
     height: Int,
-    sample: (Int, Int) -> OverlayColor?
+    sample: (Int, Int) -> OverlayColor?,
   ) -> OCRResult {
     let lines = result.lines.flatMap { line -> [OCRResult.Line] in
       guard
-        !line.preservesSource, !line.isVerticalBlock, line.rowCount == 1,
+        !line.preservesSource,
+        !line.isVerticalBlock,
+        line.rowCount == 1,
         !line.styleRuns.contains(where: { $0.sourceFragment != nil }),
-        abs(line.rotationRadians) < 0.025, line.text.count <= 80,
+        abs(line.rotationRadians) < 0.025,
+        line.text.count <= 80,
         line.text.last.map({ !".!?。！？".contains($0) }) == true,
-        !OCRTextSemantics.isCode(line.text), !OCRTextSemantics.isIdentifier(line.text),
+        !OCRTextSemantics.isCode(line.text),
+        !OCRTextSemantics.isIdentifier(line.text),
         line.styleRuns.allSatisfy({ distance($0.appearance.background, line.appearance.background) < 0.08 })
       else { return [line] }
       let box = line.boundingBoxNormalized
@@ -43,7 +47,7 @@ enum OCRVisualSpacing {
         x: box.minX * CGFloat(width),
         y: box.minY * CGFloat(height),
         width: box.width * CGFloat(width),
-        height: box.height * CGFloat(height)
+        height: box.height * CGFloat(height),
       )
       .integral.intersection(CGRect(x: 0, y: 0, width: width, height: height))
       guard !pixelBox.isNull, pixelBox.width > 1, pixelBox.height > 2 else { return [line] }
@@ -59,7 +63,9 @@ enum OCRVisualSpacing {
           minY = min(minY, y)
           maxY = max(maxY, y)
         }
-        if count >= 2 { columns.append(x) }
+        if count >= 2 {
+          columns.append(x)
+        }
       }
       guard let first = columns.first, let last = columns.last, maxY >= minY else { return [line] }
       let inkHeight = CGFloat(maxY - minY + 1)
@@ -111,10 +117,14 @@ enum OCRVisualSpacing {
           let outlinedControl = hollow && enclosing && repeatedControls
             && glyphWidth >= height * 0.8 && glyphWidth <= height * 1.3
           if
-            height <= inkHeight * 0.7 || outlinedControl, glyphWidth >= height * 0.8, glyphWidth <= height * 2,
+            height <= inkHeight * 0.7 || outlinedControl,
+            glyphWidth >= height * 0.8,
+            glyphWidth <= height * 2,
             CGFloat(gap.1 - gap.0 - 1) >= height * (outlinedControl ? 0.25 : 0.5)
           {
-            if !gaps.contains(where: { $0.0 == gap.0 }) { gaps.append(gap) }
+            if !gaps.contains(where: { $0.0 == gap.0 }) {
+              gaps.append(gap)
+            }
             accessoryBoundary = prefix.utf16.count
           }
         }
@@ -166,7 +176,7 @@ enum OCRVisualSpacing {
           x: CGFloat(start - 1) / CGFloat(width),
           y: box.minY,
           width: CGFloat(end - start + 3) / CGFloat(width),
-          height: box.height
+          height: box.height,
         )
         fragment.boundingBoxNormalized = refined
         fragment.orientedBox = nil
@@ -195,14 +205,15 @@ enum OCRVisualSpacing {
         fragment.replacementPatches = [.init(
           box: refined,
           appearance: fragment.appearance,
-          clippingBox: line.replacementPatches.compactMap(\.clippingBox).first
+          clippingBox: line.replacementPatches.compactMap(\.clippingBox).first,
         )]
         // A visible control boundary must survive every later coalescing pass.
         fragment.preventsJoining = line.preventsJoining || !cuts.isEmpty
         if let accessoryBoundary, range.location == 0, NSMaxRange(range) == accessoryBoundary {
           fragment.preservesSource = true
         }
-        if !cuts.isEmpty { fragment.surface = nil
+        if !cuts.isEmpty {
+          fragment.surface = nil
           fragment.alignment = .leading
         }
         return fragment
@@ -219,4 +230,5 @@ enum OCRVisualSpacing {
   private static func distance(_ a: OverlayColor, _ b: OverlayColor) -> CGFloat {
     max(abs(a.red - b.red), abs(a.green - b.green), abs(a.blue - b.blue))
   }
+
 }

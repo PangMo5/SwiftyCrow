@@ -30,23 +30,23 @@ struct MixedDirectionLayoutTests {
     Sample(
       language: "ar",
       text: "v2 كيفية الاستخدام وإعدادات الخصوصية API 2026 وطريقة العرض على الشاشة",
-      direction: .rightToLeft
+      direction: .rightToLeft,
     ),
     Sample(language: "he", text: "API הוראות שימוש והגדרות פרטיות v2.1 עבור המשתמש והתצוגה במסך", direction: .rightToLeft),
     Sample(
       language: "en",
       text: "مرحبا Internationalization configuration and accessibility settings for everyone",
-      direction: .leftToRight
+      direction: .leftToRight,
     ),
     Sample(
       language: "en",
       text: "هذه إرشادات تفصيلية لطريقة الاستخدام وإعدادات الخصوصية Internationalization لجميع المستخدمين",
-      direction: .rightToLeft
+      direction: .rightToLeft,
     ),
   ]
 
   @Test(arguments: wrapped, [false, true])
-  func wrappedRunsRetainParagraphContextAndLogicalCoverage(_ sample: Sample, _ shaped: Bool) {
+  func `wrapped runs retain paragraph context and logical coverage`(_ sample: Sample, _ shaped: Bool) {
     let language = Locale.Language(identifier: sample.language)
     #expect(OverlayTextFlowResolver.horizontalFlow(text: sample.text, language: language) == .horizontal(sample.direction))
     let width: CGFloat = 160
@@ -59,14 +59,14 @@ struct MixedDirectionLayoutTests {
       width: width,
       lineHeightMultiple: 1,
       regions: shaped ? [CGRect(x: 0, y: 0, width: width, height: 1_000)] : [],
-      height: 1_000
+      height: 1_000,
     )
     #expect(plan.complete)
     #expect(plan.lines.count > 1)
     let typesetter = CTTypesetterCreateWithAttributedString(Self.referenceString(
       sample.text,
       language: language,
-      direction: sample.direction
+      direction: sample.direction,
     ))
     var cursor = 0
     let legalBreaks = HorizontalHyphenation.wordBreaks(in: sample.text, language: language)
@@ -87,11 +87,13 @@ struct MixedDirectionLayoutTests {
       }
     }
     #expect(cursor == sample.text.utf16.count)
-    if sample.language == "en" { #expect(!plan.hyphens.isEmpty) }
+    if sample.language == "en" {
+      #expect(!plan.hyphens.isEmpty)
+    }
   }
 
   @Test(arguments: samples, [false, true])
-  func completeRunsUseTheResolvedParagraphDirection(_ sample: Sample, _ shaped: Bool) throws {
+  func `complete runs use the resolved paragraph direction`(_ sample: Sample, _ shaped: Bool) throws {
     let language = Locale.Language(identifier: sample.language)
     #expect(OverlayTextFlowResolver.horizontalFlow(text: sample.text, language: language) == .horizontal(sample.direction))
     let plan = HorizontalTextRenderer.plan(
@@ -103,7 +105,7 @@ struct MixedDirectionLayoutTests {
       width: 800,
       lineHeightMultiple: 1,
       regions: shaped ? [CGRect(x: 0, y: 0, width: 800, height: 120)] : [],
-      height: 120
+      height: 120,
     )
     #expect(plan.complete)
     #expect(plan.lines.count == 1)
@@ -111,14 +113,14 @@ struct MixedDirectionLayoutTests {
     Self.expectSameCursors(
       actual,
       Self.reference(sample.text, language: language, direction: sample.direction),
-      text: sample.text
+      text: sample.text,
     )
   }
 
   @Test(arguments: [OverlayInlineDirection.leftToRight, .rightToLeft], [CGFloat.zero, .pi / 2])
-  func placementDirectionIsAuthoritativeRegardlessOfTargetOrientation(
+  func `placement direction is authoritative regardless of target orientation`(
     _ direction: OverlayInlineDirection,
-    _ angle: CGFloat
+    _ angle: CGFloat,
   ) throws {
     let sample = Self.samples[1]
     let line = Self.line(sample)
@@ -130,20 +132,23 @@ struct MixedDirectionLayoutTests {
       placementBounds: .zero,
       fontSize: 24,
       lineHeightMultiple: 1,
-      alignment: .center
+      alignment: .center,
     )
     placement.targetRotationRadians = angle
     let actual = try #require(HorizontalTextRenderer.plan(for: placement).lines.first)
     Self.expectSameCursors(
       actual,
       Self.reference(sample.text, language: line.displayedLanguage, direction: direction),
-      text: sample.text
+      text: sample.text,
     )
     #expect(placement.line.displayedText == sample.text)
   }
 
   @Test(arguments: [OverlayTextAlignment.leading, .center, .trailing], [(0, false), (0, true), (4, false), (4, true)])
-  func logicalDirectionDoesNotMoveThePhysicalReadingEdge(_ alignment: OverlayTextAlignment, _ variant: (Int, Bool)) throws {
+  func `logical direction does not move the physical reading edge`(
+    _ alignment: OverlayTextAlignment,
+    _ variant: (Int, Bool),
+  ) throws {
     let sample = Self.samples[variant.0]
     let shaped = variant.1
     let frame = CGRect(x: 50, y: 30, width: 800, height: 120)
@@ -158,7 +163,7 @@ struct MixedDirectionLayoutTests {
       alignment: alignment,
       textFlowRegions: shaped
         ? [CGRect(origin: .zero, size: frame.size)]
-        : []
+        : [],
     )
     let ink = try #require(HorizontalTextRenderer.paintedBounds(for: placement).first)
     switch alignment {
@@ -174,7 +179,7 @@ struct MixedDirectionLayoutTests {
     background: .white,
     foreground: .black,
     confidence: 1,
-    fontWeight: .semibold
+    fontWeight: .semibold,
   )
 
   private static func line(_ sample: Sample) -> OverlayLine {
@@ -182,9 +187,9 @@ struct MixedDirectionLayoutTests {
       recognized: .init(
         boundingBoxNormalized: .zero,
         text: "Source",
-        appearance: appearance
+        appearance: appearance,
       ),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     ))
     line.showTranslation(sample.text, language: .init(identifier: sample.language))
     return line
@@ -197,7 +202,7 @@ struct MixedDirectionLayoutTests {
   private static func referenceString(
     _ text: String,
     language: Locale.Language,
-    direction: OverlayInlineDirection
+    direction: OverlayInlineDirection,
   ) -> NSAttributedString {
     let paragraph = NSMutableParagraphStyle()
     paragraph.baseWritingDirection = direction == .rightToLeft ? .rightToLeft : .leftToRight
@@ -217,4 +222,5 @@ struct MixedDirectionLayoutTests {
       #expect(abs(a - b) < 0.001, "Logical UTF-16 position \(index) was placed on the wrong visual side")
     }
   }
+
 }

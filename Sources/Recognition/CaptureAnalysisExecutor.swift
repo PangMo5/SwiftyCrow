@@ -10,7 +10,7 @@ enum CaptureAnalysisExecutor {
   static func map<Element: Sendable, Output: Sendable>(
     _ elements: [Element],
     maximumConcurrency: Int = min(8, ProcessInfo.processInfo.activeProcessorCount),
-    transform: @escaping @Sendable (Element) -> Output
+    transform: @escaping @Sendable (Element) -> Output,
   ) async -> [Output] {
     guard elements.count > 1 else { return elements.map(transform) }
     return await withTaskGroup(of: (Int, Output).self) { group in

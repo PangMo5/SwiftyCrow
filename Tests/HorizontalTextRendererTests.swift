@@ -11,7 +11,7 @@ import Testing
 struct HorizontalTextRendererTests {
   @Test(arguments: [CGFloat(1), 2])
   @MainActor
-  func aLooseSingleRowBoxKeepsTheMeasuredInkCenter(_ scale: CGFloat) throws {
+  func `a loose single row box keeps the measured ink center`(_ scale: CGFloat) throws {
     let size = CGSize(width: 240, height: 100)
     let box = CGRect(x: 20 / size.width, y: 20 / size.height, width: 120 / size.width, height: 28 / size.height)
     let ink = CGRect(x: 21 / size.width, y: 21 / size.height, width: 80 / size.width, height: 12 / size.height)
@@ -20,7 +20,7 @@ struct HorizontalTextRendererTests {
       foreground: .init(red: 0.05, green: 0.3, blue: 0.9, alpha: 1),
       confidence: 1,
       fontSizeScale: 0.14,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let source = OCRResult.Line(
       boundingBoxNormalized: box,
@@ -31,8 +31,8 @@ struct HorizontalTextRendererTests {
         range: .init(location: 0, length: 5),
         box: box,
         appearance: appearance,
-        inkBox: ink
-      )]
+        inkBox: ink,
+      )],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
     line.showTranslation("공유", language: .init(identifier: "ko"))
@@ -42,7 +42,7 @@ struct HorizontalTextRendererTests {
       lines: [line],
       size: size,
       scale: scale,
-      prefersHorizontalTextLayout: false
+      prefersHorizontalTextLayout: false,
     ))
     let context = try #require(CGContext(
       data: nil,
@@ -50,8 +50,8 @@ struct HorizontalTextRendererTests {
       height: image.height,
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -65,12 +65,12 @@ struct HorizontalTextRendererTests {
   }
 
   @Test(arguments: [("en", "A B"), ("ar", "نص عربي")])
-  func inlineBackgroundIsPaintedOnceByNativeCoreText(_ sample: (String, String)) throws {
+  func `inline background is painted once by native core text`(_ sample: (String, String)) throws {
     let base = OverlaySourceAppearance(
       background: .white,
       foreground: .init(red: 0, green: 0, blue: 0, alpha: 0),
       confidence: 1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var highlight = base
     highlight.background = .init(red: 1, green: 1, blue: 0, alpha: 0.5)
@@ -81,12 +81,12 @@ struct HorizontalTextRendererTests {
       styleRuns: [.init(
         range: NSRange(location: 0, length: 6),
         box: CGRect(x: 0, y: 0, width: 1, height: 1),
-        appearance: highlight
-      )]
+        appearance: highlight,
+      )],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     var translated = AttributedString(sample.1)
-    translated.link = URL(string: "swiftycrow-style://run/0")!
+    translated.link = try #require(URL(string: "swiftycrow-style://run/0"))
     line.showTranslation(sample.1, attributedText: translated, language: .init(identifier: sample.0))
     let frame = CGRect(x: 0, y: 0, width: 300, height: 100)
     let placement = OverlayPlacement(
@@ -97,7 +97,7 @@ struct HorizontalTextRendererTests {
       placementBounds: frame,
       fontSize: 32,
       lineHeightMultiple: 1,
-      alignment: .leading
+      alignment: .leading,
     )
     let image = try #require(HorizontalTextRenderer.image(for: placement, scale: 1))
     let context = try #require(CGContext(
@@ -106,8 +106,8 @@ struct HorizontalTextRendererTests {
       height: image.height,
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: frame)
     let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -118,7 +118,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test(arguments: ["\u{00A0}", "\u{2007}", "\u{202F}"], [false, true])
-  func dictionaryHyphenationDoesNotBreakANonbreakingSpace(_ separator: String, _ shaped: Bool) {
+  func `dictionary hyphenation does not break A nonbreaking space`(_ separator: String, _ shaped: Bool) {
     let text = "a" + separator + "Implication"
     let plan = HorizontalTextRenderer.plan(
       text: text,
@@ -129,7 +129,7 @@ struct HorizontalTextRendererTests {
       width: 50,
       lineHeightMultiple: 1,
       regions: shaped ? [CGRect(x: 0, y: 0, width: 50, height: 250)] : [],
-      height: shaped ? 250 : nil
+      height: shaped ? 250 : nil,
     )
     #expect(plan.fits(CGSize(width: 50, height: 250)))
     #expect(!plan.hyphens.isEmpty)
@@ -142,7 +142,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test(arguments: [("en", "Implication"), ("de", "Implikation"), ("de", "Einstimmen")])
-  func dictionaryHyphenationKeepsNarrowLabelsReadable(_ sample: (String, String)) {
+  func `dictionary hyphenation keeps narrow labels readable`(_ sample: (String, String)) {
     let language = Locale.Language(identifier: sample.0)
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     let font = CoreTextTypesetter.horizontalWordFittedFontSize(
@@ -151,7 +151,7 @@ struct HorizontalTextRendererTests {
       constrainedToWidth: 40,
       preferred: 18,
       minimum: 4,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     #expect(font >= 16)
     let plan = HorizontalTextRenderer.plan(
@@ -161,11 +161,11 @@ struct HorizontalTextRendererTests {
       appearance: appearance,
       styles: [],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.fits(CGSize(width: 40, height: 150)))
     #expect(!plan.hyphens.isEmpty)
-    #expect(plan.lines.map { CTLineGetStringRange($0).length }.reduce(0, +) == sample.1.utf16.count)
+    #expect(plan.lines.lazy.map { CTLineGetStringRange($0).length }.reduce(0, +) == sample.1.utf16.count)
     let legal = Set(HorizontalHyphenation.boundaries(in: sample.1, language: language).map(\.offset))
     for (index, hyphen) in plan.hyphens {
       let range = CTLineGetStringRange(plan.lines[index])
@@ -177,7 +177,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func discretionaryHyphenNeverChangesLogicalTextOrCrossesNewlines() {
+  func `discretionary hyphen never changes logical text or crosses newlines`() {
     let text = "Implication\nImplication"
     let plan = HorizontalTextRenderer.plan(
       text: text,
@@ -186,7 +186,7 @@ struct HorizontalTextRendererTests {
       appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular),
       styles: [],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     let ranges = plan.lines.map { CTLineGetStringRange($0) }
@@ -198,7 +198,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test(arguments: ["الاستعمال", "foo_bar", "https://example.com", "ABCDEF", "👩🏽‍💻"])
-  func dictionaryBoundariesDoNotInventBreaksForLiteralsOrUnsupportedScript(_ word: String) {
+  func `dictionary boundaries do not invent breaks for literals or unsupported script`(_ word: String) {
     let language = Locale.Language(identifier: word == "الاستعمال" ? "ar" : "en")
     #expect(HorizontalHyphenation.boundaries(in: word, language: language).isEmpty)
     let plan = HorizontalTextRenderer.plan(
@@ -208,13 +208,13 @@ struct HorizontalTextRendererTests {
       appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular, fontDesign: .monospaced),
       styles: [],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.hyphens.isEmpty)
   }
 
   @Test
-  func shapedPunctuatedWordsUseDictionaryBoundariesAndVisibleHyphens() {
+  func `shaped punctuated words use dictionary boundaries and visible hyphens`() {
     let text = "Yeah, I understand. I'll do that."
     let language = Locale.Language(identifier: "en")
     let plan = HorizontalTextRenderer.plan(
@@ -226,7 +226,7 @@ struct HorizontalTextRendererTests {
       width: 200,
       lineHeightMultiple: 1,
       regions: [CGRect(x: 0, y: 0, width: 90, height: 300)],
-      height: 300
+      height: 300,
     )
     #expect(plan.complete)
     #expect(plan.fits(CGSize(width: 200, height: 300)))
@@ -244,7 +244,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func monospacedWordsNeverAcquireDiscretionaryHyphens() {
+  func `monospaced words never acquire discretionary hyphens`() {
     let plan = HorizontalTextRenderer.plan(
       text: "Implication",
       language: .init(identifier: "en"),
@@ -252,20 +252,20 @@ struct HorizontalTextRendererTests {
       appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular, fontDesign: .monospaced),
       styles: [],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.hyphens.isEmpty)
   }
 
   @Test
-  func discretionaryHyphenInheritsItsWordStyle() throws {
+  func `discretionary hyphen inherits its word style`() throws {
     let base = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     let highlight = OverlaySourceAppearance(
       background: .init(red: 0.1, green: 0.2, blue: 0.3, alpha: 1),
       foreground: .white,
       confidence: 1,
       fontWeight: .bold,
-      isUnderlined: true
+      isUnderlined: true,
     )
     let plan = HorizontalTextRenderer.plan(
       text: "Implication",
@@ -274,11 +274,12 @@ struct HorizontalTextRendererTests {
       appearance: base,
       styles: [.init(range: NSRange(location: 0, length: 11), appearance: highlight)],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(!plan.hyphens.isEmpty)
     for hyphen in plan.hyphens.values {
-      let run = try #require((CTLineGetGlyphRuns(hyphen) as! [CTRun]).first)
+      let runs = try #require(CTLineGetGlyphRuns(hyphen) as? [CTRun])
+      let run = try #require(runs.first)
       let attributes = CTRunGetAttributes(run) as NSDictionary
       #expect((attributes[NSAttributedString.Key.underlineStyle] as? Int) == NSUnderlineStyle.single.rawValue)
       let background = try #require(attributes[NSAttributedString.Key.backgroundColor] as? NSColor)
@@ -289,7 +290,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func anUnbreakableSyllableIsRejectedInsteadOfSplittingAtAnArbitraryGlyph() {
+  func `an unbreakable syllable is rejected instead of splitting at an arbitrary glyph`() {
     let plan = HorizontalTextRenderer.plan(
       text: "Implication",
       language: .init(identifier: "en"),
@@ -297,19 +298,19 @@ struct HorizontalTextRendererTests {
       appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular),
       styles: [],
       width: 8,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(!plan.fits(CGSize(width: 8, height: 1000)))
   }
 
   @Test(arguments: [40.0, 40.25, 41.0, 42.0])
-  func fittedSizeStillFitsAfterQuarterPointQuantization(_ preferred: CGFloat) {
+  func `fitted size still fits after quarter point quantization`(_ preferred: CGFloat) {
     let text = "In the ninth inning table, we formed a circle in front of the last attack. At the director's words, we hit each other again and again. It's like it's definitely going to be reversed\" \"Oh!\" All of them answered strongly."
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
       text: "Source",
-      appearance: appearance
+      appearance: appearance,
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "ja")))
     line.showTranslation(text, language: .init(identifier: "en"))
@@ -322,20 +323,20 @@ struct HorizontalTextRendererTests {
       appearance: appearance,
       styles: [],
       width: size.width,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.fits(size), "The returned font must fit; rounding may change Core Text's line breaks")
-    #expect(plan.lines.map { CTLineGetStringRange($0).length }.reduce(0, +) == text.utf16.count)
+    #expect(plan.lines.lazy.map { CTLineGetStringRange($0).length }.reduce(0, +) == text.utf16.count)
   }
 
   @Test(arguments: [("ko", "좋은 아이디어가 자랍니다"), ("ar", "الأفكار الجيدة تنمو")])
-  func centeredInkDoesNotInheritAsymmetricOCRPadding(_ sample: (String, String)) throws {
+  func `centered ink does not inherit asymmetric OCR padding`(_ sample: (String, String)) throws {
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.08,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.35, y: 0.27, width: 0.2792, height: 0.104),
@@ -349,11 +350,11 @@ struct HorizontalTextRendererTests {
           x: 0.37375,
           y: 0.28125,
           width: 0.25125,
-          height: 0.08
-        )
+          height: 0.08,
+        ),
       )],
       layoutBounds: CGRect(x: 0.01, y: 0.2, width: 0.98, height: 0.25),
-      alignment: .center
+      alignment: .center,
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     line.showTranslation(sample.1, language: .init(identifier: sample.0))
@@ -369,7 +370,7 @@ struct HorizontalTextRendererTests {
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let pixels = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -384,12 +385,12 @@ struct HorizontalTextRendererTests {
   @Test(arguments: [
     (
       "en",
-      "A complete paragraph should flow beside the figure before using the full width beneath it. Every word must remain visible."
+      "A complete paragraph should flow beside the figure before using the full width beneath it. Every word must remain visible.",
     ),
     ("ko", "문단은 그림 옆에서 시작하고 아래쪽에서는 전체 너비를 사용해야 합니다. 모든 단어가 잘리지 않고 자연스럽게 표시되어야 합니다."),
     ("ar", "يجب أن تظهر الفقرة بجوار الصورة ثم تستخدم المساحة الكاملة تحتها. يجب أن تبقى جميع الكلمات واضحة ومقروءة."),
   ], [false, true])
-  func shapedParagraphKeepsAllTextOutsideTheFigure(_ sample: (String, String), _ mirrored: Bool) throws {
+  func `shaped paragraph keeps all text outside the figure`(_ sample: (String, String), _ mirrored: Bool) throws {
     let regions = [CGRect(x: mirrored ? 0 : 0.35, y: 0, width: 0.65, height: 0.5), CGRect(x: 0, y: 0.5, width: 1, height: 0.5)]
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
@@ -401,9 +402,9 @@ struct HorizontalTextRendererTests {
         foreground: .black,
         confidence: 1,
         fontSizeScale: 0.1,
-        fontWeight: .regular
+        fontWeight: .regular,
       ),
-      alignment: sample.0 == "ar" ? .trailing : .leading
+      alignment: sample.0 == "ar" ? .trailing : .leading,
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
     line.showTranslation(sample.1, language: .init(identifier: sample.0))
@@ -412,7 +413,7 @@ struct HorizontalTextRendererTests {
     #expect(plan.complete)
     #expect(plan.usesContainerCoordinates)
     #expect(plan.fits(placement.frame.size))
-    #expect(plan.lines.map { CTLineGetStringRange($0).length }.reduce(0, +) == sample.1.utf16.count)
+    #expect(plan.lines.lazy.map { CTLineGetStringRange($0).length }.reduce(0, +) == sample.1.utf16.count)
     #expect(placement.fontSize >= 14)
     let image = try #require(HorizontalTextRenderer.image(for: placement, scale: 1))
     let context = try #require(CGContext(
@@ -422,13 +423,13 @@ struct HorizontalTextRendererTests {
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let pixels = try #require(context.data).assumingMemoryBound(to: UInt8.self)
     let exclusion = CGRect(x: mirrored ? 234 : 0, y: 0, width: 126, height: 90).offsetBy(
       dx: -placement.frame.minX,
-      dy: -placement.frame.minY
+      dy: -placement.frame.minY,
     )
     for (ctLine, origin) in zip(plan.lines, plan.origins) {
       let ink = CTLineGetBoundsWithOptions(ctLine, [.useGlyphPathBounds]).offsetBy(dx: origin.x, dy: origin.y)
@@ -440,7 +441,7 @@ struct HorizontalTextRendererTests {
         let end = range.location + range.length
         if end < sample.1.utf16.count {
           let character = (sample.1 as NSString).character(at: end - 1)
-          #expect(CharacterSet.whitespacesAndNewlines.contains(Unicode.Scalar(character)!))
+          #expect(CharacterSet.whitespacesAndNewlines.contains(try #require(Unicode.Scalar(character))))
         }
       }
     }
@@ -448,32 +449,34 @@ struct HorizontalTextRendererTests {
     // Bitmap rows use the image's top-left storage coordinates.
     for y in 0..<image.height {
       for x in 0..<image.width where exclusion.contains(CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)) {
-        if pixels[(y * image.width + x) * 4 + 3] > 0 { painted += 1 }
+        if pixels[(y * image.width + x) * 4 + 3] > 0 {
+          painted += 1
+        }
       }
     }
     #expect(painted == 0)
   }
 
   @Test
-  func ordinaryButtonPaddingKeepsGlyphsVerticallyCentered() throws {
+  func `ordinary button padding keeps glyphs vertically centered`() throws {
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.26, width: 0.15, height: 0.08),
       text: "Open",
       appearance: appearance,
       alignment: .center,
-      surface: .init(box: CGRect(x: 0.125, y: 0.2, width: 0.3, height: 0.2), confidence: 1)
+      surface: .init(box: CGRect(x: 0.125, y: 0.2, width: 0.3, height: 0.2), confidence: 1),
     )
     var line = OverlayLine(
       id: UUID(),
       source: .init(recognized: source, language: Locale.Language(identifier: "en")),
-      initialContent: .pending
+      initialContent: .pending,
     )
     line.showTranslation("열기", language: Locale.Language(identifier: "ko"))
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 500, height: 200)).first)
@@ -485,7 +488,7 @@ struct HorizontalTextRendererTests {
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let pixels = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -505,7 +508,7 @@ struct HorizontalTextRendererTests {
     ("he", "נא לבדוק את ההגדרות ואת הפרטיות. גרסה v3.2.1 זמינה עכשיו."),
     ("de", "Überprüfen Sie Einstellungen und Datenschutz. Version v3.2.1 ist verfügbar."),
   ])
-  func multilingualParagraphsKeepEveryCharacter(_ sample: (String, String)) {
+  func `multilingual paragraphs keep every character`(_ sample: (String, String)) {
     let plan = HorizontalTextRenderer.plan(
       text: sample.1,
       language: Locale.Language(identifier: sample.0),
@@ -513,12 +516,12 @@ struct HorizontalTextRendererTests {
       appearance: .fallback,
       styles: [],
       width: 230,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     #expect(plan.lines.count > 1)
     let ranges = plan.lines.map { CTLineGetStringRange($0) }
-    #expect(ranges.map { $0.length }.reduce(0,+) == sample.1.utf16.count)
+    #expect(ranges.lazy.map { $0.length }.reduce(0,+) == sample.1.utf16.count)
     if ["ar", "he"].contains(sample.0) {
       let runs = plan.lines.flatMap { CTLineGetGlyphRuns($0) as! [CTRun] }
       #expect(runs.contains { CTRunGetStatus($0).contains(.rightToLeft) })
@@ -527,7 +530,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func KoreanWordsAreNotSplitWhenTheyFitAColumn() {
+  func `korean words are not split when they fit A column`() throws {
     let text = "우편 투표를 제한하는 노력을 확인하세요." as NSString
     let plan = HorizontalTextRenderer.plan(
       text: text as String,
@@ -536,24 +539,24 @@ struct HorizontalTextRendererTests {
       appearance: .fallback,
       styles: [],
       width: 120,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     #expect(plan.lines.count > 1)
     for line in plan.lines.dropLast() {
       let range = CTLineGetStringRange(line)
       let end = range.location + range.length
-      #expect(CharacterSet.whitespacesAndNewlines.contains(Unicode.Scalar(text.character(at: end - 1))!))
+      #expect(CharacterSet.whitespacesAndNewlines.contains(try #require(Unicode.Scalar(text.character(at: end - 1)))))
     }
   }
 
   @Test
-  func identicalTranslationRetainsOriginalPixelsAndStillCompletes() {
+  func `identical translation retains original pixels and still completes`() {
     let source = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.1), text: "AP")
     var line = OverlayLine(
       id: UUID(),
       source: .init(recognized: source, language: Locale.Language(identifier: "en")),
-      initialContent: .pending
+      initialContent: .pending,
     )
     line.showTranslation("AP", language: Locale.Language(identifier: "ko"))
     #expect(!line.isPending)
@@ -563,12 +566,12 @@ struct HorizontalTextRendererTests {
       for: [line],
       placements: [],
       in: CGSize(width: 300, height: 200),
-      displayScale: 1
+      displayScale: 1,
     ).isEmpty)
   }
 
   @Test(arguments: ["명령줄", "設定", "设置", "Settings", "إعدادات"])
-  func fitsVisibleGlyphsWithoutReservingInvisibleFontLeading(_ text: String) {
+  func `fits visible glyphs without reserving invisible font leading`(_ text: String) {
     let language = Locale.Language(identifier: "ko")
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     let plan = HorizontalTextRenderer.plan(
@@ -578,7 +581,7 @@ struct HorizontalTextRendererTests {
       appearance: appearance,
       styles: [],
       width: 400,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     #expect(plan.lines.count == 1)
@@ -587,7 +590,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func fitAndRenderUseTheSameMixedStyleParagraph() throws {
+  func `fit and render use the same mixed style paragraph`() throws {
     var appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     appearance.fontSizeScale = 0.07
     var emphasis = appearance
@@ -601,8 +604,8 @@ struct HorizontalTextRendererTests {
       styleRuns: [.init(
         range: NSRange(location: 9, length: 13),
         box: CGRect(x: 0.2, y: 0.1, width: 0.2, height: 0.05),
-        appearance: emphasis
-      )]
+        appearance: emphasis,
+      )],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: Locale.Language(identifier: "en")))
     let target = "계속하기 전에 설명서를 읽고 모든 단계를 확인하세요."
@@ -619,7 +622,7 @@ struct HorizontalTextRendererTests {
       appearance: line.source.appearance,
       styles: line.displayedStyleRuns,
       width: placement.frame.width,
-      lineHeightMultiple: placement.lineHeightMultiple
+      lineHeightMultiple: placement.lineHeightMultiple,
     )
     #expect(plan.fits(placement.frame.size))
     let image = try #require(HorizontalTextRenderer.image(for: placement, scale: 2))
@@ -628,7 +631,7 @@ struct HorizontalTextRendererTests {
   }
 
   @Test
-  func longerLabelMustActuallyFitInsteadOfBeingTruncated() {
+  func `longer label must actually fit instead of being truncated`() {
     let plan = HorizontalTextRenderer.plan(
       text: "A complete sentence must not disappear behind an ellipsis.",
       language: Locale.Language(identifier: "en"),
@@ -636,7 +639,7 @@ struct HorizontalTextRendererTests {
       appearance: .fallback,
       styles: [],
       width: 160,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     #expect(plan.lines.count > 1)

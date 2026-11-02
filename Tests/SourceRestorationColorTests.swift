@@ -45,7 +45,7 @@ struct SourceRestorationColorTests {
   @Test(arguments: [1, 2, 3].flatMap { scale in
     [false, true].flatMap { dark in [false, true].map { (scale, dark, $0) } }
   })
-  func adjacentSurfaceCannotTintAFlatTextBackground(_ scenario: (Int, Bool, Bool)) async throws {
+  func `adjacent surface cannot tint A flat text background`(_ scenario: (Int, Bool, Bool)) async throws {
     let (scale, dark, quantized) = scenario
     let width = 140 * scale
     let height = 80 * scale
@@ -80,7 +80,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 30.0 / 140, y: 20.0 / 80, width: 70.0 / 140, height: 24.0 / 80)
     let line = OCRResult.Line(
@@ -89,7 +89,7 @@ struct SourceRestorationColorTests {
       horizontalGlyphScale: 22.0 / 80,
       appearance: appearance,
       replacementPatches: [.init(box: box, appearance: appearance)],
-      surface: quantized ? .init(box: box, confidence: 1) : nil
+      surface: quantized ? .init(box: box, confidence: 1) : nil,
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var maximumError = 0
@@ -103,7 +103,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [[UInt8(234), 236, 240], [232, 235, 240], [230, 235, 245]])
-  func aTextOwnerCrossingTwoMaterialsDoesNotInventUniformBackgroundEvidence(_ button: [UInt8]) async throws {
+  func `a text owner crossing two materials does not invent uniform background evidence`(_ button: [UInt8]) async throws {
     let width = 140
     let height = 80
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -126,17 +126,17 @@ struct SourceRestorationColorTests {
       bitsPerComponent: 8,
       bitsPerPixel: 32,
       bytesPerRow: width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      space: try TestGraphics.sRGBColorSpace(),
       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     ))
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .init(red: 20.0 / 255, green: 24.0 / 255, blue: 28.0 / 255, alpha: 1),
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 30.0 / 140, y: 20.0 / 80, width: 80.0 / 140, height: 24.0 / 80)
     let line = OCRResult.Line(
@@ -144,14 +144,14 @@ struct SourceRestorationColorTests {
       text: "Heading action",
       horizontalGlyphScale: 22.0 / 80,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let result = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: image)
     #expect(!result.lines[0].needsReview, "A second observed material cannot be filtered out of the uniformity evidence")
   }
 
   @Test(arguments: [1, 2, 3], [false, true])
-  func aFlatSurfaceDoesNotRetainResamplingRings(scale: Int, dark: Bool) async throws {
+  func `a flat surface does not retain resampling rings`(scale: Int, dark: Bool) async throws {
     let width = 140 * scale
     let height = 80 * scale
     let background: UInt8 = dark ? 51 : 204
@@ -175,7 +175,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 40.0 / 140, y: 20.0 / 80, width: 70.0 / 140, height: 24.0 / 80)
     let line = OCRResult.Line(
@@ -187,8 +187,8 @@ struct SourceRestorationColorTests {
       surface: .init(
         box: CGRect(x: 20.0 / 140, y: 10.0 / 80, width: 44.0 / 140, height: 50.0 / 80),
         confidence: 1,
-        clippingBox: CGRect(x: 20.0 / 140, y: 10.0 / 80, width: 100.0 / 140, height: 50.0 / 80)
-      )
+        clippingBox: CGRect(x: 20.0 / 140, y: 10.0 / 80, width: 100.0 / 140, height: 50.0 / 80),
+      ),
     )
     let output = try await Self.restoredPixels(pixels, width: width, height: height, line: line)
     var maximum = 0
@@ -202,7 +202,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: rowOutlineScenarios)
-  func connectedOutlinesRequireTheSameObservedOwner(_ scenario: (Int, Bool, Bool, Int)) async throws {
+  func `connected outlines require the same observed owner`(_ scenario: (Int, Bool, Bool, Int)) async throws {
     let (scale, dark, ownsSecondRow, antialias) = scenario
     let width = 180 * scale
     let height = 110 * scale
@@ -236,7 +236,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: dark ? 0.2 : 0.8, green: dark ? 0.2 : 0.8, blue: dark ? 0.2 : 0.8, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let boxes = [26.0, 56.0].map { CGRect(x: 30.0 / 180, y: $0 / 110, width: 60.0 / 180, height: 28.0 / 110) }
     let line = OCRResult.Line(
@@ -244,7 +244,7 @@ struct SourceRestorationColorTests {
       text: "Two rows",
       horizontalGlyphScale: 24.0 / 110,
       appearance: appearance,
-      replacementPatches: (ownsSecondRow ? boxes : [boxes[0]]).map { .init(box: $0, appearance: appearance) }
+      replacementPatches: (ownsSecondRow ? boxes : [boxes[0]]).map { .init(box: $0, appearance: appearance) },
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var remnants = 0
@@ -278,7 +278,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [1, 2, 3], [false, true])
-  func aSmallAccessoryThatOnlyGrazesTheOCRBoxKeepsItsOwnPixels(scale: Int, dark: Bool) async throws {
+  func `a small accessory that only grazes the OCR box keeps its own pixels`(scale: Int, dark: Bool) async throws {
     let width = 140 * scale
     let height = 100 * scale
     let background: UInt8 = dark ? 35 : 220
@@ -310,7 +310,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 30.0 / 140, y: 0.2, width: 60.0 / 140, height: 0.45)
     let line = OCRResult.Line(
@@ -318,14 +318,16 @@ struct SourceRestorationColorTests {
       text: "Read more",
       horizontalGlyphScale: 0.24,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var damaged = 0
     for rect in accessory {
       for y in Int(rect.minY) * scale..<Int(rect.maxY) * scale {
         for x in Int(rect.minX) * scale..<Int(rect.maxX) * scale {
-          if output[(y * width + x) * 4] != source[(y * width + x) * 4] { damaged += 1 }
+          if output[(y * width + x) * 4] != source[(y * width + x) * 4] {
+            damaged += 1
+          }
         }
       }
     }
@@ -335,14 +337,16 @@ struct SourceRestorationColorTests {
     var remnants = 0
     for y in Int(glyph.minY) * scale..<Int(glyph.maxY) * scale {
       for x in Int(glyph.minX) * scale..<Int(glyph.maxX) * scale {
-        if abs(Int(output[(y * width + x) * 4]) - Int(background)) > 1 { remnants += 1 }
+        if abs(Int(output[(y * width + x) * 4]) - Int(background)) > 1 {
+          remnants += 1
+        }
       }
     }
     #expect(remnants == 0, "Owned glyph remnants: \(remnants)")
   }
 
   @Test(arguments: [1, 2, 3], [false, true])
-  func disconnectedInkOutsideAnObservedRowIsNotOwnedByPadding(scale: Int, dark: Bool) async throws {
+  func `disconnected ink outside an observed row is not owned by padding`(scale: Int, dark: Bool) async throws {
     let width = 120 * scale
     let height = 80 * scale
     let background: UInt8 = dark ? 35 : 220
@@ -366,7 +370,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 45.0 / 120, y: 30.0 / 80, width: 35.0 / 120, height: 20.0 / 80)
     let line = OCRResult.Line(
@@ -374,13 +378,15 @@ struct SourceRestorationColorTests {
       text: "Source text",
       horizontalGlyphScale: 20.0 / 80,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var damaged = 0
     for y in Int(decoration.minY) * scale..<Int(decoration.maxY) * scale {
       for x in Int(decoration.minX) * scale..<Int(decoration.maxX) * scale {
-        if output[(y * width + x) * 4] != source[(y * width + x) * 4] { damaged += 1 }
+        if output[(y * width + x) * 4] != source[(y * width + x) * 4] {
+          damaged += 1
+        }
       }
     }
     #expect(damaged == 0, "Unobserved decoration pixels changed: \(damaged)")
@@ -388,7 +394,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [0, 1, 2, 3, 4, 5], [false, true])
-  func wordGapsAndSplitObservationFragmentsAreNotArtwork(grouping: Int, dark: Bool) async throws {
+  func `word gaps and split observation fragments are not artwork`(grouping: Int, dark: Bool) async throws {
     let width = 120
     let height = 80
     let background: UInt8 = dark ? 35 : 220
@@ -407,7 +413,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let boxes = [
       CGRect(x: 30.0 / 120, y: 0.25, width: 30.0 / 120, height: 0.5),
@@ -420,7 +426,7 @@ struct SourceRestorationColorTests {
           text: "Whole observation",
           horizontalGlyphScale: 0.3,
           appearance: appearance,
-          replacementPatches: boxes.map { .init(box: $0, appearance: appearance) }
+          replacementPatches: boxes.map { .init(box: $0, appearance: appearance) },
         )]
       } else {
         boxes.enumerated().map { index, box in
@@ -430,10 +436,14 @@ struct SourceRestorationColorTests {
             horizontalGlyphScale: 0.3,
             recognitionGroupID: grouping == 2 ? 77 + index : 77,
             appearance: appearance,
-            replacementPatches: [.init(box: box, appearance: appearance)]
+            replacementPatches: [.init(box: box, appearance: appearance)],
           )
-          if grouping == 3 { line.recognitionContextID = index }
-          if grouping == 4 { line.tableCell = .init(table: 0, row: 0, column: index, box: box) }
+          if grouping == 3 {
+            line.recognitionContextID = index
+          }
+          if grouping == 4 {
+            line.tableCell = .init(table: 0, row: 0, column: index, box: box)
+          }
           if grouping == 5 {
             line.recognitionContainer = CGRect(x: CGFloat(index) * 0.5, y: 0, width: 0.5, height: 1)
           }
@@ -445,14 +455,16 @@ struct SourceRestorationColorTests {
     let expected = grouping >= 2 ? foreground : background
     for y in Int(glyph.minY)..<Int(glyph.maxY) {
       for x in Int(glyph.minX)..<Int(glyph.maxX) {
-        if abs(Int(output[(y * width + x) * 4]) - Int(expected)) > 1 { wrong += 1 }
+        if abs(Int(output[(y * width + x) * 4]) - Int(expected)) > 1 {
+          wrong += 1
+        }
       }
     }
     #expect(wrong == 0, "Incorrectly attributed component pixels: \(wrong)")
   }
 
   @Test(arguments: gradientScenarios)
-  func reconstructionRetainsAnUnderlyingSmoothGradient(_ scenario: (Int, Bool, Int)) async throws {
+  func `reconstruction retains an underlying smooth gradient`(_ scenario: (Int, Bool, Int)) async throws {
     let (scale, dark, direction) = scenario
     let width = 180 * scale
     let height = 100 * scale
@@ -476,7 +488,7 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: gray, green: gray, blue: gray, alpha: 1),
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let box = CGRect(x: 40.0 / 180, y: 0.2, width: 100.0 / 180, height: 0.55)
     let line = OCRResult.Line(
@@ -484,7 +496,7 @@ struct SourceRestorationColorTests {
       text: "Gradient",
       horizontalGlyphScale: 0.26,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var total = 0
@@ -503,7 +515,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test
-  func aProtectedStrokeFringeDoesNotRetainNearbyOwnedGlyphs() async throws {
+  func `a protected stroke fringe does not retain nearby owned glyphs`() async throws {
     let width = 180
     let height = 100
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -521,14 +533,14 @@ struct SourceRestorationColorTests {
     let appearance = OverlaySourceAppearance(
       background: .init(red: 0.8, green: 0.8, blue: 0.8, alpha: 1),
       foreground: .black,
-      confidence: 1
+      confidence: 1,
     )
     let line = OCRResult.Line(
       boundingBoxNormalized: box,
       text: "Text",
       horizontalGlyphScale: 0.24,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let result = try await Self.restoredPixels(pixels, width: width, height: height, line: line)
     #expect((35..<60).allSatisfy { y in (80..<95).allSatisfy { x in result[(y * width + x) * 4] > 180 } })
@@ -536,7 +548,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test
-  func connectedInkInAnotherObservedPatchStillBelongsToTheText() async throws {
+  func `connected ink in another observed patch still belongs to the text`() async throws {
     let width = 150
     let height = 80
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -554,14 +566,14 @@ struct SourceRestorationColorTests {
       text: "Connected text",
       horizontalGlyphScale: 10.0 / 80,
       appearance: appearance,
-      replacementPatches: boxes.map { .init(box: $0, appearance: appearance) }
+      replacementPatches: boxes.map { .init(box: $0, appearance: appearance) },
     )
     let result = try await Self.restoredPixels(pixels, width: width, height: height, line: line)
     #expect((40..<44).allSatisfy { y in (35..<111).allSatisfy { x in result[(y * width + x) * 4] > 180 } })
   }
 
   @Test
-  func aBoxContainingOnlyExternalArtworkHasNoOpaqueErasureOwner() async throws {
+  func `a box containing only external artwork has no opaque erasure owner`() async throws {
     let width = 100
     let height = 100
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -577,14 +589,14 @@ struct SourceRestorationColorTests {
       text: "Text",
       horizontalGlyphScale: 0.1,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let result = try await Self.restoredPixels(pixels, width: width, height: height, line: line)
     #expect(result == pixels)
   }
 
   @Test(arguments: borderScenarios)
-  func crossingArtworkSurvivesAnImpreciseTextBox(_ scenario: (Int, Bool, Bool, Bool)) async throws {
+  func `crossing artwork survives an imprecise text box`(_ scenario: (Int, Bool, Bool, Bool)) async throws {
     let (scale, dark, curved, textured) = scenario
     let width = 200 * scale
     let height = 100 * scale
@@ -607,7 +619,9 @@ struct SourceRestorationColorTests {
     if curved {
       for x in 0..<200 {
         let y = Int(61 + 0.002 * Double((x - 88) * (x - 88)))
-        if y + 3 <= 100 { artwork.append(CGRect(x: x, y: y, width: 1, height: 3)) }
+        if y + 3 <= 100 {
+          artwork.append(CGRect(x: x, y: y, width: 1, height: 3))
+        }
       }
     } else {
       for y in 0..<95 { artwork.append(CGRect(x: 100 + y * 2 / 3, y: y, width: 3, height: 1)) }
@@ -620,7 +634,7 @@ struct SourceRestorationColorTests {
       background: .init(red: background, green: background, blue: background, alpha: 1),
       foreground: dark ? .white : .black,
       confidence: 1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     // The OCR box overlaps a real boundary; its interior is not all text ink.
     let box = CGRect(x: 35.0 / 200, y: 25.0 / 100, width: 100.0 / 200, height: 40.0 / 100)
@@ -629,14 +643,16 @@ struct SourceRestorationColorTests {
       text: "Text",
       horizontalGlyphScale: 24.0 / 100,
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var artworkChanges = 0
     for rect in artwork {
       for y in Int(rect.minY) * scale..<Int(rect.maxY) * scale {
         for x in Int(rect.minX) * scale..<Int(rect.maxX) * scale {
-          if output[(y * width + x) * 4] != source[(y * width + x) * 4] { artworkChanges += 1 }
+          if output[(y * width + x) * 4] != source[(y * width + x) * 4] {
+            artworkChanges += 1
+          }
         }
       }
     }
@@ -646,7 +662,9 @@ struct SourceRestorationColorTests {
       for y in Int(rect.minY) * scale..<Int(rect.maxY) * scale {
         for x in Int(rect.minX) * scale..<Int(rect.maxX) * scale {
           let value = Int(output[(y * width + x) * 4])
-          if (dark ? 255 - value : value) < 170 { remainingGlyphPixels += 1 }
+          if (dark ? 255 - value : value) < 170 {
+            remainingGlyphPixels += 1
+          }
         }
       }
     }
@@ -654,7 +672,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: outlineScenarios)
-  func outlinedGlyphsDoNotBecomeTheirOwnBackground(_ scenario: OutlineScenario) async throws {
+  func `outlined glyphs do not become their own background`(_ scenario: OutlineScenario) async throws {
     let scale = scenario.scale
     let dark = scenario.dark
     let backdrop = scenario.backdrop
@@ -686,20 +704,22 @@ struct SourceRestorationColorTests {
     for rect in glyphs { fill(rect.insetBy(dx: CGFloat(-scale), dy: CGFloat(-scale)), value: dark ? 105 : 150) }
     for rect in glyphs { fill(rect, value: dark ? 240 : 15) }
     let frame = CGRect(x: 0, y: 64, width: 180, height: 3).applying(transform)
-    if backdrop == .framed { fill(frame, value: dark ? 240 : 15) }
+    if backdrop == .framed {
+      fill(frame, value: dark ? 240 : 15)
+    }
     let box = CGRect(x: 25.0 / 180, y: 20.0 / 80, width: 90.0 / 180, height: 40.0 / 80)
     // The white/black outline dominates OCR appearance sampling. It must not
     // be treated as the material beneath the glyph or copied back as a donor.
     let appearance = OverlaySourceAppearance(
       background: dark ? .black : .white,
       foreground: dark ? .white : .black,
-      confidence: 1
+      confidence: 1,
     )
     let line = OCRResult.Line(
       boundingBoxNormalized: box,
       text: "Outlined text",
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance)]
+      replacementPatches: [.init(box: box, appearance: appearance)],
     )
     let output = try await Self.restoredPixels(source, width: width, height: height, line: line)
     var remnants = 0
@@ -708,7 +728,9 @@ struct SourceRestorationColorTests {
         for x in Int(rect.minX)..<Int(rect.maxX) {
           let value = Int(output[(y * width + x) * 4])
           let light = dark ? 255 - value : value
-          if !(190...218).contains(light) { remnants += 1 }
+          if !(190...218).contains(light) {
+            remnants += 1
+          }
         }
       }
     }
@@ -717,7 +739,9 @@ struct SourceRestorationColorTests {
     for rect in [artwork] + (backdrop == .framed ? [frame] : []) {
       for y in Int(rect.minY)..<Int(rect.maxY) {
         for x in Int(rect.minX)..<Int(rect.maxX) {
-          if output[(y * width + x) * 4] != source[(y * width + x) * 4] { artworkChanges += 1 }
+          if output[(y * width + x) * 4] != source[(y * width + x) * 4] {
+            artworkChanges += 1
+          }
         }
       }
     }
@@ -725,7 +749,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [false, true])
-  func texturedRestorationUsesObservedOwnershipBetweenRows(enclosed: Bool) async throws {
+  func `textured restoration uses observed ownership between rows`(enclosed: Bool) async throws {
     let width = 240
     let height = 140
     var pixels = [UInt8](repeating: 255, count: width * height * 4)
@@ -751,25 +775,25 @@ struct SourceRestorationColorTests {
       bitsPerComponent: 8,
       bitsPerPixel: 32,
       bytesPerRow: width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      space: try TestGraphics.sRGBColorSpace(),
       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     ))
     func normalized(_ rect: CGRect) -> CGRect {
       CGRect(
         x: rect.minX / CGFloat(width),
         y: rect.minY / CGFloat(height),
         width: rect.width / CGFloat(width),
-        height: rect.height / CGFloat(height)
+        height: rect.height / CGFloat(height),
       )
     }
     let appearance = OverlaySourceAppearance(
       background: .init(red: 0.84, green: 0.84, blue: 0.84, alpha: 1),
       foreground: .black,
-      confidence: 1
+      confidence: 1,
     )
     let line = OCRResult.Line(
       boundingBoxNormalized: normalized(first.union(last)),
@@ -782,9 +806,9 @@ struct SourceRestorationColorTests {
           box: normalized(first.union(last)),
           confidence: 1,
           clippingBox: normalized(first.union(last)),
-          clippingRows: [normalized(first.union(last))]
+          clippingRows: [normalized(first.union(last))],
         )
-        : nil
+        : nil,
     )
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: sourceImage)
     for patch in try #require(restored.lines.first).replacementPatches {
@@ -797,8 +821,8 @@ struct SourceRestorationColorTests {
         height: tile.height,
         bitsPerComponent: 8,
         bytesPerRow: tile.width * 4,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        space: try TestGraphics.sRGBColorSpace(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       raster.draw(tile, in: CGRect(x: 0, y: 0, width: tile.width, height: tile.height))
       let bytes = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))
@@ -816,7 +840,9 @@ struct SourceRestorationColorTests {
     var damaged = 0
     for y in Int(graphic.minY)..<Int(graphic.maxY) {
       for x in Int(graphic.minX)..<Int(graphic.maxX) {
-        if pixels[(y * width + x) * 4] != 0 { damaged += 1 }
+        if pixels[(y * width + x) * 4] != 0 {
+          damaged += 1
+        }
       }
     }
     if enclosed {
@@ -836,15 +862,15 @@ struct SourceRestorationColorTests {
   }
 
   @Test
-  func aFullyOwnedTileCanSampleBackgroundBeyondItsRasterEdge() async throws {
+  func `a fully owned tile can sample background beyond its raster edge`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 20,
       height: 20,
       bitsPerComponent: 8,
       bytesPerRow: 80,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 20, height: 20))
@@ -856,7 +882,7 @@ struct SourceRestorationColorTests {
       boundingBoxNormalized: box,
       text: "Annotation",
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance, isAnnotation: true)]
+      replacementPatches: [.init(box: box, appearance: appearance, isAnnotation: true)],
     )
     let result = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: try #require(context.makeImage()))
     let png = try #require(result.lines.first?.replacementPatches.first?.restorationPNG)
@@ -868,8 +894,8 @@ struct SourceRestorationColorTests {
       height: tile.height,
       bitsPerComponent: 8,
       bytesPerRow: tile.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     raster.draw(tile, in: CGRect(x: 0, y: 0, width: tile.width, height: tile.height))
     let pixels = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))
@@ -879,15 +905,15 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [0.0, 0.72])
-  func aBitmapCannotCopyNeighboringInkBackIntoAnErasedGlyph(_ neighborGray: Double) async throws {
+  func `a bitmap cannot copy neighboring ink back into an erased glyph`(_ neighborGray: Double) async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 100,
       height: 80,
       bitsPerComponent: 8,
       bytesPerRow: 400,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 100, height: 80))
@@ -905,8 +931,8 @@ struct SourceRestorationColorTests {
       replacementPatches: [.init(box: box, appearance: appearance)],
       surface: .init(
         box: box,
-        confidence: 1
-      )
+        confidence: 1,
+      ),
     )
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: try #require(context.makeImage()))
     let data = try #require(restored.lines.first?.replacementPatches.first?.restorationPNG)
@@ -918,8 +944,8 @@ struct SourceRestorationColorTests {
       height: tile.height,
       bitsPerComponent: 8,
       bytesPerRow: tile.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     raster.draw(tile, in: CGRect(x: 0, y: 0, width: tile.width, height: tile.height))
     let pixels = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))
@@ -928,15 +954,15 @@ struct SourceRestorationColorTests {
   }
 
   @Test
-  func establishedRubyRailRecoversSmallMissedInkButNotConnectedArtwork() async throws {
+  func `established ruby rail recovers small missed ink but not connected artwork`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 100,
       height: 100,
       bitsPerComponent: 8,
       bytesPerRow: 400,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
@@ -954,7 +980,7 @@ struct SourceRestorationColorTests {
       isVerticalBlock: true,
       verticalCharScale: 0.22,
       appearance: appearance,
-      replacementPatches: [.init(box: ruby, appearance: appearance, isAnnotation: true)]
+      replacementPatches: [.init(box: ruby, appearance: appearance, isAnnotation: true)],
     )
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: try #require(context.makeImage()))
     let patches = try #require(restored.lines.first).replacementPatches
@@ -963,15 +989,15 @@ struct SourceRestorationColorTests {
   }
 
   @Test
-  func annotationErasesOnlyItsInkAndKeepsAdjacentColoredSurface() async throws {
+  func `annotation erases only its ink and keeps adjacent colored surface`() async throws {
     let context = try #require(CGContext(
       data: nil,
       width: 100,
       height: 80,
       bitsPerComponent: 8,
       bytesPerRow: 400,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 100, height: 80))
@@ -985,7 +1011,7 @@ struct SourceRestorationColorTests {
       boundingBoxNormalized: box,
       text: "漢字",
       appearance: appearance,
-      replacementPatches: [.init(box: box, appearance: appearance, isAnnotation: true)]
+      replacementPatches: [.init(box: box, appearance: appearance, isAnnotation: true)],
     )
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: try #require(context.makeImage()))
     let patch = try #require(restored.lines.first?.replacementPatches.first)
@@ -999,8 +1025,8 @@ struct SourceRestorationColorTests {
       height: image.height,
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     raster.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let pixels = try #require(raster.data).assumingMemoryBound(to: UInt8.self)
@@ -1022,7 +1048,7 @@ struct SourceRestorationColorTests {
   }
 
   @Test(arguments: [false, true])
-  func unmodeledInlineColorsAreNotCopiedBackAsBackground(dark: Bool) async throws {
+  func `unmodeled inline colors are not copied back as background`(dark: Bool) async throws {
     let width = 220
     let height = 80
     let context = try #require(CGContext(
@@ -1031,8 +1057,8 @@ struct SourceRestorationColorTests {
       height: height,
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     let background = dark ? OverlayColor.black : .white
     let foreground = dark ? OverlayColor.white : .black
@@ -1054,7 +1080,7 @@ struct SourceRestorationColorTests {
       appearance: appearance,
       replacementPatches: [.init(box: box, appearance: appearance)],
       // Force raster restoration, which used to preserve the unknown colors.
-      surface: .init(box: box, confidence: 1)
+      surface: .init(box: box, confidence: 1),
     )
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: [line]), image: try #require(context.makeImage()))
     let patch = try #require(restored.lines.first?.replacementPatches.first)
@@ -1067,8 +1093,8 @@ struct SourceRestorationColorTests {
       height: image.height,
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     // Composite over the actual old glyph pixels. Filling an empty background
     // here would let transparent, unerased link glyphs falsely pass the test.
@@ -1078,7 +1104,7 @@ struct SourceRestorationColorTests {
       x: renderingBox.minX * CGFloat(width),
       y: renderingBox.minY * CGFloat(height),
       width: renderingBox.width * CGFloat(width),
-      height: renderingBox.height * CGFloat(height)
+      height: renderingBox.height * CGFloat(height),
     ).integral))
     raster.draw(oldPixels, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     raster.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
@@ -1109,7 +1135,7 @@ struct SourceRestorationColorTests {
     _ pixels: [UInt8],
     width: Int,
     height: Int,
-    line: OCRResult.Line
+    line: OCRResult.Line,
   ) async throws -> [UInt8] {
     try await restoredPixels(pixels, width: width, height: height, lines: [line])
   }
@@ -1119,7 +1145,7 @@ struct SourceRestorationColorTests {
     _ pixels: [UInt8],
     width: Int,
     height: Int,
-    lines: [OCRResult.Line]
+    lines: [OCRResult.Line],
   ) async throws -> [UInt8] {
     let provider = try #require(CGDataProvider(data: Data(pixels) as CFData))
     let image = try #require(CGImage(
@@ -1133,7 +1159,7 @@ struct SourceRestorationColorTests {
       provider: provider,
       decode: nil,
       shouldInterpolate: false,
-      intent: .defaultIntent
+      intent: .defaultIntent,
     ))
     let restored = await SourceRestorationBuilder.applying(to: .init(lines: lines), image: image)
     let overlays = restored.lines.map { line in
@@ -1145,7 +1171,7 @@ struct SourceRestorationColorTests {
     let rendered = try #require(CaptureResultImage.render(
       imageData: image.pngData,
       imageSize: CGSize(width: width, height: height),
-      lines: overlays
+      lines: overlays,
     ))
     let raster = try #require(CGContext(
       data: nil,
@@ -1154,7 +1180,7 @@ struct SourceRestorationColorTests {
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     raster.draw(rendered, in: CGRect(x: 0, y: 0, width: width, height: height))
     let bytes = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))

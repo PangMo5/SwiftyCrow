@@ -31,7 +31,7 @@ extension ScreenRecordingAccessClient: DependencyKey {
         continuation.onTermination = { _ in observers.cancel() }
         continuation.yield()
       }
-    }
+    },
   )
   static let testValue = ScreenRecordingAccessClient()
 }
@@ -63,14 +63,19 @@ actor ScreenRecordingAccessState {
 
   func isGranted() -> Bool {
     guard !closed else { return false }
-    if !preflight() { close() }
+    if !preflight() {
+      close()
+    }
     return !closed
   }
 
   func captureFailed(_ error: any Error) {
     let error = error as NSError
-    if error.domain == SCStreamErrorDomain, error.code == SCStreamError.Code.userDeclined.rawValue { close() }
-    else { _ = isGranted() }
+    if error.domain == SCStreamErrorDomain, error.code == SCStreamError.Code.userDeclined.rawValue {
+      close()
+    } else {
+      _ = isGranted()
+    }
   }
 
   // MARK: Private
@@ -84,6 +89,7 @@ actor ScreenRecordingAccessState {
     closed = true
     center.post(name: Self.didClose, object: nil)
   }
+
 }
 
 // MARK: - ScreenRecordingObservers
@@ -108,4 +114,5 @@ private final class ScreenRecordingObservers: @unchecked Sendable {
   // MARK: Private
 
   private let tokens: [any NSObjectProtocol]
+
 }

@@ -19,7 +19,6 @@ struct OverlayColor: Equatable, Hashable, Sendable {
   func distance(to other: OverlayColor) -> CGFloat {
     max(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
   }
-
 }
 
 // MARK: - OverlayFontWeight
@@ -44,7 +43,7 @@ struct OverlaySourceAppearance: Equatable, Hashable, Sendable {
   static let fallback = OverlaySourceAppearance(
     background: .white,
     foreground: .black,
-    confidence: 0
+    confidence: 0,
   )
 
   var background: OverlayColor
@@ -66,7 +65,6 @@ struct OverlaySourceAppearance: Equatable, Hashable, Sendable {
   var fontDesign = OverlayFontDesign.standard
   var isItalic = false
   var isUnderlined = false
-
 }
 
 // MARK: - OverlaySourceStyleRun

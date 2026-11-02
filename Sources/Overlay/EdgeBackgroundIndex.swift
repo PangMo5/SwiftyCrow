@@ -32,7 +32,7 @@ struct EdgeBackgroundIndex: Sendable {
       red: CGFloat((value >> 16) & 255) / 255,
       green: CGFloat((value >> 8) & 255) / 255,
       blue: CGFloat(value & 255) / 255,
-      alpha: 1
+      alpha: 1,
     )
     var visited = [Bool](repeating: false, count: width * height)
     var queue = [Int]()
@@ -49,10 +49,18 @@ struct EdgeBackgroundIndex: Sendable {
       cursor += 1
       let x = index % width
       let y = index / width
-      if x > 0 { enqueue(index - 1) }
-      if x + 1 < width { enqueue(index + 1) }
-      if y > 0 { enqueue(index - width) }
-      if y + 1 < height { enqueue(index + width) }
+      if x > 0 {
+        enqueue(index - 1)
+      }
+      if x + 1 < width {
+        enqueue(index + 1)
+      }
+      if y > 0 {
+        enqueue(index - width)
+      }
+      if y + 1 < height {
+        enqueue(index + width)
+      }
     }
     connected = visited
   }

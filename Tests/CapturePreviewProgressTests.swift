@@ -12,7 +12,7 @@ import Testing
 @MainActor
 struct CapturePreviewProgressTests {
   @Test(arguments: [false, true])
-  func autoSourceFailureKeepsOriginalAndStopsLoadingWithAnExplicitError(_ missingModel: Bool) async {
+  func `auto source failure keeps original and stops loading with an explicit error`(_ missingModel: Bool) async {
     let state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
       RegionCaptureFeature.State(target: .region(.zero))
     }
@@ -48,7 +48,7 @@ struct CapturePreviewProgressTests {
   }
 
   @Test
-  func translationCanFinishDuringRestorationButCannotPaintUnrestoredPixels() async {
+  func `translation can finish during restoration but cannot paint unrestored pixels`() async {
     var state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
       RegionCaptureFeature.State(target: .region(CGRect(x: 0, y: 0, width: 300, height: 200)))
     }
@@ -87,7 +87,7 @@ struct CapturePreviewProgressTests {
   }
 
   @Test
-  func restorationFailureDiscardsProvisionalTranslationsAndLateResponses() async {
+  func `restoration failure discards provisional translations and late responses`() async {
     var state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
       RegionCaptureFeature.State(target: .region(.zero))
     }
@@ -105,7 +105,7 @@ struct CapturePreviewProgressTests {
   }
 
   @Test
-  func originalPreviewIsAvailableWhileOCRRunsAndSurvivesAnOCRFailure() async {
+  func `original preview is available while OCR runs and survives an OCR failure`() async {
     var state = withDependencies { $0.defaultFileStorage = .inMemory } operation: {
       RegionCaptureFeature.State(target: .region(CGRect(x: 0, y: 0, width: 300, height: 200)))
     }
@@ -139,7 +139,7 @@ struct CapturePresentationTests {
   // MARK: Internal
 
   @Test(arguments: [false, true])
-  func resultWindowWaitsForSourceAcquisition(_ fails: Bool) async throws {
+  func `result window waits for source acquisition`(_ fails: Bool) async throws {
     let started = AsyncStream<Void>.makeStream()
     let release = AsyncStream<Void>.makeStream()
     let image = try fixtureImage()
@@ -152,7 +152,9 @@ struct CapturePresentationTests {
         #expect(excludedPID == ProcessInfo.processInfo.processIdentifier)
         started.continuation.yield(())
         for await _ in release.stream { break }
-        if fails { throw ScreenCaptureError.unreadableImage }
+        if fails {
+          throw ScreenCaptureError.unreadableImage
+        }
         return image
       }
       $0.ocr.recognizeCapture = { _, _, _ in
@@ -180,7 +182,7 @@ struct CapturePresentationTests {
   }
 
   @Test
-  func replacingAPendingCaptureCannotPresentItsLateResult() async throws {
+  func `replacing A pending capture cannot present its late result`() async throws {
     let started = AsyncStream<Void>.makeStream()
     let release = AsyncStream<Void>.makeStream()
     let image = try fixtureImage()
@@ -236,12 +238,13 @@ struct CapturePresentationTests {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
     return try #require(context.makeImage())
   }
+
 }
 
 /// A synchronous probe observes the current thread without suggesting that an

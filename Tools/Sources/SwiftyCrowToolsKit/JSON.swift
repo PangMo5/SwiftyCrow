@@ -16,13 +16,19 @@ indirect enum JSON: Sendable, Equatable, Codable {
 
   init(from decoder: any Decoder) throws {
     let value = try decoder.singleValueContainer()
-    if value.decodeNil() { self = .null }
-    else if let bool = try? value.decode(Bool.self) { self = .bool(bool) }
-    else if let text = try? value.decode(String.self) { self = .string(text) }
-    else if let number = try? value.decode(Int64.self) { self = .number(String(number)) }
-    else if let number = try? value.decode(Double.self) { self = .number(String(number)) }
-    else if let array = try? value.decode([JSON].self) { self = .array(array) }
-    else {
+    if value.decodeNil() {
+      self = .null
+    } else if let bool = try? value.decode(Bool.self) {
+      self = .bool(bool)
+    } else if let text = try? value.decode(String.self) {
+      self = .string(text)
+    } else if let number = try? value.decode(Int64.self) {
+      self = .number(String(number))
+    } else if let number = try? value.decode(Double.self) {
+      self = .number(String(number))
+    } else if let array = try? value.decode([JSON].self) {
+      self = .array(array)
+    } else {
       let object = try value.decode([String: JSON].self)
       self = .object(object.sorted { $0.key < $1.key }.map { ($0.key, $0.value) })
     }
@@ -31,17 +37,23 @@ indirect enum JSON: Sendable, Equatable, Codable {
   // MARK: Internal
 
   var object: [(String, JSON)] {
-    if case .object(let value) = self { return value }
+    if case .object(let value) = self {
+      return value
+    }
     return []
   }
 
   var array: [JSON] {
-    if case .array(let value) = self { return value }
+    if case .array(let value) = self {
+      return value
+    }
     return []
   }
 
   var string: String? {
-    if case .string(let value) = self { return value }
+    if case .string(let value) = self {
+      return value
+    }
     return nil
   }
 
@@ -50,7 +62,9 @@ indirect enum JSON: Sendable, Equatable, Codable {
   }
 
   var double: Double {
-    if case .number(let value) = self { return Double(value) ?? .nan }
+    if case .number(let value) = self {
+      return Double(value) ?? .nan
+    }
     return Double(str) ?? .nan
   }
 
@@ -103,13 +117,19 @@ indirect enum JSON: Sendable, Equatable, Codable {
   }
 
   subscript(_ key: String) -> JSON {
-    get { if case .object(let entries) = self { return entries.first { $0.0 == key }?.1 ?? .null }
+    get {
+      if case .object(let entries) = self {
+        return entries.first { $0.0 == key }?.1 ?? .null
+      }
       return .null
     }
     set {
       var entries = object
-      if let index = entries.firstIndex(where: { $0.0 == key }) { entries[index].1 = newValue }
-      else { entries.append((key, newValue)) }
+      if let index = entries.firstIndex(where: { $0.0 == key }) {
+        entries[index].1 = newValue
+      } else {
+        entries.append((key, newValue))
+      }
       self = .object(entries)
     }
   }
@@ -141,7 +161,9 @@ indirect enum JSON: Sendable, Equatable, Codable {
   func write(_ file: URL) throws {
     // Existing scene bytes are referenced by accepted captures. Equivalent data
     // is already current, so changing serializer formatting must not invalidate it.
-    if file.exists, try Self.read(file) == self { return }
+    if file.exists, try Self.read(file) == self {
+      return
+    }
     try file.write(rendered() + "\n")
   }
 
@@ -154,9 +176,13 @@ indirect enum JSON: Sendable, Equatable, Codable {
     case .array(let array): try value.encode(array)
     case .object(let object): try value.encode(Dictionary(uniqueKeysWithValues: object))
     case .number(let number):
-      if let integer = Int64(number) { try value.encode(integer) }
-      else if let decimal = Double(number), decimal.isFinite { try value.encode(decimal) }
-      else { throw ToolError("Invalid JSON number: \(number)") }
+      if let integer = Int64(number) {
+        try value.encode(integer)
+      } else if let decimal = Double(number), decimal.isFinite {
+        try value.encode(decimal)
+      } else {
+        throw ToolError("Invalid JSON number: \(number)")
+      }
     }
   }
 }

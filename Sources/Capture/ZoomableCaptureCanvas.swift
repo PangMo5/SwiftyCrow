@@ -13,10 +13,16 @@ enum CaptureZoomGeometry {
 
   static func fitScale(image: CGSize, viewport: CGSize, backingScale: CGFloat) -> CGFloat? {
     guard
-      image.width.isFinite, image.height.isFinite,
-      viewport.width.isFinite, viewport.height.isFinite,
-      image.width > 0, image.height > 0, viewport.width > 0, viewport.height > 0,
-      backingScale.isFinite, backingScale > 0
+      image.width.isFinite,
+      image.height.isFinite,
+      viewport.width.isFinite,
+      viewport.height.isFinite,
+      image.width > 0,
+      image.height > 0,
+      viewport.width > 0,
+      viewport.height > 0,
+      backingScale.isFinite,
+      backingScale > 0
     else { return nil }
     return min(1, min(viewport.width / image.width, viewport.height / image.height) * backingScale)
   }
@@ -28,15 +34,16 @@ enum CaptureZoomGeometry {
 
   static func scrollOrigin(center: CGPoint, visibleSize: CGSize, documentSize: CGSize) -> CGPoint {
     func coordinate(_ center: CGFloat, visible: CGFloat, document: CGFloat) -> CGFloat {
-      if document <= visible { return (document - visible) / 2 }
+      if document <= visible {
+        return (document - visible) / 2
+      }
       return max(0, min(document - visible, center * document - visible / 2))
     }
     return CGPoint(
       x: coordinate(center.x, visible: visibleSize.width, document: documentSize.width),
-      y: coordinate(center.y, visible: visibleSize.height, document: documentSize.height)
+      y: coordinate(center.y, visible: visibleSize.height, document: documentSize.height),
     )
   }
-
 }
 
 // MARK: - CaptureZoomModel
@@ -87,6 +94,7 @@ final class CaptureZoomModel {
     self.minimumScale = minimumScale
     self.isFitting = isFitting
   }
+
 }
 
 // MARK: - ZoomableCaptureCanvas
@@ -138,7 +146,9 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
 
       let preservedCenter = scrollView.takePendingCenter() ?? center(in: scrollView)
       let nativeScale = scrollView.magnification * lastBackingScale
-      if imageChanged { isFitting = true }
+      if imageChanged {
+        isFitting = true
+      }
       lastViewport = viewport
       lastBackingScale = displayScale
       minimumScale = min(0.1, fit)
@@ -148,7 +158,7 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
       setScale(
         isFitting ? fit : nativeScale,
         center: isFitting ? CGPoint(x: 0.5, y: 0.5) : preservedCenter,
-        in: scrollView
+        in: scrollView,
       )
     }
 
@@ -157,7 +167,7 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
       model.update(
         scale: scrollView.magnification * lastBackingScale,
         minimumScale: minimumScale,
-        isFitting: false
+        isFitting: false,
       )
     }
 
@@ -177,7 +187,7 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
       let clamped = min(CaptureZoomGeometry.maximumScale, max(minimumScale, scale))
       scrollView.setMagnification(clamped / lastBackingScale, centeredAt: CGPoint(
         x: center.x * imageSize.width,
-        y: center.y * imageSize.height
+        y: center.y * imageSize.height,
       ))
       // Magnification can leave legacy scrollers at their previous visibility
       // until tiling. Finalize the actual clip area before centering the image.
@@ -185,7 +195,7 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
       let origin = CaptureZoomGeometry.scrollOrigin(
         center: center,
         visibleSize: scrollView.documentVisibleRect.size,
-        documentSize: imageSize
+        documentSize: imageSize,
       )
       scrollView.scrollContent(to: origin)
       model.update(scale: clamped, minimumScale: minimumScale, isFitting: isFitting)
@@ -203,12 +213,13 @@ struct ZoomableCaptureCanvas<Content: View>: NSViewRepresentable {
         scrollView.maxMagnification = upper
       }
     }
+
   }
 
   let imageSize: CGSize
   let backingScale: CGFloat
   let model: CaptureZoomModel
-  @ViewBuilder let content: Content
+  @ContentBuilder let content: Content
 
   func makeCoordinator() -> Coordinator {
     Coordinator(model: model)
@@ -271,7 +282,9 @@ final class CaptureScrollView: NSScrollView {
   }
 
   override func setFrameSize(_ newSize: NSSize) {
-    if frame.size != newSize { preserveCenter() }
+    if frame.size != newSize {
+      preserveCenter()
+    }
     super.setFrameSize(newSize)
   }
 
@@ -329,13 +342,16 @@ final class CaptureScrollView: NSScrollView {
     case .ended,
          .cancelled,
          .failed:
-      if panOrigin != nil { NSCursor.pop() }
+      if panOrigin != nil {
+        NSCursor.pop()
+      }
       panOrigin = nil
 
     default:
       break
     }
   }
+
 }
 
 // MARK: - CenteringCaptureClipView

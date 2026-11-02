@@ -13,15 +13,15 @@ struct InlineSourceFragmentTests {
   // MARK: Internal
 
   @Test
-  func aCodeFillProtectsTheOriginalPathEvenWhenOCRInsertedWhitespace() throws {
+  func `a code fill protects the original path even when OCR inserted whitespace`() throws {
     let context = try #require(CGContext(
       data: nil,
       width: 320,
       height: 100,
       bitsPerComponent: 8,
       bytesPerRow: 0,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 1, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 320, height: 100))
@@ -29,7 +29,7 @@ struct InlineSourceFragmentTests {
     context.fill(CGRect(x: 70, y: 38, width: 160, height: 24))
     let glyphs = CTLineCreateWithAttributedString(NSAttributedString(
       string: "scripts/export.sh",
-      attributes: [.font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)]
+      attributes: [.font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)],
     ))
     context.textPosition = CGPoint(x: 73, y: 44)
     CTLineDraw(glyphs, context)
@@ -60,7 +60,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: [false, true])
-  func onlyInternalFilenameDotsCarryTheCodeBackground(_ internalDot: Bool) throws {
+  func `only internal filename dots carry the code background`(_ internalDot: Bool) throws {
     let text = internalDot ? "Keep report.v2. pdf here." : "Keep report.v2. here."
     let source = text as NSString
     let stem = source.range(of: "report.v2")
@@ -69,23 +69,25 @@ struct InlineSourceFragmentTests {
     var code = OverlaySourceAppearance(
       background: .init(red: 0.3, green: 0.3, blue: 0.3, alpha: 1),
       foreground: .white,
-      confidence: 1
+      confidence: 1,
     )
     code.fontDesign = .monospaced
     var runs: [OverlaySourceStyleRun] = [
       .init(range: stem, box: box, appearance: code),
       .init(range: dot, box: box, appearance: code),
     ]
-    if internalDot { runs.append(.init(
-      range: source.range(of: "pdf"),
-      box: CGRect(x: 0.41, y: 0.2, width: 0.06, height: 0.04),
-      appearance: code
-    )) }
+    if internalDot {
+      runs.append(.init(
+        range: source.range(of: "pdf"),
+        box: CGRect(x: 0.41, y: 0.2, width: 0.06, height: 0.04),
+        appearance: code,
+      ))
+    }
     let observed = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.04),
       text: text,
       appearance: .init(background: .white, foreground: .black, confidence: 1),
-      styleRuns: runs
+      styleRuns: runs,
     )
     let line = OverlayLine(id: UUID(), source: .init(recognized: observed, language: .init(identifier: "en")))
     let attributed = try #require(line.source.attributedTextForTranslation())
@@ -99,36 +101,36 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func rewordedContextKeepsTheLinkWithItsTranslatedPhrase() throws {
-    let link = URL(string: "swiftycrow-style://run/1")!
+  func `reworded context keeps the link with its translated phrase`() throws {
+    let link = try #require(URL(string: "swiftycrow-style://run/1"))
     var phrase = AttributedString("من سلسلة مقالات")
     phrase.link = link
     let source = AttributedString("جزء ") + phrase + AttributedString(" حول")
     let target = try #require(TranslationStyleMapper.contextualTranslation(
       source: source,
-      response: "관련 <s0>기사 시리즈</s0>의 일부"
+      response: "관련 <s0>기사 시리즈</s0>의 일부",
     ))
     #expect(String(target.characters) == "관련 기사 시리즈의 일부")
     let marked = try #require(TranslationStyleMapper.contextualTranslation(
       source: source,
-      response: "관련 ZXQSTYLE0OPEN 기사 시리즈 ZXQSTYLE0CLOSE 의 일부"
+      response: "관련 ZXQSTYLE0OPEN 기사 시리즈 ZXQSTYLE0CLOSE 의 일부",
     ))
     #expect(marked.runs.filter { $0.link == link }.map { String(marked.characters[$0.range]) } == [" 기사 시리즈 "])
     #expect(target.runs.filter { $0.link == link }.map { String(target.characters[$0.range]) } == ["기사 시리즈"])
     let rtl = try #require(TranslationStyleMapper.contextualTranslation(
       source: source,
-      response: "ZXQSTYLE0CLOSE시리즈 기사ZXQSTYLE0OPEN의 일부"
+      response: "ZXQSTYLE0CLOSE시리즈 기사ZXQSTYLE0OPEN의 일부",
     ))
     #expect(rtl.runs.filter { $0.link == link }.map { String(rtl.characters[$0.range]) } == ["시리즈 기사"])
     #expect(TranslationStyleMapper.contextualTranslation(source: source, response: "관련 기사의 일부") == nil)
     #expect(TranslationStyleMapper.contextualTranslation(
       source: source,
-      response: "<s0>기사</s0> <s0>시리즈</s0>"
+      response: "<s0>기사</s0> <s0>시리즈</s0>",
     ) == nil)
   }
 
   @Test
-  func sourcePixelGateRequiresTheWholeRegionAndTranslatedPublication() throws {
+  func `source pixel gate requires the whole region and translated publication`() throws {
     let input = try fixture()
     let result = OCRInlineSourceFragments.applying(to: .init(lines: [input.line]), image: input.image)
     var line = OverlayLine(id: UUID(), source: .init(recognized: result.lines[0], language: .init(identifier: "en")))
@@ -136,7 +138,7 @@ struct InlineSourceFragmentTests {
     let box = try #require(run.inkBox)
     let expectation = CaptureSourceFragmentExpectation(
       sourcePrefix: "Values range",
-      region: [box.minX, box.minY, box.width, box.height]
+      region: [box.minX, box.minY, box.width, box.height],
     )
     #expect(!CaptureQualityMetrics.sourceFragmentIssues(lines: [line], expected: [expectation]).isEmpty)
     let source = try #require(line.source.attributedTextForTranslation())
@@ -151,12 +153,12 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: [false, true])
-  func nativeFragmentLookupUsesThePrimaryCodeProtectionContract(_ missingMarker: Bool) async throws {
+  func `native fragment lookup uses the primary code protection contract`(_ missingMarker: Bool) async throws {
     let id = UUID()
     var code = AttributedString("i8")
     code.inlinePresentationIntent = .code
-    code.link = URL(string: "swiftycrow-style://run/0")!
-    let link = URL(string: "swiftycrow-style://run/1?source=pixels")!
+    code.link = try #require(URL(string: "swiftycrow-style://run/0"))
+    let link = try #require(URL(string: "swiftycrow-style://run/1?source=pixels"))
     var formula = AttributedString("2⁷ − 1")
     formula.link = link
     let source = code + AttributedString(" stores ") + formula
@@ -164,7 +166,7 @@ struct InlineSourceFragmentTests {
     let anchors = try await TranslationClient.aligningNativeStyles(
       [id: target],
       linesByID: [id: .init(id: id, text: String(source.characters), attributedText: source)],
-      preserving: [:]
+      preserving: [:],
     ) { request in
       #expect(String(request.characters) == "ZXQ000XQZ stores 2⁷ − 1")
       #expect(request.runs.filter { $0.link == link }.map { String(request.characters[$0.range]) } == ["2⁷ − 1"])
@@ -178,7 +180,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func restorationDiagnosticRetainsFragmentOwnershipAndDimensions() throws {
+  func `restoration diagnostic retains fragment ownership and dimensions`() throws {
     let input = try fixture()
     let result = OCRInlineSourceFragments.applying(to: .init(lines: [input.line]), image: input.image)
     var line = OverlayLine(id: UUID(), source: .init(recognized: result.lines[0], language: .init(identifier: "en")))
@@ -200,11 +202,11 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func failedNativeLookupRetainsOtherAnchorsAndAllowsLexicalAlignment() async throws {
+  func `failed native lookup retains other anchors and allows lexical alignment`() async throws {
     enum LookupError: Error { case unavailable }
     let failedID = UUID()
     let successfulID = UUID()
-    let link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    let link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     var failedSource = AttributedString("2⁸ − 1")
     failedSource.link = link
     var successfulSource = AttributedString("2⁷ − 1")
@@ -217,9 +219,11 @@ struct InlineSourceFragmentTests {
         failedID: .init(id: failedID, text: "2⁸ − 1", attributedText: failedSource),
         successfulID: .init(id: successfulID, text: "2⁷ − 1", attributedText: successfulSource),
       ],
-      preserving: [:]
+      preserving: [:],
     ) { source in
-      if source == failedSource { throw LookupError.unavailable }
+      if source == failedSource {
+        throw LookupError.unavailable
+      }
       return successfulNative
     }
     #expect(anchors[successfulID] == successfulNative)
@@ -229,22 +233,22 @@ struct InlineSourceFragmentTests {
       source: failedSource,
       target: "255",
       alternatives: [link: "255"],
-      preserving: anchors[failedID]
+      preserving: anchors[failedID],
     )
     #expect(!lexical.hasUnmappedSourceFragments)
     #expect(String(lexical.target.characters) == "255")
   }
 
   @Test
-  func optionalNativeLookupStillPropagatesCancellation() async throws {
+  func `optional native lookup still propagates cancellation`() async throws {
     let id = UUID()
     var source = AttributedString("2⁸ − 1")
-    source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source.link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     await #expect(throws: CancellationError.self) {
       _ = try await TranslationClient.aligningNativeStyles(
         [id: "255"],
         linesByID: [id: .init(id: id, text: "2⁸ − 1", attributedText: source)],
-        preserving: [:]
+        preserving: [:],
       ) { _ in throw CancellationError() }
     }
   }
@@ -256,9 +260,9 @@ struct InlineSourceFragmentTests {
     ("3-1", "Table 3-1 is shown.", "3-1"),
     ("2⁸ − 1", "Values 28 - 1 inclusive.", "28 - 1"),
   ])
-  func imageAlignmentDoesNotRewritePrimaryProse(_ sample: (String, String, String)) {
+  func `image alignment does not rewrite primary prose`(_ sample: (String, String, String)) throws {
     var source = AttributedString(sample.0)
-    source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source.link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     let aligned = TranslationStyleMapper.align(source: source, target: sample.1)
     #expect(!aligned.hasUnmappedSourceFragments)
     #expect(String(aligned.target.characters) == sample.1)
@@ -268,42 +272,43 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: ["13-10", "3-1과 3-1"])
-  func aPixelFragmentCannotGuessItsOccurrence(_ target: String) {
+  func `a pixel fragment cannot guess its occurrence`(_ target: String) throws {
     var source = AttributedString("3-1")
-    source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source.link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     let aligned = TranslationStyleMapper.align(source: source, target: target)
     #expect(aligned.hasUnmappedSourceFragments)
     #expect(aligned.target.runs.allSatisfy { $0.link == nil })
   }
 
   @Test
-  func compatibilityMatchingCannotTakePartOfAnExpandedGrapheme() {
+  func `compatibility matching cannot take part of an expanded grapheme`() throws {
     var source = AttributedString("2")
-    source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source.link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     #expect(TranslationStyleMapper.align(source: source, target: "⑫").hasUnmappedSourceFragments)
   }
 
   @Test(arguments: [false, true])
-  func aDigitJoinedToPunctuationCannotBeAssignedToThePunctuation(_ joined: Bool) throws {
+  func `a digit joined to punctuation cannot be assigned to the punctuation`(_ joined: Bool) throws {
     let fixture = try fixture(finalNumber: "11", connectedComma: joined)
     let result = OCRInlineSourceFragments.applying(to: .init(lines: [fixture.line]), image: fixture.image)
     let fragments = result.lines[0].styleRuns.filter { $0.sourceFragment != nil }
-    if joined { #expect(fragments.isEmpty) }
-    else {
+    if joined {
+      #expect(fragments.isEmpty)
+    } else {
       let fragment = try #require(fragments.first)
       #expect((fixture.line.text as NSString).substring(with: fragment.range) == "28 - 11")
     }
   }
 
   @Test
-  func contextualImageMetadataCannotReplaceTheBaselineWording() {
+  func `contextual image metadata cannot replace the baseline wording`() throws {
     var source = AttributedString("Unsigned variants store 2° - 1.")
-    source[source.range(of: "2° - 1")!].link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source[try #require(source.range(of: "2° - 1"))].link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     let target = "부호가 없는 변형은 2° - 1까지 저장한다."
     let aligned = TranslationStyleMapper.alignContextual(
       source: source,
       target: target,
-      response: "서명되지 않은 변형은 <s0>2° - 1</s0>까지 저장한다."
+      response: "서명되지 않은 변형은 <s0>2° - 1</s0>까지 저장한다.",
     )
     #expect(!aligned.hasUnmappedSourceFragments)
     #expect(String(aligned.target.characters) == target)
@@ -311,9 +316,9 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func contextualBoundariesDistinguishRepeatedNumericSubstrings() {
+  func `contextual boundaries distinguish repeated numeric substrings`() throws {
     var source = AttributedString("2' - 1")
-    source.link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+    source.link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     let target = "-(2')부터 2'까지 저장한다."
     let aligned = TranslationStyleMapper.alignContextual(source: source, target: target, response: "-(2')부터 <s0>2'</s0>까지 저장한다.")
     #expect(!aligned.hasUnmappedSourceFragments)
@@ -322,19 +327,19 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func nativeLiteralLinksIgnoreDetachedPunctuationButNeverReplaceProse() {
-    let link = URL(string: "swiftycrow-style://run/0?source=pixels")!
+  func `native literal links ignore detached punctuation but never replace prose`() throws {
+    let link = try #require(URL(string: "swiftycrow-style://run/0?source=pixels"))
     var source = AttributedString("2' - 1")
     source.link = link
     let target = "부호가 없는 값은 2'까지 저장하며, 끝난다."
     var native = AttributedString(target)
-    native[native.range(of: "2'")!].link = link
-    native[native.range(of: ",")!].link = link
+    native[try #require(native.range(of: "2'"))].link = link
+    native[try #require(native.range(of: ","))].link = link
     let aligned = TranslationStyleMapper.alignNativeStyles(
       source: source,
       target: target,
       native: native,
-      preserving: nil
+      preserving: nil,
     )
     #expect(!aligned.hasUnmappedSourceFragments)
     #expect(String(aligned.target.characters) == target)
@@ -345,14 +350,14 @@ struct InlineSourceFragmentTests {
       source: source,
       target: target,
       native: different,
-      preserving: nil
+      preserving: nil,
     )
     #expect(rejected.hasUnmappedSourceFragments)
     #expect(String(rejected.target.characters) == target)
   }
 
   @Test(arguments: ["2⁸ − 1", "2° - 1,", "28 - 1,", "-(2n - 1)", "x + 2", "-(27)", "- (2')", "2⁸"])
-  func arithmeticCandidatesRetainTheirWholeRange(_ expression: String) {
+  func `arithmetic candidates retain their whole range`(_ expression: String) {
     let text = "Values are \(expression) in this range."
     let ranges = OCRInlineSourceFragments.candidateRanges(in: text)
     #expect(ranges
@@ -360,12 +365,12 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: ["8-bit integer", "2026 release notes", "- 1 item", "src/file.swift", "Version 2foo - 1", "C++ language"])
-  func proseAndIsolatedListMarkersAreNotArithmetic(_ text: String) {
+  func `prose and isolated list markers are not arithmetic`(_ text: String) {
     #expect(OCRInlineSourceFragments.candidateRanges(in: text).isEmpty)
   }
 
   @Test
-  func automaticOwnershipKeepsSuperscriptPixelsInsteadOfFlattenedOCR() throws {
+  func `automatic ownership keeps superscript pixels instead of flattened OCR`() throws {
     let fixture = try fixture()
     let result = OCRInlineSourceFragments.applying(to: .init(lines: [fixture.line]), image: fixture.image)
     let literal = try #require(result.lines[0].styleRuns.first { $0.sourceFragment != nil })
@@ -379,7 +384,7 @@ struct InlineSourceFragmentTests {
       x: (ink.minX * 600).rounded(),
       y: (ink.minY * 100).rounded(),
       width: CGFloat(fragment.width),
-      height: CGFloat(fragment.height)
+      height: CGFloat(fragment.height),
     )))
     #expect(try pixels(crop) == fragment.pixels)
     let source = OverlayLine.Source(recognized: result.lines[0], language: .init(identifier: "en"))
@@ -392,7 +397,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func tightObservedGlyphBoundsStillCaptureTheCompleteFormula() throws {
+  func `tight observed glyph bounds still capture the complete formula`() throws {
     var input = try fixture()
     let range = try #require(OCRInlineSourceFragments.candidateRanges(in: input.line.text).first)
     let ink = input.line.styleRuns.filter { NSIntersectionRange($0.range, range).length > 0 }
@@ -416,14 +421,14 @@ struct InlineSourceFragmentTests {
       x: (capturedInk.minX * 600).rounded(),
       y: (capturedInk.minY * 100).rounded(),
       width: CGFloat(fragment.width),
-      height: CGFloat(fragment.height)
+      height: CGFloat(fragment.height),
     )))
     #expect(fragment.height >= 14)
     #expect(try pixels(crop) == fragment.pixels)
   }
 
   @Test(arguments: ["partial", "crossing", "vertical", "textured"])
-  func uncertainOwnershipCannotMoveSourcePixels(_ reason: String) throws {
+  func `uncertain ownership cannot move source pixels`(_ reason: String) throws {
     let fixture = try fixture(textured: reason == "textured")
     var line = fixture.line
     let range = (line.text as NSString).range(of: "28")
@@ -439,7 +444,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func anotherRecognizedOwnerCannotBeCarriedInsideTheLiteral() throws {
+  func `another recognized owner cannot be carried inside the literal`() throws {
     let fixture = try fixture()
     let run = try #require(fixture.line.styleRuns.first { (fixture.line.text as NSString).substring(with: $0.range) == "28" })
     let other = OCRResult.Line(boundingBoxNormalized: try #require(run.inkBox), text: "note", preservesSource: true)
@@ -448,7 +453,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: ["same-line", "other-line", "missing-range"])
-  func partiallyMeasuredNeighborsStillOwnTheirPixels(_ variant: String) throws {
+  func `partially measured neighbors still own their pixels`(_ variant: String) throws {
     let fixture = try fixture()
     var line = fixture.line
     let owned = try #require(line.styleRuns.first { (line.text as NSString).substring(with: $0.range) == "28" })
@@ -471,7 +476,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func restoredArtworkOwnershipIsAppliedBeforeCreatingALiteral() async throws {
+  func `restored artwork ownership is applied before creating A literal`() async throws {
     let fixture = try fixture()
     let original = OCRResult(lines: [fixture.line])
     let box = try #require(fixture.line.styleRuns.first { (fixture.line.text as NSString).substring(with: $0.range) == "28" }).box
@@ -488,12 +493,14 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: [(true, false), (false, false), (false, true)])
-  func cancellationCannotAuthorizeUnresolvedSourcePixels(_ scenario: (Bool, Bool)) async throws {
+  func `cancellation cannot authorize unresolved source pixels`(_ scenario: (Bool, Bool)) async throws {
     let beforeResolution = scenario.0
     let fixture = try fixture()
     let calls = Mutex(0)
     let task = Task {
-      if beforeResolution { withUnsafeCurrentTask { $0?.cancel() } }
+      if beforeResolution {
+        withUnsafeCurrentTask { $0?.cancel() }
+      }
       return try await OCRInlineSourceFragments.resolving(.init(lines: [fixture.line]), image: fixture.image) { input, _ in
         calls.withLock { $0 += 1 }
         withUnsafeCurrentTask { $0?.cancel() }
@@ -505,7 +512,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func measuredRaisedInkCanExtendBeyondTheNativeRangeBox() throws {
+  func `measured raised ink can extend beyond the native range box`() throws {
     let fixture = try fixture()
     var line = fixture.line
     let range = (line.text as NSString).range(of: "28 - 1,")
@@ -520,7 +527,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: [(1, 1.0), (2, 1.0), (2, 0.5)])
-  func translatedLiteralPaintRetainsTheActualSourceSamples(_ sample: (Int, Double)) throws {
+  func `translated literal paint retains the actual source samples`(_ sample: (Int, Double)) throws {
     let scale = sample.0
     let pixelRatio = Int(Double(scale) * sample.1)
     let fixture = try fixture()
@@ -529,7 +536,7 @@ struct InlineSourceFragmentTests {
     let fragment = try #require(recognized.styleRuns[index].sourceFragment)
     let text = (recognized.text as NSString).substring(with: recognized.styleRuns[index].range)
     var target = AttributedString(text)
-    target.link = URL(string: "swiftycrow-style://run/\(index)")!
+    target.link = try #require(URL(string: "swiftycrow-style://run/\(index)"))
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     line.showTranslation(text, attributedText: target, language: .init(identifier: "ko"))
     let frame = CGRect(x: 0, y: 0, width: 100, height: 60)
@@ -541,13 +548,13 @@ struct InlineSourceFragmentTests {
       placementBounds: frame,
       fontSize: fragment.referenceFontSize * sample.1,
       lineHeightMultiple: 1,
-      alignment: .leading
+      alignment: .leading,
     )
     let rendered = try #require(HorizontalTextRenderer.image(for: placement, scale: CGFloat(scale)))
     let rgba = try pixels(rendered)
     let occupied = stride(from: 3, to: rgba.count, by: 4).filter { rgba[$0] > 0 }.map { $0 / 4 }
-    let x0 = try #require(occupied.map { $0 % rendered.width }.min())
-    let y0 = try #require(occupied.map { $0 / rendered.width }.min())
+    let x0 = try #require(occupied.lazy.map { $0 % rendered.width }.min())
+    let y0 = try #require(occupied.lazy.map { $0 / rendered.width }.min())
     #expect(occupied.count == fragment.width * fragment.height * pixelRatio * pixelRatio)
     var expected = Data()
     for y in 0..<(fragment.height * pixelRatio) { for x in 0..<(fragment.width * pixelRatio) {
@@ -558,19 +565,19 @@ struct InlineSourceFragmentTests {
       x: x0,
       y: y0,
       width: fragment.width * pixelRatio,
-      height: fragment.height * pixelRatio
+      height: fragment.height * pixelRatio,
     )))
     #expect(try pixels(actual) == expected)
   }
 
   @Test
-  func changedRunIndexesInvalidateAnInflightTranslation() throws {
+  func `changed run indexes invalidate an inflight translation`() throws {
     let fixture = try fixture()
     var recognized = OCRInlineSourceFragments.applying(to: .init(lines: [fixture.line]), image: fixture.image).lines[0]
     let old = OverlayLine.Source(recognized: recognized, language: .init(identifier: "en"))
     recognized.styleRuns.insert(
       .init(range: NSRange(location: 0, length: 0), box: .zero, appearance: recognized.appearance),
-      at: 0
+      at: 0,
     )
     let current = OverlayLine.Source(recognized: recognized, language: .init(identifier: "en"))
     #expect(TranslationLiteralPlan(old.attributedTextForTranslation())?
@@ -579,49 +586,49 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func literalPixelWidthDeterminesTheFontInsteadOfTheFlattenedToken() throws {
+  func `literal pixel width determines the font instead of the flattened token`() throws {
     let fragment = try #require(OverlayInlineSourceFragment(
       pixels: Data(repeating: 255, count: 30 * 14 * 4),
       width: 30,
       height: 14,
       descent: 2,
-      referenceFontSize: 13
+      referenceFontSize: 13,
     ))
     var source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.3), text: "x", styleRuns: [.init(
         range: NSRange(location: 0, length: 1),
         box: .zero,
-        sourceFragment: fragment
+        sourceFragment: fragment,
       )]),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     source.appearance.fontSizeScale = 0.13
     var line = OverlayLine(id: UUID(), source: source)
     let text = "123456789098765432123456789098765432"
     var target = AttributedString(text)
-    target.link = URL(string: "swiftycrow-style://run/0")!
+    target.link = try #require(URL(string: "swiftycrow-style://run/0"))
     line.showTranslation(text, attributedText: target, language: .init(identifier: "en"))
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 100, height: 100)).first)
     #expect(abs(placement.fontSize - 13) < 0.001)
   }
 
   @MainActor @Test
-  func unplaceablePlaceholderKeepsTheOriginalCapture() throws {
+  func `unplaceable placeholder keeps the original capture`() throws {
     let fragment = try #require(OverlayInlineSourceFragment(
       pixels: Data(repeating: 255, count: 1000 * 24 * 4),
       width: 1000,
       height: 24,
       descent: 4,
-      referenceFontSize: 13
+      referenceFontSize: 13,
     ))
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.1, height: 0.1),
       text: "original",
-      styleRuns: [.init(range: NSRange(location: 0, length: 8), box: .zero, sourceFragment: fragment)]
+      styleRuns: [.init(range: NSRange(location: 0, length: 8), box: .zero, sourceFragment: fragment)],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
     var target = AttributedString("different")
-    target.link = URL(string: "swiftycrow-style://run/0")!
+    target.link = try #require(URL(string: "swiftycrow-style://run/0"))
     line.showTranslation("different", attributedText: target, language: .init(identifier: "en"))
     let size = CGSize(width: 100, height: 100)
     let placements = OverlayLayoutEngine.placements(for: [line], in: size)
@@ -633,8 +640,8 @@ struct InlineSourceFragmentTests {
       height: 100,
       bitsPerComponent: 8,
       bytesPerRow: 400,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(red: 0.6, green: 0.2, blue: 0.4, alpha: 1))
     context.fill(CGRect(origin: .zero, size: size))
@@ -645,13 +652,13 @@ struct InlineSourceFragmentTests {
   }
 
   @Test(arguments: ["en", "ko", "ar"], [1.0, 2.0])
-  func rendererUsesOneObjectAndIncludesItsEntirePaint(_ language: String, _ scale: Double) throws {
+  func `renderer uses one object and includes its entire paint`(_ language: String, _ scale: Double) throws {
     let fragment = try #require(OverlayInlineSourceFragment(
       pixels: Data(repeating: 255, count: 48 * 24 * 4),
       width: 48,
       height: 24,
       descent: 4,
-      referenceFontSize: 13
+      referenceFontSize: 13,
     ))
     let style = OverlayTextStyleRun(range: NSRange(location: 0, length: 6), appearance: .fallback, sourceFragment: fragment)
     let plan = HorizontalTextRenderer.plan(
@@ -661,7 +668,7 @@ struct InlineSourceFragmentTests {
       appearance: .fallback,
       styles: [style],
       width: 100,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(plan.complete)
     #expect(plan.lines.count == 1)
@@ -676,13 +683,13 @@ struct InlineSourceFragmentTests {
       appearance: .fallback,
       styles: [style],
       width: 40,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(!narrow.fits(CGSize(width: 40, height: 100)))
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
       text: "28 - 1",
-      styleRuns: [.init(range: style.range, box: CGRect(x: 0, y: 0, width: 1, height: 1), sourceFragment: fragment)]
+      styleRuns: [.init(range: style.range, box: CGRect(x: 0, y: 0, width: 1, height: 1), sourceFragment: fragment)],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     let attributed = try #require(line.source.attributedTextForTranslation())
@@ -696,7 +703,7 @@ struct InlineSourceFragmentTests {
       placementBounds: frame,
       fontSize: 13,
       lineHeightMultiple: 1,
-      alignment: .leading
+      alignment: .leading,
     )
     let image = try #require(HorizontalTextRenderer.image(for: placement, scale: scale))
     let raster = try pixels(image)
@@ -705,13 +712,13 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func invalidRangesCannotProduceAPartialSuccessfulPlan() throws {
+  func `invalid ranges cannot produce A partial successful plan`() throws {
     let fragment = try #require(OverlayInlineSourceFragment(
       pixels: Data(repeating: 255, count: 16),
       width: 2,
       height: 2,
       descent: 0,
-      referenceFontSize: 13
+      referenceFontSize: 13,
     ))
     let plan = HorizontalTextRenderer.plan(
       text: "hello",
@@ -720,14 +727,14 @@ struct InlineSourceFragmentTests {
       appearance: .fallback,
       styles: [.init(range: NSRange(location: 2, length: 10), appearance: .fallback, sourceFragment: fragment)],
       width: 100,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(!plan.complete)
     #expect(!plan.fits(CGSize(width: 100, height: 100)))
   }
 
   @Test
-  func missingTargetOwnershipCannotEraseASourceFormula() throws {
+  func `missing target ownership cannot erase A source formula`() throws {
     let fixture = try fixture()
     let recognized = OCRInlineSourceFragments.applying(to: .init(lines: [fixture.line]), image: fixture.image).lines[0]
     #expect(recognized.styleRuns.contains { $0.sourceFragment != nil })
@@ -738,7 +745,7 @@ struct InlineSourceFragmentTests {
   }
 
   @Test
-  func liveStyleStabilizationRetainsTheCurrentCapturedLiteral() throws {
+  func `live style stabilization retains the current captured literal`() throws {
     let fixture = try fixture()
     let line = OCRInlineSourceFragments.applying(to: .init(lines: [fixture.line]), image: fixture.image).lines[0]
     let old = OverlayLine.Source(recognized: line, language: .init(identifier: "en"))
@@ -752,7 +759,7 @@ struct InlineSourceFragmentTests {
       width: previous.width,
       height: previous.height,
       descent: previous.descent,
-      referenceFontSize: previous.referenceFontSize
+      referenceFontSize: previous.referenceFontSize,
     )
     let stabilized = current.stabilized(relativeTo: old, imageSize: CGSize(width: 600, height: 100))
     #expect(stabilized.styleRuns[index].sourceFragment?.pixels == bytes)
@@ -764,7 +771,7 @@ struct InlineSourceFragmentTests {
   private func fixture(
     textured: Bool = false,
     finalNumber: String = "1",
-    connectedComma: Bool = false
+    connectedComma: Bool = false,
   ) throws -> (line: OCRResult.Line, image: CGImage) {
     let text = "Values range from 28 - \(finalNumber), and other values stay here."
     let appearance = OverlaySourceAppearance(
@@ -772,11 +779,11 @@ struct InlineSourceFragmentTests {
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.13,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let attributed = NSMutableAttributedString(
       string: text,
-      attributes: [.font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.black]
+      attributes: [.font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.black],
     )
     let exponent = (text as NSString).range(of: "8")
     attributed.addAttributes([.font: NSFont.systemFont(ofSize: 9), .baselineOffset: 5], range: exponent)
@@ -788,7 +795,7 @@ struct InlineSourceFragmentTests {
       bitsPerComponent: 8,
       bytesPerRow: 2400,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(NSColor.white.cgColor)
     context.fill(CGRect(x: 0, y: 0, width: 600, height: 100))
@@ -812,7 +819,7 @@ struct InlineSourceFragmentTests {
         let end = CTLineGetOffsetForStringIndex(native, NSMaxRange(match.range), nil)
         let ink = CTLineGetBoundsWithOptions(
           CTLineCreateWithAttributedString(attributed.attributedSubstring(from: match.range)),
-          [.useGlyphPathBounds]
+          [.useGlyphPathBounds],
         )
         return .init(
           range: match.range,
@@ -822,8 +829,8 @@ struct InlineSourceFragmentTests {
             x: (10 + start + ink.minX) / 600,
             y: (30 - ink.maxY) / 100,
             width: ink.width / 600,
-            height: ink.height / 100
-          )
+            height: ink.height / 100,
+          ),
         )
       }
     return (
@@ -832,9 +839,9 @@ struct InlineSourceFragmentTests {
         text: text,
         imageAspectRatio: 6,
         appearance: appearance,
-        styleRuns: runs
+        styleRuns: runs,
       ),
-      try #require(context.makeImage())
+      try #require(context.makeImage()),
     )
   }
 
@@ -846,9 +853,10 @@ struct InlineSourceFragmentTests {
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     return Data(bytes: try #require(context.data), count: image.width * image.height * 4)
   }
+
 }

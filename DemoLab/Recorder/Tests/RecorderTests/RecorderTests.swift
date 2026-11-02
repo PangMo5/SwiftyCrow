@@ -1,13 +1,14 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import Testing
 import CoreVideo
 import Foundation
 import Metal
+import Testing
 @testable import DemoRecorderKit
 
-@Test func cadenceSeparatesLateTimerAndRejectedInput() {
+@Test
+func `cadence separates late timer and rejected input`() {
   var accounting = CadenceAccounting()
   #expect(accounting.reserve(elapsed: 0, fps: 30) == 0)
   #expect(accounting.reserve(elapsed: 0.3, fps: 30) == 9)
@@ -19,20 +20,24 @@ import Metal
 }
 
 @Test(arguments: ["hevc", "h264"])
-func explicitlySelectedCodecIsPreserved(_ codec: String) throws {
+func `explicitly selected codec is preserved`(_ codec: String) throws {
   let command = try RecorderCommand.parse(["--output", "/tmp/codec-test.mov", "--codec", codec, "--fps", "30"])
-  guard case .record(let options) = command else { Issue.record("Expected recording command"); return }
+  guard case .record(let options) = command else { Issue.record("Expected recording command")
+    return
+  }
   #expect(options.codec.rawValue == codec)
   #expect(options.fps == 30)
 }
 
-@Test func unknownCodecFailsInsteadOfChangingCodec() {
+@Test
+func `unknown codec fails instead of changing codec`() {
   #expect(throws: UsageError.self) {
     try RecorderCommand.parse(["--output", "/tmp/codec-test.mov", "--codec", "automatic"])
   }
 }
 
-@Test func backpressurePreservesCollectedPixelsAndTimestampOrder() throws {
+@Test
+func `backpressure preserves collected pixels and timestamp order`() throws {
   var queue = BoundedFrameQueue<String>(capacity: 3)
   try queue.enqueue(index: 0, payload: "pixels collected at zero")
   #expect(queue.next(encoderReady: false) == nil)
@@ -44,10 +49,11 @@ func explicitlySelectedCodecIsPreserved(_ codec: String) throws {
   #expect(queue.next(encoderReady: true)?.payload == "pixels collected at nine")
   // Missing indices 1...8 remain absent rather than being filled later.
   try queue.acknowledge(index: 9)
-  #expect(queue.count == 0)
+  #expect(queue.isEmpty)
 }
 
-@Test func queueBoundAndOrderViolationsFailWithoutReplacingFrames() throws {
+@Test
+func `queue bound and order violations fail without replacing frames`() throws {
   var queue = BoundedFrameQueue<Int>(capacity: 2)
   try queue.enqueue(index: 1, payload: 101)
   #expect(throws: FrameQueueError.nonIncreasingTimestamp) { try queue.enqueue(index: 1, payload: 999) }
@@ -58,7 +64,8 @@ func explicitlySelectedCodecIsPreserved(_ codec: String) throws {
   #expect(queue.count == 2)
 }
 
-@Test func shutdownRequiresDrainingEveryCollectedFrame() throws {
+@Test
+func `shutdown requires draining every collected frame`() throws {
   var queue = BoundedFrameQueue<Int>(capacity: 2)
   try queue.enqueue(index: 0, payload: 11)
   try queue.enqueue(index: 1, payload: 12)
@@ -87,7 +94,8 @@ private func makeMetalTestBuffer() throws -> CVPixelBuffer {
   return buffer
 }
 
-@Test func metalCopyPreservesPixelsInIndependentStorage() async throws {
+@Test
+func `metal copy preserves pixels in independent storage`() async throws {
   let buffer = try makeMetalTestBuffer()
   let copier = try MetalFrameCopier(width: 4, height: 2, fps: 30)
   let copiedFrame = try copier.copy(buffer)
@@ -105,7 +113,8 @@ private func makeMetalTestBuffer() throws -> CVPixelBuffer {
   #expect(copiedBytes[CVPixelBufferGetBytesPerRow(copy)] == 42)
 }
 
-@Test func metalCopyRetainsResourcesUntilGPUCompletionAndShutdownWaits() async throws {
+@Test
+func `metal copy retains resources until GPU completion and shutdown waits`() async throws {
   let device = try #require(MTLCreateSystemDefaultDevice())
   let queue = try #require(device.makeCommandQueue())
   let gate = try #require(device.makeSharedEvent())

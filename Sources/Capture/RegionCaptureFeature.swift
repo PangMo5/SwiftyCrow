@@ -48,7 +48,6 @@ struct RegionCaptureFeature {
       latency[milestone] = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
       Log.capture.log("Capture \(milestone, privacy: .public): \(duration.loggedSeconds, privacy: .public)s since action")
     }
-
   }
 
   enum Action {
@@ -86,7 +85,7 @@ struct RegionCaptureFeature {
             try await clock.sleep(for: .seconds(2))
             await send(.captureIsTakingLong)
           }.cancellable(id: CancelID.slowHint),
-          captureEffect(target: target, settings: state.settings)
+          captureEffect(target: target, settings: state.settings),
         )
 
       case .captureIsTakingLong:
@@ -133,8 +132,13 @@ struct RegionCaptureFeature {
           state.isTakingLong = false
           if
             state.overlayLines
-              .contains(where: { $0.translatedText != nil }) { state.recordLatency("firstRenderableTranslation") }
-          if !state.isTranslating { state.recordLatency("complete") }
+              .contains(where: { $0.translatedText != nil })
+          {
+            state.recordLatency("firstRenderableTranslation")
+          }
+          if !state.isTranslating {
+            state.recordLatency("complete")
+          }
           return .none
         }
         return .send(.recognized(captured, restorationPending: false))
@@ -146,7 +150,9 @@ struct RegionCaptureFeature {
         state.isRestoring = restorationPending
         state.isRecognizing = false
         state.isTakingLong = false
-        if let data = captured.pngData { state.imageData = data }
+        if let data = captured.pngData {
+          state.imageData = data
+        }
         state.imageSize = captured.size
         let settings = state.requestedSettings ?? state.settings
         let configured = settings.languages.source
@@ -158,7 +164,7 @@ struct RegionCaptureFeature {
         let sourceLines = captured.lines.indices.map {
           OverlayLine.Source(
             recognized: captured.lines[$0],
-            language: lineSources[$0].localeLanguage
+            language: lineSources[$0].localeLanguage,
           )
         }
         let preservesSource = sourceLines.indices.map {
@@ -177,7 +183,7 @@ struct RegionCaptureFeature {
           var overlayLine = OverlayLine(
             id: uuid(),
             source: sourceLine,
-            initialContent: needsTranslation ? .pending : .source
+            initialContent: needsTranslation ? .pending : .source,
           )
           overlayLine.sourcePixelsAreCurrent = !state.isRestoring
           newLines.append(overlayLine)
@@ -190,10 +196,10 @@ struct RegionCaptureFeature {
                 trailingContext: contextGroups[index] == nil
                   ? OverlayTranslationPolicy.trailingContext(
                     at: index,
-                    in: sourceLines
+                    in: sourceLines,
                   )
                   : nil,
-                groupContext: contextGroups[index]
+                groupContext: contextGroups[index],
               ))
           }
         }
@@ -215,9 +221,9 @@ struct RegionCaptureFeature {
                       id: result.id,
                       translation: TranslatedText(
                         text: result.text,
-                        attributedText: result.attributedText
+                        attributedText: result.attributedText,
                       ),
-                      target: target
+                      target: target,
                     ))
                   }
                 } catch is CancellationError {
@@ -264,15 +270,20 @@ struct RegionCaptureFeature {
           state.overlayLines[index].showTranslation(
             text,
             attributedText: text == translation.text ? translation.attributedText : nil,
-            language: target
+            language: target,
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
         if !state.isRestoring {
           if
             state.overlayLines
-              .contains(where: { $0.translatedText != nil }) { state.recordLatency("firstRenderableTranslation") }
-          if !state.isTranslating { state.recordLatency("complete") }
+              .contains(where: { $0.translatedText != nil })
+          {
+            state.recordLatency("firstRenderableTranslation")
+          }
+          if !state.isTranslating {
+            state.recordLatency("complete")
+          }
         }
         return .none
 
@@ -328,7 +339,7 @@ struct RegionCaptureFeature {
         let image = try await withDeadline(
           CaptureDeadline.screenCapture,
           stage: .screenCapture,
-          clock: clock
+          clock: clock,
         ) {
           let image: CGImage =
             switch target {
@@ -336,7 +347,7 @@ struct RegionCaptureFeature {
               try await screenCapture.captureImage(
                 region,
                 await displayID(coveringMostOf: region),
-                ProcessInfo.processInfo.processIdentifier
+                ProcessInfo.processInfo.processIdentifier,
               )
 
             case .window(let id, _):
@@ -357,7 +368,7 @@ struct RegionCaptureFeature {
         return CapturedRegion(
           pngData: await preview,
           size: size,
-          lines: result.lines
+          lines: result.lines,
         )
       }
       guard !Task.isCancelled else { return }
@@ -404,7 +415,9 @@ extension RegionResultClient: DependencyKey {
     // The controller touches AppKit, so build it lazily on the main actor.
     nonisolated(unsafe) var controller: RegionResultWindowController?
     let resolve: @MainActor @Sendable () -> RegionResultWindowController = {
-      if let controller { return controller }
+      if let controller {
+        return controller
+      }
       let new = RegionResultWindowController()
       controller = new
       return new
@@ -444,7 +457,7 @@ final class RegionResultWindowController {
       contentRect: NSRect(x: 0, y: 0, width: 620, height: 520),
       styleMask: [.borderless, .resizable, .fullSizeContentView],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     // ARC and this controller own the window lifetime, including a hidden
     // capture replaced before presentation. AppKit must not release it on close.
@@ -465,7 +478,7 @@ final class RegionResultWindowController {
         owningWindow: { [weak panel] in panel },
         onSaveImage: { [weak self, weak panel] data in self?.saveImage(data, panel: panel) },
         onCopyImage: { [weak self, weak panel] data in self?.copyImage(data, panel: panel) },
-        onClose: { [weak panel] in panel?.close() }
+        onClose: { [weak panel] in panel?.close() },
       )
     )
     panel.contentViewController = hosting
@@ -479,7 +492,9 @@ final class RegionResultWindowController {
     observeToken = observe { [weak self, weak panel] in
       guard let self, let panel, self.panel === panel else { return }
       guard store.imageData != nil || store.lastError != nil else { return }
-      if store.imageSize != .zero { fitWindow(panel, toPixelSize: store.imageSize) }
+      if store.imageSize != .zero {
+        fitWindow(panel, toPixelSize: store.imageSize)
+      }
       if !panel.didPresent {
         // Promote the menu-bar agent only when its result is ready to appear.
         // The shared coordinator balances activation with Settings windows.
@@ -494,17 +509,21 @@ final class RegionResultWindowController {
     closeObserver = NotificationCenter.default.addObserver(
       forName: NSWindow.willCloseNotification,
       object: panel,
-      queue: .main
+      queue: .main,
     ) { [weak self] _ in
       MainActor.assumeIsolated {
         Log.capture.debug("Capture result window closed")
-        if panel.didPresent { WindowActivation.closed() }
+        if panel.didPresent {
+          WindowActivation.closed()
+        }
         if self?.panel === panel {
           self?.captureTask?.cancel()
           self?.captureTask = nil
           self?.observeToken = nil
           self?.panel = nil
-          if let token = self?.closeObserver { NotificationCenter.default.removeObserver(token) }
+          if let token = self?.closeObserver {
+            NotificationCenter.default.removeObserver(token)
+          }
           self?.closeObserver = nil
         }
       }
@@ -557,6 +576,7 @@ final class RegionResultWindowController {
     panel.setContentSize(CGSize(width: max(360, width), height: height + chromeHeight))
     panel.center()
   }
+
 }
 
 // MARK: - ResultPanel

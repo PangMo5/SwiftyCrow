@@ -1,2 +1,18 @@
 [tools]
-tuist = "latest"
+tuist = "4.214.1"
+swiftformat = "0.64.5"
+
+[env]
+_.source = "scripts/xcode-env.sh"
+
+[tasks.format]
+description = "Format Swift sources with the Airbnb style"
+run = "swiftformat ."
+
+[tasks."format:check"]
+description = "Check Swift formatting without changing files"
+run = "swiftformat --lint ."
+
+[tasks.generate]
+description = "Resolve dependencies and generate the Xcode workspace"
+run = ["tuist install", "tuist generate --no-open"]

@@ -14,6 +14,7 @@ let appVersion = "2.10.1"
 let buildNumber = Environment.buildNumber.getString(default: "1")
 
 let baseSettings: SettingsDictionary = [
+  "SDKROOT": "macosx",
   "SWIFT_EMIT_LOC_STRINGS": "YES",
   "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
   "DEVELOPMENT_TEAM": SettingValue(stringLiteral: developmentTeam),
@@ -91,7 +92,7 @@ let project = Project(
             fi
             """,
           name: "Validate Localizations",
-          basedOnDependencyAnalysis: false
+          basedOnDependencyAnalysis: false,
         ),
         .post(
           script: """
@@ -106,7 +107,7 @@ let project = Project(
             fi
             """,
           name: "Check Extracted UI Strings",
-          basedOnDependencyAnalysis: false
+          basedOnDependencyAnalysis: false,
         ),
       ],
       dependencies: [
@@ -142,8 +143,8 @@ let project = Project(
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon-Debug",
           ]),
           .release(name: "Release"),
-        ]
-      )
+        ],
+      ),
     ),
     .target(
       name: "SwiftyCrowTests",
@@ -155,7 +156,7 @@ let project = Project(
       sources: ["Tests/**"],
       dependencies: [
         .target(name: "SwiftyCrow")
-      ]
+      ],
     ),
-  ]
+  ],
 )

@@ -6,7 +6,7 @@ import Testing
 
 struct EdgeBackgroundIndexTests {
   @Test
-  func anEnclosedWhiteControlIsNotTheWhitePageBackground() throws {
+  func `an enclosed white control is not the white page background`() throws {
     let size = 20
     var pixels = [UInt8](repeating: 255, count: size * size * 4)
     for y in 5 ... 14 {

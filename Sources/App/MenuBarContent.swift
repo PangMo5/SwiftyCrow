@@ -22,7 +22,7 @@ struct MenuBarContent: View {
             "Capture translation",
             detail: "Translate and copy text from your screen",
             icon: "viewfinder",
-            shortcut: store.settings.shortcuts.selectRegion
+            shortcut: store.settings.shortcuts.selectRegion,
           )
         }
         .buttonStyle(MenuCardButtonStyle())
@@ -90,14 +90,14 @@ struct MenuBarContent: View {
             "Live translation",
             detail: "Select an area to translate continuously",
             icon: "captions.bubble",
-            shortcut: store.settings.shortcuts.liveOverlay
+            shortcut: store.settings.shortcuts.liveOverlay,
           )
         }
         .buttonStyle(MenuLiveActionButtonStyle())
         .accessibilityIdentifier("start-live-translation")
         Toggle("Show overlay", isOn: Binding(
           get: { store.capture.overlayActive },
-          set: { store.send(.capture(.setOverlayVisible($0))) }
+          set: { store.send(.capture(.setOverlayVisible($0))) },
         ))
         .toggleStyle(.switch).labelsHidden()
         .disabled(!store.capture.overlayFrame.hasSelection && !store.capture.overlayActive)
@@ -124,7 +124,7 @@ struct MenuBarContent: View {
           store.capture.isLive ? "Translating live" : "Translation paused",
           systemImage: store.capture.isLive
             ? "waveform"
-            : "pause.circle"
+            : "pause.circle",
         )
         .font(.callout.weight(.medium))
         Spacer()
@@ -171,7 +171,7 @@ struct MenuBarContent: View {
     _ title: LocalizedStringResource,
     detail: LocalizedStringResource,
     icon: String,
-    shortcut: HotKey?
+    shortcut: HotKey?,
   ) -> some View {
     HStack(spacing: 12) {
       Image(systemName: icon).font(.title2).foregroundStyle(.tint).frame(width: 25)
@@ -180,7 +180,9 @@ struct MenuBarContent: View {
         Text(detail).font(.caption).opacity(0.75).fixedSize(horizontal: false, vertical: true)
       }
       Spacer(minLength: 0)
-      if let shortcut { Text(shortcut.symbols).font(.caption.monospaced()).opacity(0.75) }
+      if let shortcut {
+        Text(shortcut.symbols).font(.caption.monospaced()).opacity(0.75)
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .contentShape(.rect)
@@ -190,6 +192,7 @@ struct MenuBarContent: View {
     openWindow(id: settingsWindowID)
     NSApp.activate(ignoringOtherApps: true)
   }
+
 }
 
 // MARK: - MenuCardButtonStyle
@@ -231,4 +234,5 @@ private struct MenuTranslationNotice: View {
         .fixedSize(horizontal: false, vertical: true)
     }
   }
+
 }

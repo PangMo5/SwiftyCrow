@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import Foundation
 #if os(macOS)
-@preconcurrency import AVFoundation
 import CoreGraphics
 import CoreText
 import ImageIO
+@preconcurrency import AVFoundation
 #endif
 
 // MARK: - VideoAudit
@@ -20,7 +20,7 @@ struct VideoAudit {
     let reader = try AVAssetReader(asset: asset)
     let stream = AVAssetReaderTrackOutput(
       track: track,
-      outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+      outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA],
     )
     stream.alwaysCopiesSampleData = false
     try require(reader.canAdd(stream), "Cannot decode video track")
@@ -61,7 +61,7 @@ struct VideoAudit {
       if duplicate == nil {
         try sheet.append(
           pixels.image(),
-          label: String(format: "f%d  %.3fs  dark=%d  magenta=%d", index, timestamp, metrics.dark, metrics.magenta)
+          label: String(format: "f%d  %.3fs  dark=%d  magenta=%d", index, timestamp, metrics.dark, metrics.magenta),
         )
         if sheet.count == 16 {
           sheetCount += 1
@@ -85,7 +85,7 @@ struct VideoAudit {
     guard let darkImage, let magentaImage else { throw ToolError("Missing review candidate frames") }
     try writePNG(darkImage, output.at("maximum-dark-full.png"))
     try writePNG(magentaImage, output.at("maximum-magenta-full.png"))
-    if sheet.count > 0 {
+    if !sheet.isEmpty {
       sheetCount += 1
       try sheet.write(output.at(String(format: "full-frame-contact-%03d.png", sheetCount)))
     }
@@ -104,7 +104,7 @@ struct VideoAudit {
         "visualReview",
         .string(
           "Pending. Inspect all full-frame contact sheets and original-resolution suspect frames. Metrics are not acceptance."
-        )
+        ),
       ),
     ])
     try summary.write(output.at("summary.json"))
@@ -147,8 +147,12 @@ struct DecodedPixels {
         let blue = bytes[index]
         let green = bytes[index + 1]
         let red = bytes[index + 2]
-        if red < 12, green < 12, blue < 12 { dark += 1 }
-        if red > 180, blue > 180, green < 90 { magenta += 1 }
+        if red < 12, green < 12, blue < 12 {
+          dark += 1
+        }
+        if red > 180, blue > 180, green < 90 {
+          magenta += 1
+        }
       }
       return (dark, magenta)
     }
@@ -156,7 +160,8 @@ struct DecodedPixels {
 
   func image() throws -> CGImage {
     guard
-      let provider = CGDataProvider(data: data as CFData), let image = CGImage(
+      let provider = CGDataProvider(data: data as CFData),
+      let image = CGImage(
         width: width,
         height: height,
         bitsPerComponent: 8,
@@ -170,11 +175,12 @@ struct DecodedPixels {
         provider: provider,
         decode: nil,
         shouldInterpolate: true,
-        intent: .defaultIntent
+        intent: .defaultIntent,
       )
     else { throw ToolError("Cannot create decoded frame image") }
     return image
   }
+
 }
 
 private struct ContactSheet {
@@ -190,7 +196,7 @@ private struct ContactSheet {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { throw ToolError("Cannot create contact sheet") }
     context.setFillColor(CGColor(gray: 0.93, alpha: 1))
@@ -204,6 +210,10 @@ private struct ContactSheet {
   let context: CGContext
   var count = 0
 
+  var isEmpty: Bool {
+    count == 0
+  }
+
   mutating func append(_ image: CGImage, label: String) throws {
     let x = (count % 4) * 384
     let y = 1056 - (count / 4 + 1) * 264
@@ -212,7 +222,7 @@ private struct ContactSheet {
     let height = Double(image.height) * scale
     context.draw(
       image,
-      in: CGRect(x: Double(x) + (384 - width) / 2, y: Double(y) + (240 - height) / 2, width: width, height: height)
+      in: CGRect(x: Double(x) + (384 - width) / 2, y: Double(y) + (240 - height) / 2, width: width, height: height),
     )
     let text = NSAttributedString(string: label, attributes: [
       NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName("Menlo" as CFString, 9, nil),
@@ -227,6 +237,7 @@ private struct ContactSheet {
     guard let image = context.makeImage() else { throw ToolError("Cannot finalize contact sheet") }
     try writePNG(image, file)
   }
+
 }
 
 private func writePNG(_ image: CGImage, _ file: URL) throws {

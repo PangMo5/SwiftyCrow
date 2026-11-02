@@ -62,7 +62,7 @@ enum OverlayLayoutEngine {
   static func placements(
     for lines: [OverlayLine],
     in canvasSize: CGSize,
-    prefersHorizontalTextLayout: Bool = false
+    prefersHorizontalTextLayout: Bool = false,
   ) -> [OverlayPlacement] {
     guard canvasSize.width > 0, canvasSize.height > 0 else { return [] }
     return lines.compactMap { line in
@@ -76,7 +76,7 @@ enum OverlayLayoutEngine {
     for lines: [OverlayLine],
     placements: [OverlayPlacement],
     in size: CGSize,
-    displayScale: CGFloat
+    displayScale: CGFloat,
   ) -> [CGRect] {
     let scale = max(1, displayScale)
     let halo = 1 / scale
@@ -87,7 +87,7 @@ enum OverlayLayoutEngine {
           x: patch.box.minX * size.width,
           y: patch.box.minY * size.height,
           width: patch.box.width * size.width,
-          height: patch.box.height * size.height
+          height: patch.box.height * size.height,
         ).insetBy(dx: -halo, dy: -halo)
           .applying(CGAffineTransform(scaleX: scale, y: scale)).integral
           .applying(CGAffineTransform(scaleX: 1 / scale, y: 1 / scale))
@@ -109,7 +109,7 @@ enum OverlayLayoutEngine {
     sourceLayout: OverlaySourceLayout,
     sourceSurface: OverlaySourceSurface? = nil,
     in canvasSize: CGSize,
-    displayScale: CGFloat
+    displayScale: CGFloat,
   ) -> CGRect {
     guard canvasSize.width > 0, canvasSize.height > 0 else { return .zero }
     let canvas = CGRect(origin: .zero, size: canvasSize)
@@ -118,14 +118,14 @@ enum OverlayLayoutEngine {
       x: box.minX * canvasSize.width,
       y: box.minY * canvasSize.height,
       width: max(1, box.width * canvasSize.width),
-      height: max(1, box.height * canvasSize.height)
+      height: max(1, box.height * canvasSize.height),
     )
     let clippingFrame = patch.clippingBox.map {
       CGRect(
         x: $0.minX * canvas.width,
         y: $0.minY * canvas.height,
         width: $0.width * canvas.width,
-        height: $0.height * canvas.height
+        height: $0.height * canvas.height,
       )
     } ?? canvas
     if patch.restorationPNG != nil {
@@ -182,14 +182,14 @@ enum OverlayLayoutEngine {
       x: minimumX,
       y: minimumY,
       width: maximumX - minimumX,
-      height: maximumY - minimumY
+      height: maximumY - minimumY,
     ).intersection(clippingFrame)
     return clipped.isNull || clipped.isEmpty ? .zero : clipped
   }
 
   static func sourceSurfaceFrame(
     for surface: OverlaySourceSurface,
-    in canvasSize: CGSize
+    in canvasSize: CGSize,
   ) -> CGRect {
     guard canvasSize.width > 0, canvasSize.height > 0 else { return .zero }
     let canvas = CGRect(origin: .zero, size: canvasSize)
@@ -200,7 +200,7 @@ enum OverlayLayoutEngine {
       x: safe.minX + (full.minX - safe.minX) * interpolation,
       y: safe.minY + (full.minY - safe.minY) * interpolation,
       width: safe.width + (full.width - safe.width) * interpolation,
-      height: safe.height + (full.height - safe.height) * interpolation
+      height: safe.height + (full.height - safe.height) * interpolation,
     )
     return sourceFrame(for: clipping, canvas: canvas, safeBounds: canvas)
   }
@@ -213,7 +213,7 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     among lines: [OverlayLine],
     in canvasSize: CGSize,
-    prefersHorizontalTextLayout: Bool
+    prefersHorizontalTextLayout: Bool,
   ) -> OverlayPlacement? {
     guard line.shouldReplaceSourcePixels else { return nil }
     let canvas = CGRect(origin: .zero, size: canvasSize)
@@ -231,7 +231,7 @@ enum OverlayLayoutEngine {
       tableCell: exclusiveTableCell(for: line, among: lines),
       canvas: canvas,
       safeBounds: contextFrame,
-      among: lines
+      among: lines,
     )
     var frame = inkAlignedFrame(for: line, alignment: alignment, sourceFrame: source, canvas: canvas) ?? source
     if abs(line.source.rotationRadians) > 0.025, !line.source.isReconstructedTextRegion {
@@ -242,7 +242,9 @@ enum OverlayLayoutEngine {
     }
     if line.source.isReconstructedTextRegion, let surface = exclusiveSurface(for: line, among: lines) {
       let interior = sourceFrame(for: surface.box, canvas: canvas, safeBounds: source)
-      if !interior.isNull, !interior.isEmpty { frame = interior }
+      if !interior.isNull, !interior.isEmpty {
+        frame = interior
+      }
     }
     let preferred = preferredFontSize(for: line, sourceFrame: source, canvasSize: canvasSize)
     let original = makePlacement(
@@ -253,7 +255,7 @@ enum OverlayLayoutEngine {
       alignment: alignment,
       preferredFontSize: preferred,
       canvasWidth: canvasSize.width,
-      canvasHeight: canvasSize.height
+      canvasHeight: canvasSize.height,
     )
     if
       !prefersHorizontalTextLayout,
@@ -272,14 +274,20 @@ enum OverlayLayoutEngine {
       let ink: [CGRect] =
         if case .horizontal = result.flow {
           HorizontalTextRenderer.paintedBounds(for: result).map { $0.applying(result.transform) }
-        } else { [result.visualFrame] }
+        } else {
+          [result.visualFrame]
+        }
       guard !ink.isEmpty else { return nil }
       let boundary = result.placementBounds
-      if ink.allSatisfy({ boundary.insetBy(dx: -0.00001, dy: -0.00001).contains($0) }) { return result }
+      if ink.allSatisfy({ boundary.insetBy(dx: -0.00001, dy: -0.00001).contains($0) }) {
+        return result
+      }
       let footprint = ink.reduce(CGRect.null) { $0.union($1) }
       guard
-        result.textFlowRegions.isEmpty, !footprint.isNull,
-        footprint.width <= boundary.width, footprint.height <= boundary.height
+        result.textFlowRegions.isEmpty,
+        !footprint.isNull,
+        footprint.width <= boundary.width,
+        footprint.height <= boundary.height
       else { return nil }
       let dx = min(max(0, boundary.minX - footprint.minX), boundary.maxX - footprint.maxX)
       let dy = min(max(0, boundary.minY - footprint.minY), boundary.maxY - footprint.maxY)
@@ -289,7 +297,7 @@ enum OverlayLayoutEngine {
           x: $0.minX * canvasSize.width,
           y: $0.minY * canvasSize.height,
           width: $0.width * canvasSize.width,
-          height: $0.height * canvasSize.height
+          height: $0.height * canvasSize.height,
         )
       }
       guard !obstacles.contains(where: moved.intersects) else { return nil }
@@ -305,10 +313,12 @@ enum OverlayLayoutEngine {
         verticalWrapping: result.verticalWrapping,
         isTextLayoutComplete: true,
         targetRotationRadians: result.targetRotationRadians,
-        textFlowRegions: result.textFlowRegions
+        textFlowRegions: result.textFlowRegions,
       )
     }
-    if let original = contained(placement) { return original }
+    if let original = contained(placement) {
+      return original
+    }
     func refitted(_ font: CGFloat) -> OverlayPlacement {
       var result = makePlacement(
         line: placement.line,
@@ -319,7 +329,7 @@ enum OverlayLayoutEngine {
         preferredFontSize: font,
         canvasWidth: canvasSize.width,
         canvasHeight: canvasSize.height,
-        regionsOverride: placement.textFlowRegions
+        regionsOverride: placement.textFlowRegions,
       )
       result.targetRotationRadians = placement.targetRotationRadians
       return result
@@ -333,9 +343,12 @@ enum OverlayLayoutEngine {
     }
     for _ in 0..<12 {
       let middle = (lower + upper) / 2
-      if let candidate = contained(refitted(middle)) { best = candidate
+      if let candidate = contained(refitted(middle)) {
+        best = candidate
         lower = middle
-      } else { upper = middle }
+      } else {
+        upper = middle
+      }
     }
     return best
   }
@@ -348,28 +361,32 @@ enum OverlayLayoutEngine {
     _ original: OverlayPlacement,
     preferred: CGFloat,
     canvasSize: CGSize,
-    among lines: [OverlayLine]
+    among lines: [OverlayLine],
   ) -> OverlayPlacement? {
     let source = original.line.source
     guard
       case .horizontal = original.flow,
       case .vertical(let characterScale, let progression) = source.layout,
-      characterScale > 0, abs(source.rotationRadians) < 0.025,
-      !source.isReconstructedTextRegion, source.textFlowRegions.isEmpty,
+      characterScale > 0,
+      abs(source.rotationRadians) < 0.025,
+      !source.isReconstructedTextRegion,
+      source.textFlowRegions.isEmpty,
       exclusiveSurface(for: original.line, among: lines) != nil,
       original.fontSize < preferred * 0.5
     else { return nil }
     let glyph = characterScale * canvasSize.width
     let frame = original.frame
     guard
-      frame.height >= frame.width * 2, frame.height <= glyph * 6,
-      frame.width <= glyph * 1.75, original.sourceFrame.width <= glyph * 1.75
+      frame.height >= frame.width * 2,
+      frame.height <= glyph * 6,
+      frame.width <= glyph * 1.75,
+      original.sourceFrame.width <= glyph * 1.75
     else { return nil }
     let rotatedFrame = CGRect(
       x: frame.midX - frame.height / 2,
       y: frame.midY - frame.width / 2,
       width: frame.height,
-      height: frame.width
+      height: frame.width,
     )
     func candidate(maximumLineCount: Int? = nil) -> OverlayPlacement? {
       var result = makePlacement(
@@ -381,7 +398,7 @@ enum OverlayLayoutEngine {
         preferredFontSize: preferred,
         canvasWidth: canvasSize.width,
         canvasHeight: canvasSize.height,
-        maximumLineCount: maximumLineCount
+        maximumLineCount: maximumLineCount,
       )
       result.targetRotationRadians = progression == .rightToLeft ? .pi / 2 : -.pi / 2
       return avoidingRetainedContent(result, canvasSize: canvasSize)
@@ -391,7 +408,8 @@ enum OverlayLayoutEngine {
     // gain. Measure with the same styled Core Text plan used by the renderer.
     if
       HorizontalTextRenderer.plan(for: result).lines.count > 1,
-      let single = candidate(maximumLineCount: 1), single.fontSize >= result.fontSize * 0.8,
+      let single = candidate(maximumLineCount: 1),
+      single.fontSize >= result.fontSize * 0.8,
       HorizontalTextRenderer.plan(for: single).lines.count == 1
     {
       result = single
@@ -412,7 +430,12 @@ enum OverlayLayoutEngine {
       guard other.id != line.id, other.source.recognitionContextID == line.source.recognitionContextID else { return false }
       if
         let peer = other.source.tableCell,
-        peer.table == cell.table, peer.row == cell.row, peer.column == cell.column { return true }
+        peer.table == cell.table,
+        peer.row == cell.row,
+        peer.column == cell.column
+      {
+        return true
+      }
       let box = other.source.box
       let overlap = cell.box.intersection(box)
       return !overlap.isNull && !overlap.isEmpty
@@ -439,25 +462,32 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     alignment: OverlayTextAlignment,
     sourceFrame: CGRect,
-    canvas: CGRect
+    canvas: CGRect,
   ) -> CGRect? {
     guard
       case .horizontal = line.source.layout,
       !line.source.isReconstructedTextRegion,
-      abs(line.source.rotationRadians) <= 0.025, !line.source.styleRuns.isEmpty
+      abs(line.source.rotationRadians) <= 0.025,
+      !line.source.styleRuns.isEmpty
     else { return nil }
     let text = line.source.text as NSString
     var cursor = 0
     var ink = CGRect.null
     for run in line.source.styleRuns.sorted(by: { $0.range.location < $1.range.location }) {
       guard
-        run.range.location >= 0, NSMaxRange(run.range) <= text.length,
-        let observed = run.inkBox, !observed.isNull, !observed.isEmpty
+        run.range.location >= 0,
+        NSMaxRange(run.range) <= text.length,
+        let observed = run.inkBox,
+        !observed.isNull,
+        !observed.isEmpty
       else { return nil }
       if
         run.range.location > cursor,
         !text.substring(with: NSRange(location: cursor, length: run.range.location - cursor))
-          .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return nil }
+          .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      {
+        return nil
+      }
       cursor = max(cursor, NSMaxRange(run.range))
       ink = ink.union(observed)
     }
@@ -478,7 +508,7 @@ enum OverlayLayoutEngine {
       x: minimumX,
       y: centerY - sourceFrame.height / 2,
       width: maximumX - minimumX,
-      height: sourceFrame.height
+      height: sourceFrame.height,
     )
   }
 
@@ -492,7 +522,7 @@ enum OverlayLayoutEngine {
         x: box.minX * canvasSize.width,
         y: box.minY * canvasSize.height,
         width: box.width * canvasSize.width,
-        height: box.height * canvasSize.height
+        height: box.height * canvasSize.height,
       )
     }
     let exclusions = source.layoutExclusions.map { pixels($0).applying(inverse) }
@@ -501,7 +531,9 @@ enum OverlayLayoutEngine {
     let ink: [CGRect] =
       if case .horizontal = placement.flow {
         HorizontalTextRenderer.paintedBounds(for: placement)
-      } else { [placement.frame] }
+      } else {
+        [placement.frame]
+      }
     guard ink.contains(where: { bounds in exclusions.contains { $0.intersects(bounds) } }) else { return placement }
     let allowed = source.textFlowRegions.map { pixels($0).applying(inverse) }
     guard
@@ -509,7 +541,7 @@ enum OverlayLayoutEngine {
         in: placement.frame,
         excluding: exclusions,
         allowed: allowed,
-        alignment: placement.alignment
+        alignment: placement.alignment,
       )
     else { return nil }
     let translatedCenter = CGPoint(x: clear.midX, y: clear.midY).applying(transform)
@@ -517,7 +549,7 @@ enum OverlayLayoutEngine {
       x: translatedCenter.x - clear.width / 2,
       y: translatedCenter.y - clear.height / 2,
       width: clear.width,
-      height: clear.height
+      height: clear.height,
     )
     var result = makePlacement(
       line: placement.line,
@@ -528,7 +560,7 @@ enum OverlayLayoutEngine {
       preferredFontSize: placement.fontSize,
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
-      regionsOverride: []
+      regionsOverride: [],
     )
     result.targetRotationRadians = placement.targetRotationRadians
     return result
@@ -544,14 +576,14 @@ enum OverlayLayoutEngine {
     canvasWidth: CGFloat,
     canvasHeight: CGFloat,
     regionsOverride: [CGRect]? = nil,
-    maximumLineCount: Int? = nil
+    maximumLineCount: Int? = nil,
   ) -> OverlayPlacement {
     let regions = regionsOverride ?? line.source.textFlowRegions.map {
       CGRect(
         x: $0.minX * canvasWidth - frame.minX,
         y: $0.minY * canvasHeight - frame.minY,
         width: $0.width * canvasWidth,
-        height: $0.height * canvasHeight
+        height: $0.height * canvasHeight,
       )
       .intersection(CGRect(origin: .zero, size: frame.size))
     }.filter { !$0.isNull && !$0.isEmpty }
@@ -559,7 +591,7 @@ enum OverlayLayoutEngine {
       for: line,
       flow: flow,
       preferredFontSize: preferredFontSize,
-      canvasHeight: canvasHeight
+      canvasHeight: canvasHeight,
     )
     let fittedPreferred: CGFloat =
       switch flow {
@@ -575,7 +607,7 @@ enum OverlayLayoutEngine {
           minimum: minimumFontSize,
           fontWeight: line.source.appearance.fontWeight,
           fontDesign: line.source.appearance.fontDesign,
-          isItalic: line.source.appearance.isItalic
+          isItalic: line.source.appearance.isItalic,
         )
 
       case .vertical:
@@ -591,7 +623,7 @@ enum OverlayLayoutEngine {
           regions: regions,
           alignment: alignment,
           maximumLineCount: maximumLineCount,
-          inlineDirection: flow.inlineDirection
+          inlineDirection: flow.inlineDirection,
         )
       } else {
         CoreTextTypesetter.fittedLayout(
@@ -606,7 +638,7 @@ enum OverlayLayoutEngine {
           minimum: minimumFontSize,
           lineHeightMultiple: lineHeightMultiple,
           styles: line.displayedStyleRuns,
-          isUnderlined: line.source.appearance.isUnderlined
+          isUnderlined: line.source.appearance.isUnderlined,
         )
       }
 
@@ -618,14 +650,14 @@ enum OverlayLayoutEngine {
       placementBounds: Self.sourceFrame(
         for: line.source.box,
         canvas: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight),
-        safeBounds: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight)
+        safeBounds: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight),
       ),
       fontSize: fitted.fontSize,
       lineHeightMultiple: lineHeightMultiple,
       alignment: alignment,
       verticalWrapping: fitted.verticalWrapping,
       isTextLayoutComplete: fitted.isComplete,
-      textFlowRegions: regions
+      textFlowRegions: regions,
     )
   }
 
@@ -633,7 +665,7 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     flow: OverlayTextFlow,
     preferredFontSize: CGFloat,
-    canvasHeight: CGFloat
+    canvasHeight: CGFloat,
   ) -> CGFloat {
     guard
       case .horizontal = flow,
@@ -648,7 +680,7 @@ enum OverlayLayoutEngine {
       language: line.displayedLanguage,
       fontWeight: line.source.appearance.fontWeight,
       fontDesign: line.source.appearance.fontDesign,
-      isItalic: line.source.appearance.isItalic
+      isItalic: line.source.appearance.isItalic,
     )
     guard naturalLineHeight > 0 else { return 1 }
     let sourceLineAdvance = line.source.horizontalLineAdvanceScale * canvasHeight
@@ -658,7 +690,7 @@ enum OverlayLayoutEngine {
   private static func preferredFontSize(
     for line: OverlayLine,
     sourceFrame: CGRect,
-    canvasSize: CGSize
+    canvasSize: CGSize,
   ) -> CGFloat {
     let raw: CGFloat =
       switch line.source.layout {
@@ -667,7 +699,7 @@ enum OverlayLayoutEngine {
           for: line,
           rows: rows,
           sourceFrame: sourceFrame,
-          canvasSize: canvasSize
+          canvasSize: canvasSize,
         )
 
       case .vertical(let characterScale, _):
@@ -690,9 +722,11 @@ enum OverlayLayoutEngine {
     tableCell: OCRTableCell?,
     canvas: CGRect,
     safeBounds: CGRect,
-    among lines: [OverlayLine]
+    among lines: [OverlayLine],
   ) -> OverlayTextAlignment {
-    if line.source.isReconstructedTextRegion { return .center }
+    if line.source.isReconstructedTextRegion {
+      return .center
+    }
     switch flow {
     case .vertical:
       return .center
@@ -702,18 +736,26 @@ enum OverlayLayoutEngine {
       if OCRTextSemantics.beginsListItem(line.source.text) {
         return direction == .rightToLeft ? .trailing : .leading
       }
-      if rows > 1, let measured = line.source.rowAlignment { return measured }
+      if rows > 1, let measured = line.source.rowAlignment {
+        return measured
+      }
       // Writing direction shapes the target glyphs; physical alignment belongs
       // to the captured layout, including a single row with no native hint.
       let defaultAlignment: OverlayTextAlignment = line.source.language.characterDirection == .rightToLeft ? .trailing : .leading
       // Equal or conflicting physical rows cannot support the native hint.
       // Preserve the source reading edge when geometry is genuinely ambiguous;
       // missing row geometry still allows a native alignment hint below.
-      if rows > 1, line.source.rowAlignmentEvidence == .ambiguous { return defaultAlignment }
+      if rows > 1, line.source.rowAlignmentEvidence == .ambiguous {
+        return defaultAlignment
+      }
       let fallback = line.source.alignment ?? defaultAlignment
       if
-        rows == 1, line.source.alignment != nil,
-        hasAdjacentPreservedAccessory(for: line, alignment: fallback, among: lines) { return fallback }
+        rows == 1,
+        line.source.alignment != nil,
+        hasAdjacentPreservedAccessory(for: line, alignment: fallback, among: lines)
+      {
+        return fallback
+      }
       let preservesLeadingAccessory = fallback == .leading
         && hasLeadingAccessoryIndent(for: line, among: lines)
       let neighboring = preservesLeadingAccessory
@@ -724,23 +766,31 @@ enum OverlayLayoutEngine {
         // A neighboring indented quote or the screen edge does not change a
         // paragraph's own edge alignment. Center hints may still be corrected
         // by repeated leading/trailing neighbors when its rows are ambiguous.
-        if line.source.alignment == .leading || line.source.alignment == .trailing { return fallback }
+        if line.source.alignment == .leading || line.source.alignment == .trailing {
+          return fallback
+        }
         return neighboring == .center ? fallback : neighboring ?? fallback
       }
 
-      if tableCell == nil, isIsolatedCenteredHeading(line, among: lines) { return .center }
+      if tableCell == nil, isIsolatedCenteredHeading(line, among: lines) {
+        return .center
+      }
 
       if let cell = tableCell {
-        if let alignment = tableColumnAlignment(for: line, cell: cell, among: lines, canvas: canvas) { return alignment }
+        if let alignment = tableColumnAlignment(for: line, cell: cell, among: lines, canvas: canvas) {
+          return alignment
+        }
         let bounds = self.sourceFrame(for: cell.box, canvas: canvas, safeBounds: safeBounds)
-        if geometricAlignment(of: sourceFrame, inside: bounds) == .center { return .center }
+        if geometricAlignment(of: sourceFrame, inside: bounds) == .center {
+          return .center
+        }
       }
 
       if let surface = line.source.surface, surface.confidence >= 0.35 {
         let surfaceFrame = self.sourceFrame(
           for: surface.box,
           canvas: canvas,
-          safeBounds: safeBounds
+          safeBounds: safeBounds,
         )
         if surfaceFrame.contains(CGPoint(x: sourceFrame.midX, y: sourceFrame.midY)) {
           // Geometry is strong evidence for compact controls because their
@@ -759,7 +809,7 @@ enum OverlayLayoutEngine {
       return neighboring ?? pageAlignment(
         sourceFrame: sourceFrame,
         safeBounds: safeBounds,
-        canvasWidth: canvas.width * contextBounds(of: line.source).width
+        canvasWidth: canvas.width * contextBounds(of: line.source).width,
       ) ?? fallback
     }
   }
@@ -771,7 +821,8 @@ enum OverlayLayoutEngine {
     let context = contextBounds(of: source)
     let size = source.appearance.fontSizeScale
     guard
-      size > 0, source.appearance.confidence >= 0.35,
+      size > 0,
+      source.appearance.confidence >= 0.35,
       source.appearance.fontWeight.rawValue >= OverlayFontWeight.semibold.rawValue,
       source.alignment == nil || source.alignment == .center,
       abs(source.rotationRadians) < 0.025,
@@ -795,7 +846,7 @@ enum OverlayLayoutEngine {
   private static func hasAdjacentPreservedAccessory(
     for line: OverlayLine,
     alignment: OverlayTextAlignment,
-    among lines: [OverlayLine]
+    among lines: [OverlayLine],
   ) -> Bool {
     guard alignment != .center, abs(line.source.rotationRadians) < 0.025 else { return false }
     let source = contextBox(of: line.source)
@@ -804,9 +855,12 @@ enum OverlayLayoutEngine {
     guard source.height > 0, aspect > 0 else { return false }
     return lines.contains { other in
       guard
-        other.id != line.id, other.source.preservesSource, abs(other.source.rotationRadians) < 0.025,
+        other.id != line.id,
+        other.source.preservesSource,
+        abs(other.source.rotationRadians) < 0.025,
         other.source.recognitionContextID == line.source.recognitionContextID,
-        case .horizontal(let rows) = other.source.layout, rows == 1
+        case .horizontal(let rows) = other.source.layout,
+        rows == 1
       else { return false }
       let box = contextBox(of: other.source)
       let overlap = min(source.maxY, box.maxY) - max(source.minY, box.minY)
@@ -820,7 +874,7 @@ enum OverlayLayoutEngine {
 
   private static func neighboringBlockAlignment(
     for line: OverlayLine,
-    among lines: [OverlayLine]
+    among lines: [OverlayLine],
   ) -> OverlayTextAlignment? {
     let source = contextBox(of: line.source)
     let sourceRowScale = horizontalRowScale(of: line.source)
@@ -841,7 +895,7 @@ enum OverlayLayoutEngine {
 
       let verticalGap = max(
         0,
-        max(source.minY, other.minY) - min(source.maxY, other.maxY)
+        max(source.minY, other.minY) - min(source.maxY, other.maxY),
       )
       let rowScale = max(sourceRowScale, horizontalRowScale(of: candidate.source))
       let maximumGap = min(0.08, max(0.02, rowScale * 2.5))
@@ -867,20 +921,20 @@ enum OverlayLayoutEngine {
     guard !evidence.isEmpty else { return nil }
     let ranked = [OverlayTextAlignment.leading, .center, .trailing]
       .map { alignment in
-        (alignment: alignment, count: evidence.count { $0 == alignment })
+        (alignment: alignment, votes: evidence.count { $0 == alignment })
       }
-      .filter { $0.count > 0 }
-      .sorted { $0.count > $1.count }
+      .filter { $0.votes > 0 }
+      .sorted { $0.votes > $1.votes }
     guard
       let best = ranked.first,
-      ranked.count < 2 || best.count > ranked[1].count
+      ranked.count < 2 || best.votes > ranked[1].votes
     else { return nil }
     return best.alignment
   }
 
   private static func hasLeadingAccessoryIndent(
     for line: OverlayLine,
-    among lines: [OverlayLine]
+    among lines: [OverlayLine],
   ) -> Bool {
     guard
       line.source.alignment == nil,
@@ -904,7 +958,7 @@ enum OverlayLayoutEngine {
       guard verticalOverlap / min(source.height, other.height) <= 0.25 else { return nil }
       let verticalGap = max(
         0,
-        max(source.minY, other.minY) - min(source.maxY, other.maxY)
+        max(source.minY, other.minY) - min(source.maxY, other.maxY),
       )
       let rowScale = max(sourceRowScale, horizontalRowScale(of: candidate.source))
       let maximumGap = min(0.08, max(0.02, rowScale * 2.5))
@@ -954,7 +1008,7 @@ enum OverlayLayoutEngine {
       x: (box.minX - context.minX) / context.width,
       y: (box.minY - context.minY) / context.height,
       width: box.width / context.width,
-      height: box.height / context.height
+      height: box.height / context.height,
     )
   }
 
@@ -964,7 +1018,7 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     cell: OCRTableCell,
     among lines: [OverlayLine],
-    canvas: CGRect
+    canvas: CGRect,
   ) -> OverlayTextAlignment? {
     let peers = lines.filter {
       guard let owner = $0.source.tableCell, case .horizontal(rows: 1) = $0.source.layout else { return false }
@@ -989,7 +1043,7 @@ enum OverlayLayoutEngine {
 
   private static func geometricAlignment(
     of sourceFrame: CGRect,
-    inside containerFrame: CGRect
+    inside containerFrame: CGRect,
   ) -> OverlayTextAlignment? {
     let source = sourceFrame.standardized
     let container = containerFrame.standardized
@@ -1015,7 +1069,7 @@ enum OverlayLayoutEngine {
 
   private static func isCompactSurface(
     _ surfaceFrame: CGRect,
-    around sourceFrame: CGRect
+    around sourceFrame: CGRect,
   ) -> Bool {
     surfaceFrame.width <= sourceFrame.width * 2.2
       && surfaceFrame.height <= sourceFrame.height * 3
@@ -1024,7 +1078,7 @@ enum OverlayLayoutEngine {
   private static func pageAlignment(
     sourceFrame: CGRect,
     safeBounds: CGRect,
-    canvasWidth: CGFloat
+    canvasWidth: CGFloat,
   ) -> OverlayTextAlignment? {
     // A wide OCR box centered on the page is not evidence of centered text:
     // full-width search results and article rows have the same geometry. Center
@@ -1044,7 +1098,7 @@ enum OverlayLayoutEngine {
     for line: OverlayLine,
     rows: Int,
     sourceFrame: CGRect,
-    canvasSize: CGSize
+    canvasSize: CGSize,
   ) -> CGFloat {
     if line.source.appearance.fontSizeScale > 0 {
       return line.source.appearance.fontSizeScale * canvasSize.height
@@ -1102,14 +1156,14 @@ enum OverlayLayoutEngine {
   private static func sourceFrame(
     for normalizedBox: CGRect,
     canvas: CGRect,
-    safeBounds: CGRect
+    safeBounds: CGRect,
   ) -> CGRect {
     let box = normalizedBox.standardized
     let raw = CGRect(
       x: box.minX * canvas.width,
       y: box.minY * canvas.height,
       width: max(1, box.width * canvas.width),
-      height: max(1, box.height * canvas.height)
+      height: max(1, box.height * canvas.height),
     )
     return raw.intersection(safeBounds).intersection(canvas)
   }

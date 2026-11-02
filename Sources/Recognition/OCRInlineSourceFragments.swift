@@ -29,7 +29,7 @@ enum OCRInlineSourceFragments {
     image: CGImage,
     resolve: @Sendable (OCRResult, CGImage) async -> OCRResult? = { result, image in
       await SourceRestorationBuilder.resolvingOwnership(to: result, image: image)
-    }
+    },
   ) async throws -> OCRResult {
     try Task.checkCancellation()
     let restored = await resolve(result, image)
@@ -44,9 +44,12 @@ enum OCRInlineSourceFragments {
     for index in result.lines.indices {
       var line = result.lines[index]
       guard
-        !line.isVerticalBlock, !line.preservesSource, !line.needsReview,
+        !line.isVerticalBlock,
+        !line.preservesSource,
+        !line.needsReview,
         abs(line.rotationRadians) < 0.025,
-        line.appearance.fontSizeScale > 0, hasCompleteRunCoverage(line)
+        line.appearance.fontSizeScale > 0,
+        hasCompleteRunCoverage(line)
       else { continue }
       for range in candidateRanges(in: line.text) {
         line = OCRInlinePunctuation.separating(after: range, in: line, image: image)
@@ -99,21 +102,21 @@ enum OCRInlineSourceFragments {
             width: Int(ink.width),
             height: Int(ink.height),
             descent: ink.maxY - baseline,
-            referenceFontSize: fontSize
+            referenceFontSize: fontSize,
           )
         else { continue }
         let normalized = CGRect(
           x: ink.minX / size.width,
           y: ink.minY / size.height,
           width: ink.width / size.width,
-          height: ink.height / size.height
+          height: ink.height / size.height,
         )
         let run = OverlaySourceStyleRun(
           range: range,
           box: box,
           appearance: line.appearance,
           inkBox: normalized,
-          sourceFragment: fragment
+          sourceFragment: fragment,
         )
         line.styleRuns.removeAll { NSIntersectionRange($0.range, range).length > 0 }
         line.styleRuns.append(run)
@@ -158,9 +161,9 @@ enum OCRInlineSourceFragments {
             x: bounds.minX / size.width,
             y: bounds.minY / size.height,
             width: bounds.width / size.width,
-            height: bounds.height / size.height
+            height: bounds.height / size.height,
           ),
-          sourceFragment: fragment
+          sourceFragment: fragment,
         ))
         line.styleRuns.sort { $0.range.location < $1.range.location }
       }
@@ -178,12 +181,14 @@ enum OCRInlineSourceFragments {
       for index in lines.indices {
         let base = lines[index]
         guard
-          !base.isVerticalBlock, base.text.unicodeScalars.count(where: { (0x0041...0x005A).contains($0.value)
+          !base.isVerticalBlock,
+          base.text.unicodeScalars.count(where: { (0x0041...0x005A).contains($0.value)
               || (0x0061...0x007A).contains($0.value)
           }) >= 8,
           let word = OCRResult.rubyBaseWord(in: base, for: ruby),
           let range = Range(word.range, in: base.text),
-          (1...4).contains(base.text[range].count), base.text[range].contains(where: \.isLetter),
+          (1...4).contains(base.text[range].count),
+          base.text[range].contains(where: \.isLetter),
           let run = base.styleRuns.first(where: { NSIntersectionRange($0.range, word.range).length > 0 }),
           run.sourceFragment == nil
         else { continue }
@@ -207,9 +212,9 @@ enum OCRInlineSourceFragments {
             x: bounds.minX / size.width,
             y: bounds.minY / size.height,
             width: bounds.width / size.width,
-            height: bounds.height / size.height
+            height: bounds.height / size.height,
           ),
-          sourceFragment: fragment
+          sourceFragment: fragment,
         ))
         lines[index].styleRuns.sort { $0.range.location < $1.range.location }
         break
@@ -238,7 +243,9 @@ enum OCRInlineSourceFragments {
           run.range.location - NSMaxRange(last.range) <= 2
         {
           groups[groups.count - 1].append(run)
-        } else { groups.append([run]) }
+        } else {
+          groups.append([run])
+        }
       }
       var line = original
       let source = original.text as NSString
@@ -249,7 +256,8 @@ enum OCRInlineSourceFragments {
         let value = source.substring(with: range)
         let compact = String(value.filter { !$0.isWhitespace })
         guard
-          value.count <= 80, !value.contains(where: \.isNewline),
+          value.count <= 80,
+          !value.contains(where: \.isNewline),
           OCRVisualStructure.isPath(compact) || OCRTextSemantics.isFileName(compact) || OCRTextSemantics.isCode(value)
         else { continue }
         let box = group.reduce(first.box) { $0.union($1.box).union($1.inkBox ?? $1.box) }
@@ -273,9 +281,9 @@ enum OCRInlineSourceFragments {
             x: bounds.minX / size.width,
             y: bounds.minY / size.height,
             width: bounds.width / size.width,
-            height: bounds.height / size.height
+            height: bounds.height / size.height,
           ),
-          sourceFragment: fragment
+          sourceFragment: fragment,
         ))
         line.styleRuns.sort { $0.range.location < $1.range.location }
       }
@@ -298,10 +306,12 @@ enum OCRInlineSourceFragments {
     in bounds: CGRect,
     image: CGImage,
     baseline: CGFloat,
-    fontSize: CGFloat
+    fontSize: CGFloat,
   ) -> OverlayInlineSourceFragment? {
     guard
-      bounds.width > 0, bounds.height > 0, bounds.width * bounds.height <= 100_000,
+      bounds.width > 0,
+      bounds.height > 0,
+      bounds.width * bounds.height <= 100_000,
       let crop = image.cropping(to: bounds),
       let context = CGContext(
         data: nil,
@@ -310,8 +320,9 @@ enum OCRInlineSourceFragments {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-      ), let bytes = context.data
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
+      ),
+      let bytes = context.data
     else { return nil }
     context.draw(crop, in: CGRect(x: 0, y: 0, width: crop.width, height: crop.height))
     return OverlayInlineSourceFragment(
@@ -320,7 +331,7 @@ enum OCRInlineSourceFragments {
       height: crop.height,
       descent: bounds.maxY - baseline,
       referenceFontSize: fontSize,
-      kind: .annotation
+      kind: .annotation,
     )
   }
 
@@ -345,11 +356,12 @@ enum OCRInlineSourceFragments {
     row: CGRect,
     text: String,
     fontSize: CGFloat,
-    size: CGSize
+    size: CGSize,
   ) -> CGFloat? {
     let candidates = runs.compactMap { run -> CGFloat? in
       guard
-        run.sourceFragment == nil, let ink = run.inkBox,
+        run.sourceFragment == nil,
+        let ink = run.inkBox,
         abs(run.box.midY - row.midY) <= min(run.box.height, row.height) * 0.4,
         let range = Range(run.range, in: text),
         text[range].unicodeScalars.count(where: CharacterSet.letters.contains) >= 2,
@@ -382,7 +394,7 @@ enum OCRInlineSourceFragments {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ),
       let bytes = context.data?.assumingMemoryBound(to: UInt8.self)
     else { return nil }
@@ -390,7 +402,7 @@ enum OCRInlineSourceFragments {
     let bg = [background.red, background.green, background.blue].map { Int(($0 * 255).rounded()) }
     func difference(x: Int, y: Int) -> Int {
       let offset = (y * crop.width + x) * 4
-      return (0..<3).map { abs(Int(bytes[offset + $0]) - bg[$0]) }.max() ?? 0
+      return (0..<3).lazy.map { abs(Int(bytes[offset + $0]) - bg[$0]) }.max() ?? 0
     }
     func isClear(_ y: Int) -> Bool {
       (0..<crop.width).allSatisfy { difference(x: $0, y: y) <= 12 }
@@ -432,9 +444,10 @@ enum OCRInlineSourceFragments {
         x: samplingBounds.minX + CGFloat(minX),
         y: samplingBounds.minY + CGFloat(minY),
         width: CGFloat(width),
-        height: CGFloat(height)
+        height: CGFloat(height),
       ),
-      pixels
+      pixels,
     )
   }
+
 }

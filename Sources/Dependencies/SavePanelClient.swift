@@ -15,6 +15,8 @@ struct SavePanelClient {
   var savePNG: @Sendable (_ pngData: Data, _ suggestedName: String) async -> Bool = { _, _ in false }
 }
 
+// MARK: DependencyKey
+
 extension SavePanelClient: DependencyKey {
   static var liveValue: SavePanelClient {
     SavePanelClient(

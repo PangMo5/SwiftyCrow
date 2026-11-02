@@ -14,7 +14,7 @@ struct CaptureFeatureTests {
   // MARK: Internal
 
   @Test
-  func keyboardWindowSelectionWrapsAndRecoversFromClosedWindows() {
+  func `keyboard window selection wraps and recovers from closed windows`() {
     let windows = [
       PickableWindow(id: 11, frame: .zero, ownerName: "Preview", title: "Example.png"),
       PickableWindow(id: 22, frame: .zero, ownerName: "Finder", title: "Documents"),
@@ -31,7 +31,7 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func lateResponseFromCancelledGenerationIsIgnored() async {
+  func `late response from cancelled generation is ignored`() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()
     }
@@ -41,13 +41,13 @@ struct CaptureFeatureTests {
         generation: 1,
         lineID: pendingLine.id,
         key: cacheKey,
-        translation: TranslatedText(text: "Stale translation")
+        translation: TranslatedText(text: "Stale translation"),
       )
     )
   }
 
   @Test
-  func currentResponseResolvesPendingLineAndCachesOnlyNonemptyText() async {
+  func `current response resolves pending line and caches only nonempty text`() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()
     }
@@ -57,21 +57,21 @@ struct CaptureFeatureTests {
         generation: 2,
         lineID: pendingLine.id,
         key: cacheKey,
-        translation: TranslatedText(text: "  Current translation  ")
+        translation: TranslatedText(text: "  Current translation  "),
       )
     ) {
       $0.translationCache[cacheKey] = TranslatedText(text: "Current translation")
       $0.translationCacheOrder = [cacheKey]
       $0.overlayLines[0].showTranslation(
         "Current translation",
-        language: Locale.Language(identifier: "en-US")
+        language: Locale.Language(identifier: "en-US"),
       )
       $0.isTranslating = false
     }
   }
 
   @Test
-  func recoveredTranslationClearsTheFailureShownByTheWarningPopover() async {
+  func `recovered translation clears the failure shown by the warning popover`() async {
     var state = makeState()
     state.translationUnavailable = true
     state.lastError = "Required model is not installed."
@@ -80,7 +80,7 @@ struct CaptureFeatureTests {
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: .init(text: "Recovered translation")
+      translation: .init(text: "Recovered translation"),
     )) {
       $0.translationCache[cacheKey] = .init(text: "Recovered translation")
       $0.translationCacheOrder = [cacheKey]
@@ -92,7 +92,7 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func emptyResponseBecomesVisibleErrorWithoutPoisoningCache() async {
+  func `empty response becomes visible error without poisoning cache`() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()
     }
@@ -102,7 +102,7 @@ struct CaptureFeatureTests {
         generation: 2,
         lineID: pendingLine.id,
         key: cacheKey,
-        translation: TranslatedText(text: " \n ")
+        translation: TranslatedText(text: " \n "),
       )
     ) {
       $0.overlayLines[0].showUnavailable()
@@ -112,7 +112,7 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func omittedResultBecomesExplicitFallback() async {
+  func `omitted result becomes explicit fallback`() async {
     let store = TestStore(initialState: makeState()) {
       CaptureFeature()
     }
@@ -121,7 +121,7 @@ struct CaptureFeatureTests {
       CaptureFeature.Action.translationUnavailable(
         generation: 2,
         lineIDs: [pendingLine.id],
-        message: nil
+        message: nil,
       )
     ) {
       $0.overlayLines[0].showUnavailable()
@@ -131,7 +131,7 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func unchangedLiveOCRKeepsInFlightTranslationAndRefreshesSourceStyle() async {
+  func `unchanged live OCR keeps in flight translation and refreshes source style`() async {
     var state = makeState()
     state.$settings.withLock {
       $0.languages.source = Language(code: "ja")
@@ -141,7 +141,7 @@ struct CaptureFeatureTests {
       strategy: .lowLatency,
       target: "en-US",
       imageSize: CGSize(width: 900, height: 600),
-      sources: [pendingLine.id: pendingLine.source]
+      sources: [pendingLine.id: pendingLine.source],
     )
     state.isLive = true
     state.recognitionSettings = LiveFrame.Settings(state.settings)
@@ -151,23 +151,23 @@ struct CaptureFeatureTests {
       confidence: 0.9,
       foregroundConfidence: 0.8,
       inkCoverage: 0.25,
-      fontWeight: .medium
+      fontWeight: .medium,
     )
     let refreshed = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.41, y: 0.21, width: 0.08, height: 0.3),
       text: pendingLine.source.text,
       isVerticalBlock: true,
       verticalCharScale: 0.04,
-      appearance: appearance
+      appearance: appearance,
     )
     let capture = CaptureFeature.LiveCapture(
       backdrop: nil,
       imageSize: CGSize(width: 900, height: 600),
-      result: OCRResult(lines: [refreshed])
+      result: OCRResult(lines: [refreshed]),
     )
     let expectedSource = OverlayLine.Source(
       recognized: refreshed,
-      language: Locale.Language(identifier: "ja")
+      language: Locale.Language(identifier: "ja"),
     ).stabilized(relativeTo: state.overlayLines[0].source, imageSize: capture.imageSize)
     let store = TestStore(initialState: state) {
       CaptureFeature()
@@ -187,48 +187,48 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func sourceStabilizationAcceptsRealMovementImmediately() {
+  func `source stabilization accepts real movement immediately`() {
     let previous = pendingLine.source
     let moved = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.55, y: 0.35, width: 0.08, height: 0.3),
       text: previous.text,
       isVerticalBlock: true,
-      verticalCharScale: 0.04
+      verticalCharScale: 0.04,
     )
     let current = OverlayLine.Source(recognized: moved, language: previous.language)
 
     let stabilized = current.stabilized(
       relativeTo: previous,
-      imageSize: CGSize(width: 900, height: 600)
+      imageSize: CGSize(width: 900, height: 600),
     )
 
     #expect(stabilized.box == moved.boundingBoxNormalized)
   }
 
   @Test
-  func liveCadenceSubtractsWorkAlreadySpentInTheTick() {
+  func `live cadence subtracts work already spent in the tick`() {
     #expect(
       LiveCaptureCadence.remainingDelay(
         interval: .milliseconds(800),
-        elapsed: .milliseconds(275)
+        elapsed: .milliseconds(275),
       ) == .milliseconds(525)
     )
     #expect(
       LiveCaptureCadence.remainingDelay(
         interval: .milliseconds(800),
-        elapsed: .milliseconds(800)
+        elapsed: .milliseconds(800),
       ) == nil
     )
     #expect(
       LiveCaptureCadence.remainingDelay(
         interval: .milliseconds(800),
-        elapsed: .seconds(2)
+        elapsed: .seconds(2),
       ) == nil
     )
   }
 
   @Test
-  func cacheEvictsOldestEntryAtCapacity() async {
+  func `cache evicts oldest entry at capacity`() async {
     var state = makeState()
     for index in 0..<512 {
       var key = cacheKey
@@ -243,7 +243,7 @@ struct CaptureFeatureTests {
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: TranslatedText(text: "Current translation")
+      translation: TranslatedText(text: "Current translation"),
     ))
     expectNoDifference(store.state.translationCache.count, 512)
     expectNoDifference(store.state.translationCacheOrder.count, 512)
@@ -252,12 +252,12 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func optionalStyleResponseRemainsAcceptedAfterPlainTextAppears() async {
+  func `optional style response remains accepted after plain text appears`() async {
     var state = makeState()
     state.overlayLines[0].source.styleRuns = [OverlaySourceStyleRun(
       range: NSRange(location: 0, length: 2),
       box: pendingLine.source.box,
-      appearance: OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .bold)
+      appearance: OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .bold),
     )]
     let store = TestStore(initialState: state) { CaptureFeature() }
     store.exhaustivity = .off
@@ -265,7 +265,7 @@ struct CaptureFeatureTests {
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: TranslatedText(text: "Hello")
+      translation: TranslatedText(text: "Hello"),
     ))
     #expect(!store.state.isTranslating)
     var styled = AttributedString("Hello")
@@ -274,7 +274,7 @@ struct CaptureFeatureTests {
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: TranslatedText(text: "Hello", attributedText: styled)
+      translation: TranslatedText(text: "Hello", attributedText: styled),
     ))
     expectNoDifference(store.state.overlayLines[0].translatedText, "Hello")
     expectNoDifference(store.state.overlayLines[0].displayedStyleRuns.count, 1)
@@ -283,7 +283,7 @@ struct CaptureFeatureTests {
   }
 
   @Test
-  func styledRevisionCanReplaceTheEarlierPlainWordingInTheSameGeneration() async {
+  func `styled revision can replace the earlier plain wording in the same generation`() async throws {
     var state = makeState()
     state.overlayLines[0].source.styleRuns = [.init(
       range: NSRange(location: 0, length: 2),
@@ -294,10 +294,10 @@ struct CaptureFeatureTests {
           red: 0.2,
           green: 0.4,
           blue: 0.8,
-          alpha: 1
+          alpha: 1,
         ),
-        confidence: 1
-      )
+        confidence: 1,
+      ),
     )]
     let store = TestStore(initialState: state) { CaptureFeature() }
     store.exhaustivity = .off
@@ -305,18 +305,18 @@ struct CaptureFeatureTests {
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: .init(text: "Earlier wording")
+      translation: .init(text: "Earlier wording"),
     ))
     var formatted = AttributedString("Linked revised wording")
-    formatted.link = URL(string: "swiftycrow-style://run/0")!
+    formatted.link = try #require(URL(string: "swiftycrow-style://run/0"))
     await store.send(.translationResponse(
       generation: 2,
       lineID: pendingLine.id,
       key: cacheKey,
       translation: .init(
         text: String(formatted.characters),
-        attributedText: formatted
-      )
+        attributedText: formatted,
+      ),
     ))
     #expect(store.state.overlayLines[0].translatedText == "Linked revised wording")
     #expect(store.state.overlayLines[0].displayedStyleRuns.count == 1)
@@ -324,7 +324,7 @@ struct CaptureFeatureTests {
       generation: 1,
       lineID: pendingLine.id,
       key: cacheKey,
-      translation: .init(text: "Stale wording")
+      translation: .init(text: "Stale wording"),
     ))
     #expect(store.state.overlayLines[0].translatedText == "Linked revised wording")
   }
@@ -336,7 +336,7 @@ struct CaptureFeatureTests {
       source: "ja-Jpan-JP",
       strategy: .lowLatency,
       target: "en-US",
-      text: "今日は大切な話があります"
+      text: "今日は大切な話があります",
     )
   }
 
@@ -345,15 +345,15 @@ struct CaptureFeatureTests {
       boundingBoxNormalized: CGRect(x: 0.4, y: 0.2, width: 0.08, height: 0.3),
       text: "今日は大切な話があります",
       isVerticalBlock: true,
-      verticalCharScale: 0.04
+      verticalCharScale: 0.04,
     )
     return OverlayLine(
       id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
       source: OverlayLine.Source(
         recognized: recognized,
-        language: Locale.Language(identifier: "ja")
+        language: Locale.Language(identifier: "ja"),
       ),
-      initialContent: .pending
+      initialContent: .pending,
     )
   }
 
@@ -364,4 +364,5 @@ struct CaptureFeatureTests {
     state.overlayLines = [pendingLine]
     return state
   }
+
 }

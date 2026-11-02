@@ -49,7 +49,7 @@ struct CaptureFeature {
       _ sources: [OverlayLine.Source],
       previous: [OverlayLine?],
       imageSize: CGSize,
-      groupContexts: [Int: TranslationGroupContext.Member]? = nil
+      groupContexts: [Int: TranslationGroupContext.Member]? = nil,
     ) -> Bool {
       let currentGroups = groupContexts ?? TranslationGroupContext.associations(in: sources)
       guard self.imageSize == imageSize, self.sources.count == sources.count else { return false }
@@ -171,7 +171,7 @@ struct CaptureFeature {
           .cancel(id: CancelID.live),
           .cancel(id: CancelID.recognition),
           .cancel(id: CancelID.preparation),
-          .cancel(id: CancelID.translation)
+          .cancel(id: CancelID.translation),
         )
 
       case .selectRegionRequested:
@@ -186,8 +186,11 @@ struct CaptureFeature {
         return selectLiveTarget(initialMode: .region)
 
       case .liveTargetSelected(let target):
-        if case .window(let id, _) = target { state.sourceWindowID = id }
-        else { state.sourceWindowID = nil }
+        if case .window(let id, _) = target {
+          state.sourceWindowID = id
+        } else {
+          state.sourceWindowID = nil
+        }
         state.sourceWindowAvailable = true
         let kind: OverlayFrame.SelectionKind = state.sourceWindowID == nil ? .region : .window
         state.$overlayFrame.withLock { $0 = OverlayFrame(rect: target.frame, selectionKind: kind) }
@@ -207,7 +210,9 @@ struct CaptureFeature {
           return .none
         }
         state.sourceWindowAvailable = frame != nil
-        if let frame { state.$overlayFrame.withLock { $0.updateGeometry(frame) } }
+        if let frame {
+          state.$overlayFrame.withLock { $0.updateGeometry(frame) }
+        }
         // Retire every old-frame request in this action, before the new frame
         // can be displayed. Desired Live state survives temporary minimization.
         return setLive(state.isLive, into: &state)
@@ -242,7 +247,7 @@ struct CaptureFeature {
           .cancel(id: CancelID.live),
           .cancel(id: CancelID.recognition),
           .cancel(id: CancelID.preparation),
-          .cancel(id: CancelID.translation)
+          .cancel(id: CancelID.translation),
         )
 
       case .sourceInteractionEnded:
@@ -253,8 +258,10 @@ struct CaptureFeature {
 
       case .liveFrameResponse(let generation, let frame, let result):
         guard
-          state.isLive, !state.isSourceInteracting,
-          generation == state.captureGeneration, frame == state.overlayFrame
+          state.isLive,
+          !state.isSourceInteracting,
+          generation == state.captureGeneration,
+          frame == state.overlayFrame
         else { return .none }
         switch result {
         case .failure(let error):
@@ -279,7 +286,7 @@ struct CaptureFeature {
             state.isTranslating = false
             return .merge(
               .cancel(id: CancelID.translation),
-              recognize(snapshot, settings: settings, frame: frame, into: &state)
+              recognize(snapshot, settings: settings, frame: frame, into: &state),
             )
           }
           refreshVisualFreshness(snapshot, into: &state)
@@ -296,7 +303,8 @@ struct CaptureFeature {
 
       case .liveCaptureResponse(let generation, let frame, let result):
         guard
-          state.isLive, !state.isSourceInteracting,
+          state.isLive,
+          !state.isSourceInteracting,
           generation == state.recognitionGeneration,
           frame == state.overlayFrame
         else { return .none }
@@ -335,7 +343,7 @@ struct CaptureFeature {
           state.pendingRecognitionFrame = nil
           return .merge(
             applied,
-            recognize(pending, settings: LiveFrame.Settings(state.settings), frame: frame, into: &state)
+            recognize(pending, settings: LiveFrame.Settings(state.settings), frame: frame, into: &state),
           )
 
         case .failure(let error):
@@ -422,7 +430,7 @@ struct CaptureFeature {
         }
         let translation = TranslatedText(
           text: text,
-          attributedText: text == translation.text ? translation.attributedText : nil
+          attributedText: text == translation.text ? translation.attributedText : nil,
         )
         state.translationCacheOrder.removeAll { $0 == key }
         state.translationCacheOrder.append(key)
@@ -436,7 +444,7 @@ struct CaptureFeature {
           state.overlayLines[index].showTranslation(
             translation.text,
             attributedText: translation.attributedText,
-            language: Locale.Language(identifier: key.target)
+            language: Locale.Language(identifier: key.target),
           )
         }
         state.isTranslating = state.overlayLines.contains(where: \.isPending)
@@ -464,7 +472,9 @@ struct CaptureFeature {
     let verifiedBounds: [UUID: CGRect] =
       if let frame = state.recognitionFrame, frame.imageSize == capture.imageSize {
         state.visualSourceWitnesses.compactMapValues { frame.matches($0) ? $0.bounds : nil }
-      } else { [:] }
+      } else {
+        [:]
+      }
 
     guard !result.lines.isEmpty || !verifiedBounds.isEmpty else {
       state.translationGeneration += 1
@@ -538,7 +548,7 @@ struct CaptureFeature {
         trailingContext: contextGroups[index] == nil
           ? OverlayTranslationPolicy.trailingContext(at: index, in: stableSources)
           : nil,
-        groupContext: contextGroups[index]
+        groupContext: contextGroups[index],
       )
       let key = TranslationCacheKey(
         source: source.maximalIdentifier,
@@ -546,7 +556,7 @@ struct CaptureFeature {
         target: targetLanguage.code,
         text: translationLine.requestText,
         attributedText: translationLine.attributedText,
-        groupContext: translationLine.groupContext
+        groupContext: translationLine.groupContext,
       )
       let needsTranslation = !sameLanguage && !preservesSource[index]
       let cached = needsTranslation ? cache[key] : nil
@@ -554,13 +564,13 @@ struct CaptureFeature {
       var overlayLine = OverlayLine(
         id: translationLine.id,
         source: stableSources[index],
-        initialContent: needsTranslation ? .pending : .source
+        initialContent: needsTranslation ? .pending : .source,
       )
       if let cached {
         overlayLine.showTranslation(
           cached.text,
           attributedText: cached.attributedText,
-          language: target
+          language: target,
         )
       }
 
@@ -591,7 +601,7 @@ struct CaptureFeature {
       sources: Dictionary(uniqueKeysWithValues: zip(newLines, rawSources).map { ($0.id, $1) }),
       groupContexts: Dictionary(uniqueKeysWithValues: newLines.indices.compactMap { index in
         contextGroups[index].map { (newLines[index].id, $0) }
-      })
+      }),
     )
     return Effect<Action>.run { send in
       // One session per source language; each response or explicit fallback
@@ -612,8 +622,8 @@ struct CaptureFeature {
                       key: key,
                       translation: TranslatedText(
                         text: result.text,
-                        attributedText: result.attributedText
-                      )
+                        attributedText: result.attributedText,
+                      ),
                     )
                   )
                 }
@@ -626,7 +636,7 @@ struct CaptureFeature {
                 .translationUnavailable(
                   generation: generation,
                   lineIDs: remaining,
-                  message: error.localizedDescription
+                  message: error.localizedDescription,
                 )
               )
               return
@@ -649,7 +659,7 @@ struct CaptureFeature {
   /// otherwise stable text views.
   private func matchedPreviousLines(
     for lines: [OverlayLine.Source],
-    in previousLines: [OverlayLine]
+    in previousLines: [OverlayLine],
   ) -> [OverlayLine?] {
     var remaining = Array(previousLines.indices)
     return lines.indices.map { index in
@@ -694,7 +704,7 @@ struct CaptureFeature {
     _ snapshot: LiveFrame,
     settings: LiveFrame.Settings,
     frame: OverlayFrame,
-    into state: inout State
+    into state: inout State,
   ) -> Effect<Action> {
     state.recognitionGeneration += 1
     state.recognitionFrame = snapshot
@@ -713,7 +723,7 @@ struct CaptureFeature {
         return LiveCapture(
           backdrop: settings.mode == .window ? snapshot.backdrop : nil,
           imageSize: snapshot.imageSize,
-          result: recognized
+          result: recognized,
         )
       }
       try Task.checkCancellation()
@@ -744,7 +754,7 @@ struct CaptureFeature {
       .cancel(id: CancelID.preparation),
       .cancel(id: CancelID.recognition),
       .cancel(id: CancelID.translation),
-      state.isLive ? .none : .cancel(id: CancelID.live)
+      state.isLive ? .none : .cancel(id: CancelID.live),
     )
   }
 
@@ -817,27 +827,27 @@ struct CaptureFeature {
             await send(.liveFrameResponse(
               generation: generation,
               frame: (try? result.get().0) ?? frame,
-              result: result.map { $0.1 }
+              result: result.map { $0.1 },
             ))
             let elapsed = tickStarted.duration(to: cadenceClock.now)
             if
               let delay = LiveCaptureCadence.remainingDelay(
                 interval: cadence.interval(after: try? result.get().1.signature),
-                elapsed: elapsed
+                elapsed: elapsed,
               )
             {
               try await clock.sleep(for: delay)
             }
           }
         }
-        .cancellable(id: CancelID.live, cancelInFlight: true)
+        .cancellable(id: CancelID.live, cancelInFlight: true),
       )
     } else {
       return .merge(
         .cancel(id: CancelID.live),
         .cancel(id: CancelID.recognition),
         .cancel(id: CancelID.preparation),
-        .cancel(id: CancelID.translation)
+        .cancel(id: CancelID.translation),
       )
     }
   }
@@ -846,17 +856,18 @@ struct CaptureFeature {
     let image = try await withDeadline(
       CaptureDeadline.screenCapture,
       stage: .screenCapture,
-      clock: clock
+      clock: clock,
     ) { [screenCapture] in
       try await screenCapture.captureImage(
         overlayFrame.rect,
         await displayID(coveringMostOf: overlayFrame.rect),
-        ProcessInfo.processInfo.processIdentifier
+        ProcessInfo.processInfo.processIdentifier,
       )
     }
     try Task.checkCancellation()
     return try LiveFrame(image: image)
   }
+
 }
 
 // MARK: - LiveCaptureCadence

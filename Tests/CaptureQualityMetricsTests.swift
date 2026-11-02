@@ -8,21 +8,21 @@ import Testing
 
 struct CaptureQualityMetricsTests {
   @Test
-  func paragraphOwnersPreferCompleteTitlesOverIncidentalMentions() {
+  func `paragraph owners prefer complete titles over incidental mentions`() {
     let source = ["From the free encyclopedia, Wikia.", "Wikia", "The free encyclopedia"]
     #expect(CaptureQualityMetrics.paragraphIssues(texts: source, expected: source).isEmpty)
     #expect(!CaptureQualityMetrics.paragraphIssues(
       texts: ["Wikia. The free encyclopedia"],
-      expected: ["Wikia", "The free encyclopedia"]
+      expected: ["Wikia", "The free encyclopedia"],
     ).isEmpty)
   }
 
   @Test
-  func exactFontOwnersExcludeOtherMentionsOfTheHeading() {
+  func `exact font owners exclude other mentions of the heading`() {
     func placement(_ text: String, size: CGFloat) -> OverlayPlacement {
       let line = OverlayLine(id: UUID(), source: .init(
         recognized: .init(boundingBoxNormalized: .zero, text: text),
-        language: .init(identifier: "en")
+        language: .init(identifier: "en"),
       ))
       let frame = CGRect(x: 0, y: 0, width: 100, height: 100)
       return .init(
@@ -33,7 +33,7 @@ struct CaptureQualityMetricsTests {
         placementBounds: frame,
         fontSize: size,
         lineHeightMultiple: 1,
-        alignment: .leading
+        alignment: .leading,
       )
     }
     let placements = [placement("Search Heading", size: 12), placement("Heading", size: 28)]
@@ -43,7 +43,7 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func exactStyleOwnersDoNotBorrowAnEmphasizedParagraph() {
+  func `exact style owners do not borrow an emphasized paragraph`() {
     func line(_ source: String, italic: Bool) -> OverlayLine {
       var recognized = OCRResult.Line(boundingBoxNormalized: .zero, text: source)
       recognized.appearance.isItalic = italic
@@ -62,7 +62,7 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func repeatedSourceGlyphsRequireExactCoverageWithoutDuplicatedOwners() {
+  func `repeated source glyphs require exact coverage without duplicated owners`() {
     #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン", "トン"], expected: ["トン": 2], forbidden: []).isEmpty)
     #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン"], expected: ["トン": 2], forbidden: []).count == 1)
     #expect(CaptureQualityMetrics.sourceOccurrenceIssues(["トン", "トン", "トン"], expected: ["トン": 2], forbidden: []).count == 1)
@@ -71,26 +71,26 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func backgroundGateDetectsBrightRemnantsAndRejectsInvalidRegions() throws {
+  func `background gate detects bright remnants and rejects invalid regions`() throws {
     let context = try #require(CGContext(
       data: nil,
       width: 12,
       height: 8,
       bitsPerComponent: 8,
       bytesPerRow: 48,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(try #require(CGColor(
-      colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-      components: [0.8, 0.8, 0.8, 1]
+      colorSpace: try TestGraphics.sRGBColorSpace(),
+      components: [0.8, 0.8, 0.8, 1],
     )))
     context.fill(CGRect(x: 0, y: 0, width: 12, height: 8))
     let expected = CaptureBackgroundExpectation(region: [0, 0, 12, 8], color: [204, 204, 204], maximumChannelError: 1)
     #expect(CaptureQualityMetrics.restoredBackgroundIssues(try #require(context.makeImage()), expected: [expected]).isEmpty)
     context.setFillColor(try #require(CGColor(
-      colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-      components: [217.0 / 255, 217.0 / 255, 217.0 / 255, 1]
+      colorSpace: try TestGraphics.sRGBColorSpace(),
+      components: [217.0 / 255, 217.0 / 255, 217.0 / 255, 1],
     )))
     context.fill(CGRect(x: 3, y: 3, width: 1, height: 1))
     let image = try #require(context.makeImage())
@@ -102,11 +102,11 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func scopedMeaningChecksDoNotBorrowCorrectWordsFromOtherParagraphs() {
+  func `scoped meaning checks do not borrow correct words from other paragraphs`() {
     func line(_ source: String, _ target: String) -> OverlayLine {
       var value = OverlayLine(
         id: UUID(),
-        source: .init(recognized: .init(boundingBoxNormalized: .zero, text: source), language: .init(identifier: "en"))
+        source: .init(recognized: .init(boundingBoxNormalized: .zero, text: source), language: .init(identifier: "en")),
       )
       value.showTranslation(target, language: .init(identifier: "ko"))
       return value
@@ -114,22 +114,22 @@ struct CaptureQualityMetricsTests {
     let expected = [CaptureTranslationExpectation(
       sourcePrefix: "Unsigned variants",
       targetIncludes: ["부호"],
-      targetExcludes: ["서명"]
+      targetExcludes: ["서명"],
     )]
     let incorrect = [line("Other paragraph", "부호가 없는 정수"), line("Unsigned variants can store numbers.", "서명되지 않은 변형")]
     #expect(CaptureQualityMetrics.translationIssues(incorrect, expected: expected).count == 2)
     #expect(CaptureQualityMetrics.translationIssues(
       [line("Unsigned variants can store numbers.", "부호가 없는 변형")],
-      expected: expected
+      expected: expected,
     ).isEmpty)
     #expect(!CaptureQualityMetrics.translationIssues([], expected: expected).isEmpty)
   }
 
   @Test
-  func lineCountExpectationsCatchWrappingAtTheSameFontSize() {
+  func `line count expectations catch wrapping at the same font size`() {
     var line = OverlayLine(id: UUID(), source: .init(
       recognized: .init(boundingBoxNormalized: .zero, text: "Label"),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     ))
     line.showTranslation("1.2. 안녕하세요, 세계!", language: .init(identifier: "ko"))
     func placement(width: CGFloat) -> OverlayPlacement {
@@ -142,7 +142,7 @@ struct CaptureQualityMetricsTests {
         placementBounds: frame,
         fontSize: 12,
         lineHeightMultiple: 1,
-        alignment: .leading
+        alignment: .leading,
       )
     }
     let expected = [CaptureLineCountExpectation(source: "Label", maximum: 1)]
@@ -154,10 +154,10 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func rotatedOwnerChecksUsePhysicalCanvasCoordinates() {
+  func `rotated owner checks use physical canvas coordinates`() {
     var line = OverlayLine(id: UUID(), source: .init(
       recognized: .init(boundingBoxNormalized: .zero, text: "First"),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     ))
     line.showTranslation("A translated label", language: .init(identifier: "en"))
     let frame = CGRect(x: 30, y: 85, width: 140, height: 30)
@@ -169,7 +169,7 @@ struct CaptureQualityMetricsTests {
       placementBounds: frame,
       fontSize: 20,
       lineHeightMultiple: 1,
-      alignment: .center
+      alignment: .center,
     )
     first.targetRotationRadians = .pi / 2
     line = OverlayLine(id: UUID(), source: line.source)
@@ -184,7 +184,7 @@ struct CaptureQualityMetricsTests {
         placementBounds: frame,
         fontSize: 20,
         lineHeightMultiple: 1,
-        alignment: .center
+        alignment: .center,
       )
     }
     #expect(!CaptureQualityMetrics.ownerOverlapIssues([first, other(CGRect(x: 90, y: 50, width: 20, height: 60))]).isEmpty)
@@ -192,17 +192,17 @@ struct CaptureQualityMetricsTests {
     #expect(!CaptureQualityMetrics.foreignRegionIssues(
       [first],
       canvas: CGSize(width: 200, height: 200),
-      regions: [CGRect(x: 85, y: 30, width: 30, height: 140)]
+      regions: [CGRect(x: 85, y: 30, width: 30, height: 140)],
     ).isEmpty)
     #expect(CaptureQualityMetrics.foreignRegionIssues(
       [first],
       canvas: CGSize(width: 200, height: 200),
-      regions: [CGRect(x: 35, y: 90, width: 35, height: 20)]
+      regions: [CGRect(x: 35, y: 90, width: 35, height: 20)],
     ).isEmpty)
   }
 
   @Test
-  func paragraphOwnershipIgnoresVocalizationButStillRequiresEveryWordInOneUnit() {
+  func `paragraph ownership ignores vocalization but still requires every word in one unit`() {
     let expected = ["تشمل أبرز تطبيقات محرّكات البحث."]
     #expect(CaptureQualityMetrics.paragraphIssues(texts: ["تشمل أبرز تطبيقات محركات البحث."], expected: expected).isEmpty)
     #expect(!CaptureQualityMetrics.paragraphIssues(texts: ["تشمل أبرز تطبيقات", "محركات البحث."], expected: expected).isEmpty)
@@ -210,7 +210,7 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func proseChecksRejectAnAccidentallyProtectedWordInsideATranslatedParagraph() {
+  func `prose checks reject an accidentally protected word inside A translated paragraph`() {
     let text = "Read these types here."
     let base = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     var code = base
@@ -223,10 +223,10 @@ struct CaptureQualityMetricsTests {
         styleRuns: [.init(
           range: (text as NSString).range(of: "types"),
           box: .zero,
-          appearance: code
-        )]
+          appearance: code,
+        )],
       ),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     var line = OverlayLine(id: UUID(), source: source)
     line.showTranslation("이 types를 읽으세요.", language: .init(identifier: "ko"))
@@ -236,7 +236,7 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func onePreservedLiteralCannotHideAnotherTranslatedOccurrence() {
+  func `one preserved literal cannot hide another translated occurrence`() {
     var known = OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.2, height: 0.05), text: "usize")
     known.preservesSource = true
     let preserved = OverlayLine(id: UUID(), source: .init(recognized: known, language: .init(identifier: "en")))
@@ -248,11 +248,11 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func alignmentChecksRejectWrongAndMissingSubjects() {
+  func `alignment checks reject wrong and missing subjects`() {
     var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
       boundingBoxNormalized: CGRect(x: 0.3, y: 0.3, width: 0.4, height: 0.05),
       text: "Alignment subject",
-      alignment: .center
+      alignment: .center,
     ), language: .init(identifier: "en")))
     line.showTranslation("정렬을 확인합니다", language: .init(identifier: "ko"))
     let placements = OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 1000, height: 800))
@@ -264,16 +264,16 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func fixedPitchStandaloneTokenRetainsSourceButMonospacedProseStillTranslates() {
+  func `fixed pitch standalone token retains source but monospaced prose still translates`() {
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
-      fontDesign: .monospaced
+      fontDesign: .monospaced,
     )
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .zero, text: "usize", appearance: appearance),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     var line = OverlayLine(id: UUID(), source: source)
     #expect(source.isProtectedLiteral)
@@ -286,7 +286,7 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test
-  func unprotectedCoincidentalLiteralDoesNotPassTheProtectionCheck() {
+  func `unprotected coincidental literal does not pass the protection check`() {
     let recognized = OCRResult.Line(boundingBoxNormalized: .zero, text: "Use u32 here")
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     line.showTranslation("u32를 사용하세요", language: .init(identifier: "ko"))
@@ -294,18 +294,18 @@ struct CaptureQualityMetricsTests {
   }
 
   @Test(arguments: [false, true])
-  func foreignContainerChecksActualPaintInsteadOfOnlyTextFit(_ shaped: Bool) {
+  func `foreign container checks actual paint instead of only text fit`(_ shaped: Bool) {
     let canvas = CGSize(width: 300, height: 200)
     let source = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
       text: "A paragraph",
       rowCount: 5,
-      appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
+      appearance: .init(background: .white, foreground: .black, confidence: 1, fontWeight: .regular),
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "en")))
     line.showTranslation(
       "Translations must avoid the table while retaining the complete paragraph below it.",
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     let placement = OverlayPlacement(
       line: line,
@@ -321,12 +321,12 @@ struct CaptureQualityMetricsTests {
           CGRect(x: 100, y: 0, width: 200, height: 50),
           CGRect(x: 0, y: 50, width: 300, height: 150),
         ]
-        : []
+        : [],
     )
     let issues = CaptureQualityMetrics.foreignRegionIssues(
       [placement],
       canvas: canvas,
-      regions: [CGRect(x: 0, y: 0, width: 100, height: 50)]
+      regions: [CGRect(x: 0, y: 0, width: 100, height: 50)],
     )
     #expect(issues.isEmpty == shaped)
     var captionLine = line
@@ -339,22 +339,22 @@ struct CaptureQualityMetricsTests {
       placementBounds: CGRect(origin: .zero, size: canvas),
       fontSize: 12,
       lineHeightMultiple: 1,
-      alignment: .leading
+      alignment: .leading,
     )
     #expect(CaptureQualityMetrics.ownerOverlapIssues([placement, caption]).isEmpty == shaped)
   }
 
   @Test
-  func readablePlainTextDoesNotPassARequiredLinkStyle() {
+  func `readable plain text does not pass A required link style`() {
     let source = OCRResult.Line(
       boundingBoxNormalized: .zero,
       text: "A linked term",
-      appearance: .init(background: .white, foreground: .black, confidence: 1)
+      appearance: .init(background: .white, foreground: .black, confidence: 1),
     )
     var line = OverlayLine(
       id: UUID(),
       source: .init(recognized: source, language: .init(identifier: "en")),
-      initialContent: .pending
+      initialContent: .pending,
     )
     line.showTranslation("링크된 용어", language: .init(identifier: "ko"))
     let expectation = CaptureStyleExpectation(source: "linked term", target: "용어", kind: "color")
@@ -366,23 +366,23 @@ struct CaptureQualityMetricsTests {
     ("ko", "업 데이트 중에는 기기를 분리하지 마세요.", "업데이트"),
     ("zh-Hans", "更新过程中请勿断开。", "连接"),
   ])
-  func nativeRecognitionDefectsCannotPassBecauseTranslationRendered(_ sample: (String, String, String)) {
+  func `native recognition defects cannot pass because translation rendered`(_ sample: (String, String, String)) {
     #expect(CaptureQualityMetrics.missingSourceText(
       sample.1,
       requiredText: [],
       requiredWords: [sample.2],
-      language: sample.0
+      language: sample.0,
     ) ==
       [sample.2])
   }
 
   @Test
-  func missingControlsAreIndependentFromParagraphCoverage() {
+  func `missing controls are independent from paragraph coverage`() {
     #expect(CaptureQualityMetrics.missingSourceText(
       "Téléchargements Documentation",
       requiredText: ["Téléchargements", "Assistance"],
       requiredWords: [],
-      language: "fr"
+      language: "fr",
     ) == ["Assistance"])
   }
 }

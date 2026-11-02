@@ -27,7 +27,7 @@ enum OCRTextEdgeRecovery {
         x: box.minX * imageSize.width,
         y: box.minY * imageSize.height,
         width: box.width * imageSize.width,
-        height: box.height * imageSize.height
+        height: box.height * imageSize.height,
       )
     }
     let rows = lines.filter {
@@ -37,8 +37,12 @@ enum OCRTextEdgeRecovery {
     }.map { (line: $0, box: pixels($0.boundingBoxNormalized)) }.filter {
       $0.box.height >= 6 && $0.box.height <= imageSize.height * 0.1 && $0.box.width >= $0.box.height
     }.sorted {
-      if $0.box.minY != $1.box.minY { return $0.box.minY < $1.box.minY }
-      if $0.box.minX != $1.box.minX { return $0.box.minX < $1.box.minX }
+      if $0.box.minY != $1.box.minY {
+        return $0.box.minY < $1.box.minY
+      }
+      if $0.box.minX != $1.box.minX {
+        return $0.box.minX < $1.box.minX
+      }
       return $0.box.width < $1.box.width
     }
     var visited = Set<[Int]>()
@@ -53,7 +57,8 @@ enum OCRTextEdgeRecovery {
             && min(a.height, b.height) / max(a.height, b.height) >= 0.6
         }
         guard
-          peers.count >= 5, visited.insert(peers).inserted,
+          peers.count >= 5,
+          visited.insert(peers).inserted,
           Set(peers.compactMap { rows[$0].line.recognitionGroupID }).count >= 3
         else { continue }
         let ordered = peers.sorted { rows[$0].box.midY < rows[$1].box.midY }
@@ -82,7 +87,7 @@ enum OCRTextEdgeRecovery {
             x: min(a.minX, b.minX) - height * 0.3,
             y: top,
             width: max(a.maxX, b.maxX) - min(a.minX, b.minX) + height * 0.6,
-            height: bottom - top
+            height: bottom - top,
           ).integral.intersection(canvas)
           guard
             bounds.height >= height * 0.8,
@@ -100,7 +105,7 @@ enum OCRTextEdgeRecovery {
     _ lines: [OCRResult.Line],
     image: CGImage,
     language: Language,
-    recognize: @Sendable (CGRect, Language, CGFloat) async throws -> [OCRResult.Line]
+    recognize: @Sendable (CGRect, Language, CGFloat) async throws -> [OCRResult.Line],
   ) async throws -> [OCRResult.Line] {
     let size = CGSize(width: image.width, height: image.height)
     var result = lines
@@ -119,7 +124,7 @@ enum OCRTextEdgeRecovery {
           x: box.minX * size.width,
           y: box.minY * size.height,
           width: box.width * size.width,
-          height: box.height * size.height
+          height: box.height * size.height,
         )
         let overlap = pixels.intersection(gap.bounds)
         return !candidate.isVerticalBlock && candidate.recognitionConfidence >= 0.5
@@ -131,9 +136,13 @@ enum OCRTextEdgeRecovery {
         candidate.recognitionGroupID = group
         return candidate
       }
-      if !accepted.isEmpty { result = OCRCandidateReconciler.adding(accepted, to: result) }
+      if !accepted.isEmpty {
+        result = OCRCandidateReconciler.adding(accepted, to: result)
+      }
       requests += 1
-      if requests == 4 { break }
+      if requests == 4 {
+        break
+      }
     }
     return result
   }
@@ -142,7 +151,7 @@ enum OCRTextEdgeRecovery {
     _ lines: [OCRResult.Line],
     image: CGImage,
     language: Language,
-    onlyUnassigned: Bool = false
+    onlyUnassigned: Bool = false,
   ) async throws -> [OCRResult.Line] {
     var lines = lines
     var assigned = Set<Int>()
@@ -157,13 +166,16 @@ enum OCRTextEdgeRecovery {
     var result = lines
     let groups = Dictionary(
       grouping: lines.filter { !$0.isVerticalBlock && $0.recognitionGroupID != nil },
-      by: { $0.recognitionGroupID! }
+      by: { $0.recognitionGroupID! },
     )
     var requests = 0
     for id in groups.keys.sorted() {
-      if onlyUnassigned && !assigned.contains(id) { continue }
+      if onlyUnassigned && !assigned.contains(id) {
+        continue
+      }
       guard
-        let group = groups[id], group.map(\.text).joined().count >= 24,
+        let group = groups[id],
+        group.map(\.text).joined().count >= 24,
         !group
           .contains(where: { $0.preservesSource || OCRTextSemantics.isCode($0.text) || OCRTextSemantics.isIdentifier($0.text) }),
         let crop = recoveryCrop(group, all: lines, image: image)
@@ -177,15 +189,17 @@ enum OCRTextEdgeRecovery {
         language: hint,
         crop: crop,
         minimumGlyphHeight: group
-          .map {
+          .lazy.map {
             $0.boundingBoxNormalized.height * CGFloat(image.height)
           }
           .min() ?? 20,
-        preferredScale: 2
+        preferredScale: 2,
       )
       result = merging(candidates, into: result, groupID: id)
       requests += 1
-      if requests == (onlyUnassigned ? 2 : 4) { break }
+      if requests == (onlyUnassigned ? 2 : 4) {
+        break
+      }
     }
     return result
   }
@@ -209,30 +223,36 @@ enum OCRTextEdgeRecovery {
         candidate.recognitionGroupID = groupID
         candidate.followingSeparator = result[index].followingSeparator
         candidate.continuesToNextLine = result[index].continuesToNextLine
-        if candidate.recognitionLanguages.isEmpty { candidate.recognitionLanguages = result[index].recognitionLanguages }
+        if candidate.recognitionLanguages.isEmpty {
+          candidate.recognitionLanguages = result[index].recognitionLanguages
+        }
         candidate.alignment = result[index].alignment
         result[index] = candidate
         continue
       }
       guard
-        candidate.text.count <= 8, candidate.recognitionConfidence >= 0.5,
+        candidate.text.count <= 8,
+        candidate.recognitionConfidence >= 0.5,
         !result.contains(where: { old in
           let overlap = b.intersection(old.boundingBoxNormalized)
           return !overlap.isNull && overlap.width * overlap.height > b.width * b.height * 0.35
-        }), let previous = result.indices.filter({ result[$0].recognitionGroupID == groupID }).max(by: {
+        }),
+        let previous = result.indices.filter({ result[$0].recognitionGroupID == groupID }).max(by: {
           result[$0].boundingBoxNormalized.maxY < result[$1].boundingBoxNormalized.maxY
         })
       else { continue }
       let a = result[previous].boundingBoxNormalized
       guard
-        b.minY >= a.midY, b.minY - a.maxY < a.height,
+        b.minY >= a.midY,
+        b.minY - a.maxY < a.height,
         abs(a.minX - b.minX) * candidate.imageAspectRatio < a.height,
         min(a.height, b.height) / max(a.height, b.height) > 0.5
       else { continue }
       candidate.recognitionGroupID = groupID
       candidate.alignment = result[previous].alignment
       if
-        let last = result[previous].text.last, let first = candidate.text.first,
+        let last = result[previous].text.last,
+        let first = candidate.text.first,
         last.unicodeScalars.allSatisfy({ (0x3040...0x9FFF).contains($0.value) }),
         first.unicodeScalars.allSatisfy({ (0x3040...0x9FFF).contains($0.value) })
       {
@@ -257,7 +277,7 @@ enum OCRTextEdgeRecovery {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ),
       let pixels = raster.data?.assumingMemoryBound(to: UInt8.self)
     else { return false }
@@ -273,10 +293,14 @@ enum OCRTextEdgeRecovery {
       var count = 0
       for x in 0..<crop.width {
         let index = (y * crop.width + x) * 4
-        if (0..<3).contains(where: { abs(Int(pixels[index + $0]) - background[$0]) >= 35 }) { count += 1 }
+        if (0..<3).contains(where: { abs(Int(pixels[index + $0]) - background[$0]) >= 35 }) {
+          count += 1
+        }
       }
       ink += count
-      if count >= 2 { occupiedRows += 1 }
+      if count >= 2 {
+        occupiedRows += 1
+      }
     }
     return occupiedRows >= 3 && occupiedRows <= crop.height * 9 / 10
       && ink >= max(6, crop.width * crop.height / 200) && ink < crop.width * crop.height / 2
@@ -289,23 +313,24 @@ enum OCRTextEdgeRecovery {
       x: bounds.minX * CGFloat(image.width),
       y: bounds.minY * CGFloat(image.height),
       width: bounds.width * CGFloat(image.width),
-      height: bounds.height * CGFloat(image.height)
+      height: bounds.height * CGFloat(image.height),
     )
     .insetBy(dx: -max(12, h * 0.8), dy: -max(12, h * 0.8)).integral.intersection(CGRect(
       x: 0,
       y: 0,
       width: image.width,
-      height: image.height
+      height: image.height,
     ))
     guard
-      let cut = image.cropping(to: crop), let context = CGContext(
+      let cut = image.cropping(to: crop),
+      let context = CGContext(
         data: nil,
         width: cut.width,
         height: cut.height,
         bitsPerComponent: 8,
         bytesPerRow: cut.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
     context.draw(cut, in: CGRect(x: 0, y: 0, width: cut.width, height: cut.height))
@@ -319,21 +344,25 @@ enum OCRTextEdgeRecovery {
         x: b.minX * CGFloat(image.width) - crop.minX,
         y: b.minY * CGFloat(image.height) - crop.minY,
         width: b.width * CGFloat(image.width),
-        height: b.height * CGFloat(image.height)
+        height: b.height * CGFloat(image.height),
       ).insetBy(dx: -2, dy: -2)
     }.filter { $0.intersects(CGRect(x: 0, y: 0, width: cut.width, height: cut.height)) }
     var ink = 0
     for y in 0..<cut.height { for x in 0..<cut.width {
       let o = (y * cut.width + x) * 4
       guard
-        (0..<3).contains(where: { abs(Int(data[o + $0]) - bg[$0]) > 80 }), !covered.contains(where: { $0.contains(CGPoint(
+        (0..<3).contains(where: { abs(Int(data[o + $0]) - bg[$0]) > 80 }),
+        !covered.contains(where: { $0.contains(CGPoint(
           x: x,
-          y: y
+          y: y,
         )) })
       else { continue }
       ink += 1
-      if ink >= max(8, Int(h * 0.6)) { return crop }
+      if ink >= max(8, Int(h * 0.6)) {
+        return crop
+      }
     }}
     return nil
   }
+
 }

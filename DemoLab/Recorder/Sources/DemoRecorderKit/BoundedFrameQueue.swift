@@ -1,5 +1,7 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
+
+// MARK: - FrameQueueError
 
 enum FrameQueueError: Error, Equatable, CustomStringConvertible {
   case full
@@ -17,26 +19,40 @@ enum FrameQueueError: Error, Equatable, CustomStringConvertible {
   }
 }
 
+// MARK: - BoundedFrameQueue
+
 /// The producer owns timestamps. Readiness only controls consumption; it never
 /// changes, replaces, or invents a frame. The caller serializes access.
 struct BoundedFrameQueue<Payload> {
-  struct Frame {
-    let index: Int
-    let payload: Payload
-  }
+
+  // MARK: Lifecycle
 
   init(capacity: Int) {
     precondition(capacity > 0)
     self.capacity = capacity
   }
 
+  // MARK: Internal
+
+  struct Frame {
+    let index: Int
+    let payload: Payload
+  }
+
   let capacity: Int
   private(set) var producerClosed = false
-  private var frames: [Frame] = []
-  private var lastIndex: Int?
 
-  var count: Int { frames.count }
-  var isDrained: Bool { producerClosed && frames.isEmpty }
+  var count: Int {
+    frames.count
+  }
+
+  var isEmpty: Bool {
+    frames.isEmpty
+  }
+
+  var isDrained: Bool {
+    producerClosed && frames.isEmpty
+  }
 
   mutating func enqueue(index: Int, payload: Payload) throws {
     guard !producerClosed else { throw FrameQueueError.producerClosed }
@@ -55,5 +71,13 @@ struct BoundedFrameQueue<Payload> {
     frames.removeFirst()
   }
 
-  mutating func finishProducing() { producerClosed = true }
+  mutating func finishProducing() {
+    producerClosed = true
+  }
+
+  // MARK: Private
+
+  private var frames = [Frame]()
+  private var lastIndex: Int?
+
 }

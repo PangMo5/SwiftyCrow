@@ -10,7 +10,7 @@ import CoreGraphics
 func displayID(coveringMostOf frame: CGRect) -> CGDirectDisplayID? {
   let screen = NSScreen.screens
     .map { ($0, frame.intersection($0.frame)) }
-    .map { ($0.0, $0.1.width * $0.1.height) }
+    .lazy.map { ($0.0, $0.1.width * $0.1.height) }
     .max { $0.1 < $1.1 }?
     .0
   guard

@@ -12,7 +12,7 @@ enum OverlayTypography {
     size: CGFloat,
     weight: OverlayFontWeight,
     design: OverlayFontDesign,
-    isItalic: Bool = false
+    isItalic: Bool = false,
   ) -> CTFont {
     let base = (design == .monospaced
       ? NSFont.monospacedSystemFont(ofSize: max(1, size), weight: weight.nsFontWeight)

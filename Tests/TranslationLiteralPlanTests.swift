@@ -7,12 +7,12 @@ import Testing
 
 struct TranslationLiteralPlanTests {
   @Test
-  func attributedRoundTripRetainsNonliteralOwnershipAndRestoresCodeAfterReordering() throws {
+  func `attributed round trip retains nonliteral ownership and restores code after reordering`() throws {
     var code = AttributedString("i8")
     code.inlinePresentationIntent = .code
-    code.link = URL(string: "swiftycrow-style://run/0")!
+    code.link = try #require(URL(string: "swiftycrow-style://run/0"))
     var formula = AttributedString("2⁷ − 1")
-    formula.link = URL(string: "swiftycrow-style://run/1?source=pixels")!
+    formula.link = try #require(URL(string: "swiftycrow-style://run/1?source=pixels"))
     let source = code + AttributedString(" holds ") + formula
     let plan = try #require(TranslationLiteralPlan(source))
     #expect(plan.requestText == "ZXQ000XQZ holds 2⁷ − 1")
@@ -30,7 +30,7 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func punctuationCanAssembleAnIdentifierWithoutAbsorbingFollowingProse() throws {
+  func `punctuation can assemble an identifier without absorbing following prose`() throws {
     let text = "Use foo.bar types."
     let base = OverlaySourceAppearance(background: .init(red: 1, green: 1, blue: 1, alpha: 1), foreground: .black, confidence: 1)
     var chip = base
@@ -39,23 +39,23 @@ struct TranslationLiteralPlanTests {
       OverlaySourceStyleRun(
         range: (text as NSString).range(of: token),
         box: CGRect(x: Double(index) * 0.1, y: 0, width: 0.1, height: 0.1),
-        appearance: chip
+        appearance: chip,
       )
     }
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .zero, text: text, appearance: base, styleRuns: runs),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     #expect(try #require(TranslationLiteralPlan(source.attributedTextForTranslation())).requestText == "Use ZXQ000XQZ types.")
   }
 
   @Test
-  func codeChipCannotAbsorbTheFollowingPlainWordWhenColorsAreSimilar() throws {
+  func `code chip cannot absorb the following plain word when colors are similar`() throws {
     let text = "Use usize types here."
     let base = OverlaySourceAppearance(
       background: .init(red: 0.999, green: 0.999, blue: 0.999, alpha: 1),
       foreground: .init(red: 0.1, green: 0.1, blue: 0.1, alpha: 1),
-      confidence: 1
+      confidence: 1,
     )
     var code = base
     code.background = .init(red: 0.973, green: 0.975, blue: 0.973, alpha: 1)
@@ -66,24 +66,24 @@ struct TranslationLiteralPlanTests {
       OverlaySourceStyleRun(
         range: (text as NSString).range(of: "usize"),
         box: CGRect(x: 0.1, y: 0.1, width: 0.1, height: 0.03),
-        appearance: code
+        appearance: code,
       ),
       OverlaySourceStyleRun(
         range: (text as NSString).range(of: "types"),
         box: CGRect(x: 0.21, y: 0.1, width: 0.1, height: 0.03),
-        appearance: plain
+        appearance: plain,
       ),
     ]
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .zero, text: text, appearance: base, styleRuns: runs),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     let plan = try #require(TranslationLiteralPlan(source.attributedTextForTranslation()))
     #expect(plan.requestText == "Use ZXQ000XQZ types here.")
   }
 
   @Test
-  func adjacentCodeChipsRetainTheirLiteralRoleAfterStyleCoalescing() throws {
+  func `adjacent code chips retain their literal role after style coalescing`() throws {
     let text = "Use u32 u64 values."
     let base = OverlaySourceAppearance(background: .init(red: 1, green: 1, blue: 1, alpha: 1), foreground: .black, confidence: 1)
     var code = base
@@ -92,12 +92,12 @@ struct TranslationLiteralPlanTests {
       OverlaySourceStyleRun(
         range: (text as NSString).range(of: value),
         box: CGRect(x: 0.1 + Double(index) * 0.12, y: 0.1, width: 0.1, height: 0.03),
-        appearance: code
+        appearance: code,
       )
     }
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .zero, text: text, appearance: base, styleRuns: runs),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     let plan = try #require(TranslationLiteralPlan(source.attributedTextForTranslation()))
     #expect(plan.requestText == "Use ZXQ000XQZ values.")
@@ -105,7 +105,7 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func aChangedLiteralRoleInvalidatesSemanticReuseButRecoloringDoesNot() {
+  func `a changed literal role invalidates semantic reuse but recoloring does not`() {
     let text = "Use u32 to store the number."
     let base = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1, fontWeight: .regular)
     var chip = base
@@ -114,7 +114,7 @@ struct TranslationLiteralPlanTests {
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.7, height: 0.1),
       text: text,
       appearance: base,
-      styleRuns: [.init(range: (text as NSString).range(of: "u32"), box: .zero, appearance: chip)]
+      styleRuns: [.init(range: (text as NSString).range(of: "u32"), box: .zero, appearance: chip)],
     )
     let source = OverlayLine.Source(recognized: line, language: .init(identifier: "en"))
     var plain = source
@@ -126,13 +126,13 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func inlineTypeAndVersionAreProtectedWithoutFreezingAnOrdinaryStyledWord() throws {
+  func `inline type and version are protected without freezing an ordinary styled word`() throws {
     let text = "Use u32 and version v2.10.0, then open settings."
     let base = OverlaySourceAppearance(
       background: .init(red: 0.9969, green: 0.9969, blue: 0.9969, alpha: 1),
       foreground: .black,
       confidence: 1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var chip = base
     chip.background = .init(red: 0.9722, green: 0.9751, blue: 0.9721, alpha: 1)
@@ -141,24 +141,24 @@ struct TranslationLiteralPlanTests {
       OverlaySourceStyleRun(
         range: (text as NSString).range(of: value),
         box: CGRect(x: Double(index) * 0.25, y: 0, width: 0.1, height: 0.1),
-        appearance: chip
+        appearance: chip,
       )
     }
     let source = OverlayLine.Source(
       recognized: .init(boundingBoxNormalized: .zero, text: text, appearance: base, styleRuns: runs),
-      language: .init(identifier: "en")
+      language: .init(identifier: "en"),
     )
     let plan = try #require(TranslationLiteralPlan(source.attributedTextForTranslation()))
     #expect(plan.requestText == "Use ZXQ000XQZ and version ZXQ001XQZ, then open settings.")
   }
 
   @Test
-  func reorderedLiteralsRetainExactSpellingAndTheirOwnStyles() throws {
+  func `reordered literals retain exact spelling and their own styles`() throws {
     var source = AttributedString("Use u8 with 2⁸ − 1 and isize.")
     for (index, value) in ["u8", "2⁸ − 1", "isize"].enumerated() {
       let range = try #require(source.range(of: value))
       source[range].inlinePresentationIntent = .code
-      source[range].link = URL(string: "swiftycrow-style://run/\(index)")!
+      source[range].link = try #require(URL(string: "swiftycrow-style://run/\(index)"))
     }
     let plan = try #require(TranslationLiteralPlan(source))
     #expect(plan.requestText == "Use ZXQ000XQZ with ZXQ001XQZ and ZXQ002XQZ.")
@@ -182,7 +182,7 @@ struct TranslationLiteralPlanTests {
     "ZXQ 000XQZ",
     "ZXQ000 XQZ",
   ])
-  func malformedMarkerResponsesCannotBeDisplayed(_ response: String) throws {
+  func `malformed marker responses cannot be displayed`(_ response: String) throws {
     var source = AttributedString("u8")
     source.inlinePresentationIntent = .code
     let plan = try #require(TranslationLiteralPlan(source))
@@ -190,14 +190,14 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func adjacentAttributeRunsDoNotIntroduceSpacesInsideAnIdentifier() throws {
+  func `adjacent attribute runs do not introduce spaces inside an identifier`() throws {
     var source = AttributedString("Use foo.Bar")
     let a = try #require(source.range(of: "foo."))
     let b = try #require(source.range(of: "Bar"))
     source[a].inlinePresentationIntent = .code
     source[b].inlinePresentationIntent = .code
-    source[a].link = URL(string: "swiftycrow-style://run/0")!
-    source[b].link = URL(string: "swiftycrow-style://run/1")!
+    source[a].link = try #require(URL(string: "swiftycrow-style://run/0"))
+    source[b].link = try #require(URL(string: "swiftycrow-style://run/1"))
     let plan = try #require(TranslationLiteralPlan(source))
     #expect(plan.requestText == "Use ZXQ000XQZ")
     let restored = try #require(plan.restoring("ZXQ000XQZ을 사용하세요"))
@@ -206,7 +206,7 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func sourceMarkerLookalikesCannotCollideWithGeneratedMarkers() throws {
+  func `source marker lookalikes cannot collide with generated markers`() throws {
     var source = AttributedString("The text ZXQ000XQZ refers to u8.")
     source[try #require(source.range(of: "u8"))].inlinePresentationIntent = .code
     let plan = try #require(TranslationLiteralPlan(source))
@@ -215,7 +215,7 @@ struct TranslationLiteralPlanTests {
   }
 
   @Test
-  func plainProseDoesNotAcquireProtectedMarkers() {
+  func `plain prose does not acquire protected markers`() {
     #expect(TranslationLiteralPlan(nil) == nil)
     #expect(TranslationLiteralPlan(AttributedString("Read the documentation.")) == nil)
   }

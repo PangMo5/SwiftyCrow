@@ -15,11 +15,13 @@ struct CatalogChecks {
     var implicit = 0
     return matches(
       #"%(?:(\d+)\$)?[-+ #0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?(lld|llu|ld|lu|d|u|@|f|g|s)"#,
-      source.replacingOccurrences(of: "%%", with: "")
+      source.replacing("%%", with: ""),
     ).map { match in
       let position: Int
-      if let explicit = Int(match[1]) { position = explicit }
-      else { implicit += 1
+      if let explicit = Int(match[1]) {
+        position = explicit
+      } else {
+        implicit += 1
         position = implicit
       }
       return "\(position):\(match[2])"
@@ -47,14 +49,18 @@ struct CatalogChecks {
     var strings = JSON.object([])
     for key in extracted.keys.sorted() {
       var entry = catalog["strings"][key]
-      if entry.isNull { entry = .object([
-        ("extractionState", .string("manual")),
-        (
-          "localizations",
-          .object([("en", .object([("stringUnit", .object([("state", .string("translated")), ("value", .string(key))]))]))])
-        ),
-      ]) }
-      if let comment = extracted[key]?["comment"].string, !comment.isEmpty { entry["comment"] = .string(comment) }
+      if entry.isNull {
+        entry = .object([
+          ("extractionState", .string("manual")),
+          (
+            "localizations",
+            .object([("en", .object([("stringUnit", .object([("state", .string("translated")), ("value", .string(key))]))]))]),
+          ),
+        ])
+      }
+      if let comment = extracted[key]?["comment"].string, !comment.isEmpty {
+        entry["comment"] = .string(comment)
+      }
       strings[key] = entry
     }
     catalog["strings"] = strings
@@ -63,7 +69,9 @@ struct CatalogChecks {
   }
 
   func app(_ directory: URL? = nil, locale selectedLocale: String? = nil) throws {
-    if let selectedLocale { try require(locales.contains(selectedLocale), "Unsupported app locale") }
+    if let selectedLocale {
+      try require(locales.contains(selectedLocale), "Unsupported app locale")
+    }
     let checkedLocales = selectedLocale.map { $0 == "en" ? ["en"] : ["en", $0] } ?? locales
     var total = 0
     for name in ["Localizable", "InfoPlist"] {
@@ -77,7 +85,7 @@ struct CatalogChecks {
           let value = unit["value"].str
           try require(
             unit["state"].str == "translated" && unit["value"].string != nil && (key.isEmpty || !value.isEmpty),
-            "Missing app translation: \(name)/\(key)/\(locale)"
+            "Missing app translation: \(name)/\(key)/\(locale)",
           )
           try require(Self.placeholders(source) == Self.placeholders(value), "Changed app placeholders: \(key)/\(locale)")
           try require(!value.contains("—"), "Em dash in interface copy: \(key)/\(locale)")
@@ -125,7 +133,9 @@ struct CatalogChecks {
   }
 
   func text(_ kind: String, locale selectedLocale: String? = nil) throws {
-    if let selectedLocale { try require(locales.contains(selectedLocale), "Unsupported catalog locale") }
+    if let selectedLocale {
+      try require(locales.contains(selectedLocale), "Unsupported catalog locale")
+    }
     let checkedLocales = selectedLocale.map { [$0] } ?? Array(locales.dropFirst())
     let values = try JSON.read(workspace.root.at("Localization/\(kind == "docs" ? "Docs" : "Web").json"))
     for locale in checkedLocales {
@@ -137,7 +147,7 @@ struct CatalogChecks {
         let legal = observed.english == "[GNU Affero General Public License v3.0 only]({0}) ({1}). Copyright (C) 2021-2026 PangMo5."
         try require(
           locale == "en" || legal || values[key][locale].str != observed.english,
-          "Unreviewed English copy in \(kind)/\(key)/\(locale)"
+          "Unreviewed English copy in \(kind)/\(key)/\(locale)",
         )
       }
     }
@@ -158,7 +168,7 @@ struct CatalogChecks {
           let value = film[field][locale].str
           try require(
             !value.isEmpty && (locale == "en" || value != film[field]["en"].str),
-            "Missing film translation: \(name)/\(field)/\(locale)"
+            "Missing film translation: \(name)/\(field)/\(locale)",
           )
         }
       }

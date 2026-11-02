@@ -23,7 +23,7 @@ extension HotKey {
   init(_ keyCombo: KeyCombo) {
     self.init(
       carbonKeyCode: keyCombo.QWERTYKeyCode,
-      carbonModifiers: keyCombo.modifiers
+      carbonModifiers: keyCombo.modifiers,
     )
   }
 
@@ -34,6 +34,7 @@ extension HotKey {
   var keyCombo: KeyCombo? {
     KeyCombo(QWERTYKeyCode: carbonKeyCode, carbonModifiers: carbonModifiers)
   }
+
 }
 
 // MARK: - skhd-style string
@@ -100,10 +101,18 @@ extension HotKey {
   /// skhd-style description: `"<mods joined by ' + '> - <key>"`.
   var displayString: String {
     var mods = [String]()
-    if carbonModifiers & Self.control != 0 { mods.append("ctrl") }
-    if carbonModifiers & Self.option != 0 { mods.append("alt") }
-    if carbonModifiers & Self.shift != 0 { mods.append("shift") }
-    if carbonModifiers & Self.cmd != 0 { mods.append("cmd") }
+    if carbonModifiers & Self.control != 0 {
+      mods.append("ctrl")
+    }
+    if carbonModifiers & Self.option != 0 {
+      mods.append("alt")
+    }
+    if carbonModifiers & Self.shift != 0 {
+      mods.append("shift")
+    }
+    if carbonModifiers & Self.cmd != 0 {
+      mods.append("cmd")
+    }
     let key = Self.keyCodeToName[carbonKeyCode] ?? "0x" + String(carbonKeyCode, radix: 16)
     return mods.isEmpty ? key : mods.joined(separator: " + ") + " - " + key
   }
@@ -138,7 +147,7 @@ extension HotKey: Codable {
     let keyed = try decoder.container(keyedBy: CodingKeys.self)
     self.init(
       carbonKeyCode: try keyed.decode(Int.self, forKey: .carbonKeyCode),
-      carbonModifiers: try keyed.decode(Int.self, forKey: .carbonModifiers)
+      carbonModifiers: try keyed.decode(Int.self, forKey: .carbonModifiers),
     )
   }
 
@@ -168,10 +177,18 @@ extension HotKey {
   /// independent of the active keyboard layout.
   var symbols: String {
     var out = ""
-    if carbonModifiers & Self.control != 0 { out += "⌃" }
-    if carbonModifiers & Self.option != 0 { out += "⌥" }
-    if carbonModifiers & Self.shift != 0 { out += "⇧" }
-    if carbonModifiers & Self.cmd != 0 { out += "⌘" }
+    if carbonModifiers & Self.control != 0 {
+      out += "⌃"
+    }
+    if carbonModifiers & Self.option != 0 {
+      out += "⌥"
+    }
+    if carbonModifiers & Self.shift != 0 {
+      out += "⇧"
+    }
+    if carbonModifiers & Self.cmd != 0 {
+      out += "⌘"
+    }
     return out + keySymbol
   }
 
@@ -193,6 +210,7 @@ extension HotKey {
     default: (Self.keyCodeToName[carbonKeyCode] ?? "0x" + String(carbonKeyCode, radix: 16)).uppercased()
     }
   }
+
 }
 
 // MARK: - US ANSI virtual key codes

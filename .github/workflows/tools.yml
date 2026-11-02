@@ -5,6 +5,12 @@ on:
     branches: ["pangmo5/release-*"]
   pull_request:
     paths:
+      - "**/*.swift"
+      - "**/.swiftformat"
+      - ".swiftformat"
+      - ".mise.toml"
+      - ".xcode-version"
+      - "scripts/xcode-env.sh"
       - "Tools/**"
       - "DemoLab/**"
       - "Localization/**"
@@ -22,11 +28,35 @@ permissions:
   contents: read
 
 jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+        with:
+          install_args: swiftformat
+      - run: mise run format:check
+
+  macos:
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v7
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "27.2"
+      - uses: jdx/mise-action@v5
+      - run: mise run generate
+      - name: Test app and recorder with the selected Xcode SDK
+        run: |
+          xcodebuild test -workspace SwiftyCrow.xcworkspace -scheme SwiftyCrow \
+            -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
+          swift test --package-path DemoLab/Recorder
+
   portable-tools:
     runs-on: ubuntu-latest
-    container: swift:6.2-noble
+    container: swift:6.4-noble
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install video metadata tools
         run: apt-get update && apt-get install -y ffmpeg
       - name: Test Swift automation and verify reviewed media

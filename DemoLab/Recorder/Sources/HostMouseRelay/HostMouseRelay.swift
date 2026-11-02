@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 PangMo5 and contributors
+// SPDX-FileCopyrightText: 2021-2026 PangMo5 and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import AppKit
@@ -52,7 +52,8 @@ private final class InputService {
     guard
       let sourceWindow = content.windows.first(where: {
         $0.windowID == viewport.windowID && $0.owningApplication?.processID == viewport.ownerPID && $0.title == viewport.title
-      }), let display = content.displays.first(where: { $0.displayID == viewport.displayID }),
+      }),
+      let display = content.displays.first(where: { $0.displayID == viewport.displayID }),
       abs(viewport.width * viewport.scale - 1920) < 0.001,
       abs(viewport.height * viewport.scale - 1200) < 0.001,
       abs(Double(SCContentFilter(display: display, including: [sourceWindow]).pointPixelScale) - viewport.scale) < 0.001
@@ -61,7 +62,7 @@ private final class InputService {
       x: viewport.x + display.frame.minX,
       y: viewport.y + display.frame.minY,
       width: viewport.width,
-      height: viewport.height
+      height: viewport.height,
     )
     guard sourceWindow.frame.contains(rectangle), display.frame.contains(rectangle) else {
       throw InteractionError("Owned viewport is outside its window or display")
@@ -80,7 +81,7 @@ private final class InputService {
     originalFrame = frame
     binaryHash = SHA256.hash(data: try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[0]))).map { String(
       format: "%02x",
-      $0
+      $0,
     ) }.joined()
     try FileManager.default.createDirectory(at: logDirectory, withIntermediateDirectories: true)
     let url = logDirectory.appendingPathComponent("host-input-\(sessionID).jsonl")
@@ -115,8 +116,10 @@ private final class InputService {
 
   static func frame(_ window: AXUIElement) throws -> CGRect {
     guard
-      let position = attribute(window, kAXPositionAttribute), CFGetTypeID(position) == AXValueGetTypeID(),
-      let size = attribute(window, kAXSizeAttribute), CFGetTypeID(size) == AXValueGetTypeID()
+      let position = attribute(window, kAXPositionAttribute),
+      CFGetTypeID(position) == AXValueGetTypeID(),
+      let size = attribute(window, kAXSizeAttribute),
+      CFGetTypeID(size) == AXValueGetTypeID()
     else { throw InteractionError("Owned VM window frame is unavailable") }
     var point = CGPoint.zero
     var dimensions = CGSize.zero
@@ -178,8 +181,9 @@ private final class InputService {
       "hostStartUptimeNanoseconds": String(received),
     ]
     do {
-      if request.operation == "metadata" { response["metadata"] = metadata() }
-      else {
+      if request.operation == "metadata" {
+        response["metadata"] = metadata()
+      } else {
         guard ["move", "click", "drag", "scroll"].contains(request.operation)
         else { throw InteractionError("Unknown host input operation") }
         let point = try mapped(request.x, request.y)
@@ -252,7 +256,7 @@ private enum SocketService {
     let result = withUnsafePointer(to: &address) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.bind(
       listener,
       $0,
-      socklen_t(MemoryLayout<sockaddr_in>.size)
+      socklen_t(MemoryLayout<sockaddr_in>.size),
     ) } }
     guard result == 0, Darwin.listen(listener, 8) == 0 else { Darwin.close(listener)
       throw InteractionError("Could not bind host input listener")
@@ -261,7 +265,7 @@ private enum SocketService {
     guard
       withUnsafeMutablePointer(
         to: &address,
-        { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(listener, $0, &length) } }
+        { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(listener, $0, &length) } },
       ) == 0
     else {
       Darwin.close(listener)
@@ -282,13 +286,14 @@ private enum SocketService {
         let client = withUnsafeMutablePointer(to: &remote) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.accept(
           listener,
           $0,
-          &size
+          &size,
         ) } }
         guard client >= 0 else { continue }
         var expected = in_addr()
         guard
           peer.withCString({ inet_pton(AF_INET, $0, &expected) }) == 1,
-          remote.sin_addr.s_addr == expected.s_addr, capacity.wait(timeout: .now()) == .success
+          remote.sin_addr.s_addr == expected.s_addr,
+          capacity.wait(timeout: .now()) == .success
         else { Darwin.close(client)
           continue
         }
@@ -308,12 +313,15 @@ private enum SocketService {
             var byte: UInt8 = 0
             while bytes.count < 4096 {
               guard Darwin.recv(client, &byte, 1, 0) == 1 else { return }
-              if byte == 10 { break }
+              if byte == 10 {
+                break
+              }
               bytes.append(byte)
             }
             let received = DispatchTime.now().uptimeNanoseconds
             guard
-              bytes.count < 4096, let request = try? JSONDecoder().decode(Request.self, from: bytes),
+              bytes.count < 4096,
+              let request = try? JSONDecoder().decode(Request.self, from: bytes),
               UUID(uuidString: request.id) != nil
             else { return }
             let response: Data =
@@ -328,12 +336,16 @@ private enum SocketService {
               var offset = 0
               while offset < raw.count {
                 let count = Darwin.send(client, raw.baseAddress! + offset, raw.count - offset, 0)
-                if count <= 0 { return false }
+                if count <= 0 {
+                  return false
+                }
                 offset += count
               }
               return true
             }
-            if !sent { return }
+            if !sent {
+              return
+            }
           }
         }
       }
@@ -358,19 +370,19 @@ private enum Main {
       do {
         let viewport = try JSONDecoder().decode(
           Viewport.self,
-          from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
+          from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1])),
         )
         let service = try await InputService(
           viewport: viewport,
           peer: CommandLine.arguments[3],
-          logDirectory: URL(fileURLWithPath: CommandLine.arguments[5])
+          logDirectory: URL(fileURLWithPath: CommandLine.arguments[5]),
         )
         try SocketService.listen(
           host: CommandLine.arguments[2],
           peer: CommandLine.arguments[3],
           token: UUID().uuidString,
           configurationURL: URL(fileURLWithPath: CommandLine.arguments[4]),
-          input: service
+          input: service,
         )
         FileHandle.standardOutput.write(Data("Host input service ready: \(service.sessionID)\n".utf8))
       } catch {

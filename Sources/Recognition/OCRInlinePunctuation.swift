@@ -18,7 +18,7 @@ enum OCRInlinePunctuation {
     }
     let group = line.styleRuns.filter { sameBox($0.box) }
     let start = group.map(\.range.location).min() ?? boundary
-    let end = group.map { NSMaxRange($0.range) }.max() ?? boundary
+    let end = group.lazy.map { NSMaxRange($0.range) }.max() ?? boundary
     guard start < boundary, end > boundary, end <= line.text.utf16.count else { return line }
     let suffix = (line.text as NSString).substring(with: NSRange(location: boundary, length: end - boundary))
     guard suffix.count == 1, suffix.allSatisfy({ ",.;:!?،，。".contains($0) }) else { return line }
@@ -27,11 +27,13 @@ enum OCRInlinePunctuation {
       x: box.minX * size.width,
       y: box.minY * size.height,
       width: box.width * size.width,
-      height: box.height * size.height
+      height: box.height * size.height,
     )
     .insetBy(dx: 0, dy: -1).integral.intersection(CGRect(origin: .zero, size: size))
     guard
-      region.width >= 3, region.height >= 3, region.width * region.height <= 100_000,
+      region.width >= 3,
+      region.height >= 3,
+      region.width * region.height <= 100_000,
       let crop = image.cropping(to: region),
       let context = CGContext(
         data: nil,
@@ -40,7 +42,7 @@ enum OCRInlinePunctuation {
         bitsPerComponent: 8,
         bytesPerRow: crop.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ),
       let bytes = context.data?.assumingMemoryBound(to: UInt8.self)
     else { return line }
@@ -67,7 +69,9 @@ enum OCRInlinePunctuation {
       return bounds.isNull ? nil : bounds
     }
     guard
-      let leftInk = ink(in: 0..<cut), let rightInk = ink(in: cut..<crop.width), rightInk.width <= region.height * 0.65,
+      let leftInk = ink(in: 0..<cut),
+      let rightInk = ink(in: cut..<crop.width),
+      rightInk.width <= region.height * 0.65,
       rightInk.maxY >= leftInk.midY
     else { return line }
     let pointSize = line.appearance.fontSizeScale * size.height
@@ -83,17 +87,23 @@ enum OCRInlinePunctuation {
       var bands = [Int]()
       var previous = -2
       for y in ys {
-        if y == previous + 1 { bands[bands.count - 1] += 1 } else { bands.append(1) }
+        if y == previous + 1 {
+          bands[bands.count - 1] += 1
+        } else {
+          bands.append(1)
+        }
         previous = y
       }
       guard bands.count == 2, CGFloat(bands[0]) <= pointSize * 0.3, CGFloat(bands[1]) <= pointSize * 0.55 else { return line }
-    } else { return line }
+    } else {
+      return line
+    }
     func normalized(_ rect: CGRect) -> CGRect {
       CGRect(
         x: (region.minX + rect.minX) / size.width,
         y: (region.minY + rect.minY) / size.height,
         width: rect.width / size.width,
-        height: rect.height / size.height
+        height: rect.height / size.height,
       )
     }
     let left = normalized(CGRect(x: 0, y: 0, width: cut, height: crop.height))

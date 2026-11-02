@@ -20,7 +20,6 @@ enum OCRVerticalParagraphGrouping {
 
     let first: Int
     let second: Int
-
   }
 
   static func bounds(_ line: OCRResult.Line) -> CGRect {
@@ -33,7 +32,7 @@ enum OCRVerticalParagraphGrouping {
   static func links(
     in lines: [OCRResult.Line],
     compatible: (OCRResult.Line, OCRResult.Line) -> Bool,
-    clearExpansion: ((Region, Region) -> Bool)?
+    clearExpansion: ((Region, Region) -> Bool)?,
   ) -> Set<Link> {
     guard let clearExpansion else { return [] }
     let candidates = lines.indices.filter {
@@ -62,7 +61,9 @@ enum OCRVerticalParagraphGrouping {
       let boxes = ordered.map { bounds(lines[$0]) }
       let advances = zip(boxes, boxes.dropFirst()).map { abs($0.midX - $1.midX) }.sorted()
       guard
-        let smallest = advances.first, let largest = advances.last, smallest > 0,
+        let smallest = advances.first,
+        let largest = advances.last,
+        smallest > 0,
         largest <= smallest * 1.25
       else { continue }
       let advance = advances[advances.count / 2]
@@ -77,7 +78,9 @@ enum OCRVerticalParagraphGrouping {
       let eligible = candidates.filter { index in
         let line = lines[index]
         guard line.recognitionContainer == reference.recognitionContainer, compatible(reference, line) else { return false }
-        if line.recognitionGroupID == group { return true }
+        if line.recognitionGroupID == group {
+          return true
+        }
         // Measured containers remain independent. Enclosed speech balloons
         // have their own joining path; a paper paragraph cannot absorb one.
         guard line.surface == nil, reference.surface == nil else { return false }
@@ -94,7 +97,7 @@ enum OCRVerticalParagraphGrouping {
       // beneath a short final column, before it becomes part of that envelope.
       var region = Region(
         box: indices.dropFirst().reduce(reference.boundingBoxNormalized) { $0.union(lines[$1].boundingBoxNormalized) },
-        background: reference.appearance.background
+        background: reference.appearance.background,
       )
       var previous = ordered.last!
       for next in eligible where lines[next].recognitionGroupID != group {
@@ -120,7 +123,7 @@ enum OCRVerticalParagraphGrouping {
     to extensionRegion: Region,
     width: Int,
     height: Int,
-    sample: (Int, Int) -> OverlayColor?
+    sample: (Int, Int) -> OverlayColor?,
   ) -> Bool {
     let canvas = CGRect(x: 0, y: 0, width: width, height: height)
     let owned = [existing.box, extensionRegion.box].map {
@@ -128,7 +131,7 @@ enum OCRVerticalParagraphGrouping {
         x: $0.minX * CGFloat(width),
         y: $0.minY * CGFloat(height),
         width: $0.width * CGFloat(width),
-        height: $0.height * CGFloat(height)
+        height: $0.height * CGFloat(height),
       ).integral.intersection(canvas)
     }.sorted { $0.minX < $1.minX }
     guard owned.allSatisfy({ !$0.isNull && !$0.isEmpty }) else { return false }

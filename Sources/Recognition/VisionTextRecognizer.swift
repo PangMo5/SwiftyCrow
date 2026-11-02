@@ -46,7 +46,7 @@ enum VisionTextRecognizer {
       throw NSError(
         domain: "SwiftyCrow.VisionCompute",
         code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "Unsupported Vision compute device: \(policy.rawValue)"]
+        userInfo: [NSLocalizedDescriptionKey: "Unsupported Vision compute device: \(policy.rawValue)"],
       )
     }
     request.setComputeDevice(device, for: .main)
@@ -62,7 +62,7 @@ enum VisionTextRecognizer {
     let inputs = OCRDocumentRegion.inputs(
       imageSize: size,
       detectedText: detectedText,
-      surfaceBounds: OCRDocumentRegion.surfaceBounds(in: image)
+      surfaceBounds: OCRDocumentRegion.surfaceBounds(in: image),
     )
     Log.ocr.log("Document inputs: \(String(describing: inputs), privacy: .public)")
     return inputs
@@ -115,18 +115,20 @@ enum VisionTextRecognizer {
     in image: CGImage,
     language: Language,
     crop: CGRect? = nil,
-    usesLanguageCorrection: Bool? = nil
+    usesLanguageCorrection: Bool? = nil,
   ) async throws -> Document {
     if let crop {
       guard let cropped = image.cropping(to: crop) else { throw CocoaError(.coderInvalidValue) }
       return OCRDocumentRegion.remap(
         try await document(in: cropped, language: language, usesLanguageCorrection: usesLanguageCorrection),
         crop: crop,
-        imageSize: CGSize(width: image.width, height: image.height)
+        imageSize: CGSize(width: image.width, height: image.height),
       )
     }
     var request = RecognizeDocumentsRequest()
-    if let usesLanguageCorrection { request.textRecognitionOptions.useLanguageCorrection = usesLanguageCorrection }
+    if let usesLanguageCorrection {
+      request.textRecognitionOptions.useLanguageCorrection = usesLanguageCorrection
+    }
     if language.isAuto {
       request.textRecognitionOptions.automaticallyDetectLanguage = true
     } else {
@@ -159,7 +161,7 @@ enum VisionTextRecognizer {
             column: cell.columnRange.lowerBound,
             box: topLeftBox(cell.content.boundingRegion.boundingBox.cgRect),
             rowSpan: cell.rowRange.count,
-            columnSpan: cell.columnRange.count
+            columnSpan: cell.columnRange.count,
           )
           for line in cell.content.text.lines { tableMembership[line.uuid] = ownership }
           return ownership
@@ -177,13 +179,13 @@ enum VisionTextRecognizer {
         }
         return RecognizedWord(
           text: text,
-          box: Self.topLeftBox(observation.boundingRegion.boundingBox.cgRect)
+          box: Self.topLeftBox(observation.boundingRegion.boundingBox.cgRect),
         )
       } ?? []
       let recognizedLines = paragraph.lines.compactMap { observation -> (
         observation: RecognizedTextObservation,
         candidate: RecognizedText,
-        transcript: String
+        transcript: String,
       )? in
         guard
           let candidate = observation.topCandidates(1).first,
@@ -194,16 +196,16 @@ enum VisionTextRecognizer {
         return (
           observation: observation,
           candidate: candidate,
-          transcript: candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+          transcript: candidate.string.trimmingCharacters(in: .whitespacesAndNewlines),
         )
       }
       let segmentIndices = OCRParagraphLineGrouping.segmentIndices(
         paragraphTranscript: paragraph.transcript,
-        lineTranscripts: recognizedLines.map(\.transcript)
+        lineTranscripts: recognizedLines.map(\.transcript),
       )
       let separators = OCRParagraphLineGrouping.separators(
         paragraphTranscript: paragraph.transcript,
-        lineTranscripts: recognizedLines.map(\.transcript)
+        lineTranscripts: recognizedLines.map(\.transcript),
       )
       let groupBase = nextRecognitionGroupID
       nextRecognitionGroupID += max(1, (segmentIndices.max() ?? 0) + 1)
@@ -221,7 +223,7 @@ enum VisionTextRecognizer {
           topRight: topRight,
           imageSize: imageSize,
           declaredVertical: observation.textDirection == .topToBottom,
-          bounds: box
+          bounds: box,
         )
         let dx = (topRight.x - topLeft.x) * imageSize.width
         let dy = -(topRight.y - topLeft.y) * imageSize.height
@@ -229,7 +231,7 @@ enum VisionTextRecognizer {
         let rotation = abs(angle) > 0.025 ? angle : 0
         let orientedHeight = hypot(
           (bottomLeft.x - topLeft.x) * imageSize.width,
-          (bottomLeft.y - topLeft.y) * imageSize.height
+          (bottomLeft.y - topLeft.y) * imageSize.height,
         ) /
           imageSize.height
         let orientedWidth = hypot(dx, dy) / imageSize.width
@@ -237,7 +239,7 @@ enum VisionTextRecognizer {
           x: box.midX - orientedWidth / 2,
           y: box.midY - orientedHeight / 2,
           width: orientedWidth,
-          height: orientedHeight
+          height: orientedHeight,
         )
         let documentWords = paragraphWords.filter { word in
           let intersection = box.intersection(word.box)
@@ -278,7 +280,7 @@ enum VisionTextRecognizer {
           alignment: alignment,
           tableCell: tableMembership[observation.uuid],
           recognitionLanguages: observation.recognitionLanguages.map(\.minimalIdentifier),
-          continuesToNextLine: observation.shouldWrapToNextLine
+          continuesToNextLine: observation.shouldWrapToNextLine,
         )
       }
       guard mapped.isEmpty else { return mapped }
@@ -293,7 +295,7 @@ enum VisionTextRecognizer {
           rowCount: 1,
           recognitionGroupID: groupBase,
           replacementPatches: [OverlaySourcePatch(box: box)],
-          alignment: alignment
+          alignment: alignment,
         )
       ]
     }
@@ -313,7 +315,7 @@ enum VisionTextRecognizer {
     crop: CGRect,
     minimumGlyphHeight: CGFloat,
     preferredScale: CGFloat = 1,
-    usesLanguageCorrection: Bool = true
+    usesLanguageCorrection: Bool = true,
   ) async throws -> [OCRResult.Line] {
     var request = RecognizeTextRequest()
     request.recognitionLevel = .accurate
@@ -327,20 +329,20 @@ enum VisionTextRecognizer {
       in: image,
       crop: crop,
       minimumGlyphHeight: minimumGlyphHeight,
-      preferredScale: preferredScale
+      preferredScale: preferredScale,
     )
     let region = CGRect(
       x: crop.minX / CGFloat(image.width),
       y: crop.minY / CGFloat(image.height),
       width: crop.width / CGFloat(image.width),
-      height: crop.height / CGFloat(image.height)
+      height: crop.height / CGFloat(image.height),
     )
     func mapBox(_ box: CGRect) -> CGRect {
       CGRect(
         x: region.minX + box.minX * region.width,
         y: region.minY + box.minY * region.height,
         width: box.width * region.width,
-        height: box.height * region.height
+        height: box.height * region.height,
       )
     }
     try configure(&request)
@@ -368,8 +370,8 @@ enum VisionTextRecognizer {
           x: 0,
           y: 0,
           width: box.width * CGFloat(image.width) / size.width,
-          height: box.height * CGFloat(image.height) / size.height
-        )
+          height: box.height * CGFloat(image.height) / size.height,
+        ),
       )
       let dx = (topRight.x - topLeft.x) * size.width
       let dy = -(topRight.y - topLeft.y) * size.height
@@ -388,7 +390,7 @@ enum VisionTextRecognizer {
             x: box.midX - orientedWidth / 2,
             y: box.midY - orientedHeight / 2,
             width: orientedWidth,
-            height: orientedHeight
+            height: orientedHeight,
           ),
         imageAspectRatio: CGFloat(image.width) / CGFloat(image.height),
         recognitionConfidence: candidate.confidence,
@@ -397,7 +399,7 @@ enum VisionTextRecognizer {
           ? OCRGeometry.verticalCharacterScale(
             text: text,
             bounds: box,
-            imageSize: CGSize(width: image.width, height: image.height)
+            imageSize: CGSize(width: image.width, height: image.height),
           )
           : 0,
         horizontalGlyphScale: vertical ? 0 : (rotation == 0 ? median(wordBoxes.map(\.height)) ?? box.height : orientedHeight),
@@ -407,7 +409,7 @@ enum VisionTextRecognizer {
         styleRuns: styleRuns(in: text, words: words),
         spacingAnchors: spacingAnchors(in: candidate, map: mapBox),
         recognitionLanguages: observation.recognitionLanguages.map(\.minimalIdentifier),
-        continuesToNextLine: observation.shouldWrapToNextLine
+        continuesToNextLine: observation.shouldWrapToNextLine,
       )
     }
   }
@@ -419,8 +421,11 @@ enum VisionTextRecognizer {
     var request = RecognizeTextRequest()
     request.recognitionLevel = .accurate
     request.usesLanguageCorrection = true
-    if language.isAuto { request.automaticallyDetectsLanguage = true }
-    else { request.recognitionLanguages = [language.localeLanguage] }
+    if language.isAuto {
+      request.automaticallyDetectsLanguage = true
+    } else {
+      request.recognitionLanguages = [language.localeLanguage]
+    }
     try configure(&request)
     let observations = try await request.perform(on: input)
     try Task.checkCancellation()
@@ -439,20 +444,21 @@ enum VisionTextRecognizer {
     in image: CGImage,
     crop: CGRect,
     minimumGlyphHeight: CGFloat,
-    preferredScale: CGFloat
+    preferredScale: CGFloat,
   ) throws -> CGImage {
     let baseSize = OCRCoverage.recognitionSize(crop: crop.size, minimumGlyphHeight: minimumGlyphHeight)
     let scale = max(1, min(preferredScale, 1800 / max(baseSize.width, baseSize.height)))
     let inputSize = CGSize(width: baseSize.width * scale, height: baseSize.height * scale)
     guard
-      let originalCrop = image.cropping(to: crop), let context = CGContext(
+      let originalCrop = image.cropping(to: crop),
+      let context = CGContext(
         data: nil,
         width: Int(inputSize.width),
         height: Int(inputSize.height),
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { throw CocoaError(.coderInvalidValue) }
     context.interpolationQuality = .high
@@ -477,7 +483,7 @@ enum VisionTextRecognizer {
 
   private static func styleRuns(
     in transcript: String,
-    words: [RecognizedWord]
+    words: [RecognizedWord],
   ) -> [OverlaySourceStyleRun] {
     guard !transcript.isEmpty, !words.isEmpty else { return [] }
     let source = transcript as NSString
@@ -502,7 +508,7 @@ enum VisionTextRecognizer {
       guard let observation = candidate.boundingBox(for: range) else { return nil }
       return RecognizedWord(
         text: String(candidate.string[range]),
-        box: topLeftBox(observation.boundingBox.cgRect)
+        box: topLeftBox(observation.boundingBox.cgRect),
       )
     }
   }
@@ -510,9 +516,10 @@ enum VisionTextRecognizer {
   private static func spacingAnchors(in candidate: RecognizedText, map: (CGRect) -> CGRect) -> [OCRTextAnchor] {
     let text = candidate.string
     guard
-      text.count <= 80, zip(text, text.dropFirst()).contains(where: { OCRTextTokenization.hasUnspacedBoundary(
+      text.count <= 80,
+      zip(text, text.dropFirst()).contains(where: { OCRTextTokenization.hasUnspacedBoundary(
         between: $0,
-        and: $1
+        and: $1,
       ) })
     else { return [] }
     return text.indices.compactMap { start in

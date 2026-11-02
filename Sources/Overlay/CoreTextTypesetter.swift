@@ -46,7 +46,7 @@ enum CoreTextTypesetter {
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
     isItalic: Bool = false,
-    constrainedToWidth width: CGFloat
+    constrainedToWidth width: CGFloat,
   ) -> CGSize {
     guard !text.isEmpty, width > 0 else { return .zero }
     let attributed = attributedString(
@@ -56,7 +56,7 @@ enum CoreTextTypesetter {
       fontWeight: fontWeight,
       fontDesign: fontDesign,
       isItalic: isItalic,
-      vertical: false
+      vertical: false,
     )
     let framesetter = CTFramesetterCreateWithAttributedString(attributed)
     let size = CTFramesetterSuggestFrameSizeWithConstraints(
@@ -64,7 +64,7 @@ enum CoreTextTypesetter {
       CFRange(location: 0, length: attributed.length),
       nil,
       CGSize(width: width, height: 100_000),
-      nil
+      nil,
     )
     return CGSize(width: ceil(size.width), height: ceil(size.height))
   }
@@ -81,11 +81,15 @@ enum CoreTextTypesetter {
     minimum: CGFloat,
     lineHeightMultiple: CGFloat = 1,
     styles: [OverlayTextStyleRun] = [],
-    isUnderlined: Bool = false
+    isUnderlined: Bool = false,
   ) -> FittedLayout {
     guard
-      preferred.isFinite, minimum.isFinite, size.width.isFinite, size.height.isFinite,
-      preferred < CGFloat(Int.max / 4), minimum < CGFloat(Int.max / 4)
+      preferred.isFinite,
+      minimum.isFinite,
+      size.width.isFinite,
+      size.height.isFinite,
+      preferred < CGFloat(Int.max / 4),
+      minimum < CGFloat(Int.max / 4)
     else { return FittedLayout(fontSize: 0, verticalWrapping: .words, isComplete: false) }
     guard !text.isEmpty, size.width > 0, size.height > 0 else {
       return FittedLayout(fontSize: minimum, verticalWrapping: .words, isComplete: text.isEmpty)
@@ -105,7 +109,7 @@ enum CoreTextTypesetter {
         lineHeightMultiple: lineHeightMultiple,
         verticalWrapping: wrapping,
         styles: styles,
-        isUnderlined: isUnderlined
+        isUnderlined: isUnderlined,
       )
     }
     if fits(upperBound, wrapping: .words) {
@@ -132,7 +136,11 @@ enum CoreTextTypesetter {
     var high = Int(floor(upperBound * 4))
     while low < high {
       let candidate = low + (high - low + 1) / 2
-      if fits(CGFloat(candidate) / 4, wrapping: wrapping) { low = candidate } else { high = candidate - 1 }
+      if fits(CGFloat(candidate) / 4, wrapping: wrapping) {
+        low = candidate
+      } else {
+        high = candidate - 1
+      }
     }
     return FittedLayout(fontSize: max(lowerBound, CGFloat(low) / 4), verticalWrapping: wrapping, isComplete: true)
   }
@@ -149,7 +157,7 @@ enum CoreTextTypesetter {
     lineHeightMultiple: CGFloat = 1,
     verticalWrapping: VerticalWrapping = .words,
     styles: [OverlayTextStyleRun] = [],
-    isUnderlined: Bool = false
+    isUnderlined: Bool = false,
   ) -> Bool {
     guard !text.isEmpty else { return true }
     guard size.width > 0, size.height > 0, fontSize > 0 else { return false }
@@ -164,7 +172,7 @@ enum CoreTextTypesetter {
         constrainedToHeight: size.height,
         wrapping: verticalWrapping,
         styles: styles,
-        isUnderlined: isUnderlined
+        isUnderlined: isUnderlined,
       )
       return !plan.columns.isEmpty && plan.fitsHeight && plan.requiredWidth <= size.width + 0.5
     }
@@ -178,12 +186,12 @@ enum CoreTextTypesetter {
         confidence: 1,
         fontWeight: fontWeight,
         fontDesign: fontDesign,
-        isItalic: isItalic
+        isItalic: isItalic,
       ),
       styles: styles,
       width: size.width,
       lineHeightMultiple: lineHeightMultiple,
-      inlineDirection: flow.inlineDirection
+      inlineDirection: flow.inlineDirection,
     ).fits(size)
   }
 
@@ -192,13 +200,13 @@ enum CoreTextTypesetter {
     language _: Locale.Language,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
-    isItalic: Bool = false
+    isItalic: Bool = false,
   ) -> CGFloat {
     let font = OverlayTypography.font(
       size: fontSize,
       weight: fontWeight,
       design: fontDesign,
-      isItalic: isItalic
+      isItalic: isItalic,
     )
     return ceil(CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font))
   }
@@ -209,14 +217,14 @@ enum CoreTextTypesetter {
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
     isItalic: Bool = false,
-    lineHeightMultiple: CGFloat
+    lineHeightMultiple: CGFloat,
   ) -> CGFloat {
     let natural = lineHeight(
       fontSize: fontSize,
       language: language,
       fontWeight: fontWeight,
       fontDesign: fontDesign,
-      isItalic: isItalic
+      isItalic: isItalic,
     )
     return max(0, natural * (max(1, lineHeightMultiple) - 1))
   }
@@ -229,7 +237,7 @@ enum CoreTextTypesetter {
     minimum: CGFloat,
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
-    isItalic: Bool = false
+    isItalic: Bool = false,
   ) -> CGFloat {
     guard width > 0, preferred > 0 else { return minimum }
     guard !usesCharacterWrapping(language) else { return preferred }
@@ -248,8 +256,8 @@ enum CoreTextTypesetter {
             fontWeight: fontWeight,
             fontDesign: fontDesign,
             isItalic: isItalic,
-            constrainedToWidth: 100_000
-          ).width
+            constrainedToWidth: 100_000,
+          ).width,
         )
       }
     }
@@ -270,7 +278,7 @@ enum CoreTextTypesetter {
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
     isItalic: Bool = false,
-    constrainedToWidth width: CGFloat
+    constrainedToWidth width: CGFloat,
   ) -> Bool {
     guard width > 0, fontSize > 0 else { return false }
     guard !usesCharacterWrapping(language) else { return true }
@@ -284,7 +292,7 @@ enum CoreTextTypesetter {
         fontWeight: fontWeight,
         fontDesign: fontDesign,
         isItalic: isItalic,
-        constrainedToWidth: 100_000
+        constrainedToWidth: 100_000,
       ).width <= width + 0.5
     }
   }
@@ -296,7 +304,7 @@ enum CoreTextTypesetter {
     fontWeight: OverlayFontWeight = .semibold,
     fontDesign: OverlayFontDesign = .standard,
     isItalic: Bool = false,
-    constrainedToHeight height: CGFloat
+    constrainedToHeight height: CGFloat,
   ) -> Bool {
     guard !usesCharacterWrapping(language) else { return true }
     let boundaries = Set(verticalLayoutPlan(
@@ -306,7 +314,7 @@ enum CoreTextTypesetter {
       fontWeight: fontWeight,
       fontDesign: fontDesign,
       isItalic: isItalic,
-      constrainedToHeight: height
+      constrainedToHeight: height,
     ).columns.dropLast().map { $0.location + $0.length })
     return wrappingWordRanges(in: text).allSatisfy { token in
       !boundaries.contains(where: { $0 > token.location && $0 < token.location + token.length })
@@ -327,7 +335,7 @@ enum CoreTextTypesetter {
     foreground: OverlayColor = .init(red: 1, green: 1, blue: 1, alpha: 1),
     baseBackground: OverlayColor = .white,
     styles: [OverlayTextStyleRun] = [],
-    isUnderlined: Bool = false
+    isUnderlined: Bool = false,
   ) -> CGImage? {
     guard !text.isEmpty, size.width > 0, size.height > 0, scale > 0 else { return nil }
     let pixelWidth = max(1, Int(ceil(size.width * scale)))
@@ -341,7 +349,7 @@ enum CoreTextTypesetter {
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: colorSpace,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       )
     else { return nil }
 
@@ -358,14 +366,14 @@ enum CoreTextTypesetter {
       isItalic: isItalic,
       vertical: true,
       styles: styles,
-      isUnderlined: isUnderlined
+      isUnderlined: isUnderlined,
     )
     // Paint monochrome glyphs with their actual color. Preserve intrinsic
     // color-font glyphs; a template tint would turn emoji into solid silhouettes.
     attributed.addAttribute(
       NSAttributedString.Key(kCTForegroundColorAttributeName as String),
       value: CGColor(colorSpace: colorSpace, components: [foreground.red, foreground.green, foreground.blue, foreground.alpha])!,
-      range: NSRange(location: 0, length: attributed.length)
+      range: NSRange(location: 0, length: attributed.length),
     )
     var hasDecorations = isUnderlined
     for style in validStyles(styles, length: attributed.length) {
@@ -374,7 +382,7 @@ enum CoreTextTypesetter {
       attributed.addAttribute(
         NSAttributedString.Key(kCTForegroundColorAttributeName as String),
         value: CGColor(colorSpace: colorSpace, components: [color.red, color.green, color.blue, color.alpha])!,
-        range: style.range
+        range: style.range,
       )
       if style.appearance.background.distance(to: baseBackground) > 0.025 {
         hasDecorations = true
@@ -383,7 +391,7 @@ enum CoreTextTypesetter {
           srgbRed: background.red,
           green: background.green,
           blue: background.blue,
-          alpha: background.alpha
+          alpha: background.alpha,
         ), range: style.range)
       } else {
         attributed.removeAttribute(verticalBackgroundKey, range: style.range)
@@ -397,7 +405,7 @@ enum CoreTextTypesetter {
         attributed.addAttribute(
           NSAttributedString.Key(kCTForegroundColorAttributeName as String),
           value: item.color.copy(alpha: 1)!,
-          range: item.range
+          range: item.range,
         )
       }
       context.setAlpha(uniformAlpha)
@@ -407,7 +415,7 @@ enum CoreTextTypesetter {
       language: language,
       fontSize: fontSize,
       constrainedToHeight: size.height,
-      wrapping: wrapping
+      wrapping: wrapping,
     )
     guard !plan.columns.isEmpty, plan.fitsHeight, plan.requiredWidth <= size.width + 0.5 else { return nil }
 
@@ -423,9 +431,9 @@ enum CoreTextTypesetter {
           x: centerX - pathWidth / 2,
           y: 0,
           width: pathWidth,
-          height: size.height
+          height: size.height,
         ),
-        progression: progression
+        progression: progression,
       )
       let visible = CTFrameGetVisibleStringRange(frame)
       guard visible.location == range.location, visible.length >= range.length else { return nil }
@@ -442,7 +450,7 @@ enum CoreTextTypesetter {
           fontSize: fontSize,
           scale: scale,
           foregroundAlpha: uniformOpacity ? uniformAlpha : 1,
-          context: context
+          context: context,
         )
       }
       if uniformOpacity {
@@ -462,18 +470,18 @@ enum CoreTextTypesetter {
             pass.addAttribute(
               NSAttributedString.Key(kCTForegroundColorAttributeName as String),
               value: CGColor(gray: 0, alpha: 0),
-              range: NSRange(location: 0, length: pass.length)
+              range: NSRange(location: 0, length: pass.length),
             )
             pass.addAttribute(
               NSAttributedString.Key(kCTForegroundColorAttributeName as String),
               value: color.copy(alpha: 1)!,
-              range: NSRange(location: visibleRange.location, length: visibleRange.length)
+              range: NSRange(location: visibleRange.location, length: visibleRange.length),
             )
             let painted = makeFrame(
               attributed: pass,
               range: CFRange(location: range.location, length: range.length),
               rect: CGRect(x: centerX - pathWidth / 2, y: 0, width: pathWidth, height: size.height),
-              progression: progression
+              progression: progression,
             )
             context.saveGState()
             context.setAlpha(color.alpha)
@@ -497,7 +505,7 @@ enum CoreTextTypesetter {
     constrainedToHeight height: CGFloat,
     wrapping: VerticalWrapping = .words,
     styles: [OverlayTextStyleRun] = [],
-    isUnderlined: Bool = false
+    isUnderlined: Bool = false,
   ) -> VerticalLayoutPlan {
     verticalLayoutPlan(
       attributed: attributedString(
@@ -509,12 +517,12 @@ enum CoreTextTypesetter {
         isItalic: isItalic,
         vertical: true,
         styles: styles,
-        isUnderlined: isUnderlined
+        isUnderlined: isUnderlined,
       ),
       language: language,
       fontSize: fontSize,
       constrainedToHeight: height,
-      wrapping: wrapping
+      wrapping: wrapping,
     )
   }
 
@@ -558,7 +566,7 @@ enum CoreTextTypesetter {
     fontSize: CGFloat,
     scale: CGFloat,
     foregroundAlpha: CGFloat,
-    context: CGContext
+    context: CGContext,
   ) {
     let lines = CTFrameGetLines(frame) as! [CTLine]
     var origins = [CGPoint](repeating: .zero, count: lines.count)
@@ -567,8 +575,10 @@ enum CoreTextTypesetter {
     var fills = [(color: NSColor, path: CGMutablePath)]()
     var underlines = [(color: NSColor, path: CGMutablePath)]()
     func add(_ rect: CGRect, color: NSColor, to paths: inout [(color: NSColor, path: CGMutablePath)]) {
-      if let match = paths.firstIndex(where: { $0.color.isEqual(color) }) { paths[match].path.addRect(rect) }
-      else { let path = CGMutablePath()
+      if let match = paths.firstIndex(where: { $0.color.isEqual(color) }) {
+        paths[match].path.addRect(rect)
+      } else {
+        let path = CGMutablePath()
         path.addRect(rect)
         paths.append((color, path))
       }
@@ -589,9 +599,11 @@ enum CoreTextTypesetter {
           x: origin.x + lower,
           y: origin.y - bounds.maxX,
           width: upper - lower,
-          height: bounds.width
+          height: bounds.width,
         )
-        if let color = attributes[verticalBackgroundKey] as? NSColor { add(rect, color: color, to: &fills) }
+        if let color = attributes[verticalBackgroundKey] as? NSColor {
+          add(rect, color: color, to: &fills)
+        }
         if
           attributes[verticalUnderlineKey] as? Bool == true,
           let foreground = attributes[kCTForegroundColorAttributeName]
@@ -634,9 +646,11 @@ enum CoreTextTypesetter {
     var result = [(range: NSRange, color: CGColor)]()
     text.enumerateAttribute(
       NSAttributedString.Key(kCTForegroundColorAttributeName as String),
-      in: NSRange(location: 0, length: text.length)
+      in: NSRange(location: 0, length: text.length),
     ) { value, range, _ in
-      if let value { result.append((range, value as! CGColor)) }
+      if let value {
+        result.append((range, value as! CGColor))
+      }
     }
     return result
   }
@@ -657,20 +671,20 @@ enum CoreTextTypesetter {
     vertical: Bool,
     lineHeightMultiple: CGFloat = 1,
     styles: [OverlayTextStyleRun] = [],
-    isUnderlined: Bool = false
+    isUnderlined: Bool = false,
   ) -> NSMutableAttributedString {
     let attributes: [NSAttributedString.Key: Any] = [
       NSAttributedString.Key(kCTFontAttributeName as String): OverlayTypography.font(
         size: fontSize,
         weight: fontWeight,
         design: fontDesign,
-        isItalic: isItalic
+        isItalic: isItalic,
       ),
       NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(
         red: 1,
         green: 1,
         blue: 1,
-        alpha: 1
+        alpha: 1,
       ),
       NSAttributedString.Key(kCTLanguageAttributeName as String): language.maximalIdentifier,
     ]
@@ -688,7 +702,7 @@ enum CoreTextTypesetter {
           size: fontSize,
           weight: style.appearance.fontWeight,
           design: style.appearance.fontDesign,
-          isItalic: style.appearance.isItalic
+          isItalic: style.appearance.isItalic,
         ),
         underlineKey: vertical
           ? NSNumber(value: style.appearance.isUnderlined)
@@ -705,10 +719,10 @@ enum CoreTextTypesetter {
             fontWeight: fontWeight,
             fontDesign: fontDesign,
             isItalic: isItalic,
-            lineHeightMultiple: lineHeightMultiple
+            lineHeightMultiple: lineHeightMultiple,
           )
         ),
-        range: wholeRange
+        range: wholeRange,
       )
       return attributed
     }
@@ -717,18 +731,18 @@ enum CoreTextTypesetter {
     attributed.addAttribute(
       NSAttributedString.Key(kCTVerticalFormsAttributeName as String),
       value: true,
-      range: wholeRange
+      range: wholeRange,
     )
     attributed.addAttribute(
       NSAttributedString.Key(kCTParagraphStyleAttributeName as String),
       value: wordWrappingParagraphStyle(),
-      range: wholeRange
+      range: wholeRange,
     )
     for range in horizontalInVerticalRanges(in: text) {
       attributed.addAttribute(
         NSAttributedString.Key(kCTHorizontalInVerticalFormsAttributeName as String),
         value: NSNumber(value: range.length),
-        range: range
+        range: range,
       )
     }
     for match in ellipsisPattern.matches(in: text, range: wholeRange) {
@@ -746,7 +760,7 @@ enum CoreTextTypesetter {
           attributed.addAttribute(
             NSAttributedString.Key(kCTKernAttributeName as String),
             value: (fontSize - advance) / CGFloat(match.range.length),
-            range: match.range
+            range: match.range,
           )
         }
       }
@@ -759,7 +773,7 @@ enum CoreTextTypesetter {
     language: Locale.Language,
     fontSize: CGFloat,
     constrainedToHeight height: CGFloat,
-    wrapping: VerticalWrapping
+    wrapping: VerticalWrapping,
   ) -> VerticalLayoutPlan {
     guard attributed.length > 0, height > 0 else {
       return VerticalLayoutPlan(columns: [], glyphExtent: 0, columnAdvance: 0, requiredWidth: 0, fitsHeight: false)
@@ -776,7 +790,7 @@ enum CoreTextTypesetter {
       var length = adjustedToWordBoundary(
         proposedLength: suggested,
         offset: offset,
-        words: words
+        words: words,
       )
       if length <= 0 {
         length = CTTypesetterSuggestClusterBreak(typesetter, offset, height)
@@ -813,8 +827,12 @@ enum CoreTextTypesetter {
     // by itself. Move the last legal break slightly earlier, using Core Text's
     // CJK break rules, without changing text or crossing an explicit newline.
     if
-      fontSize.isFinite, fontSize > 0, height.isFinite,
-      usesCharacterWrapping(language), columns.count >= 2, let last = columns.last
+      fontSize.isFinite,
+      fontSize > 0,
+      height.isFinite,
+      usesCharacterWrapping(language),
+      columns.count >= 2,
+      let last = columns.last
     {
       func letters(_ range: NSRange) -> Int {
         text.substring(with: range).unicodeScalars.count(where: CharacterSet.alphanumerics.contains)
@@ -829,7 +847,9 @@ enum CoreTextTypesetter {
           let first = NSRange(location: previous.location, length: length)
           let second = NSRange(location: NSMaxRange(first), length: NSMaxRange(last) - NSMaxRange(first))
           if
-            length < previous.length, letters(first) >= 3, letters(second) >= 3,
+            length < previous.length,
+            letters(first) >= 3,
+            letters(second) >= 3,
             CTTypesetterSuggestLineBreak(typesetter, second.location, height) >= second.length
           {
             columns[columns.count - 2] = first
@@ -848,7 +868,7 @@ enum CoreTextTypesetter {
       glyphExtent: glyphExtent,
       columnAdvance: columnAdvance,
       requiredWidth: requiredWidth,
-      fitsHeight: fitsHeight
+      fitsHeight: fitsHeight,
     )
   }
 
@@ -863,12 +883,12 @@ enum CoreTextTypesetter {
           CTParagraphStyleSetting(
             spec: .lineBreakMode,
             valueSize: MemoryLayout<CTLineBreakMode>.size,
-            value: UnsafeRawPointer(pointer)
+            value: UnsafeRawPointer(pointer),
           ),
           CTParagraphStyleSetting(
             spec: .lineSpacingAdjustment,
             valueSize: MemoryLayout<CGFloat>.size,
-            value: UnsafeRawPointer(spacingPointer)
+            value: UnsafeRawPointer(spacingPointer),
           ),
         ]
         return settings.withUnsafeBufferPointer {
@@ -881,13 +901,15 @@ enum CoreTextTypesetter {
   private static func adjustedToWordBoundary(
     proposedLength: Int,
     offset: Int,
-    words: [NSRange]
+    words: [NSRange],
   ) -> Int {
     let proposedEnd = offset + proposedLength
     for word in words {
       let end = NSMaxRange(word)
       guard proposedEnd >= word.location, proposedEnd < end, offset < end else { continue }
-      if word.location > offset { return word.location - offset }
+      if word.location > offset {
+        return word.location - offset
+      }
       return end - offset
     }
     return proposedLength
@@ -895,7 +917,7 @@ enum CoreTextTypesetter {
 
   private static func horizontalTokens(
     in text: String,
-    language: Locale.Language
+    language: Locale.Language,
   ) -> [String] {
     horizontalTokenRanges(in: text, language: language).compactMap { range in
       Range(range, in: text).map { String(text[$0]) }
@@ -904,7 +926,7 @@ enum CoreTextTypesetter {
 
   private static func horizontalTokenRanges(
     in text: String,
-    language: Locale.Language
+    language: Locale.Language,
   ) -> [NSRange] {
     HorizontalHyphenation.wordRanges(in: text, language: language)
   }
@@ -912,13 +934,13 @@ enum CoreTextTypesetter {
   private static func makeFrame(
     attributed: NSAttributedString,
     size: CGSize,
-    progression: OverlayColumnProgression?
+    progression: OverlayColumnProgression?,
   ) -> CTFrame {
     makeFrame(
       attributed: attributed,
       range: CFRange(location: 0, length: attributed.length),
       rect: CGRect(origin: .zero, size: size),
-      progression: progression
+      progression: progression,
     )
   }
 
@@ -926,7 +948,7 @@ enum CoreTextTypesetter {
     attributed: NSAttributedString,
     range: CFRange,
     rect: CGRect,
-    progression: OverlayColumnProgression?
+    progression: OverlayColumnProgression?,
   ) -> CTFrame {
     let framesetter = CTFramesetterCreateWithAttributedString(attributed)
     let path = CGPath(rect: rect, transform: nil)
@@ -944,9 +966,10 @@ enum CoreTextTypesetter {
       framesetter,
       range,
       path,
-      attributes
+      attributes,
     )
   }
+
 }
 
 extension OverlayFontWeight {

@@ -11,7 +11,7 @@ struct RealWebStructureTests {
     ["تشمل التطبيقات التي تظهر في هذه الواجهة", "مجموعة من الأدوات التي تساعد", "على قراءة المحتوى بسهولة."],
     ["この文章は画面に表示された内容について", "改行をまたいで説明を続けます", "最後まで一つの段落として読みます。"],
   ])
-  func aDetachedFirstBodyRowRetainsItsFollowingParagraph(_ texts: [String]) {
+  func `a detached first body row retains its following paragraph`(_ texts: [String]) {
     let lines = texts.enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.2, y: 0.2 + Double(index) * 0.03, width: 0.4, height: 0.02),
@@ -24,13 +24,13 @@ struct RealWebStructureTests {
             red: index == 0 ? 0.3 : 0.2,
             green: index == 0 ? 0.3 : 0.2,
             blue: index == 0 ? 0.3 : 0.2,
-            alpha: 1
+            alpha: 1,
           ),
           confidence: 1,
           foregroundConfidence: index == 0 ? 0.06 : 0.04,
           fontSizeScale: 0.022,
-          fontWeight: index == 0 ? .semibold : .regular
-        )
+          fontWeight: index == 0 ? .semibold : .regular,
+        ),
       )
     }
     #expect(OCRResult(lines: lines).coalescingParagraphFragments().lines.count == 1)
@@ -41,7 +41,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func nativeWrappingConnectsStyledRowsWithoutAbsorbingAnUnrelatedHeading() {
+  func `native wrapping connects styled rows without absorbing an unrelated heading`() {
     var emphasized = OverlaySourceAppearance.fallback
     emphasized.confidence = 1
     emphasized.foregroundConfidence = 1
@@ -56,14 +56,14 @@ struct RealWebStructureTests {
       recognitionGroupID: 4,
       appearance: emphasized,
       recognitionLanguages: ["en"],
-      continuesToNextLine: true
+      continuesToNextLine: true,
     )
     let next = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.25, width: 0.5, height: 0.04),
       text: "continues in ordinary text.",
       recognitionGroupID: 4,
       appearance: ordinary,
-      recognitionLanguages: ["en"]
+      recognitionLanguages: ["en"],
     )
     #expect(OCRResult(lines: [first, next]).coalescingParagraphFragments().lines.count == 1)
     var heading = first
@@ -76,34 +76,34 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: ["en", "ar"])
-  func targetWritingDirectionDoesNotMoveTheSourceReadingEdge(_ source: String) throws {
+  func `target writing direction does not move the source reading edge`(_ source: String) throws {
     var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.25, height: 0.04),
-      text: source == "ar" ? "تطبيقات الذكاء الاصطناعي" : "Artificial intelligence applications"
+      text: source == "ar" ? "تطبيقات الذكاء الاصطناعي" : "Artificial intelligence applications",
     ), language: .init(identifier: source)))
     line.showTranslation(
       source == "ar" ? "인공지능 응용 분야" : "تطبيقات الذكاء الاصطناعي",
-      language: .init(identifier: source == "ar" ? "ko" : "ar")
+      language: .init(identifier: source == "ar" ? "ko" : "ar"),
     )
     let placement = try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 1200, height: 800)).first)
     #expect(placement.alignment == (source == "ar" ? .trailing : .leading))
   }
 
   @Test
-  func paddedColumnBoxesDoNotSplitAContiguousSentence() {
+  func `padded column boxes do not split A contiguous sentence`() {
     let left = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.4, y: 0.2, width: 0.02, height: 0.08),
       text: "文章",
       isVerticalBlock: true,
       verticalCharScale: 0.02,
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     let right = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.412, y: 0.2, width: 0.056, height: 0.08),
       text: "最初の",
       isVerticalBlock: true,
       verticalCharScale: 0.02,
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     #expect(OCRResult(lines: [left, right]).coalescingParagraphFragments().lines.map(\.text) == ["最初の文章"])
     // Two hypotheses of the same physical column must still remain separate
@@ -114,28 +114,28 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func rubyErasureMarginsDoNotSeparateNeighboringTextColumns() throws {
+  func `ruby erasure margins do not separate neighboring text columns`() throws {
     let columns = [
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.4, y: 0.2, width: 0.02, height: 0.08),
         text: "漢字中",
         isVerticalBlock: true,
         verticalCharScale: 0.02,
-        recognitionGroupID: 1
+        recognitionGroupID: 1,
       ),
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.43, y: 0.2, width: 0.02, height: 0.08),
         text: "次の文",
         isVerticalBlock: true,
         verticalCharScale: 0.02,
-        recognitionGroupID: 1
+        recognitionGroupID: 1,
       ),
     ]
     let ruby = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.423, y: 0.2, width: 0.017, height: 0.04),
       text: "かんじ",
       isVerticalBlock: true,
-      verticalCharScale: 0.008
+      verticalCharScale: 0.008,
     )
     let original = OCRResult(lines: columns).coalescingParagraphFragments()
     let annotated = OCRResult(lines: columns + [ruby]).absorbingRubyAnnotations().coalescingParagraphFragments()
@@ -145,7 +145,7 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: [false, true], [800.0, 1600, 3424])
-  func analysisKeepsPhysicalGlyphSamplesWithinItsBudget(_ vertical: Bool, _ width: Double) {
+  func `analysis keeps physical glyph samples within its budget`(_ vertical: Bool, _ width: Double) {
     let size = CGSize(width: width, height: 600)
     let lines = (0..<8).map { index in
       OCRResult.Line(
@@ -153,13 +153,13 @@ struct RealWebStructureTests {
           x: 0.2,
           y: 0.1 + Double(index) * 0.08,
           width: (vertical ? 24 : 300) / width,
-          height: (vertical ? 120 : 24) / 600
+          height: (vertical ? 120 : 24) / 600,
         ),
         text: "文章の領域",
         imageAspectRatio: width / 600,
         isVerticalBlock: vertical,
         verticalCharScale: vertical ? 24 / width : 0,
-        horizontalGlyphScale: vertical ? 0 : 24 / 600
+        horizontalGlyphScale: vertical ? 0 : 24 / 600,
       )
     }
     let side = OCRGeometry.analysisRasterLongestSide(for: lines, imageSize: size)
@@ -168,7 +168,7 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: ["en", "ar"], [OverlayTextAlignment.leading, .center, .trailing])
-  func indistinguishableRowsUseSourceReadingDirection(_ language: String, _ hint: OverlayTextAlignment) throws {
+  func `indistinguishable rows use source reading direction`(_ language: String, _ hint: OverlayTextAlignment) throws {
     let rows = [
       CGRect(x: 0.2, y: 0.2, width: 0.4, height: 0.025),
       CGRect(x: 0.2, y: 0.24, width: 0.4, height: 0.025),
@@ -181,7 +181,7 @@ struct RealWebStructureTests {
       styleRuns: rows.enumerated().map { index, box in
         OverlaySourceStyleRun(range: NSRange(location: index, length: 1), box: box)
       },
-      alignment: hint
+      alignment: hint,
     ), language: .init(identifier: language)))
     line.showTranslation("학습, 추론, 지식 표현", language: .init(identifier: "ko"))
     #expect(line.source.rowAlignmentEvidence == .ambiguous)
@@ -190,7 +190,7 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: [800.0, 3424, 10000])
-  func emptyCanvasMarginsCannotChangeParagraphAlignment(_ canvasWidth: Double) {
+  func `empty canvas margins cannot change paragraph alignment`(_ canvasWidth: Double) {
     let rows = (0..<20).map { index -> CGRect in
       let width: Double = index == 19 ? 368 : 400
       let y = Double(10 + index * 18) / 600
@@ -200,7 +200,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func similarLengthRowsDoNotGainFalseCenterEvidenceInAWideCanvas() {
+  func `similar length rows do not gain false center evidence in A wide canvas`() {
     let rows = [
       CGRect(x: 0.624123833, y: 0.753101804, width: 0.047897195, height: 0.018847191),
       CGRect(x: 0.626464844, y: 0.773833713, width: 0.043945313, height: 0.016962471),
@@ -210,13 +210,13 @@ struct RealWebStructureTests {
       x: ($0.minX - 0.3) / 0.4,
       y: $0.minY,
       width: $0.width / 0.4,
-      height: $0.height
+      height: $0.height,
     ) }
     #expect(OCRGeometry.horizontalAlignment(forRows: cropped, imageAspectRatio: 1369.6 / 1060) == nil)
   }
 
   @Test(arguments: [OverlayTextAlignment.leading, .center, .trailing])
-  func completeRowsKeepTheShortFinalRowAsAlignmentEvidence(_ expected: OverlayTextAlignment) throws {
+  func `complete rows keep the short final row as alignment evidence`(_ expected: OverlayTextAlignment) throws {
     let widths: [CGFloat] = [0.38, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.16]
     let rows = widths.enumerated().map { index, width in
       let x: CGFloat =
@@ -233,11 +233,11 @@ struct RealWebStructureTests {
       [
         OverlaySourceStyleRun(
           range: NSRange(location: index * 2, length: 1),
-          box: CGRect(x: box.minX, y: box.minY, width: box.width * 0.3, height: box.height)
+          box: CGRect(x: box.minX, y: box.minY, width: box.width * 0.3, height: box.height),
         ),
         OverlaySourceStyleRun(
           range: NSRange(location: index * 2 + 1, length: 1),
-          box: CGRect(x: box.minX + box.width * 0.3, y: box.minY, width: box.width * 0.7, height: box.height)
+          box: CGRect(x: box.minX + box.width * 0.3, y: box.minY, width: box.width * 0.7, height: box.height),
         ),
       ]
     }
@@ -247,7 +247,7 @@ struct RealWebStructureTests {
       imageAspectRatio: 1.5,
       rowCount: rows.count,
       styleRuns: runs,
-      alignment: expected == .center ? .leading : .center
+      alignment: expected == .center ? .leading : .center,
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     line.showTranslation("원본 문단의 행 정렬을 유지합니다.", language: .init(identifier: "ko"))
@@ -257,7 +257,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func anIndentedQuoteCannotCenterItsLeadingParagraph() {
+  func `an indented quote cannot center its leading paragraph`() {
     let boxes = [
       CGRect(x: 0.22, y: 0.51, width: 0.284, height: 0.154),
       CGRect(x: 0.274, y: 0.695, width: 0.174, height: 0.088),
@@ -270,9 +270,9 @@ struct RealWebStructureTests {
             ? "A left aligned article paragraph"
             : "An indented quotation",
           rowCount: index == 0 ? 5 : 3,
-          alignment: index == 0 ? .leading : nil
+          alignment: index == 0 ? .leading : nil,
         ),
-        language: .init(identifier: "en")
+        language: .init(identifier: "en"),
       ))
       line.showTranslation(index == 0 ? "왼쪽으로 정렬된 기사 본문" : "들여쓴 인용문", language: .init(identifier: "ko"))
       return line
@@ -282,11 +282,11 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func ambiguousArabicRowsRetainTheirSourceEdgeInAKoreanTranslation() throws {
+  func `ambiguous arabic rows retain their source edge in A korean translation`() throws {
     var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
       boundingBoxNormalized: CGRect(x: 0.27, y: 0.5, width: 0.5, height: 0.08),
       text: "تشمل الأهداف التقليدية التعلم والاستدلال وتمثيل المعرفة",
-      rowCount: 2
+      rowCount: 2,
     ), language: .init(identifier: "ar")))
     line.showTranslation("전통적인 목표에는 학습과 추론, 지식 표현이 포함됩니다.", language: .init(identifier: "ko"))
     #expect(try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 1200, height: 820)).first)
@@ -294,12 +294,12 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func aViewportEdgeCannotRightAlignLeadingMultilineProse() throws {
+  func `a viewport edge cannot right align leading multiline prose`() throws {
     var line = OverlayLine(id: UUID(), source: .init(recognized: .init(
       boundingBoxNormalized: CGRect(x: 0.52, y: 0.1, width: 0.46, height: 0.2),
       text: "Visible lines of a clipped article",
       rowCount: 6,
-      alignment: .leading
+      alignment: .leading,
     ), language: .init(identifier: "en")))
     line.showTranslation("화면에 보이는 기사의 일부입니다.", language: .init(identifier: "ko"))
     #expect(try #require(OverlayLayoutEngine.placements(for: [line], in: CGSize(width: 620, height: 820)).first)
@@ -312,21 +312,21 @@ struct RealWebStructureTests {
     ["هذه الفقرة", "تستمر عبر", "عدة أسطر", "في الشاشة."],
     ["הפסקה הזאת", "ממשיכה דרך", "כמה שורות", "על המסך."],
   ])
-  func shortUncasedRowsUseGeometryRatherThanLatinCharacterCounts(_ texts: [String]) {
+  func `short uncased rows use geometry rather than latin character counts`(_ texts: [String]) {
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 0.9,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.025,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let lines = texts.enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.2, y: 0.1 + Double(index) * 0.035, width: 0.3, height: 0.025),
         text: text,
         recognitionGroupID: index < 2 ? 1 : 2,
-        appearance: appearance
+        appearance: appearance,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -335,7 +335,7 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: [false, true], [false, true])
-  func physicalParagraphRowsPreserveUncasedSentenceContinuity(_ mirrored: Bool, _ completed: Bool) {
+  func `physical paragraph rows preserve uncased sentence continuity`(_ mirrored: Bool, _ completed: Bool) {
     let texts = [
       "تشمل أبرز التطبيقات محركات البحث المتقدمة",
       "وروبوتات المحادثة والمساعدات" + (completed ? ".[5]" : ""),
@@ -348,7 +348,7 @@ struct RealWebStructureTests {
       confidence: 0.9,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.025,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let lines = texts.enumerated().map { index, text in
       let width: CGFloat = [0.38, 0.35, 0.36, 0.32][index]
@@ -357,14 +357,14 @@ struct RealWebStructureTests {
           x: mirrored ? 0.2 : 0.8 - width,
           y: 0.1 + Double(index) * 0.035,
           width: width,
-          height: 0.025
+          height: 0.025,
         ),
         text: text,
         recognitionGroupID: index < 2 ? 1 : 2,
         appearance: appearance,
         alignment: mirrored
           ? .leading
-          : .trailing
+          : .trailing,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -376,12 +376,12 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: ["النهاية؟", "النهاية.[5]", "文章終わり。", "끝입니다.\"", "समाप्त।", "Finished.[1][2]", "Finished.”[1]"])
-  func sentenceEndIncludesUncasedScriptsAndCitations(_ text: String) {
+  func `sentence end includes uncased scripts and citations`(_ text: String) {
     #expect(OCRTextSemantics.endsSentence(text))
   }
 
   @Test(arguments: [false, true])
-  func citationsAndShortTitleTailsDoNotCreateParagraphContinuations(_ shortTitle: Bool) {
+  func `citations and short title tails do not create paragraph continuations`(_ shortTitle: Bool) {
     let texts = shortTitle
       ? ["An independent multiline heading", "Overview", "正文是另外一个完整段落", "这里是第二行的内容。"]
       : [
@@ -396,7 +396,7 @@ struct RealWebStructureTests {
       confidence: 0.9,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.025,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let lines = texts.enumerated().map { index, text in
       OCRResult.Line(
@@ -404,19 +404,19 @@ struct RealWebStructureTests {
           x: 0.2,
           y: 0.1 + Double(index) * 0.035,
           width: shortTitle && index == 1 ? 0.15 : 0.4,
-          height: 0.025
+          height: 0.025,
         ),
         text: text,
         recognitionGroupID: index < 2 ? 1 : 2,
         appearance: appearance,
-        alignment: .leading
+        alignment: .leading,
       )
     }
     #expect(OCRResult(lines: lines).coalescingParagraphFragments().lines.count == 2)
   }
 
   @Test(arguments: [false, true], [false, true])
-  func repeatedNativeListLabelsRemainIndependentButWrappedProseDoesNot(_ prose: Bool, _ mirrored: Bool) {
+  func `repeated native list labels remain independent but wrapped prose does not`(_ prose: Bool, _ mirrored: Bool) {
     let texts = ["Floating-Point Types", "Numeric Operations", "The Boolean Type", "The Character Type", "Compound Types"]
     let lines = texts.enumerated().map { index, text in
       let width = [0.1, 0.09, 0.105, 0.108, 0.102][index]
@@ -425,11 +425,11 @@ struct RealWebStructureTests {
           x: mirrored ? 1 - 0.085 - width : 0.085,
           y: 0.5 + Double(index) * 0.034,
           width: width,
-          height: 0.024
+          height: 0.024,
         ),
         text: text,
         recognitionGroupID: prose ? 1 : [1, 2, 3, 3, 4][index],
-        recognitionContainer: CGRect(x: mirrored ? 0.795 : 0.025, y: 0.4, width: 0.18, height: 0.3)
+        recognitionContainer: CGRect(x: mirrored ? 0.795 : 0.025, y: 0.4, width: 0.18, height: 0.3),
       )
     }
     let result = OCRVisualStructure.classifying(.init(lines: lines)).coalescingParagraphFragments()
@@ -443,7 +443,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func nativeCellBoundaryCannotBeBridgedByParagraphAppearance() {
+  func `native cell boundary cannot be bridged by paragraph appearance`() {
     let cells = [CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.06), CGRect(x: 0.1, y: 0.165, width: 0.3, height: 0.06)]
     let texts = ["First wrapped", "cell description", "Second cell"]
     let lines = texts.enumerated().map { index, text in
@@ -453,7 +453,7 @@ struct RealWebStructureTests {
         text: text,
         recognitionGroupID: 1,
         recognitionContainer: OCRParagraphLineGrouping.container(for: box, in: cells),
-        alignment: .leading
+        alignment: .leading,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -463,7 +463,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func nestedNativeContainersChooseTheSmallestOwnerWithoutClaimingOutsideText() {
+  func `nested native containers choose the smallest owner without claiming outside text`() {
     let outer = CGRect(x: 0.1, y: 0.1, width: 0.7, height: 0.7)
     let inner = CGRect(x: 0.2, y: 0.2, width: 0.3, height: 0.1)
     let row = CGRect(x: 0.21, y: 0.21, width: 0.25, height: 0.03)
@@ -474,7 +474,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func tallInlineFormulaDoesNotSplitTheRemainingBodyIntoAControl() {
+  func `tall inline formula does not split the remaining body into A control`() {
     let text = "Values from (2 - 1) inclusive, where n is the number of bits"
     let source = text as NSString
     let tokens = ["Values from", "(2 - 1)", "inclusive, where n is the number of bits"]
@@ -488,7 +488,7 @@ struct RealWebStructureTests {
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.18, width: 0.595, height: 0.05),
       text: text,
-      styleRuns: runs
+      styleRuns: runs,
     )
     let result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line]))
     #expect(result.lines.count == 1)
@@ -496,14 +496,14 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: ["1.1.", "3.4.", "12.2.7.", "١.٢."])
-  func hierarchicalNavigationItemsKeepTheirOwnTranslationUnits(_ marker: String) {
+  func `hierarchical navigation items keep their own translation units`(_ marker: String) {
     let texts = ["1. Getting Started", "\(marker) Installation", "2. Hello, World!"]
     let lines = texts.enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.025, y: 0.14 + Double(index) * 0.035, width: 0.16, height: 0.025),
         text: text,
         recognitionGroupID: 3,
-        alignment: .center
+        alignment: .center,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -512,14 +512,14 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func hierarchicalListContinuationStaysAttachedWithoutAbsorbingNextItem() {
+  func `hierarchical list continuation stays attached without absorbing next item`() {
     let texts = ["1.2. Installing the required", "development tools", "1.3. Open a project"]
     let lines = texts.enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: index == 1 ? 0.12 : 0.1, y: 0.1 + Double(index) * 0.035, width: 0.3, height: 0.025),
         text: text,
         recognitionGroupID: 1,
-        alignment: .leading
+        alignment: .leading,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -534,16 +534,16 @@ struct RealWebStructureTests {
     "v1.2. release",
     "README.md file"
   ])
-  func proseAndIdentifiersAreNotHierarchicalListMarkers(_ text: String) {
+  func `prose and identifiers are not hierarchical list markers`(_ text: String) {
     #expect(!OCRTextSemantics.beginsListItem(text))
   }
 
   @Test(arguments: ["ko", "ar"])
-  func numberedNavigationAlignmentFollowsTargetDirection(_ target: String) throws {
+  func `numbered navigation alignment follows target direction`(_ target: String) throws {
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.2, height: 0.03),
       text: "3.1. Variables and Mutability",
-      alignment: .center
+      alignment: .center,
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "en")))
     line.showTranslation(target == "ar" ? "3.1. المتغيرات" : "3.1. 변수와 가변성", language: .init(identifier: target))
@@ -552,7 +552,7 @@ struct RealWebStructureTests {
   }
 
   @Test(arguments: [false, true])
-  func paragraphAlignmentUsesWholeRowsInsteadOfInlineStyleFragments(_ mirrored: Bool) {
+  func `paragraph alignment uses whole rows instead of inline style fragments`(_ mirrored: Bool) {
     let edges: [CGFloat] = [0.3, 0.4, 0.25]
     let lines = edges.enumerated().flatMap { index, edge in
       [
@@ -560,7 +560,9 @@ struct RealWebStructureTests {
         CGRect(x: (edge + 0.8) / 2, y: 0.1 + Double(index) * 0.05, width: (0.8 - edge) / 2, height: 0.03),
       ].map { box in
         var box = box
-        if mirrored { box.origin.x = 1 - box.maxX }
+        if mirrored {
+          box.origin.x = 1 - box.maxX
+        }
         return OCRResult.Line(boundingBoxNormalized: box, text: "نص الفقرة مع الروابط", recognitionGroupID: 1, alignment: .center)
       }
     }
@@ -570,7 +572,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func mixedSizeHeadingDoesNotInheritAFictitiousOCRRotation() {
+  func `mixed size heading does not inherit A fictitious OCR rotation`() {
     let heading = CGRect(x: 0.22, y: 0.5228, width: 0.12, height: 0.0286)
     let control = CGRect(x: 0.35, y: 0.5328, width: 0.16, height: 0.0157)
     let line = OCRResult.Line(
@@ -580,7 +582,7 @@ struct RealWebStructureTests {
       styleRuns: [
         .init(range: NSRange(location: 0, length: 12), box: heading, inkBox: heading),
         .init(range: NSRange(location: 13, length: 6), box: control, inkBox: control),
-      ]
+      ],
     )
     let result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line]))
     #expect(result.lines.map(\.text) == ["Beschreibung", "[Edit]"])
@@ -591,13 +593,13 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func paragraphMarginSurvivesAnOCRDamagedTerminalCitation() {
+  func `paragraph margin survives an OCR damaged terminal citation`() {
     let positions: [CGFloat] = [0.366, 0.398, 0.43, 0.462, 0.494, 0.526, 0.55, 0.607, 0.641, 0.673]
     let lines = positions.enumerated().map { index, y in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.22, y: y, width: 0.27, height: index == 6 ? 0.038 : 0.025),
         text: index == 6 ? "这一个段落结束。（" : "同一个文本段落的内容",
-        recognitionGroupID: index < 7 ? 26 : 27
+        recognitionGroupID: index < 7 ? 26 : 27,
       )
     }
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -607,7 +609,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func pronunciationReferenceCannotRouteItsAccentMarksAsVietnameseProse() {
+  func `pronunciation reference cannot route its accent marks as vietnamese prose`() {
     #expect(OCRTextSemantics.isIdentifier("• (Tokyo) J U3\"5 [àízú\"chì] (Nakadaka - [31) [314]"))
     #expect(OCRTextSemantics.isIdentifier("Pronunciation: [ˈswɪft]"))
     #expect(OCRTextSemantics.isIdentifier("• IPA(key): [aizitsi]"))
@@ -617,7 +619,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func recoveryCannotDiscardTheUnrecognizedHalfOfAnOverlap() {
+  func `recovery cannot discard the unrecognized half of an overlap`() {
     let top = CGRect(x: 0.1, y: 0.1, width: 0.04, height: 0.1)
     let bottom = CGRect(x: 0.1, y: 0.16, width: 0.04, height: 0.1)
     #expect(!OCRConflictRecovery.coversOwners([top, bottom], with: [top]))
@@ -625,12 +627,12 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func paragraphOwnershipCannotJumpOverAnIndependentRow() {
+  func `paragraph ownership cannot jump over an independent row`() {
     var first = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.7, height: 0.05),
       text: "First paragraph fragment",
       recognitionGroupID: 1,
-      alignment: .leading
+      alignment: .leading,
     )
     var middle = first
     middle.boundingBoxNormalized.origin.y = 0.16
@@ -647,13 +649,13 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func tableControlsDoNotClaimRowsInTheNeighboringArticle() {
+  func `table controls do not claim rows in the neighboring article`() {
     let lines = (0..<3).flatMap { index in
       let y = 0.1 + Double(index) * 0.05
       return [
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.01, y: y, width: 0.25, height: 0.025),
-          text: "An article continues on this row"
+          text: "An article continues on this row",
         ),
         OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.42, y: y, width: 0.06, height: 0.025), text: "Label \(index)"),
         OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.53, y: y, width: 0.05, height: 0.025), text: "[show]"),
@@ -665,12 +667,12 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func maskedRecognitionCanCorrectTheSameColumnButCannotReplaceAnotherBalloon() {
+  func `masked recognition can correct the same column but cannot replace another balloon`() {
     let old = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.3, y: 0.1, width: 0.04, height: 0.1),
       text: "献B",
       recognitionConfidence: 0.5,
-      isVerticalBlock: true
+      isVerticalBlock: true,
     )
     var corrected = old
     corrected.text = "前日"
@@ -681,7 +683,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func shortUprightCJKColumnsDoNotNeedRotatedCornerVectors() {
+  func `short upright CJK columns do not need rotated corner vectors`() {
     let size = CGSize(width: 1000, height: 1000)
     #expect(OCRGeometry.isVertical(
       text: "だから",
@@ -689,7 +691,7 @@ struct RealWebStructureTests {
       topRight: CGPoint(x: 0.03, y: 0),
       imageSize: size,
       declaredVertical: false,
-      bounds: CGRect(x: 0, y: 0, width: 0.03, height: 0.09)
+      bounds: CGRect(x: 0, y: 0, width: 0.03, height: 0.09),
     ))
     #expect(!OCRGeometry.isVertical(
       text: "横に読む本文です",
@@ -697,28 +699,28 @@ struct RealWebStructureTests {
       topRight: CGPoint(x: 0.12, y: 0),
       imageSize: size,
       declaredVertical: false,
-      bounds: CGRect(x: 0, y: 0, width: 0.12, height: 0.07)
+      bounds: CGRect(x: 0, y: 0, width: 0.12, height: 0.07),
     ))
     #expect(OCRGeometry.verticalCharacterScale(
       text: "うんで",
       bounds: CGRect(x: 0, y: 0, width: 0.08, height: 0.09),
-      imageSize: size
+      imageSize: size,
     ) == 0.03)
   }
 
   @Test
-  func verticalRubyIsErasedWithItsBaseAndNeverBecomesASeparateSentence() throws {
+  func `vertical ruby is erased with its base and never becomes A separate sentence`() throws {
     let base = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.1, width: 0.04, height: 0.16),
       text: "漢字",
       isVerticalBlock: true,
-      verticalCharScale: 0.04
+      verticalCharScale: 0.04,
     )
     let ruby = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.246, y: 0.11, width: 0.012, height: 0.06),
       text: "かんじ",
       isVerticalBlock: true,
-      verticalCharScale: 0.012
+      verticalCharScale: 0.012,
     )
     let result = OCRResult(lines: [base, ruby]).absorbingRubyAnnotations()
     #expect(result.lines.count == 1)
@@ -729,18 +731,18 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func repeatedTableControlsKeepEveryLabelInItsOwnRow() {
+  func `repeated table controls keep every label in its own row`() {
     let lines = ["組織", "著作", "一覧"].enumerated().flatMap { index, text in
       [
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.1, y: 0.1 + Double(index) * 0.04, width: 0.06, height: 0.025),
           text: text,
-          recognitionGroupID: 1
+          recognitionGroupID: 1,
         ),
         OCRResult.Line(
           boundingBoxNormalized: CGRect(x: 0.3, y: 0.1 + Double(index) * 0.04, width: 0.05, height: 0.025),
           text: "[表示]",
-          recognitionGroupID: 2
+          recognitionGroupID: 2,
         ),
       ]
     }
@@ -750,7 +752,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func wrappedHeadlineUsesParagraphContextForItsShortLastRow() {
+  func `wrapped headline uses paragraph context for its short last row`() {
     let words = ["La nouvelle génération", "d'Apple Intelligence est", "disponible dès", "aujourd'hui"]
     let lines = words.enumerated().map { index, text in
       var line = OCRResult.Line(
@@ -758,19 +760,19 @@ struct RealWebStructureTests {
           x: 0.2,
           y: 0.1 + Double(index) * 0.05,
           width: index == 3 ? 0.16 : 0.26,
-          height: 0.04
+          height: 0.04,
         ),
         text: text,
         horizontalInkScale: 0.03,
         recognitionGroupID: index == 3 ? 2 : 1,
-        alignment: .leading
+        alignment: .leading,
       )
       line.appearance = .init(
         background: .white,
         foreground: .black,
         confidence: 1,
         foregroundConfidence: 0.4,
-        fontSizeScale: index == 3 ? 0.05 : 0.04
+        fontSizeScale: index == 3 ? 0.05 : 0.04,
       )
       return line
     }
@@ -780,7 +782,7 @@ struct RealWebStructureTests {
   }
 
   @Test
-  func oneOCRLookalikeCannotSelectAnUnrelatedTranslationModel() {
+  func `one OCR lookalike cannot select an unrelated translation model`() {
     let broken = "integers, floating-point numbers, Boc recognize these from other programı they work in Rust."
     let context = "This chapter introduces primitive types and explains how to use the standard library. Review the examples before continuing."
     let result = LanguageDetectionClient.liveValue.resolveSources(for: [context, broken, "JA 6 languages v"], configured: .auto)

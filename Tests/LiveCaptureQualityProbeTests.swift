@@ -8,12 +8,12 @@ import Testing
 @MainActor
 struct LiveCaptureQualityProbeTests {
   @Test
-  func nativeLiveSequences() async throws {
+  func `native live sequences`() async throws {
     let root = URL(fileURLWithPath: try #require(ProcessInfo.processInfo.environment["SWIFTYCROW_LIVE_QUALITY_ROOT"]))
     let failures = try await LiveCaptureQualityRunner.run(
       root: root,
       sourceLanguage: ProcessInfo.processInfo
-        .environment["SWIFTYCROW_LIVE_QUALITY_LANGUAGE"]
+        .environment["SWIFTYCROW_LIVE_QUALITY_LANGUAGE"],
     )
     #expect(failures == 0)
   }

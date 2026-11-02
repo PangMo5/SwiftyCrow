@@ -19,7 +19,7 @@ enum BackgroundReconstruction {
     barriers: [Bool]?,
     allowsExteriorSamples: Bool = false,
     sample: (Int, Int) -> Color?,
-    write: (Int, Color?) -> Void
+    write: (Int, Color?) -> Void,
   ) -> Int {
     precondition(width > 0 && height > 0 && mask.count == width * height)
     precondition(mask.count <= Int(Int32.max))
@@ -52,9 +52,12 @@ enum BackgroundReconstruction {
         let weight = 1.0
         if nx >= 0, nx < width, ny >= 0, ny < height {
           let next = ny * width + nx
-          if barriers?[next] == true { continue }
-          if indices[next] >= 0 { adjacent[node][side] = indices[next] }
-          else if material[next].w != 0 {
+          if barriers?[next] == true {
+            continue
+          }
+          if indices[next] >= 0 {
+            adjacent[node][side] = indices[next]
+          } else if material[next].w != 0 {
             color = Color(material[next].x, material[next].y, material[next].z)
           } else {
             // A rejected, unmasked source pixel is not a missing background
@@ -98,7 +101,8 @@ enum BackgroundReconstruction {
         }
         for side in 0..<4 where adjacent[node][side] >= 0 {
           let next = Int(adjacent[node][side])
-          if !visited[next] { visited[next] = true
+          if !visited[next] {
+            visited[next] = true
             component.append(next)
           }
         }
@@ -106,7 +110,9 @@ enum BackgroundReconstruction {
       guard lower.x.isFinite else { continue }
       if lower == upper {
         for node in component { result[node] = SIMD4(lower.x, lower.y, lower.z, 1) }
-      } else { unknown += component }
+      } else {
+        unknown += component
+      }
     }
 
     if !unknown.isEmpty {
@@ -143,7 +149,7 @@ enum BackgroundReconstruction {
         SparseAttributes_t(),
         rows,
         columns,
-        coefficients
+        coefficients,
       )
       defer { SparseCleanup(matrix) }
       var options = SparseCGOptions()
@@ -160,15 +166,15 @@ enum BackgroundReconstruction {
               columnCount: 3,
               columnStride: Int32(size),
               attributes: SparseAttributes_t(),
-              data: b.baseAddress!
+              data: b.baseAddress!,
             ),
             DenseMatrix_Double(
               rowCount: Int32(size),
               columnCount: 3,
               columnStride: Int32(size),
               attributes: SparseAttributes_t(),
-              data: x.baseAddress!
-            )
+              data: x.baseAddress!,
+            ),
           )
         }
       }
@@ -191,7 +197,8 @@ enum BackgroundReconstruction {
       if field[i].w != 0 {
         let color = field[i]
         write(i, Color(color.x, color.y, color.z))
-      } else { write(i, nil)
+      } else {
+        write(i, nil)
         unresolved += 1
       }
     }

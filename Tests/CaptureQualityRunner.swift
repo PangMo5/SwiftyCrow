@@ -43,7 +43,9 @@ final class CaptureQualityRunner {
     // A failed rerun must not inherit an earlier successful metrics/image file.
     for suffix in ["ocr.json", "translation.json", "result.png", "metrics.json", "failure.json"] {
       let artifact = output.appendingPathComponent("\(item.id)-\(suffix)")
-      if FileManager.default.fileExists(atPath: artifact.path) { try FileManager.default.removeItem(at: artifact) }
+      if FileManager.default.fileExists(atPath: artifact.path) {
+        try FileManager.default.removeItem(at: artifact)
+      }
     }
     let index = item.id
     let started = ContinuousClock.now
@@ -57,14 +59,16 @@ final class CaptureQualityRunner {
         imageData: data,
         imageSize: size,
         lines: lines,
-        prefersHorizontalTextLayout: prefersHorizontal
+        prefersHorizontalTextLayout: prefersHorizontal,
       )?.pngData)
     }
     let language = item.sourceLanguage ?? Language.autoCode
     let traceDirectory = ProcessInfo.processInfo.environment["SWIFTYCROW_QUALITY_TRACE"] == "1"
       ? output.appendingPathComponent("\(index)-trace-\(UUID().uuidString)")
       : nil
-    if let traceDirectory { try FileManager.default.createDirectory(at: traceDirectory, withIntermediateDirectories: true) }
+    if let traceDirectory {
+      try FileManager.default.createDirectory(at: traceDirectory, withIntermediateDirectories: true)
+    }
     let reuse = ProcessInfo.processInfo.environment["SWIFTYCROW_QUALITY_REUSE_OCR"] == "1"
     let cached = reuse && traceDirectory == nil ? recognitionCache.lookup(data: data, language: language) : nil
     let recognition = LockIsolated<OCRResult?>(nil)
@@ -95,7 +99,9 @@ final class CaptureQualityRunner {
               { @Sendable stage, lines in
                 try Self.writeTrace(lines, to: directory.appendingPathComponent("\(stage).json"))
               }
-            } else { nil }
+            } else {
+              nil
+            }
           result = try await OCRPipeline.$traceObserver.withValue(observer) {
             try await OCRClient.liveValue.recognizeCapture(image, language, textReady)
           }
@@ -110,7 +116,9 @@ final class CaptureQualityRunner {
         NSLocalizedDescriptionKey: store.state.lastError ?? "Capture completed without a recognition result"
       ])
     }
-    if reuse, cached == nil { recognitionCache.store(ocr, data: data, language: language) }
+    if reuse, cached == nil {
+      recognitionCache.store(ocr, data: data, language: language)
+    }
     if let traceDirectory, !FileManager.default.fileExists(atPath: traceDirectory.appendingPathComponent("restored.json").path) {
       throw CocoaError(.fileReadNoSuchFile)
     }
@@ -118,12 +126,12 @@ final class CaptureQualityRunner {
       ocr.joinedText,
       requiredText: item.requiredText ?? [],
       requiredWords: item.requiredWords ?? [],
-      language: item.originalLanguage ?? "en"
+      language: item.originalLanguage ?? "en",
     )
     let occurrenceIssues = CaptureQualityMetrics.sourceOccurrenceIssues(
       ocr.lines.map(\.text),
       expected: item.requiredSourceOccurrences ?? [:],
-      forbidden: item.forbiddenSourceText ?? []
+      forbidden: item.forbiddenSourceText ?? [],
     )
     // Isolate app-owned image analysis from Vision's asynchronous model
     // compilation when collecting a CPU sample for a specific capture.
@@ -192,7 +200,7 @@ final class CaptureQualityRunner {
     let placements = OverlayLayoutEngine.placements(
       for: final.overlayLines,
       in: size,
-      prefersHorizontalTextLayout: prefersHorizontal
+      prefersHorizontalTextLayout: prefersHorizontal,
     )
     let missingPlacements = final.overlayLines.filter { line in
       line.shouldReplaceSourcePixels && !placements.contains(where: { $0.id == line.id })
@@ -214,7 +222,7 @@ final class CaptureQualityRunner {
         }) ? nil : "Required prose was not translated: \(required)"
       } + CaptureQualityMetrics.paragraphIssues(
         texts: ocr.lines.map(\.text),
-        expected: item.requiredParagraphs ?? []
+        expected: item.requiredParagraphs ?? [],
       ) + CaptureQualityMetrics.styleIssues(lines: final.overlayLines, expected: item.requiredStyles ?? [])
       + CaptureQualityMetrics.alignmentIssues(placements, expected: item.requiredAlignments ?? [])
       + CaptureQualityMetrics.fontScaleIssues(placements, canvas: size, expected: item.requiredFontScales ?? [])
@@ -228,7 +236,7 @@ final class CaptureQualityRunner {
       + CaptureQualityMetrics.layoutIssues(
         placements,
         canvas: size,
-        minimumFontRatio: item.minimumFontRatio ?? 0.35
+        minimumFontRatio: item.minimumFontRatio ?? 0.35,
       )
     try write(final.overlayLines.map { line in
       let placement = placements.first { $0.id == line.id }
@@ -281,26 +289,28 @@ final class CaptureQualityRunner {
       for: final.overlayLines,
       placements: placements,
       in: size,
-      displayScale: 1
+      displayScale: 1,
     ).map {
       CGRect(x: $0.minX / size.width, y: $0.minY / size.height, width: $0.width / size.width, height: $0.height / size.height)
     }
     let retainedPixelChanges = CaptureQualityMetrics.protectedPixelChanges(
       original: image,
       rendered: rendered,
-      rectangles: retainedFrames
+      rectangles: retainedFrames,
     )
-    if retainedPixelChanges > 0 { layoutIssues.append("Retained source pixels changed: \(retainedPixelChanges)") }
+    if retainedPixelChanges > 0 {
+      layoutIssues.append("Retained source pixels changed: \(retainedPixelChanges)")
+    }
     let protectedRects = (item.protectedRectangles ?? []).filter { $0.count == 4 }.map { CGRect(
       x: $0[0],
       y: $0[1],
       width: $0[2],
-      height: $0[3]
+      height: $0[3],
     ) }
     let protectedChanges = CaptureQualityMetrics.protectedPixelChanges(
       original: image,
       rendered: rendered,
-      rectangles: protectedRects
+      rectangles: protectedRects,
     )
     try png.write(to: output.appendingPathComponent("\(index)-result.png"))
     let backgroundExpectations = item.requiredRestoredBackgrounds ?? []
@@ -321,7 +331,7 @@ final class CaptureQualityRunner {
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
         space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       clear.clear(CGRect(origin: .zero, size: size))
       let transparent = try required(clear.makeImage()?.pngData)
@@ -371,7 +381,7 @@ final class CaptureQualityRunner {
       missingText: missingText,
       layoutIssues: layoutIssues,
       protectedPixelChanges: protectedChanges,
-      translationError: final.lastError
+      translationError: final.lastError,
     )
   }
 
@@ -451,4 +461,5 @@ final class CaptureQualityRunner {
   private func write(_ value: Any, to url: URL) throws {
     try JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]).write(to: url)
   }
+
 }

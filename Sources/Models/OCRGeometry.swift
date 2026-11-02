@@ -49,8 +49,12 @@ enum OCRGeometry {
       if
         let index = rows.lastIndex(where: { row in
           min(row.maxY, box.maxY) - max(row.minY, box.minY) >= min(row.height, box.height) * 0.55
-        }) { rows[index] = rows[index].union(box) }
-      else { rows.append(box) }
+        })
+      {
+        rows[index] = rows[index].union(box)
+      } else {
+        rows.append(box)
+      }
     }
     return horizontalAlignmentEvidence(forRows: rows, imageAspectRatio: line.imageAspectRatio)
   }
@@ -103,7 +107,7 @@ enum OCRGeometry {
     let aspect = max(0.01, lhs.imageAspectRatio)
     return (
       alignedBox(lhs.orientedBox ?? lhs.boundingBoxNormalized, angle: angle, aspect: aspect).standardized,
-      alignedBox(rhs.orientedBox ?? rhs.boundingBoxNormalized, angle: angle, aspect: aspect).standardized
+      alignedBox(rhs.orientedBox ?? rhs.boundingBoxNormalized, angle: angle, aspect: aspect).standardized,
     )
   }
 
@@ -113,13 +117,17 @@ enum OCRGeometry {
     topRight: CGPoint,
     imageSize: CGSize,
     declaredVertical: Bool,
-    bounds: CGRect? = nil
+    bounds: CGRect? = nil,
   ) -> Bool {
-    if declaredVertical { return true }
+    if declaredVertical {
+      return true
+    }
     let dx = abs(topRight.x - topLeft.x) * imageSize.width
     let dy = abs(topRight.y - topLeft.y) * imageSize.height
     let count = OverlayTextFlowResolver.scriptEvidence(in: text).verticalCharacterCount
-    if dy > dx * 2, count >= 2 { return true }
+    if dy > dx * 2, count >= 2 {
+      return true
+    }
     // Short upright CJK columns can have horizontal corner vectors and missing
     // direction metadata. Their physical extent still contains a stack of
     // square glyphs; a wrapped multi-column paragraph cannot satisfy this ratio.
@@ -136,7 +144,7 @@ enum OCRGeometry {
       x: (x * cos(angle) + y * sin(angle)) / aspect - box.width / 2,
       y: -x * sin(angle) + y * cos(angle) - box.height / 2,
       width: box.width,
-      height: box.height
+      height: box.height,
     )
   }
 
@@ -150,7 +158,7 @@ enum OCRGeometry {
       x: (x * cos(angle) - y * sin(angle)) / aspect - union.width / 2,
       y: x * sin(angle) + y * cos(angle) - union.height / 2,
       width: union.width,
-      height: union.height
+      height: union.height,
     )
   }
 }

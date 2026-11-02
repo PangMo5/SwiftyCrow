@@ -32,11 +32,11 @@ struct CoreTextTypesetterTests {
 
   @Test(
     arguments: [OverlayColumnProgression.rightToLeft, .leftToRight],
-    [(CGFloat(0), CGFloat(0.5)), (0.5, 0.5), (1, 0.5), (0, 1), (0.5, 1), (1, 1)]
+    [(CGFloat(0), CGFloat(0.5)), (0.5, 0.5), (1, 0.5), (0, 1), (0.5, 1), (1, 1)],
   )
-  func verticalInlineBackgroundHasItsOwnOpacity(
+  func `vertical inline background has its own opacity`(
     _ progression: OverlayColumnProgression,
-    _ alpha: (CGFloat, CGFloat)
+    _ alpha: (CGFloat, CGFloat),
   ) throws {
     let text = "한글\n😀"
     let foreground = OverlayColor(red: 0, green: 0, blue: 0, alpha: alpha.0)
@@ -45,7 +45,7 @@ struct CoreTextTypesetterTests {
       foreground: foreground,
       confidence: 1,
       fontWeight: .regular,
-      isUnderlined: true
+      isUnderlined: true,
     )
     let image = try #require(CoreTextTypesetter.verticalGlyphImage(
       text: text,
@@ -56,7 +56,7 @@ struct CoreTextTypesetterTests {
       scale: 2,
       progression: progression,
       foreground: foreground,
-      styles: [.init(range: NSRange(location: 0, length: text.utf16.count), appearance: style)]
+      styles: [.init(range: NSRange(location: 0, length: text.utf16.count), appearance: style)],
     ))
     let pixels = try verticalPixels(image)
     let background = yellowBackgroundAlpha(in: pixels)
@@ -70,13 +70,13 @@ struct CoreTextTypesetterTests {
   }
 
   @Test(arguments: [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func mixedOpacityVerticalHighlightsAreNotRepaintedForEveryGlyphRun(_ progression: OverlayColumnProgression) throws {
+  func `mixed opacity vertical highlights are not repainted for every glyph run`(_ progression: OverlayColumnProgression) throws {
     let text = "한글\n😀"
     let highlight = OverlaySourceAppearance(
       background: .init(red: 1, green: 1, blue: 0, alpha: 0.5),
       foreground: .black,
       confidence: 1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var faded = highlight
     faded.foreground.alpha = 0.5
@@ -92,7 +92,7 @@ struct CoreTextTypesetterTests {
       styles: [
         .init(range: NSRange(location: 0, length: text.utf16.count), appearance: highlight),
         .init(range: (text as NSString).range(of: "😀"), appearance: faded),
-      ]
+      ],
     ))
     let pixels = try verticalPixels(image)
     let background = yellowBackgroundAlpha(in: pixels)
@@ -109,7 +109,7 @@ struct CoreTextTypesetterTests {
       scale: 2,
       progression: progression,
       foreground: hidden.foreground,
-      styles: [.init(range: NSRange(location: 0, length: text.utf16.count), appearance: hidden)]
+      styles: [.init(range: NSRange(location: 0, length: text.utf16.count), appearance: hidden)],
     )))
     var plain = highlight
     plain.background = .white
@@ -127,7 +127,7 @@ struct CoreTextTypesetterTests {
       styles: [
         .init(range: NSRange(location: 0, length: text.utf16.count), appearance: plain),
         .init(range: (text as NSString).range(of: "😀"), appearance: plainFaded),
-      ]
+      ],
     )))
     var maximumError = 0
     for offset in stride(from: 0, to: pixels.count, by: 4) {
@@ -174,9 +174,9 @@ struct CoreTextTypesetterTests {
     ("한글...", OverlayFontDesign.monospaced, CGFloat(48), CGFloat(1)),
     ("한글...", OverlayFontDesign.monospaced, CGFloat(48), CGFloat(2)),
   ], [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func highlightedVerticalTextRetainsAllPaintAtTheMeasuredWidth(
+  func `highlighted vertical text retains all paint at the measured width`(
     _ sample: (String, OverlayFontDesign, CGFloat, CGFloat),
-    _ progression: OverlayColumnProgression
+    _ progression: OverlayColumnProgression,
   ) throws {
     let style = OverlaySourceAppearance(
       background: .init(red: 1, green: 1, blue: 0, alpha: 0.5),
@@ -184,7 +184,7 @@ struct CoreTextTypesetterTests {
       confidence: 1,
       fontWeight: .regular,
       fontDesign: sample.1,
-      isUnderlined: true
+      isUnderlined: true,
     )
     let styles = [OverlayTextStyleRun(range: NSRange(location: 0, length: sample.0.utf16.count), appearance: style)]
     let plan = CoreTextTypesetter.verticalLayoutPlan(
@@ -195,7 +195,7 @@ struct CoreTextTypesetterTests {
       fontDesign: sample.1,
       constrainedToHeight: sample.2 * 12,
       styles: styles,
-      isUnderlined: true
+      isUnderlined: true,
     )
     func mass(extraWidth: CGFloat) throws -> UInt64 {
       let image = try #require(CoreTextTypesetter.verticalGlyphImage(
@@ -209,7 +209,7 @@ struct CoreTextTypesetterTests {
         progression: progression,
         foreground: .black,
         styles: styles,
-        isUnderlined: true
+        isUnderlined: true,
       ))
       let pixels = try verticalPixels(image)
       return stride(from: 3, to: pixels.count, by: 4).reduce(UInt64(0)) { $0 + UInt64(pixels[$1]) }
@@ -221,7 +221,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test(arguments: ["AB", "مرحبا", "12"], [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func mixedDirectionHighlightFollowsItsOwnGlyphs(_ word: String, _ progression: OverlayColumnProgression) throws {
+  func `mixed direction highlight follows its own glyphs`(_ word: String, _ progression: OverlayColumnProgression) throws {
     let text = "한 AB مرحبا 12 글"
     let range = (text as NSString).range(of: word)
     let clear = OverlayColor(red: 0, green: 0, blue: 0, alpha: 0)
@@ -239,8 +239,8 @@ struct CoreTextTypesetterTests {
           background: background,
           foreground: foreground,
           confidence: 1,
-          fontWeight: .regular
-        ))]
+          fontWeight: .regular,
+        ))],
       )))
     }
     let glyphs = try render(background: .white, foreground: .black)
@@ -253,10 +253,14 @@ struct CoreTextTypesetterTests {
         var covered = false
         for row in max(0, y - 1)...min(499, y + 1) {
           for column in max(0, x - 1)...min(159, x + 1) {
-            if background[(row * 160 + column) * 4 + 3] > 0 { covered = true }
+            if background[(row * 160 + column) * 4 + 3] > 0 {
+              covered = true
+            }
           }
         }
-        if !covered { uncovered += 1 }
+        if !covered {
+          uncovered += 1
+        }
       }
     }
     #expect(ink > 20)
@@ -264,7 +268,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func matchingVerticalBackgroundDoesNotPaintAnotherSurface() throws {
+  func `matching vertical background does not paint another surface`() throws {
     let color = OverlayColor(red: 0.2, green: 0.3, blue: 0.4, alpha: 1)
     let transparent = OverlayColor(red: 0, green: 0, blue: 0, alpha: 0)
     let style = OverlaySourceAppearance(background: color, foreground: transparent, confidence: 1)
@@ -277,7 +281,7 @@ struct CoreTextTypesetterTests {
       progression: .rightToLeft,
       foreground: transparent,
       baseBackground: color,
-      styles: [.init(range: NSRange(location: 0, length: 2), appearance: style)]
+      styles: [.init(range: NSRange(location: 0, length: 2), appearance: style)],
     ))
     let pixels = try verticalPixels(image)
     #expect(stride(from: 3, to: pixels.count, by: 4).allSatisfy { pixels[$0] == 0 })
@@ -291,9 +295,9 @@ struct CoreTextTypesetterTests {
     WordColumnCase(text: "함께 읽어요.\n다음 문단입니다.", words: ["읽어요.", "문단입니다."], preferred: 25, height: 100),
     WordColumnCase(text: "각자 즐겁게 👩🏽‍💻 작업해요!", words: ["각자", "즐겁게", "👩🏽‍💻", "작업해요!"], preferred: 28, height: 110),
   ], [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func verticalFittingRetainsWholeWordsAndTheirPunctuation(
+  func `vertical fitting retains whole words and their punctuation`(
     _ sample: WordColumnCase,
-    _ progression: OverlayColumnProgression
+    _ progression: OverlayColumnProgression,
   ) throws {
     let size = CGSize(width: 300, height: sample.height)
     let fitted = CoreTextTypesetter.fittedLayout(
@@ -303,7 +307,7 @@ struct CoreTextTypesetterTests {
       fontWeight: .regular,
       constrainedTo: size,
       preferred: sample.preferred,
-      minimum: 8
+      minimum: 8,
     )
     let font = fitted.fontSize
     #expect(fitted.verticalWrapping == .words && fitted.isComplete)
@@ -314,7 +318,7 @@ struct CoreTextTypesetterTests {
         flow: .vertical(progression),
         fontSize: font + 0.25,
         fontWeight: .regular,
-        in: size
+        in: size,
       ))
     }
     let plan = CoreTextTypesetter.verticalLayoutPlan(
@@ -322,7 +326,7 @@ struct CoreTextTypesetterTests {
       language: .init(identifier: "ko"),
       fontSize: font,
       fontWeight: .regular,
-      constrainedToHeight: sample.height
+      constrainedToHeight: sample.height,
     )
     let pieces = try substrings(plan.columns, in: sample.text)
     #expect(pieces.joined() == sample.text)
@@ -334,7 +338,7 @@ struct CoreTextTypesetterTests {
       language: .init(identifier: "ko"),
       fontSize: font,
       fontWeight: .regular,
-      constrainedToHeight: sample.height
+      constrainedToHeight: sample.height,
     ))
     #expect(CoreTextTypesetter.verticalGlyphImage(
       text: sample.text,
@@ -343,19 +347,19 @@ struct CoreTextTypesetterTests {
       fontWeight: .regular,
       size: size,
       scale: 2,
-      progression: progression
+      progression: progression,
     ) != nil)
   }
 
   @Test(arguments: ["즐거운", "정도는...", "조금이라도"])
-  func aWordTallerThanItsColumnIsNotReportedAsFitting(_ text: String) {
+  func `a word taller than its column is not reported as fitting`(_ text: String) {
     let size = CGSize(width: 500, height: 75)
     #expect(!CoreTextTypesetter.fits(
       text: text,
       language: .init(identifier: "ko"),
       flow: .vertical(.rightToLeft),
       fontSize: 35,
-      in: size
+      in: size,
     ))
     #expect(CoreTextTypesetter.verticalGlyphImage(
       text: text,
@@ -363,12 +367,12 @@ struct CoreTextTypesetterTests {
       fontSize: 35,
       size: size,
       scale: 1,
-      progression: .rightToLeft
+      progression: .rightToLeft,
     ) == nil)
   }
 
   @Test(arguments: ["\u{00A0}", "\u{2007}", "\u{202F}"])
-  func nonbreakingSpacesRemainPartOfTheWrappingUnit(_ separator: String) {
+  func `nonbreaking spaces remain part of the wrapping unit`(_ separator: String) {
     let word = "10" + separator + "개"
     let text = word + " 다음"
     #expect(CoreTextTypesetter.wrappingWordRanges(in: text).map { (text as NSString).substring(with: $0) } == [word, "다음"])
@@ -377,12 +381,12 @@ struct CoreTextTypesetterTests {
       language: .init(identifier: "ko"),
       flow: .vertical(.rightToLeft),
       fontSize: 30,
-      in: CGSize(width: 500, height: 40)
+      in: CGSize(width: 500, height: 40),
     ))
   }
 
   @Test
-  func explicitZeroWidthAndParagraphBreaksRemainAvailable() {
+  func `explicit zero width and paragraph breaks remain available`() {
     let text = "즐겁게\u{200B}읽어요.\r\n다음 문단"
     let words = CoreTextTypesetter.wrappingWordRanges(in: text).map { (text as NSString).substring(with: $0) }
     #expect(words == ["즐겁게", "읽어요.", "다음", "문단"])
@@ -390,7 +394,7 @@ struct CoreTextTypesetterTests {
       text: text,
       language: .init(identifier: "ko"),
       fontSize: 20,
-      constrainedToHeight: 100
+      constrainedToHeight: 100,
     )
     let columns = plan.columns.map { (text as NSString).substring(with: $0) }
     #expect(columns.joined() == text)
@@ -399,7 +403,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func emergencyVerticalWrappingIsAnExplicitReadableLayout() {
+  func `emergency vertical wrapping is an explicit readable layout`() {
     let text = "가나다라마바사아자차카타파하가나다라마바사아자차카타파하"
     let size = CGSize(width: 160, height: 90)
     let fitted = CoreTextTypesetter.fittedLayout(
@@ -408,7 +412,7 @@ struct CoreTextTypesetterTests {
       flow: .vertical(.rightToLeft),
       constrainedTo: size,
       preferred: 28,
-      minimum: 14
+      minimum: 14,
     )
     #expect(fitted.isComplete && fitted.verticalWrapping == .characters)
     #expect(fitted.fontSize >= 14)
@@ -417,7 +421,7 @@ struct CoreTextTypesetterTests {
       language: .init(identifier: "ko"),
       fontSize: fitted.fontSize,
       constrainedToHeight: size.height,
-      wrapping: fitted.verticalWrapping
+      wrapping: fitted.verticalWrapping,
     )
     #expect(plan.fitsHeight)
     #expect(plan.columns.map { (text as NSString).substring(with: $0) }.joined() == text)
@@ -428,12 +432,12 @@ struct CoreTextTypesetterTests {
       size: size,
       scale: 2,
       progression: .rightToLeft,
-      wrapping: fitted.verticalWrapping
+      wrapping: fitted.verticalWrapping,
     ) != nil)
   }
 
   @Test(arguments: [CGFloat(1), 2, 3])
-  func verticalEllipsisStaysCompactWithoutChangingTextOrClippingDots(_ scale: CGFloat) throws {
+  func `vertical ellipsis stays compact without changing text or clipping dots`(_ scale: CGFloat) throws {
     let text = "그래서 시험 전날 정도는..."
     let fitted = CoreTextTypesetter.fittedLayout(
       text: text,
@@ -442,7 +446,7 @@ struct CoreTextTypesetterTests {
       fontWeight: .regular,
       constrainedTo: CGSize(width: 208, height: 152),
       preferred: 33.5,
-      minimum: 6
+      minimum: 6,
     )
     #expect(fitted.fontSize >= 30)
     #expect(fitted.verticalWrapping == .words && fitted.isComplete)
@@ -451,7 +455,7 @@ struct CoreTextTypesetterTests {
       language: .init(identifier: "ko"),
       fontSize: fitted.fontSize,
       fontWeight: .regular,
-      constrainedToHeight: 152
+      constrainedToHeight: 152,
     )
     #expect(plan.columns.map { (text as NSString).substring(with: $0) }.joined() == text)
     func alpha(height: CGFloat) throws -> UInt64 {
@@ -462,7 +466,7 @@ struct CoreTextTypesetterTests {
         fontWeight: .regular,
         size: CGSize(width: 100, height: height),
         scale: scale,
-        progression: .rightToLeft
+        progression: .rightToLeft,
       ))
       let raster = try #require(CGContext(
         data: nil,
@@ -471,7 +475,7 @@ struct CoreTextTypesetterTests {
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       raster.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
       let pixels = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))
@@ -483,21 +487,21 @@ struct CoreTextTypesetterTests {
   }
 
   @Test(arguments: [CGFloat.nan, .infinity, -.infinity, CGFloat(Int.max), CGFloat(Int.max / 4)])
-  func invalidFontBoundsCannotReachTheQuarterPointSearch(_ preferred: CGFloat) {
+  func `invalid font bounds cannot reach the quarter point search`(_ preferred: CGFloat) {
     let fitted = CoreTextTypesetter.fittedLayout(
       text: "읽을 수 있는 글자",
       language: .init(identifier: "ko"),
       flow: .vertical(.rightToLeft),
       constrainedTo: CGSize(width: 200, height: 200),
       preferred: preferred,
-      minimum: 6
+      minimum: 6,
     )
     #expect(!fitted.isComplete && fitted.fontSize.isFinite)
   }
 
   @MainActor
   @Test(arguments: [OverlayColor.black, .white, .init(red: 0.1, green: 0.3, blue: 0.8, alpha: 1)])
-  func verticalCompositorPreservesEmojiColorAndRequestedTextColor(_ foreground: OverlayColor) throws {
+  func `vertical compositor preserves emoji color and requested text color`(_ foreground: OverlayColor) throws {
     let size = CGSize(width: 200, height: 300)
     let raster = try #require(CGContext(
       data: nil,
@@ -505,8 +509,8 @@ struct CoreTextTypesetterTests {
       height: 300,
       bitsPerComponent: 8,
       bytesPerRow: 800,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     let background = OverlayColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1)
     raster.setFillColor(CGColor(gray: 0.5, alpha: 1))
@@ -524,8 +528,8 @@ struct CoreTextTypesetterTests {
           foreground: foreground,
           confidence: 1,
           fontSizeScale: 0.15,
-          fontWeight: .regular
-        )
+          fontWeight: .regular,
+        ),
       )
       var line = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: .init(identifier: "ja")))
       line.source.replacementPatches = []
@@ -536,7 +540,7 @@ struct CoreTextTypesetterTests {
       imageData: data,
       imageSize: size,
       lines: lines,
-      prefersHorizontalTextLayout: false
+      prefersHorizontalTextLayout: false,
     ))
     let top = try #require(image.cropping(to: CGRect(x: 0, y: 0, width: 200, height: 150)))
     let bottom = try #require(image.cropping(to: CGRect(x: 0, y: 150, width: 200, height: 150)))
@@ -547,8 +551,8 @@ struct CoreTextTypesetterTests {
         height: image.height,
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        space: try TestGraphics.sRGBColorSpace(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
       let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -562,7 +566,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test(arguments: ["😀", "한글"], [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func verticalOpacityIncludesColorGlyphs(_ text: String, _ progression: OverlayColumnProgression) throws {
+  func `vertical opacity includes color glyphs`(_ text: String, _ progression: OverlayColumnProgression) throws {
     func alpha(_ opacity: CGFloat) throws -> UInt64 {
       let image = try #require(CoreTextTypesetter.verticalGlyphImage(
         text: text,
@@ -571,7 +575,7 @@ struct CoreTextTypesetterTests {
         size: CGSize(width: 120, height: 150),
         scale: 2,
         progression: progression,
-        foreground: .init(red: 0.1, green: 0.3, blue: 0.8, alpha: opacity)
+        foreground: .init(red: 0.1, green: 0.3, blue: 0.8, alpha: opacity),
       ))
       let context = try #require(CGContext(
         data: nil,
@@ -579,8 +583,8 @@ struct CoreTextTypesetterTests {
         height: image.height,
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        space: try TestGraphics.sRGBColorSpace(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
       let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -594,7 +598,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test(arguments: [OverlayFontDesign.standard, .monospaced], [CGFloat(0), 0.5, 1])
-  func aFullVerticalStyleMatchesTheSameBaseAppearance(_ design: OverlayFontDesign, _ alpha: CGFloat) throws {
+  func `a full vertical style matches the same base appearance`(_ design: OverlayFontDesign, _ alpha: CGFloat) throws {
     let text = "한글..."
     let color = OverlayColor(red: 0.1, green: 0.3, blue: 0.8, alpha: alpha)
     let style = OverlaySourceAppearance(
@@ -603,7 +607,7 @@ struct CoreTextTypesetterTests {
       confidence: 1,
       fontWeight: .bold,
       fontDesign: design,
-      isUnderlined: true
+      isUnderlined: true,
     )
     let range = NSRange(location: 0, length: (text as NSString).length)
     let styled = try #require(CoreTextTypesetter.verticalGlyphImage(
@@ -615,7 +619,7 @@ struct CoreTextTypesetterTests {
       scale: 2,
       progression: .rightToLeft,
       foreground: color,
-      styles: [.init(range: range, appearance: style)]
+      styles: [.init(range: range, appearance: style)],
     ))
     let reference = try #require(CoreTextTypesetter.verticalGlyphImage(
       text: text,
@@ -627,7 +631,7 @@ struct CoreTextTypesetterTests {
       scale: 2,
       progression: .rightToLeft,
       foreground: color,
-      isUnderlined: true
+      isUnderlined: true,
     ))
     #expect(try verticalPixels(styled) == verticalPixels(reference))
     let fitted = CoreTextTypesetter.fittedLayout(
@@ -638,7 +642,7 @@ struct CoreTextTypesetterTests {
       constrainedTo: CGSize(width: 100, height: 100),
       preferred: 40,
       minimum: 6,
-      styles: [.init(range: range, appearance: style)]
+      styles: [.init(range: range, appearance: style)],
     )
     let expected = CoreTextTypesetter.fittedLayout(
       text: text,
@@ -649,13 +653,13 @@ struct CoreTextTypesetterTests {
       constrainedTo: CGSize(width: 100, height: 100),
       preferred: 40,
       minimum: 6,
-      isUnderlined: true
+      isUnderlined: true,
     )
     #expect(fitted.fontSize == expected.fontSize && fitted.verticalWrapping == expected.verticalWrapping)
   }
 
   @Test
-  func verticalRunOpacityIsAbsoluteAndPreservesColorEmoji() throws {
+  func `vertical run opacity is absolute and preserves color emoji`() throws {
     let text = "한글\n😀"
     let range = (text as NSString).range(of: "😀")
     func image(styled: Bool) throws -> CGImage {
@@ -671,9 +675,9 @@ struct CoreTextTypesetterTests {
           ? [.init(range: range, appearance: .init(
             background: .white,
             foreground: .init(red: 0.1, green: 0.3, blue: 0.8, alpha: 0.5),
-            confidence: 1
+            confidence: 1,
           ))]
-          : []
+          : [],
       ))
     }
     let full = try verticalPixels(image(styled: false))
@@ -684,9 +688,11 @@ struct CoreTextTypesetterTests {
     var unchangedText: UInt64 = 0
     for y in 0..<170 { for x in 0..<180 {
       let index = (y * 180 + x) * 4 + 3
-      if x < 90 { originalEmoji += UInt64(full[index])
+      if x < 90 {
+        originalEmoji += UInt64(full[index])
         fadedEmoji += UInt64(half[index])
-      } else { originalText += UInt64(full[index])
+      } else {
+        originalText += UInt64(full[index])
         unchangedText += UInt64(half[index])
       }
     } }
@@ -697,7 +703,7 @@ struct CoreTextTypesetterTests {
 
   @MainActor
   @Test
-  func translatedVerticalStyleReferencesReachTheActualCompositor() throws {
+  func `translated vertical style references reach the actual compositor`() throws {
     let size = CGSize(width: 240, height: 360)
     let background = try #require(CGContext(
       data: nil,
@@ -705,8 +711,8 @@ struct CoreTextTypesetterTests {
       height: 360,
       bitsPerComponent: 8,
       bytesPerRow: 960,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     background.setFillColor(CGColor(gray: 1, alpha: 1))
     background.fill(CGRect(origin: .zero, size: size))
@@ -716,7 +722,7 @@ struct CoreTextTypesetterTests {
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.1,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var emphasis = base
     emphasis.foreground = .init(red: 0.1, green: 0.3, blue: 0.8, alpha: 1)
@@ -733,8 +739,8 @@ struct CoreTextTypesetterTests {
       styleRuns: [.init(
         range: (original as NSString).range(of: "晴れ"),
         box: CGRect(x: 0.6, y: 0.35, width: 0.15, height: 0.2),
-        appearance: emphasis
-      )]
+        appearance: emphasis,
+      )],
     )
     var line = OverlayLine(id: UUID(), source: .init(recognized: source, language: .init(identifier: "ja")))
     line.source.replacementPatches = []
@@ -747,7 +753,7 @@ struct CoreTextTypesetterTests {
       imageData: data,
       imageSize: size,
       lines: [line],
-      prefersHorizontalTextLayout: false
+      prefersHorizontalTextLayout: false,
     ))
     let pixels = try verticalPixels(image)
     let blue = (0..<(image.width * image.height)).count {
@@ -758,14 +764,14 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func verticalProseDoesNotLeaveASingleLetterAndPunctuationInItsLastColumn() {
+  func `vertical prose does not leave A single letter and punctuation in its last column`() {
     let text = "第九局表，在最后的攻击前组成了圆阵。 对于导演的话，我们一次又一次地互相对峙。“ 绝对会逆转的“哦！” 所有人都有力地回答了。"
     let plan = CoreTextTypesetter.verticalLayoutPlan(
       text: text,
       language: .init(identifier: "zh-Hans"),
       fontSize: 40.93910784489563,
       fontWeight: .regular,
-      constrainedToHeight: 607.0725984574634
+      constrainedToHeight: 607.0725984574634,
     )
     #expect(plan.columns.count > 1)
     #expect(plan.columns.map { (text as NSString).substring(with: $0) }.joined() == text)
@@ -778,7 +784,7 @@ struct CoreTextTypesetterTests {
       fontWeight: .regular,
       size: CGSize(width: plan.requiredWidth + 8, height: 607.0725984574634),
       scale: 1,
-      progression: .rightToLeft
+      progression: .rightToLeft,
     ) != nil)
   }
 
@@ -789,14 +795,14 @@ struct CoreTextTypesetterTests {
       text: "마지막 공격을 앞두고 원진을 구성했습니다. 감독님의 말씀에 우리는 여러 번 여러 번 맞장구를 칩니다.",
       fontSize: 23.25,
       height: 384.5009460449219,
-      fontWeight: .regular
+      fontWeight: .regular,
     ),
     VerticalCase(language: "ja", text: "今日ここから始めよう。細かい文字も欠けないように表示する。"),
     VerticalCase(language: "zh-Hans", text: "今天我们从这里开始。请完整显示每个字符和标点。"),
   ], [OverlayColumnProgression.rightToLeft, .leftToRight])
-  func verticalDrawingRetainsTheSameInkWhenOnlyOuterMarginsChange(
+  func `vertical drawing retains the same ink when only outer margins change`(
     _ sample: VerticalCase,
-    _ progression: OverlayColumnProgression
+    _ progression: OverlayColumnProgression,
   ) throws {
     let language = Locale.Language(identifier: sample.language)
     let plan = CoreTextTypesetter.verticalLayoutPlan(
@@ -804,7 +810,7 @@ struct CoreTextTypesetterTests {
       language: language,
       fontSize: sample.fontSize,
       fontWeight: sample.fontWeight,
-      constrainedToHeight: sample.height
+      constrainedToHeight: sample.height,
     )
     let width = ceil(plan.requiredWidth) + 4
     func ink(_ text: String, extraWidth: CGFloat) throws -> UInt64 {
@@ -815,7 +821,7 @@ struct CoreTextTypesetterTests {
         fontWeight: sample.fontWeight,
         size: CGSize(width: width + extraWidth, height: sample.height),
         scale: 2,
-        progression: progression
+        progression: progression,
       ))
       let raster = try #require(CGContext(
         data: nil,
@@ -823,8 +829,8 @@ struct CoreTextTypesetterTests {
         height: image.height,
         bitsPerComponent: 8,
         bytesPerRow: image.width * 4,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        space: try TestGraphics.sRGBColorSpace(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
       ))
       raster.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
       let pixels = try #require(raster.data?.assumingMemoryBound(to: UInt8.self))
@@ -840,14 +846,14 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func koreanVerticalColumnsKeepWordsTogetherAndStayCompact() throws {
+  func `korean vertical columns keep words together and stay compact`() throws {
     let text = "괜찮다면 지금 시작해요."
     let fontSize: CGFloat = 22.75
     let plan = CoreTextTypesetter.verticalLayoutPlan(
       text: text,
       language: Locale.Language(identifier: "ko"),
       fontSize: fontSize,
-      constrainedToHeight: 154
+      constrainedToHeight: 154,
     )
     let columns = try substrings(plan.columns, in: text)
 
@@ -857,13 +863,13 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func koreanEmergencyBreakMovesWholeWordToNextColumn() throws {
+  func `korean emergency break moves whole word to next column`() throws {
     let text = "갑자기 찾아와서 미안해요."
     let plan = CoreTextTypesetter.verticalLayoutPlan(
       text: text,
       language: Locale.Language(identifier: "ko"),
       fontSize: 29.44,
-      constrainedToHeight: 342.8
+      constrainedToHeight: 342.8,
     )
     let columns = try substrings(plan.columns, in: text)
 
@@ -872,7 +878,7 @@ struct CoreTextTypesetterTests {
       text: text,
       language: Locale.Language(identifier: "ko"),
       fontSize: 29.44,
-      constrainedToHeight: 342.8
+      constrainedToHeight: 342.8,
     ))
   }
 
@@ -881,12 +887,12 @@ struct CoreTextTypesetterTests {
     VerticalCase(language: "ko", text: "오늘 중요한 이야기가 있어요. 괜찮다면 지금 시작해요."),
     VerticalCase(language: "zh-Hans", text: "今天有重要的事情告诉你。如果可以的话，我们现在开始吧。"),
   ])
-  func verticalPlansConsumeEveryComposedCharacter(_ testCase: VerticalCase) throws {
+  func `vertical plans consume every composed character`(_ testCase: VerticalCase) throws {
     let plan = CoreTextTypesetter.verticalLayoutPlan(
       text: testCase.text,
       language: Locale.Language(identifier: testCase.language),
       fontSize: 24,
-      constrainedToHeight: 180
+      constrainedToHeight: 180,
     )
     let columns = try substrings(plan.columns, in: testCase.text)
 
@@ -896,7 +902,7 @@ struct CoreTextTypesetterTests {
   }
 
   @Test
-  func englishFontFitsLegalSyllablesBeforeWrapping() {
+  func `english font fits legal syllables before wrapping`() {
     let language = Locale.Language(identifier: "en-US")
     let availableWidth: CGFloat = 62
     let fontSize = CoreTextTypesetter.horizontalWordFittedFontSize(
@@ -904,13 +910,13 @@ struct CoreTextTypesetterTests {
       language: language,
       constrainedToWidth: availableWidth,
       preferred: 28,
-      minimum: 6
+      minimum: 6,
     )
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     let recognized = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
       text: "Source",
-      appearance: appearance
+      appearance: appearance,
     )
     var overlay = OverlayLine(id: UUID(), source: .init(recognized: recognized, language: language))
     overlay.showTranslation("I have something important to tell you.", language: language)
@@ -918,7 +924,7 @@ struct CoreTextTypesetterTests {
       line: overlay,
       in: CGSize(width: availableWidth, height: 500),
       preferred: fontSize,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     ).fontSize
     let plan = HorizontalTextRenderer.plan(
       text: "I have something important to tell you.",
@@ -927,7 +933,7 @@ struct CoreTextTypesetterTests {
       appearance: .init(background: .white, foreground: .black, confidence: 1),
       styles: [],
       width: availableWidth,
-      lineHeightMultiple: 1
+      lineHeightMultiple: 1,
     )
     #expect(fontSize >= 18)
     #expect(fitted >= 18)
@@ -937,12 +943,12 @@ struct CoreTextTypesetterTests {
       text: "I have something important to tell you.",
       language: language,
       fontSize: fontSize,
-      constrainedToWidth: availableWidth
+      constrainedToWidth: availableWidth,
     ))
   }
 
   @Test
-  func horizontalLineHeightMultipleParticipatesInFitting() {
+  func `horizontal line height multiple participates in fitting`() {
     let text = "첫 번째 줄과 두 번째 줄의 간격을 원본과 동일하게 유지합니다."
     let language = Locale.Language(identifier: "ko-KR")
     let size = CGSize(width: 180, height: 72)
@@ -952,7 +958,7 @@ struct CoreTextTypesetterTests {
       flow: .horizontal(.leftToRight),
       constrainedTo: size,
       preferred: 24,
-      minimum: 6
+      minimum: 6,
     ).fontSize
     let spacedSize = CoreTextTypesetter.fittedLayout(
       text: text,
@@ -961,7 +967,7 @@ struct CoreTextTypesetterTests {
       constrainedTo: size,
       preferred: 24,
       minimum: 6,
-      lineHeightMultiple: 1.35
+      lineHeightMultiple: 1.35,
     ).fontSize
 
     #expect(spacedSize <= defaultSize)
@@ -971,7 +977,7 @@ struct CoreTextTypesetterTests {
       flow: .horizontal(.leftToRight),
       fontSize: spacedSize,
       in: size,
-      lineHeightMultiple: 1.35
+      lineHeightMultiple: 1.35,
     ))
   }
 
@@ -997,7 +1003,7 @@ struct CoreTextTypesetterTests {
       bitsPerComponent: 8,
       bytesPerRow: image.width * 4,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
     let bytes = try #require(context.data).assumingMemoryBound(to: UInt8.self)
@@ -1009,4 +1015,5 @@ struct CoreTextTypesetterTests {
       String(text[try #require(Range(range, in: text))])
     }
   }
+
 }

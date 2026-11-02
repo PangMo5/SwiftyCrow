@@ -14,12 +14,12 @@ struct OverlayWindowPlacementTests {
   // MARK: Internal
 
   @Test
-  func offscreenNativeWindowRetainsItsServerIdentity() {
+  func `offscreen native window retains its server identity`() {
     let window = NSWindow(
       contentRect: CGRect(x: 10, y: 10, width: 160, height: 100),
       styleMask: [.titled],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     window.isReleasedWhenClosed = false
     defer { window.close() }
@@ -31,7 +31,7 @@ struct OverlayWindowPlacementTests {
   }
 
   @Test
-  func teardownCannotRestoreAnInvalidatedSourceSelection() {
+  func `teardown cannot restore an invalidated source selection`() {
     withDependencies {
       $0.defaultFileStorage = .inMemory
     } operation: {
@@ -49,7 +49,7 @@ struct OverlayWindowPlacementTests {
         imageSize: CGSize(width: 300, height: 200),
         placementID: 1,
         translationUnavailable: false,
-        isPreparingRecognition: false
+        isPreparingRecognition: false,
       )
       controller.update(state)
       // The reducer has invalidated a closed source before AppKit tears down.
@@ -62,12 +62,12 @@ struct OverlayWindowPlacementTests {
   }
 
   @Test
-  func queuedWindowRendersCannotReappearAfterGeometryChanges() {
+  func `queued window renders cannot reappear after geometry changes`() {
     let original = CGRect(x: 10, y: 20, width: 300, height: 200)
     let moved = original.offsetBy(dx: 50, dy: 70)
     let line = OverlayLine(id: UUID(), source: .init(
       recognized: .init(boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1), text: "Source"),
-      language: Locale.Language(identifier: "en")
+      language: Locale.Language(identifier: "en"),
     ))
     var state = OverlayRenderState(
       lines: [line],
@@ -83,7 +83,7 @@ struct OverlayWindowPlacementTests {
       isPreparingRecognition: false,
       sourceWindowID: 42,
       sourceWindowFrame: original,
-      captureGeneration: 5
+      captureGeneration: 5,
     )
     #expect(state.validatingSourceWindow(id: 42, frame: original, minimumGeneration: 5).lines == [line])
     #expect(state.validatingSourceWindow(id: 42, frame: moved, minimumGeneration: 6).lines.isEmpty)
@@ -99,14 +99,14 @@ struct OverlayWindowPlacementTests {
   }
 
   @Test
-  func hidingReleasesTheWindowAndRecallRestoresUserGeometry() throws {
+  func `hiding releases the window and recall restores user geometry`() throws {
     try withDependencies {
       $0.defaultFileStorage = .inMemory
     } operation: {
       let controller = OverlayWindowController()
       let line = OverlayLine(id: UUID(), source: .init(
         recognized: .init(boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1), text: "A translated dialogue"),
-        language: Locale.Language(identifier: "en")
+        language: Locale.Language(identifier: "en"),
       ))
       var state = OverlayRenderState(
         lines: [line],
@@ -119,7 +119,7 @@ struct OverlayWindowPlacementTests {
         imageSize: CGSize(width: 1000, height: 200),
         placementID: 1,
         translationUnavailable: false,
-        isPreparingRecognition: false
+        isPreparingRecognition: false,
       )
       defer { state.isVisible = false
         controller.update(state)
@@ -149,7 +149,7 @@ struct OverlayWindowPlacementTests {
   }
 
   @Test
-  func aRemovedDisplayMovesTheWholeWindowIntoTheRemainingVisibleArea() {
+  func `a removed display moves the whole window into the remaining visible area`() {
     let visible = CGRect(x: 0, y: 60, width: 1200, height: 800)
     let former = CGRect(x: 1800, y: 250, width: 730, height: 163)
     let actual = OverlayWindowController.restoredResultFrame(former, screens: [visible], defaultScreen: visible)
@@ -160,7 +160,7 @@ struct OverlayWindowPlacementTests {
   }
 
   @Test
-  func anotherConnectedDisplayRetainsItsOwnLayoutAndShrunkenDisplaysContainOversizedWindows() {
+  func `another connected display retains its own layout and shrunken displays contain oversized windows`() {
     let left = CGRect(x: -1600, y: 0, width: 1600, height: 1000)
     let main = CGRect(x: 0, y: 40, width: 1200, height: 800)
     let chosen = CGRect(x: -1200, y: 300, width: 730, height: 163)
@@ -174,4 +174,5 @@ struct OverlayWindowPlacementTests {
   private func resultWindow() -> NSWindow? {
     NSApp.windows.first { $0.isVisible && $0.accessibilityIdentifier() == "live-translation-result" }
   }
+
 }

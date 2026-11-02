@@ -15,7 +15,9 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayName: String {
-    if isAuto { return String(localized: "Auto (detect)") }
+    if isAuto {
+      return String(localized: "Auto (detect)")
+    }
     return Locale.current.localizedString(forIdentifier: localeLanguage.minimalIdentifier) ?? code
   }
 
@@ -37,7 +39,6 @@ struct Language: Codable, Equatable, Hashable, Identifiable, Sendable {
   func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }
-
 }
 
 extension Locale.Language {

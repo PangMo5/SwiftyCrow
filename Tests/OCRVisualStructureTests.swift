@@ -12,7 +12,7 @@ struct OCRVisualStructureTests {
   // MARK: Internal
 
   @Test(arguments: [">", "=", ":-", "*A"], [false, true])
-  func punctuationArtworkOwnsItsPixelsAndKeepsTheLabelAnchor(_ symbol: String, _ rtl: Bool) throws {
+  func `punctuation artwork owns its pixels and keeps the label anchor`(_ symbol: String, _ rtl: Bool) throws {
     let text = symbol + " Label"
     let icon = CGRect(x: rtl ? 0.8 : 0.1, y: 0.2, width: 0.008, height: 0.016)
     let caption = CGRect(x: rtl ? 0.65 : 0.13, y: 0.196, width: 0.1, height: 0.025)
@@ -30,7 +30,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func anUnmeasurableSmallDropdownGlyphIsRetainedBesideItsLabel() {
+  func `an unmeasurable small dropdown glyph is retained beside its label`() {
     let label = CGRect(x: 0.2, y: 0.2, width: 0.1, height: 0.02)
     let icon = CGRect(x: 0.32, y: 0.207, width: 0.008, height: 0.006)
     var appearance = OverlaySourceAppearance.fallback
@@ -46,7 +46,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func aThinSeparatorCannotBecomeAnOCRNumeralInsideControlLinks() {
+  func `a thin separator cannot become an OCR numeral inside control links`() {
     let left = CGRect(x: 0.1, y: 0.2, width: 0.1, height: 0.02)
     let rule = CGRect(x: 0.21, y: 0.2, width: 0.002, height: 0.02)
     let right = CGRect(x: 0.22, y: 0.2, width: 0.12, height: 0.02)
@@ -70,7 +70,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: ["[2]", "2]", "(4]13)", "[I2)(3|4]"], [false, true])
-  func raisedReferencesKeepTheirSemanticRangeEvenWithUncertainBrackets(_ marker: String, _ raised: Bool) {
+  func `raised references keep their semantic range even with uncertain brackets`(_ marker: String, _ raised: Bool) {
     let text = "Content " + marker + " continues"
     let body = CGRect(x: 0.1, y: 0.2, width: 0.12, height: 0.03)
     let citation = CGRect(x: 0.23, y: raised ? 0.198 : 0.22, width: 0.03, height: 0.018)
@@ -90,12 +90,12 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func anUncertainMiddleFilenameKeepsItsPixelsBetweenTwoFileRows() {
+  func `an uncertain middle filename keeps its pixels between two file rows`() {
     let rows = ["proposal.pdf", "budget xisx", "photo.JPEG"].enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.1, y: 0.2 + CGFloat(index) * 0.04, width: 0.15, height: 0.02),
         text: text,
-        recognitionConfidence: index == 1 ? 0.4 : 0.9
+        recognitionConfidence: index == 1 ? 0.4 : 0.9,
       )
     }
     let result = OCRVisualStructure.classifying(.init(lines: rows))
@@ -117,11 +117,11 @@ struct OCRVisualStructureTests {
     "notes.rtf",
     "Report.v2.pdf",
   ])
-  func fileLabelsRetainPixelsAndCannotBecomeParagraphs(_ name: String) {
+  func `file labels retain pixels and cannot become paragraphs`(_ name: String) {
     let file = OCRResult.Line(boundingBoxNormalized: .init(x: 0.2, y: 0.2, width: 0.4, height: 0.02), text: name)
     let body = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.2, y: 0.23, width: 0.4, height: 0.02),
-      text: "Review the document."
+      text: "Review the document.",
     )
     let peers = ["A", "B", "C"].enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: .init(x: 0.65 + Double(index) * 0.1, y: 0.2, width: 0.02, height: 0.02), text: text)
@@ -134,13 +134,13 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: ["Chapter No. One", "The result is 3.14.", "Open the report.pdf to review it.", "Read this. Then notes.pdf"])
-  func ordinaryDottedProseDoesNotBecomeAFileLabel(_ text: String) {
+  func `ordinary dotted prose does not become A file label`(_ text: String) {
     #expect(!OCRTextSemantics.isFileName(text))
     #expect(!OCRTextSemantics.isIdentifier(text))
   }
 
   @Test
-  func aFilenameInAnInstructionDoesNotSuppressTheAction() {
+  func `a filename in an instruction does not suppress the action`() {
     let line = OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.4, height: 0.02), text: "Read manual.pdf")
     let peers = ["Print", "Share"].enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: .init(x: 0.6 + Double(index) * 0.1, y: 0.1, width: 0.08, height: 0.02), text: text)
@@ -150,10 +150,10 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func aToolbarRetainsItsTitleWhenVisionCombinesAdjacentIcons() {
+  func `a toolbar retains its title when vision combines adjacent icons`() {
     let file = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.15, y: 0.1, width: 0.25, height: 0.02),
-      text: "Financial report.pdf"
+      text: "Financial report.pdf",
     )
     let icons = OCRResult.Line(boundingBoxNormalized: .init(x: 0.5, y: 0.1, width: 0.06, height: 0.02), text: "Q Q.")
     let icon = OCRResult.Line(boundingBoxNormalized: .init(x: 0.58, y: 0.1, width: 0.02, height: 0.02), text: "Q")
@@ -164,7 +164,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func aFileColumnCannotOwnItsHeaderOrAnUnrelatedParagraphTail() {
+  func `a file column cannot own its header or an unrelated paragraph tail`() {
     let names = ["proposal.pdf", "budget.xlsx", "photo.JPEG"].enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: .init(x: 0.1, y: 0.2 + Double(index) * 0.05, width: 0.2, height: 0.02), text: text)
     }
@@ -178,7 +178,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func unreadableStemsDoNotEraseTheSymbolColumnContract() {
+  func `unreadable stems do not erase the symbol column contract`() {
     func cell(_ text: String, row: Int, column: Int) -> OCRResult.Line {
       let box = CGRect(x: Double(column) * 0.2, y: Double(row) * 0.04, width: 0.1, height: 0.02)
       return .init(boundingBoxNormalized: box, text: text, tableCell: .init(table: 0, row: row, column: column, box: box))
@@ -188,12 +188,12 @@ struct OCRVisualStructureTests {
     #expect(!OCRTableStructure.isSymbolColumnValue(left[2], among: left))
     #expect(OCRTableStructure.isSymbolColumnValue(left[2], among: left + right))
     var unrelated = right
-    for index in unrelated.indices { unrelated[index].tableCell!.table = 1 }
+    for index in unrelated.indices { unrelated[index].tableCell?.table = 1 }
     #expect(!OCRTableStructure.isSymbolColumnValue(left[2], among: left + unrelated))
   }
 
   @Test(arguments: [false, true], [false, true])
-  func aMeasuredLeadingMarkerKeepsItsSourcePixels(large: Bool, sharedBox: Bool) {
+  func `a measured leading marker keeps its source pixels`(large: Bool, sharedBox: Bool) {
     let text = "• Backchannel"
     let body = CGRect(x: 0.14, y: 0.2, width: 0.3, height: 0.02)
     let icon = sharedBox ? body : CGRect(x: 0.1, y: 0.2, width: large ? 0.02 : 0.006, height: large ? 0.02 : 0.006)
@@ -206,7 +206,7 @@ struct OCRVisualStructureTests {
       styleRuns: [
         .init(range: NSRange(location: 0, length: 1), box: icon, appearance: appearance, inkBox: icon),
         .init(range: NSRange(location: 2, length: 11), box: body, appearance: appearance, inkBox: body),
-      ]
+      ],
     )
     let result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line])).lines
     if !sharedBox {
@@ -223,10 +223,10 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: ["①", "ⓘ", "1"])
-  func anIsolatedEnclosedMarkerKeepsItsOwnRow(_ symbol: String) {
+  func `an isolated enclosed marker keeps its own row`(_ symbol: String) {
     let body = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.5, height: 0.02),
-      text: "A complete paragraph."
+      text: "A complete paragraph.",
     )
     let marker = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.2, y: 0.23, width: 0.015, height: 0.015), text: symbol)
     let result = OCRVisualStructure.classifying(.init(lines: [body, marker]))
@@ -236,7 +236,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func retainingASmallBulletDoesNotBreakItsWrappedSentence() {
+  func `retaining A small bullet does not break its wrapped sentence`() {
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     let marker = CGRect(x: 0.1, y: 0.205, width: 0.006, height: 0.006)
     let body = CGRect(x: 0.14, y: 0.2, width: 0.3, height: 0.02)
@@ -249,10 +249,10 @@ struct OCRVisualStructureTests {
           range: NSRange(location: 0, length: 1),
           box: marker,
           appearance: appearance,
-          inkBox: marker
+          inkBox: marker,
         ),
         .init(range: NSRange(location: 2, length: 10), box: body, appearance: appearance, inkBox: body),
-      ]
+      ],
     )
     var result = OCRVisualStructure.separatingStyleAccessories(.init(lines: [line])).lines
     #expect(result.count == 2)
@@ -262,7 +262,7 @@ struct OCRVisualStructureTests {
     var continuation = OCRResult.Line(
       boundingBoxNormalized: body.offsetBy(dx: 0, dy: 0.025),
       text: "continues here.",
-      appearance: appearance
+      appearance: appearance,
     )
     continuation.recognitionGroupID = 7
     let joined = OCRResult(lines: [result[1], continuation]).coalescingParagraphFragments()
@@ -270,14 +270,14 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func referenceRereadRequiresIndependentSymbolEvidence() {
+  func `reference reread requires independent symbol evidence`() {
     func column(_ values: [String], index: Int) -> [OCRResult.Line] {
       values.enumerated().map { row, text in
         let box = CGRect(x: Double(index) * 0.2, y: Double(row) * 0.05, width: 0.1, height: 0.03)
         return .init(
           boundingBoxNormalized: box,
           text: text,
-          tableCell: .init(table: 0, row: row + 1, column: index, box: box)
+          tableCell: .init(table: 0, row: row + 1, column: index, box: box),
         )
       }
     }
@@ -288,12 +288,12 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func nativeCellOwnsCenteredGlyphsDespiteAnUnderestimatedBottomEdge() {
+  func `native cell owns centered glyphs despite an underestimated bottom edge`() {
     let cell = OCRTableCell(
       table: 0,
       row: 6,
       column: 1,
-      box: CGRect(x: 0.54772075, y: 0.62016321, width: 0.02820167, height: 0.02108293)
+      box: CGRect(x: 0.54772075, y: 0.62016321, width: 0.02820167, height: 0.02108293),
     )
     let word = CGRect(x: 0.55549065, y: 0.63207547, width: 0.01401869, height: 0.01320755)
     #expect(OCRTableCell.containing(word, in: [cell]) == cell)
@@ -303,7 +303,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func tableSymbolsPropagateOnlyIntoObservedCodeSurfaces() {
+  func `table symbols propagate only into observed code surfaces`() {
     var symbol = OCRResult.Line(boundingBoxNormalized: .init(x: 0.2, y: 0.2, width: 0.05, height: 0.03), text: "alpha")
     symbol.preservesSource = true
     symbol.tableCell = .init(table: 0, row: 3, column: 1, box: symbol.boundingBoxNormalized)
@@ -312,7 +312,7 @@ struct OCRVisualStructureTests {
     let chip = OverlaySourceAppearance(
       background: .init(red: 0.9, green: 0.9, blue: 0.9, alpha: 1),
       foreground: .black,
-      confidence: 1
+      confidence: 1,
     )
     let prose = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.1, y: 0.5, width: 0.8, height: 0.04),
@@ -322,20 +322,20 @@ struct OCRVisualStructureTests {
         .init(range: NSRange(location: 0, length: 5), box: .zero, appearance: chip),
         .init(range: NSRange(location: 6, length: 5), box: .zero, appearance: plain),
         .init(range: NSRange(location: 12, length: 5), box: .zero, appearance: chip),
-      ]
+      ],
     )
     let result = OCRTableStructure.protectingInlineSymbols(.init(lines: [symbol, prose]))
     #expect(result.lines[1].styleRuns.map(\.appearance.fontDesign) == [.monospaced, .standard, .standard])
   }
 
   @Test
-  func nativeSymbolColumnProtectsAlphabeticValuesButNotHeadersOrProse() {
+  func `native symbol column protects alphabetic values but not headers or prose`() {
     func cell(_ text: String, row: Int, column: Int = 1, table: Int = 0) -> OCRResult.Line {
       let box = CGRect(x: 0.2 * Double(column), y: 0.1 + Double(row) * 0.04, width: 0.08, height: 0.025)
       return .init(
         boundingBoxNormalized: box,
         text: text,
-        tableCell: .init(table: table, row: row, column: column, box: box)
+        tableCell: .init(table: table, row: row, column: column, box: box),
       )
     }
     let values = [cell("Signed", row: 0), cell("i8", row: 1), cell("116", row: 2), cell("132", row: 3), cell("isize", row: 4)]
@@ -354,7 +354,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: [false, true], [false, true])
-  func tableSymbolsShareObservedChipStyleAcrossSamplingNoise(dark: Bool, measuredCodeFont: Bool) {
+  func `table symbols share observed chip style across sampling noise`(dark: Bool, measuredCodeFont: Bool) throws {
     func color(_ value: CGFloat) -> OverlayColor {
       .init(red: value, green: value, blue: value, alpha: 1)
     }
@@ -365,7 +365,7 @@ struct OCRVisualStructureTests {
         background: color(background + direction * delta),
         foreground: dark ? .white : .black,
         confidence: 1,
-        fontSizeScale: font
+        fontSizeScale: font,
       )
     }
     let symbols = ["alpha", "beta"].enumerated().map { index, text in
@@ -373,12 +373,14 @@ struct OCRVisualStructureTests {
         boundingBoxNormalized: .init(x: 0.2, y: 0.1 + Double(index) * 0.05, width: 0.05, height: 0.03),
         text: text,
         preservesSource: true,
-        tableCell: .init(table: 0, row: index + 1, column: 1, box: .zero)
+        tableCell: .init(table: 0, row: index + 1, column: 1, box: .zero),
       )
     }
     let text = "alpha beta beta beta beta prose"
     var anchor = appearance(measuredCodeFont ? 0.0249 : 0.026)
-    if measuredCodeFont { anchor.fontDesign = .monospaced }
+    if measuredCodeFont {
+      anchor.fontDesign = .monospaced
+    }
     var prose = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.1, y: 0.5, width: 0.8, height: 0.04),
       text: text,
@@ -391,12 +393,12 @@ struct OCRVisualStructureTests {
         .init(
           range: NSRange(location: 21, length: 4),
           box: .zero,
-          appearance: appearance(0.024, font: 0.04)
+          appearance: appearance(0.024, font: 0.04),
         ),
         .init(range: NSRange(location: 26, length: 5), box: .zero, appearance: appearance(0.024)),
-      ]
+      ],
     )
-    let classified = OCRTableStructure.protectingInlineSymbols(.init(lines: symbols + [prose])).lines.last!
+    let classified = try #require(OCRTableStructure.protectingInlineSymbols(.init(lines: symbols + [prose])).lines.last)
     #expect(classified.styleRuns.map(\.appearance.fontDesign) == [
       .monospaced,
       .monospaced,
@@ -406,12 +408,12 @@ struct OCRVisualStructureTests {
       .standard,
     ])
     prose.styleRuns.removeFirst()
-    let isolated = OCRTableStructure.protectingInlineSymbols(.init(lines: symbols + [prose])).lines.last!
+    let isolated = try #require(OCRTableStructure.protectingInlineSymbols(.init(lines: symbols + [prose])).lines.last)
     #expect(isolated.styleRuns.allSatisfy { $0.appearance.fontDesign == .standard })
   }
 
   @Test
-  func measuredWholeLabelInkRecoversNativeCellBeforeParagraphJoining() {
+  func `measured whole label ink recovers native cell before paragraph joining`() {
     let cell = OCRTableCell(table: 0, row: 3, column: 1, box: .init(x: 0.4, y: 0.4, width: 0.2, height: 0.02))
     let observation = CGRect(x: 0.45, y: 0.41, width: 0.08, height: 0.03)
     let ink = CGRect(x: 0.45, y: 0.412, width: 0.08, height: 0.014)
@@ -422,7 +424,7 @@ struct OCRVisualStructureTests {
       OCRResult.Line(
         boundingBoxNormalized: .init(x: 0.45, y: 0.3 + Double(index) * 0.04, width: 0.08, height: 0.02),
         text: text,
-        tableCell: .init(table: 0, row: index + 1, column: 1, box: .zero)
+        tableCell: .init(table: 0, row: index + 1, column: 1, box: .zero),
       )
     }
     #expect(OCRTableCell.containing(observation, in: [cell]) == nil)
@@ -460,12 +462,12 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func punctuationCannotCalibrateFontSizeFromAnAliasedWholeWordBox() {
+  func `punctuation cannot calibrate font size from an aliased whole word box`() {
     #expect(SourceTypography.measure(text: "...", inkSize: CGSize(width: 90, height: 22), coverage: 0.4) == nil)
   }
 
   @Test
-  func languagePickerSplitAcrossObservationsKeepsItsOriginalLabels() {
+  func `language picker split across observations keeps its original labels`() {
     let lines: [OCRResult.Line] = [
       .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.8, width: 0.25, height: 0.04), text: "English $701"),
       .init(boundingBoxNormalized: CGRect(x: 0.4, y: 0.8, width: 0.4, height: 0.04), text: "日本語 简体中文 繁體中文"),
@@ -477,10 +479,10 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func copyActionAfterCommandIsNotProtectedAsLiteralMetadata() {
+  func `copy action after command is not protected as literal metadata`() {
     let command = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.5, height: 0.04),
-      text: "brew install --cask example"
+      text: "brew install --cask example",
     )
     let action = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.7, y: 0.2, width: 0.08, height: 0.04), text: "Copy")
     let sources = [command, action].map { OverlayLine.Source(recognized: $0, language: Locale.Language(identifier: "en")) }
@@ -489,40 +491,40 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func isolatedToolbarSymbolsRemainArtworkEvenWithConfidentOCR() {
+  func `isolated toolbar symbols remain artwork even with confident OCR`() throws {
     let icons: [OCRResult.Line] = [
       .init(
         boundingBoxNormalized: CGRect(x: 0.73622, y: 0.0625, width: 0.035433, height: 0.016667),
         text: "G",
         imageAspectRatio: 0.528464,
-        recognitionConfidence: 0.8
+        recognitionConfidence: 0.8,
       ),
       .init(
         boundingBoxNormalized: CGRect(x: 0.811024, y: 0.05625, width: 0.03937, height: 0.025),
         text: "白",
         imageAspectRatio: 0.528464,
-        recognitionConfidence: 0.92
+        recognitionConfidence: 0.92,
       ),
     ]
     let result = OCRVisualStructure.classifying(.init(lines: icons))
     #expect(result.lines.allSatisfy { $0.preservesSource })
     let prose = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.86, y: 0.05625, width: 0.12, height: 0.025), text: "色の背景")
     let withProse = OCRVisualStructure.classifying(.init(lines: icons + [prose]))
-    #expect(!withProse.lines.first(where: { $0.text == "白" })!.preservesSource)
+    #expect(!(try #require(withProse.lines.first(where: { $0.text == "白" })?.preservesSource)))
   }
 
   @Test(arguments: ["iPhone 16 Pro", "iOS 18.5", "SDK 26.4", "MacBook Air 13"])
-  func deviceAndSDKNamesKeepTheirOriginalPixels(_ text: String) {
+  func `device and SDK names keep their original pixels`(_ text: String) {
     #expect(OCRTextSemantics.isIdentifier(text))
   }
 
   @Test(arguments: ["September 18", "3 days ago", "Chapter 16", "Postal Service chief says"])
-  func ordinaryDatesAndProseAreNotProductIdentifiers(_ text: String) {
+  func `ordinary dates and prose are not product identifiers`(_ text: String) {
     #expect(!OCRTextSemantics.isIdentifier(text))
   }
 
   @Test
-  func aShortLowercaseWordCannotBecomeALeadingIcon() {
+  func `a short lowercase word cannot become A leading icon`() {
     let lines = ["to limit mail voting", "in the source text", "on the next screen"].enumerated().map { index, text in
       let first = String(text.split(separator: " ")[0])
       let y = 0.1 + CGFloat(index) * 0.06
@@ -539,18 +541,18 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func cachedGlyphTemplatesStillDistinguishDifferentSourceWeights() throws {
+  func `cached glyph templates still distinguish different source weights`() throws {
     let thin = try #require(SourceTypography.measure(text: "Workspace", inkSize: CGSize(width: 150, height: 24), coverage: 0.1))
     let thick = try #require(SourceTypography.measure(text: "Workspace", inkSize: CGSize(width: 150, height: 24), coverage: 0.9))
     #expect(thin.weight.rawValue < thick.weight.rawValue)
   }
 
   @Test
-  func navigationUsesNearbyTechnicalContextWithoutMergingItsFrames() {
+  func `navigation uses nearby technical context without merging its frames`() {
     let sources = ["GitHub", "Releases", "CLI", "Configuration", "License"].enumerated().map { index, text in
       OverlayLine.Source(
         recognized: .init(boundingBoxNormalized: CGRect(x: CGFloat(index) * 0.18, y: 0.1, width: 0.15, height: 0.04), text: text),
-        language: Locale.Language(identifier: "en")
+        language: Locale.Language(identifier: "en"),
       )
     }
     #expect(OverlayTranslationPolicy.trailingContext(at: 3, in: sources) == "CLI")
@@ -559,14 +561,14 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func tabLabelsReceiveTheirNeighborsAsContext() {
+  func `tab labels receive their neighbors as context`() {
     let sources = ["Today", "News+", "Sports", "Following"].enumerated().map { index, text in
       OverlayLine.Source(
         recognized: .init(
           boundingBoxNormalized: CGRect(x: 0.05 + CGFloat(index) * 0.24, y: 0.9, width: 0.12, height: 0.02),
-          text: text
+          text: text,
         ),
-        language: Locale.Language(identifier: "en")
+        language: Locale.Language(identifier: "en"),
       )
     }
     #expect(OverlayTranslationPolicy.trailingContext(at: 2, in: sources) == "Today / News+ / Following")
@@ -574,7 +576,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func lowConfidenceGlyphsAboveATabRowRemainIcons() {
+  func `low confidence glyphs above A tab row remain icons`() {
     let labels = ["Today", "News+", "Sports", "Following"].enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1 + CGFloat(index) * 0.2, y: 0.9, width: 0.08, height: 0.02), text: text)
     }
@@ -582,12 +584,12 @@ struct OCRVisualStructureTests {
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.12, y: 0.84, width: 0.04, height: 0.05),
         text: "N",
-        recognitionConfidence: 0.35
+        recognitionConfidence: 0.35,
       ),
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.52, y: 0.84, width: 0.04, height: 0.05),
         text: "DoC",
-        recognitionConfidence: 0.39
+        recognitionConfidence: 0.39,
       ),
     ]
     let result = OCRVisualStructure.classifying(OCRResult(lines: icons + labels))
@@ -596,7 +598,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func naturalLanguageMetadataNextToAFileStillTranslates() {
+  func `natural language metadata next to A file still translates`() {
     var file = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.04), text: "Sources/Core")
     file.preservesSource = true
     let sources = [file, .init(boundingBoxNormalized: CGRect(x: 0.7, y: 0.1, width: 0.2, height: 0.04), text: "3 days ago")]
@@ -606,14 +608,14 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func terminalFootnoteDoesNotBecomeASeparateWord() {
+  func `terminal footnote does not become A separate word`() {
     #expect(TranslationTextStructure
       .matchingSourceBreaks("앱에서 도움을 받으세요. *", source: "Get help in your app.*") == "앱에서 도움을 받으세요.*")
     #expect(TranslationTextStructure.matchingSourceBreaks("A * B", source: "A * B") == "A * B")
   }
 
   @Test
-  func nativeLanguageSelectorKeepsItsOriginalPixels() {
+  func `native language selector keeps its original pixels`() {
     let result = OCRVisualStructure.classifying(OCRResult(lines: [
       .init(boundingBoxNormalized: CGRect(x: 0.1, y: 0.7, width: 0.5, height: 0.04), text: "한국어 日本語 简体中文 繁體中文")
     ]))
@@ -621,7 +623,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: ["O forks", "g O forks"])
-  func uncertainCounterRetainsPixelsInsteadOfDroppingItsValue(_ ambiguous: String) {
+  func `uncertain counter retains pixels instead of dropping its value`(_ ambiguous: String) {
     let lines = ["0 watching", ambiguous, "4 months old"].enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.15, y: 0.1 + CGFloat(index) * 0.06, width: 0.2, height: 0.03), text: text)
     }
@@ -632,13 +634,13 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func isolatedCheckGlyphDoesNotBecomeAJapaneseTranslation() {
+  func `isolated check glyph does not become A japanese translation`() {
     let lines = [
       OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.3, y: 0.1, width: 0.025, height: 0.03), text: "く", recognitionGroupID: 0),
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.35, y: 0.1, width: 0.3, height: 0.03),
         text: "382 Commits",
-        recognitionGroupID: 1
+        recognitionGroupID: 1,
       ),
     ]
     let result = OCRVisualStructure.classifying(OCRResult(lines: lines))
@@ -647,7 +649,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func liveTranslationCannotSurviveAChangeToALiteralRole() {
+  func `live translation cannot survive A change to A literal role`() {
     var recognized = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.2, height: 0.03), text: "workspace")
     let previous = OverlayLine.Source(recognized: recognized, language: Locale.Language(identifier: "en"))
     recognized.preservesSource = true
@@ -656,7 +658,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func repeatedAccessoryColumnKeepsIconsOutOfLabelTranslations() {
+  func `repeated accessory column keeps icons out of label translations`() {
     let lines = [("M", "Readme"), ("s&", "License"), ("*", "25 stars")].enumerated().map { index, item in
       let y = 0.1 + CGFloat(index) * 0.08
       let prefix = CGRect(x: 0.05, y: y, width: 0.035, height: 0.04)
@@ -671,18 +673,18 @@ struct OCRVisualStructureTests {
         styleRuns: [
           .init(range: NSRange(location: 0, length: item.0.utf16.count), box: prefix),
           .init(range: NSRange(location: item.0.utf16.count + 1, length: item.1.utf16.count), box: label),
-        ]
+        ],
       )
     }
     let separateIcon = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.05, y: 0.34, width: 0.035, height: 0.04),
       text: "日",
-      recognitionGroupID: 4
+      recognitionGroupID: 4,
     )
     let date = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.11, y: 0.34, width: 0.2, height: 0.04),
       text: "4 months old",
-      recognitionGroupID: 4
+      recognitionGroupID: 4,
     )
     let result = OCRVisualStructure.classifying(OCRResult(lines: lines + [separateIcon, date]))
     #expect(result.lines.count == 8)
@@ -691,21 +693,21 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func hangingListContinuationRemainsOneTranslationUnitOnWideCaptures() {
+  func `hanging list continuation remains one translation unit on wide captures`() {
     let lines = [
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.05, y: 0.2, width: 0.8, height: 0.04),
         text: "• Reopen assigned apps when their window was",
         imageAspectRatio: 2,
         recognitionGroupID: 1,
-        alignment: .leading
+        alignment: .leading,
       ),
       OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.073, y: 0.26, width: 0.08, height: 0.04),
         text: "closed.",
         imageAspectRatio: 2,
         recognitionGroupID: 1,
-        alignment: .leading
+        alignment: .leading,
       ),
     ]
     let result = OCRResult(lines: lines).coalescingParagraphFragments()
@@ -714,43 +716,43 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: [CGSize(width: 1500, height: 350), CGSize(width: 1500, height: 1500)])
-  func navigationSpacingUsesPixelsRegardlessOfCaptureAspect(_ size: CGSize) {
+  func `navigation spacing uses pixels regardless of capture aspect`(_ size: CGSize) {
     let lines = ["Releases", "Configuration", "License"].enumerated().map { index, text in
       OCRResult.Line(
         boundingBoxNormalized: CGRect(
           x: CGFloat(50 + index * 200) / size.width,
           y: 50 / size.height,
           width: 150 / size.width,
-          height: 24 / size.height
+          height: 24 / size.height,
         ),
         text: text,
         imageAspectRatio: size.width / size.height,
-        recognitionGroupID: index
+        recognitionGroupID: index,
       )
     }
     #expect(OCRResult(lines: lines).coalescingParagraphFragments().lines.count == 3)
   }
 
   @Test
-  func inlineSentenceStillJoinsAcrossColorFragments() {
+  func `inline sentence still joins across color fragments`() {
     let size = CGSize(width: 1500, height: 350)
     let a = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.2, height: 24 / size.height),
       text: "Read the",
       imageAspectRatio: size.width / size.height,
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     let b = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.305, y: 0.2, width: 0.2, height: 24 / size.height),
       text: "documentation.",
       imageAspectRatio: size.width / size.height,
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     #expect(OCRResult(lines: [a, b]).coalescingParagraphFragments().joinedText == "Read the documentation.")
   }
 
   @Test
-  func unknownCommandRowsStayExecutable() {
+  func `unknown command rows stay executable`() {
     let lines = ["quartz workspace list", "quartz workspace activate", "quartz window focus"].enumerated().map { index, text in
       monospacedLine(text, y: 0.1 + CGFloat(index) * 0.06)
     }
@@ -761,14 +763,14 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func fileColumnDoesNotTranslateDirectoryNamesOrNeighboringProse() {
+  func `file column does not translate directory names or neighboring prose`() {
     let paths = ["Engine/Sources", "EngineCLI/Sources", "Tests/Sources", "Localization"]
     let files = paths.enumerated().map { index, text in
       OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.05, y: 0.1 + CGFloat(index) * 0.1, width: 0.2, height: 0.03), text: text)
     }
     let message = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.45, y: 0.1, width: 0.4, height: 0.03),
-      text: "Improve language support"
+      text: "Improve language support",
     )
     let result = OCRVisualStructure.classifying(OCRResult(lines: files + [message]))
     #expect(result.lines.prefix(4).allSatisfy { $0.preservesSource })
@@ -776,7 +778,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func adjacentControlSurfacesCannotShareTheirTextArea() {
+  func `adjacent control surfaces cannot share their text area`() {
     let a = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.15, height: 0.03), text: "Previous")
     let b = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.3, y: 0.2, width: 0.15, height: 0.03), text: "Continue")
     let left = OCRVisualStructure.surfaceSearchBounds(for: a, among: [a, b])
@@ -787,7 +789,7 @@ struct OCRVisualStructureTests {
   }
 
   @Test
-  func longerEnglishControlDoesNotStartAnUnrelatedLanguageSession() {
+  func `longer english control does not start an unrelated language session`() {
     let client = LanguageDetectionClient(detect: { text, _ in
       text == "Configuration" ? Language(code: "ca") : Language(code: "en")
     })
@@ -796,14 +798,14 @@ struct OCRVisualStructureTests {
   }
 
   @Test(arguments: ["Release notes", "workspace", "minimum", "Settings"])
-  func regularTextDoesNotBecomeBoldBecauseOfItsLetters(_ text: String) async throws {
+  func `regular text does not become bold because of its letters`(_ text: String) async throws {
     let analyzed = try await analyze(text, weight: .regular)
     #expect(analyzed.appearance.fontWeight.rawValue <= OverlayFontWeight.medium.rawValue)
     #expect(abs(analyzed.appearance.fontSizeScale * 160 - 32) < 5)
   }
 
   @Test
-  func actualBoldTextRetainsEmphasis() async throws {
+  func `actual bold text retains emphasis`() async throws {
     let analyzed = try await analyze("Workspace settings", weight: .bold)
     #expect(analyzed.appearance.fontWeight.rawValue >= OverlayFontWeight.semibold.rawValue)
   }
@@ -818,7 +820,7 @@ struct OCRVisualStructureTests {
       bitsPerComponent: 8,
       bytesPerRow: 2400,
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.setFillColor(CGColor(gray: 0.05, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: 600, height: 160))
@@ -833,17 +835,17 @@ struct OCRVisualStructureTests {
       x: (30 + bounds.minX) / 600,
       y: (160 - 70 - bounds.maxY) / 160,
       width: bounds.width / 600,
-      height: bounds.height / 160
+      height: bounds.height / 160,
     )
     let source = OCRResult.Line(
       boundingBoxNormalized: box,
       text: text,
       imageAspectRatio: 600 / 160,
-      styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)]
+      styleRuns: [.init(range: NSRange(location: 0, length: text.utf16.count), box: box)],
     )
     let analyzed = await OverlaySourceAppearanceAnalyzer.applyingAppearances(
       to: OCRResult(lines: [source]),
-      from: try #require(context.makeImage())
+      from: try #require(context.makeImage()),
     )
     return try #require(analyzed.lines.first)
   }
@@ -859,10 +861,11 @@ struct OCRVisualStructureTests {
           x: 0.1 + CGFloat(offset) * 0.009,
           y: y,
           width: CGFloat(word.utf16.count) * 0.009,
-          height: 0.035
-        )
+          height: 0.035,
+        ),
       )
     }
     return OCRResult.Line(boundingBoxNormalized: runs.reduce(runs[0].box) { $0.union($1.box) }, text: text, styleRuns: runs)
   }
+
 }

@@ -9,7 +9,7 @@ import Testing
 
 struct OCRGlyphTopologyTests {
   @Test
-  func opticalCorrectionRequiresOneUnambiguousNativeHypothesis() {
+  func `optical correction requires one unambiguous native hypothesis`() {
     let observed = OCRGlyphTopology.Signature(components: 3, holes: 2)
     let candidates: [VisionTextRecognizer.TextCandidate] = [.init(text: "18", confidence: 1), .init(text: "i8", confidence: 0.3)]
     #expect(OCRInlineGlyphRecovery.select(original: "is", observed: observed, candidates: candidates) == "i8")
@@ -21,22 +21,22 @@ struct OCRGlyphTopologyTests {
     #expect(OCRInlineGlyphRecovery.select(
       original: "i8",
       observed: .init(components: 3, holes: 0),
-      candidates: [.init(text: "is", confidence: 1)]
+      candidates: [.init(text: "is", confidence: 1)],
     ) == nil)
     #expect(OCRInlineGlyphRecovery.select(
       original: "is",
       observed: observed,
-      candidates: candidates + [.init(text: "j8", confidence: 0.3)]
+      candidates: candidates + [.init(text: "j8", confidence: 0.3)],
     ) == nil)
     #expect(OCRInlineGlyphRecovery.select(
       original: "is",
       observed: observed,
-      candidates: [.init(text: "i8", confidence: 0.1)]
+      candidates: [.init(text: "i8", confidence: 0.1)],
     ) == nil)
   }
 
   @Test(arguments: [(false, 1), (true, 1), (false, 6), (true, 6)])
-  func correctionRequiresAMeasuredInlineSurfaceAndPreservesOtherText(_ scenario: (Bool, Int)) async throws {
+  func `correction requires A measured inline surface and preserves other text`(_ scenario: (Bool, Int)) async throws {
     let (inverse, copies) = scenario
     let original = inverse ? "18" : "is"
     let corrected = inverse ? "18" : "i8"
@@ -47,12 +47,12 @@ struct OCRGlyphTopologyTests {
     let run = OverlaySourceStyleRun(
       range: (text as NSString).range(of: original),
       box: CGRect(x: 0.18, y: 0.18, width: 0.2, height: 0.2),
-      appearance: chip
+      appearance: chip,
     )
     let patch = OverlaySourcePatch(
       box: CGRect(x: 0.15, y: 0.15, width: 0.26, height: 0.26),
       appearance: chip,
-      erasesDistinctSurface: true
+      erasesDistinctSurface: true,
     )
     let tightPatch = OverlaySourcePatch(box: run.box, appearance: chip, erasesDistinctSurface: true)
     let line = OCRResult.Line(
@@ -60,7 +60,7 @@ struct OCRGlyphTopologyTests {
       text: text,
       appearance: base,
       replacementPatches: [tightPatch, patch],
-      styleRuns: [run]
+      styleRuns: [run],
     )
     #expect(OCRInlineGlyphRecovery.spans(in: line).count == 1)
     #expect(OCRInlineGlyphRecovery.spans(in: line).first?.surface == patch.box)
@@ -76,8 +76,8 @@ struct OCRGlyphTopologyTests {
       height: 100,
       bitsPerComponent: 8,
       bytesPerRow: 400,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.translateBy(x: 0, y: 100)
     context.scaleBy(x: 1, y: -1)
@@ -93,7 +93,7 @@ struct OCRGlyphTopologyTests {
     let result = try await OCRInlineGlyphRecovery.recover(
       .init(lines: [ordinary] + Array(repeating: line, count: copies)),
       image: image,
-      language: .init(code: "en")
+      language: .init(code: "en"),
     ) { _, crop, _ in
       #expect(crop == CGRect(x: 15, y: 15, width: 26, height: 26))
       requests.withLock { $0 += 1 }
@@ -108,21 +108,21 @@ struct OCRGlyphTopologyTests {
   }
 
   @Test
-  func disconnectedDotsAndEnclosedCountersRemainDistinct() {
+  func `disconnected dots and enclosed counters remain distinct`() {
     let rows = [".........", ".#..###..", "....#.#..", ".#..###..", ".#..#.#..", ".#..###..", "........."]
     #expect(OCRGlyphTopology.signature(mask: rows.flatMap { $0.map { $0 == "#" } }, width: 9, height: 7)
       == .init(components: 3, holes: 2))
   }
 
   @Test
-  func diagonalStrokesAreConnectedWithoutInventingACounter() {
+  func `diagonal strokes are connected without inventing A counter`() {
     let rows = [".....", ".#...", "..#..", "...#.", "....."]
     #expect(OCRGlyphTopology.signature(mask: rows.flatMap { $0.map { $0 == "#" } }, width: 5, height: 5)
       == .init(components: 1, holes: 0))
   }
 
   @Test
-  func clippedOrEmptyInkCannotSupplyOpticalEvidence() {
+  func `clipped or empty ink cannot supply optical evidence`() {
     #expect(OCRGlyphTopology.signature(mask: [Bool](repeating: false, count: 25), width: 5, height: 5) == nil)
     var clipped = [Bool](repeating: false, count: 25)
     clipped[0] = true
@@ -131,7 +131,7 @@ struct OCRGlyphTopologyTests {
   }
 
   @Test
-  func referenceFacesDistinguishDotsAndCountersWithoutAWordDictionary() {
+  func `reference faces distinguish dots and counters without A word dictionary`() {
     #expect(SourceTypography.glyphTopologies(text: "i8") == [.init(components: 3, holes: 2)])
     #expect(SourceTypography.glyphTopologies(text: "18") == [.init(components: 2, holes: 2)])
     #expect(SourceTypography.glyphTopologies(text: "is") == [.init(components: 3, holes: 0)])

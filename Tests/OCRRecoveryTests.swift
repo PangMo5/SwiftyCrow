@@ -13,21 +13,21 @@ struct OCRRecoveryTests {
   // MARK: Internal
 
   @Test(arguments: ["proposal.pdf", "photo.JPEG", "report.v2.pdf"])
-  func registeredFileSyntaxDoesNotTriggerASpellingRetry(_ text: String) {
+  func `registered file syntax does not trigger A spelling retry`(_ text: String) {
     let line = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.3, height: 0.02),
       text: text,
-      recognitionConfidence: 0.4
+      recognitionConfidence: 0.4,
     )
     #expect(!OCRLineRefiner.needsRefinement(line))
   }
 
   @Test(arguments: ["proposal.paf", "budget.xisx"])
-  func weakReferenceSpellingIsRereadWithoutDictionaryCorrection(_ text: String) async throws {
+  func `weak reference spelling is reread without dictionary correction`(_ text: String) async throws {
     let line = OCRResult.Line(
       boundingBoxNormalized: .init(x: 0.1, y: 0.1, width: 0.5, height: 0.04),
       text: text,
-      recognitionConfidence: 0.3
+      recognitionConfidence: 0.3,
     )
     #expect(OCRLineRefiner.needsRefinement(line))
     let result = try await OCRLineRefiner
@@ -40,11 +40,13 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func paddedOCRBoxesDoNotHideTheEstablishedRowAdvance() throws {
+  func `padded OCR boxes do not hide the established row advance`() throws {
     let lines = repeatedRows(trailing: false).map { source in
       var source = source
       source.boundingBoxNormalized.size.height = 0.09
-      if source.boundingBoxNormalized.minY > 0.48 { source.boundingBoxNormalized.origin.y += 0.08 }
+      if source.boundingBoxNormalized.minY > 0.48 {
+        source.boundingBoxNormalized.origin.y += 0.08
+      }
       return source
     }
     let gaps = OCRTextEdgeRecovery.rowGaps(in: lines, imageSize: CGSize(width: 500, height: 500))
@@ -54,7 +56,7 @@ struct OCRRecoveryTests {
   }
 
   @Test(arguments: [0.0, 0.018])
-  func alignedRowsExposeAMissingParagraphWithVariableParagraphSpacing(_ extraSpacing: CGFloat) throws {
+  func `aligned rows expose A missing paragraph with variable paragraph spacing`(_ extraSpacing: CGFloat) throws {
     let lines = repeatedRows(trailing: false).map { source in
       var source = source
       if source.boundingBoxNormalized.minY > 0.48 {
@@ -70,19 +72,21 @@ struct OCRRecoveryTests {
     occupied.append(.init(
       boundingBoxNormalized: CGRect(x: 0.16, y: 0.55, width: 0.7, height: 0.04),
       text: "Existing content",
-      preservesSource: true
+      preservesSource: true,
     ))
     #expect(OCRTextEdgeRecovery.rowGaps(in: occupied, imageSize: CGSize(width: 500, height: 500)).isEmpty)
     let distant = lines.map { source in
       var source = source
-      if source.boundingBoxNormalized.minY > 0.48 { source.boundingBoxNormalized.origin.y += 0.3 }
+      if source.boundingBoxNormalized.minY > 0.48 {
+        source.boundingBoxNormalized.origin.y += 0.3
+      }
       return source
     }
     #expect(OCRTextEdgeRecovery.rowGaps(in: distant, imageSize: CGSize(width: 500, height: 500)).isEmpty)
   }
 
   @Test(arguments: [false, true])
-  func repeatedRowsExposeOneMissingPositionInEitherReadingDirection(_ trailing: Bool) throws {
+  func `repeated rows expose one missing position in either reading direction`(_ trailing: Bool) throws {
     let lines = repeatedRows(trailing: trailing)
     let gaps = OCRTextEdgeRecovery.rowGaps(in: lines, imageSize: CGSize(width: 500, height: 500))
     let gap = try #require(gaps.first)
@@ -108,7 +112,7 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func repeatedRowRecoveryHasOneSharedRequestBudgetAcrossColumns() async throws {
+  func `repeated row recovery has one shared request budget across columns`() async throws {
     let columns = 7
     let width = columns * 500
     let context = try #require(CGContext(
@@ -117,8 +121,8 @@ struct OCRRecoveryTests {
       height: 500,
       bitsPerComponent: 8,
       bytesPerRow: width * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      space: try TestGraphics.sRGBColorSpace(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.translateBy(x: 0, y: 500)
     context.scaleBy(x: 1, y: -1)
@@ -148,7 +152,7 @@ struct OCRRecoveryTests {
   }
 
   @Test(arguments: [false, true])
-  func blankRowsAndDividersDoNotTriggerRecognition(_ divider: Bool) async throws {
+  func `blank rows and dividers do not trigger recognition`(_ divider: Bool) async throws {
     let context = try rowImage()
     if divider {
       context.setFillColor(CGColor(gray: 0, alpha: 1))
@@ -164,7 +168,7 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func missingRowRecoveryRequiresObservedTextInsideTheGap() async throws {
+  func `missing row recovery requires observed text inside the gap`() async throws {
     let context = try rowImage()
     context.setFillColor(CGColor(gray: 0, alpha: 1))
     for x in stride(from: 350, through: 410, by: 10) { context.fill(CGRect(x: x, y: 240, width: 4, height: 20)) }
@@ -173,7 +177,7 @@ struct OCRRecoveryTests {
     let observed = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.68, y: 0.48, width: 0.16, height: 0.04),
       text: "Observed label",
-      recognitionConfidence: 0.9
+      recognitionConfidence: 0.9,
     )
     let result = try await OCRTextEdgeRecovery.recoverRows(lines, image: image, language: .init(code: "ar")) { crop, hint, _ in
       #expect(hint.code == "ar")
@@ -192,15 +196,15 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func recoveryCanExtendAClippedPrefixButCannotRewriteKnownWords() {
+  func `recovery can extend A clipped prefix but cannot rewrite known words`() {
     let old = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.12, y: 0.2, width: 0.6, height: 0.05),
       text: "ep the original files",
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     let complete = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.62, height: 0.05),
-      text: "Keep the original files"
+      text: "Keep the original files",
     )
     #expect(OCRTextEdgeRecovery.merging([complete], into: [old], groupID: 1).map(\.text) == ["Keep the original files"])
     var changed = complete
@@ -209,11 +213,11 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func recoveredTailJoinsItsOwnParagraphOnly() {
+  func `recovered tail joins its own paragraph only`() {
     let old = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.05),
       text: "请勿断开设备连",
-      recognitionGroupID: 1
+      recognitionGroupID: 1,
     )
     var tail = OCRResult.Line(boundingBoxNormalized: CGRect(x: 0.1, y: 0.26, width: 0.04, height: 0.04), text: "接。")
     let joined = OCRTextEdgeRecovery.merging([tail], into: [old], groupID: 1)
@@ -225,7 +229,7 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func visualWrapEvidenceMayChangeSpacingButNeverCharactersOrNumbers() {
+  func `visual wrap evidence may change spacing but never characters or numbers`() {
     #expect(OCRSoftWrapRefiner.confirmedSeparators(candidate: "업데이트 중에는", rows: ["업데", "이트 중에는"]) == ["", nil])
     #expect(OCRSoftWrapRefiner.confirmedSeparators(candidate: "파일을 보관하세요", rows: ["파일을", "보관하세요"]) == [" ", nil])
     #expect(OCRSoftWrapRefiner.confirmedSeparators(candidate: "50달러", rows: ["-50", "달러"]) == nil)
@@ -234,7 +238,7 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func tightlySpacedParagraphWordsCannotBecomeAnIconColumn() {
+  func `tightly spaced paragraph words cannot become an icon column`() {
     let texts = ["원본 파일을 보관하세요", "항을 확인하세요", "하지 마세요"]
     let lines = texts.enumerated().map { i, text in
       let first = NSRange(location: 0, length: 2)
@@ -248,9 +252,9 @@ struct OCRRecoveryTests {
           .init(range: first, box: CGRect(x: 0.1, y: y, width: 0.035, height: 0.05)),
           .init(
             range: NSRange(location: 3, length: (text as NSString).length - 3),
-            box: CGRect(x: 0.143, y: y, width: 0.4, height: 0.05)
+            box: CGRect(x: 0.143, y: y, width: 0.4, height: 0.05),
           ),
-        ]
+        ],
       )
     }
     let classified = OCRVisualStructure.classifying(.init(lines: lines))
@@ -259,11 +263,11 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func onlyUnreliableOrdinaryTextRequiresASecondRead() {
+  func `only unreliable ordinary text requires A second read`() {
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.05),
       text: "äole öybi",
-      recognitionConfidence: 0.11
+      recognitionConfidence: 0.11,
     )
     #expect(OCRLineRefiner.needsRefinement(line))
     var confident = line
@@ -272,21 +276,24 @@ struct OCRRecoveryTests {
   }
 
   @Test(arguments: [0, 6, 20], [false, true])
-  func skippedWeakFragmentsDoNotStarveLaterCodeRecognition(_ skippedCount: Int, _ automaticLanguage: Bool) async throws {
+  func `skipped weak fragments do not starve later code recognition`(
+    _ skippedCount: Int,
+    _ automaticLanguage: Bool,
+  ) async throws {
     let image = try #require(rowImage().makeImage())
     let weak = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.1, width: 0.04, height: 0.04),
       text: "x",
-      recognitionConfidence: 0.1
+      recognitionConfidence: 0.1,
     )
     let code = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.5, height: 0.04),
       text: "let count = 4Z;",
-      recognitionGroupID: 7
+      recognitionGroupID: 7,
     )
     let context = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.4, width: 0.8, height: 0.04),
-      text: "These settings control how the application displays translated text."
+      text: "These settings control how the application displays translated text.",
     )
     let input = Array(repeating: weak, count: skippedCount) + [code, context]
     var requests = 0
@@ -305,7 +312,7 @@ struct OCRRecoveryTests {
   }
 
   @Test(arguments: [0, 8])
-  func nativeCodeRereadSurvivesUnrelatedWeakFragments(_ skippedCount: Int) async throws {
+  func `native code reread survives unrelated weak fragments`(_ skippedCount: Int) async throws {
     let context = try rowImage()
     context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
     context.textPosition = CGPoint(x: 80, y: 132)
@@ -318,16 +325,16 @@ struct OCRRecoveryTests {
     let weak = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.02, y: 0.01, width: 0.02, height: 0.02),
       text: "x",
-      recognitionConfidence: 0.1
+      recognitionConfidence: 0.1,
     )
     let code = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.16, y: 0.2, width: 0.7, height: 0.08),
-      text: "let count = 4Z;"
+      text: "let count = 4Z;",
     )
     let result = try await OCRLineRefiner.refine(
       Array(repeating: weak, count: skippedCount) + [code],
       in: image,
-      language: .init(code: "en")
+      language: .init(code: "en"),
     )
     #expect(result.last?.text == "let count = 42;")
     #expect(result.last?.boundingBoxNormalized == code.boundingBoxNormalized)
@@ -335,11 +342,11 @@ struct OCRRecoveryTests {
   }
 
   @Test(arguments: [false, true])
-  func lineRecoveryBudgetCountsEmptyAndSuccessfulRequests(_ emptyResult: Bool) async throws {
+  func `line recovery budget counts empty and successful requests`(_ emptyResult: Bool) async throws {
     let image = try #require(rowImage().makeImage())
     let code = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.5, height: 0.04),
-      text: "let count = 4Z;"
+      text: "let count = 4Z;",
     )
     let input = Array(repeating: code, count: 12)
     var requests = 0
@@ -353,12 +360,12 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func recognitionFailurePropagatesWithoutTryingRemainingRows() async throws {
+  func `recognition failure propagates without trying remaining rows`() async throws {
     enum Failure: Error { case recognition }
     let image = try #require(rowImage().makeImage())
     let code = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.2, y: 0.2, width: 0.5, height: 0.04),
-      text: "let count = 4Z;"
+      text: "let count = 4Z;",
     )
     var requests = 0
     await #expect(throws: Failure.self) {
@@ -371,106 +378,106 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func extraTerminalPunctuationDoesNotBlockSpacingEvidenceOrGetCopied() {
+  func `extra terminal punctuation does not block spacing evidence or get copied`() {
     #expect(OCRSoftWrapRefiner.confirmedSeparators(candidate: "백업은 실행됩니다.", rows: ["백", "업은 실행됩니다"]) == ["", nil])
   }
 
   @Test
-  func chineseVisualContinuationCanCrossUnreliableParagraphIDs() {
+  func `chinese visual continuation can cross unreliable paragraph IDs`() {
     let appearance = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       foregroundConfidence: 0.2,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let a = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.05),
       text: "请勿断开设备连",
       recognitionGroupID: 1,
-      appearance: appearance
+      appearance: appearance,
     )
     let b = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.247, width: 0.6, height: 0.05),
       text: "接。请保留原始文件。",
       recognitionGroupID: 2,
-      appearance: appearance
+      appearance: appearance,
     )
     #expect(OCRResult(lines: [a, b]).coalescingParagraphFragments().joinedText == "请勿断开设备连接。请保留原始文件。")
   }
 
   @Test
-  func rightAlignedContinuationOverridesAConflictingAlignmentHint() {
+  func `right aligned continuation overrides A conflicting alignment hint`() {
     let appearance = OverlaySourceAppearance(
       background: .black,
       foreground: .white,
       confidence: 1,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.033,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let a = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.33, width: 0.6, height: 0.048),
       text: "لا تفصل الجهاز أثناء",
       recognitionGroupID: 1,
       appearance: appearance,
-      alignment: .leading
+      alignment: .leading,
     )
     let b = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.62, y: 0.38, width: 0.08, height: 0.035),
       text: "التحديث.",
       recognitionGroupID: 1,
       appearance: appearance,
-      alignment: .leading
+      alignment: .leading,
     )
     #expect(OCRResult(lines: [a, b]).coalescingParagraphFragments().joinedText == "لا تفصل الجهاز أثناء التحديث.")
   }
 
   @Test
-  func presentWordsAreInsufficientIfTheirSentenceIsSplit() {
+  func `present words are insufficient if their sentence is split`() {
     #expect(!CaptureQualityMetrics.paragraphIssues(
       texts: ["Do not disconnect during", "the update."],
-      expected: ["Do not disconnect during the update."]
+      expected: ["Do not disconnect during the update."],
     ).isEmpty)
     #expect(CaptureQualityMetrics.paragraphIssues(
       texts: ["Do not disconnect during the update."],
-      expected: ["Do not disconnect during the update."]
+      expected: ["Do not disconnect during the update."],
     ).isEmpty)
     #expect(!CaptureQualityMetrics.paragraphIssues(
       texts: ["First paragraph. Second paragraph."],
-      expected: ["First paragraph.", "Second paragraph."]
+      expected: ["First paragraph.", "Second paragraph."],
     ).isEmpty)
   }
 
   @Test
-  func sentenceCanContinueWithANumberOrUppercaseNoun() {
+  func `sentence can continue with A number or uppercase noun`() {
     let style = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.03,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     for (first, last) in [("가격이 바뀌었습니다. 백업은", "15분마다 실행됩니다."), ("Der Preis sinkt. Die Sicherung läuft alle 15", "Minuten.")] {
       let a = OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.6, height: 0.04),
         text: first,
         recognitionGroupID: 1,
-        appearance: style
+        appearance: style,
       )
       let b = OCRResult.Line(
         boundingBoxNormalized: CGRect(x: 0.1, y: 0.245, width: 0.3, height: 0.04),
         text: last,
         recognitionGroupID: 2,
-        appearance: style
+        appearance: style,
       )
       #expect(OCRResult(lines: [a, b]).coalescingParagraphFragments().joinedText == first + " " + last)
     }
   }
 
   @Test
-  func multilineObservationUsesPhysicalRowOrder() {
+  func `multiline observation uses physical row order`() {
     let text = "minutes.\nLa sauvegarde démarre toutes les 15"
     let observation = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.7, height: 0.1),
@@ -480,9 +487,9 @@ struct OCRRecoveryTests {
         .init(range: NSRange(location: 0, length: 8), box: CGRect(x: 0.1, y: 0.26, width: 0.1, height: 0.04)),
         .init(
           range: NSRange(location: 9, length: (text as NSString).length - 9),
-          box: CGRect(x: 0.1, y: 0.2, width: 0.7, height: 0.04)
+          box: CGRect(x: 0.1, y: 0.2, width: 0.7, height: 0.04),
         ),
-      ]
+      ],
     )
     let rows = OCRObservationRows.split(observation)
     #expect(rows.map(\.text) == ["La sauvegarde démarre toutes les 15", "minutes."])
@@ -491,7 +498,7 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func foreignRowInkCannotTurnTwoRowsIntoOneVisualRow() {
+  func `foreign row ink cannot turn two rows into one visual row`() {
     let upper = "La sauvegarde démarre toutes les 15"
     let a = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.2, width: 0.7, height: 0.11),
@@ -499,14 +506,14 @@ struct OCRRecoveryTests {
       recognitionGroupID: 1,
       styleRuns: [.init(
         range: NSRange(location: 0, length: (upper as NSString).length),
-        box: CGRect(x: 0.1, y: 0.21, width: 0.7, height: 0.035)
-      )]
+        box: CGRect(x: 0.1, y: 0.21, width: 0.7, height: 0.035),
+      )],
     )
     let b = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.1, y: 0.25, width: 0.1, height: 0.04),
       text: "minutes.",
       recognitionGroupID: 1,
-      styleRuns: [.init(range: NSRange(location: 0, length: 8), box: CGRect(x: 0.1, y: 0.25, width: 0.1, height: 0.04))]
+      styleRuns: [.init(range: NSRange(location: 0, length: 8), box: CGRect(x: 0.1, y: 0.25, width: 0.1, height: 0.04))],
     )
     let normalized = OCRObservationRows.split([a, b])
     #expect(normalized[0].boundingBoxNormalized.height == 0.035)
@@ -514,14 +521,14 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func smallAngleNoiseCannotReverseAParagraphTail() {
+  func `small angle noise cannot reverse A paragraph tail`() {
     let style = OverlaySourceAppearance(
       background: .black,
       foreground: .white,
       confidence: 1,
       foregroundConfidence: 0.2,
       fontSizeScale: 0.032,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let a = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.5494, y: 0.3551, width: 0.3154, height: 0.0305),
@@ -529,7 +536,7 @@ struct OCRRecoveryTests {
       imageAspectRatio: 1.5,
       recognitionGroupID: 1,
       appearance: style,
-      alignment: .leading
+      alignment: .leading,
     )
     let b = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.5491, y: 0.3894, width: 0.0766, height: 0.0287),
@@ -539,7 +546,7 @@ struct OCRRecoveryTests {
       imageAspectRatio: 1.5,
       recognitionGroupID: 1,
       appearance: style,
-      alignment: .leading
+      alignment: .leading,
     )
     let rows = OCRResult(lines: [a, b]).coalescingParagraphFragments().lines
     #expect(rows.count == 1)
@@ -548,15 +555,15 @@ struct OCRRecoveryTests {
   }
 
   @Test
-  func isolatedCardHeadingUsesItsPageContextWithoutMergingFrames() {
+  func `isolated card heading uses its page context without merging frames`() {
     let language = Locale.Language(identifier: "fr")
     let title = OverlayLine.Source(
       recognized: .init(
         boundingBoxNormalized: CGRect(x: 0.04, y: 0.04, width: 0.7, height: 0.06),
         text: "Paramètres et confidentialité",
-        appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.045)
+        appearance: .init(background: .white, foreground: .black, confidence: 1, fontSizeScale: 0.045),
       ),
-      language: language
+      language: language,
     )
     let label = OverlayLine.Source(
       recognized: .init(
@@ -566,10 +573,10 @@ struct OCRRecoveryTests {
           background: .white,
           foreground: .black,
           confidence: 1,
-          fontSizeScale: 0.035
-        )
+          fontSizeScale: 0.035,
+        ),
       ),
-      language: language
+      language: language,
     )
     #expect(OverlayTranslationPolicy.trailingContext(at: 1, in: [title, label]) == title.text)
     #expect(OverlayTranslationPolicy.trailingContext(at: 0, in: [title, label]) == nil)
@@ -585,10 +592,10 @@ struct OCRRecoveryTests {
           x: (trailing ? 420 - width : 80) / 500,
           y: CGFloat(120 + row * 40) / 500,
           width: width / 500,
-          height: 0.04
+          height: 0.04,
         ),
         text: "Navigation entry",
-        recognitionGroupID: row
+        recognitionGroupID: row,
       )
     }
   }
@@ -601,7 +608,7 @@ struct OCRRecoveryTests {
       bitsPerComponent: 8,
       bytesPerRow: 2000,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     ))
     context.translateBy(x: 0, y: 500)
     context.scaleBy(x: 1, y: -1)

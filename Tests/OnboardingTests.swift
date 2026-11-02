@@ -16,7 +16,7 @@ struct OnboardingTests {
   // MARK: Internal
 
   @Test
-  func firstLaunchPresentsOnlyOnce() async {
+  func `first launch presents only once`() async {
     let store = TestStore(initialState: state()) { OnboardingFeature() }
     await store.send(.launchChecked(hasExistingConfiguration: false)) {
       $0.hasCheckedLaunch = true
@@ -30,7 +30,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func existingUsersAreNotForcedThroughSetup() async {
+  func `existing users are not forced through setup`() async {
     let store = TestStore(initialState: state()) { OnboardingFeature() }
     await store.send(.launchChecked(hasExistingConfiguration: true)) {
       $0.hasCheckedLaunch = true
@@ -44,7 +44,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func unfinishedSetupResumesAfterPermissionRelaunch() async {
+  func `unfinished setup resumes after permission relaunch`() async {
     let initial = state()
     initial.$hasStarted.withLock { $0 = true }
     initial.$savedStep.withLock { $0 = 1 }
@@ -58,7 +58,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func skippingDoesNotApplyDraftLanguage() async {
+  func `skipping does not apply draft language`() async {
     var initial = state()
     initial.isPresented = true
     initial.target = Language(code: "fr")
@@ -72,7 +72,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func finishRequiresPermissionOnlyForImmediateCapture() async {
+  func `finish requires permission only for immediate capture`() async {
     var initial = state()
     initial.isPresented = true
     initial.target = Language(code: "fr")
@@ -86,7 +86,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func returningFromSettingsRefreshesPermissionWithoutPrompting() async {
+  func `returning from settings refreshes permission without prompting`() async {
     var initial = state()
     initial.isPresented = true
     let store = TestStore(initialState: initial) { OnboardingFeature() } withDependencies: {
@@ -100,7 +100,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func deniedPermissionDoesNotBlockTheRestOfSetup() async {
+  func `denied permission does not block the rest of setup`() async {
     var initial = state()
     initial.isPresented = true
     initial.step = .prepare
@@ -124,7 +124,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func firstCaptureStartsOnlyAfterTheWelcomeWindowCloses() async {
+  func `first capture starts only after the welcome window closes`() async {
     let initial = withDependencies {
       $0.defaultFileStorage = .inMemory
       $0.defaultAppStorage = .inMemory
@@ -156,10 +156,16 @@ struct OnboardingTests {
   }
 
   @Test
-  func fullChangelogKeepsHeadingsListsAndInlineLinks() throws {
+  func `full changelog keeps headings lists and inline links`() throws {
     let blocks =
       try parseChangelog("## 2.10.0\n\n- **Setup:** Read the [guide](https://example.com/guide).\n\n1. Open Settings\n")
-    #expect(blocks.first.map { if case .heading(2) = $0.kind { true } else { false } } == true)
+    #expect(blocks.first.map {
+      if case .heading(2) = $0.kind {
+        true
+      } else {
+        false
+      }
+    } == true)
     #expect(String(blocks[0].text.characters) == "2.10.0")
     #expect(blocks[1].marker == "•")
     #expect(blocks[1].text.runs.contains { $0.link?.absoluteString == "https://example.com/guide" })
@@ -167,12 +173,18 @@ struct OnboardingTests {
   }
 
   @Test
-  func changelogOmitsTheDocumentPreambleButKeepsDraftAndReleasedEntries() throws {
+  func `changelog omits the document preamble but keeps draft and released entries`() throws {
     let blocks =
       try parseChangelog(
         "# 변경 기록\n\nRepository-only publishing instructions.\n\n## 출시 예정\n\n- 새 기능\n\n## 2.9.1 (2026-08-22)\n\n- 이전 변경\n"
       )
-    #expect(blocks.filter { if case .heading(2) = $0.kind { true } else { false } }.map { String($0.text.characters) } == [
+    #expect(blocks.filter {
+      if case .heading(2) = $0.kind {
+        true
+      } else {
+        false
+      }
+    }.map { String($0.text.characters) } == [
       "출시 예정",
       "2.9.1 (2026-08-22)",
     ])
@@ -182,7 +194,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func whatsNewIsOncePerMinorReleaseAndNeverForFreshInstalls() {
+  func `whats new is once per minor release and never for fresh installs`() {
     #expect(!WhatsNewClient.shouldShow(current: "2.10.0", lastShown: nil, hasExistingConfiguration: false))
     #expect(WhatsNewClient.shouldShow(current: "2.10.0", lastShown: nil, hasExistingConfiguration: true))
     #expect(WhatsNewClient.shouldShow(current: "2.10.0", lastShown: "2.9.1", hasExistingConfiguration: true))
@@ -192,7 +204,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func shortcutStepKeepsSavedStepValuesAndNavigationOrder() async {
+  func `shortcut step keeps saved step values and navigation order`() async {
     #expect(OnboardingFeature.Step(rawValue: 2) == .ready)
     var initial = state()
     initial.step = .shortcuts
@@ -213,12 +225,12 @@ struct OnboardingTests {
   }
 
   @Test
-  func primaryShortcutsDefaultForNewAndPartialConfigurations() throws {
+  func `primary shortcuts default for new and partial configurations`() throws {
     let fresh = AppSettings()
     #expect(fresh.shortcuts.selectRegion == HotKey(parsing: "cmd + shift - 1"))
     #expect(fresh.shortcuts.liveOverlay == HotKey(parsing: "cmd + shift - 2"))
     #expect(fresh.shortcuts.toggleLiveOverlay == nil)
-    for text in ["", "[shortcuts]", "[shortcuts]\nregionSave = \"cmd - s\"".replacingOccurrences(of: "\\", with: "")] {
+    for text in ["", "[shortcuts]", "[shortcuts]\nregionSave = \"cmd - s\"".replacing("\\", with: "")] {
       let loaded = try TOMLDecoder().decode(AppSettings.self, from: text)
       #expect(loaded.shortcuts.selectRegion == fresh.shortcuts.selectRegion)
       #expect(loaded.shortcuts.liveOverlay == fresh.shortcuts.liveOverlay)
@@ -227,7 +239,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func clearedAndCustomShortcutsSurviveTOMLRoundTrip() throws {
+  func `cleared and custom shortcuts survive TOML round trip`() throws {
     var value = AppSettings()
     value.shortcuts.selectRegion = nil
     value.shortcuts.regionCopyImage = nil
@@ -240,7 +252,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func defaultBindingsDoNotOverwriteExplicitCustomOrClearedValues() throws {
+  func `default bindings do not overwrite explicit custom or cleared values`() throws {
     let loaded = try TOMLDecoder().decode(AppSettings.self, from: """
       [shortcuts]
       selectRegion = "cmd + shift - 9"
@@ -253,7 +265,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func leavingShortcutRecorderRestoresGlobalShortcuts() {
+  func `leaving shortcut recorder restores global shortcuts`() {
     let field = RecorderField()
     var enabled = true
     field.onRecordingChange = { enabled = !$0 }
@@ -268,7 +280,7 @@ struct OnboardingTests {
         context: nil,
         eventNumber: 0,
         clickCount: 1,
-        pressure: 1
+        pressure: 1,
       )
     {
       field.mouseDown(with: event)
@@ -279,7 +291,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func shortcutCancelRetainsBindingAndCanRecordAgain() throws {
+  func `shortcut cancel retains binding and can record again`() throws {
     let field = RecorderField()
     defer { field.cancelRecording() }
     let old = try #require(HotKey(parsing: "cmd + shift - 1"))
@@ -301,7 +313,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func duplicateShortcutShowsOwnerAndDoesNotPoisonNextRecording() throws {
+  func `duplicate shortcut shows owner and does not poison next recording`() throws {
     let field = RecorderField()
     defer { field.cancelRecording() }
     let original = try #require(HotKey(parsing: "cmd + shift - 1"))
@@ -325,7 +337,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func clearingWhileRecordingStopsCaptureAndAllowsRebinding() throws {
+  func `clearing while recording stops capture and allows rebinding`() throws {
     let field = RecorderField()
     defer { field.cancelRecording() }
     field.hotKey = HotKey(parsing: "cmd + shift - 1")
@@ -344,12 +356,12 @@ struct OnboardingTests {
   }
 
   @Test
-  func movingBetweenFieldsAndLeavingWindowResumesHotkeys() {
+  func `moving between fields and leaving window resumes hotkeys`() {
     let window = NSWindow(
       contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
       styleMask: [.titled],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     window.isReleasedWhenClosed = false
     let first = RecorderField()
@@ -376,7 +388,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func unchangedBindingDoesNotCancelInputAndPlainKeysDoNotCommit() throws {
+  func `unchanged binding does not cancel input and plain keys do not commit`() throws {
     let field = RecorderField()
     defer { field.cancelRecording() }
     let value = HotKey(parsing: "cmd + shift - 1")
@@ -395,7 +407,7 @@ struct OnboardingTests {
     .unsupported,
     .sameLanguage,
   ])
-  func setupReportsReadinessForTheSelectedPair(_ readiness: LanguageReadiness) async {
+  func `setup reports readiness for the selected pair`(_ readiness: LanguageReadiness) async {
     var initial = state()
     initial.isPresented = true
     initial.target = Language(code: "ko")
@@ -403,7 +415,7 @@ struct OnboardingTests {
       id: 1,
       source: initial.modelSource,
       target: initial.target,
-      strategy: initial.settings.translation.strategy
+      strategy: initial.settings.translation.strategy,
     )
     let store = TestStore(initialState: initial) { OnboardingFeature() } withDependencies: {
       $0.languageCatalog.readiness = { source, target, strategy in
@@ -421,14 +433,14 @@ struct OnboardingTests {
   }
 
   @Test
-  func changingLanguageInvalidatesPreviousReadiness() async {
+  func `changing language invalidates previous readiness`() async {
     var initial = state()
     initial.isPresented = true
     let old = OnboardingFeature.ModelCheck(
       id: 1,
       source: initial.modelSource,
       target: initial.target,
-      strategy: initial.settings.translation.strategy
+      strategy: initial.settings.translation.strategy,
     )
     initial.modelCheck = old
     initial.modelReadiness = .installed
@@ -448,7 +460,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func repeatedReadinessChecksRejectEarlierRepliesAndStopAfterClosing() async {
+  func `repeated readiness checks reject earlier replies and stop after closing`() async {
     var initial = state()
     initial.isPresented = true
     initial.modelCheckID = 1
@@ -456,13 +468,13 @@ struct OnboardingTests {
       id: 1,
       source: initial.modelSource,
       target: initial.target,
-      strategy: initial.settings.translation.strategy
+      strategy: initial.settings.translation.strategy,
     )
     let current = OnboardingFeature.ModelCheck(
       id: 2,
       source: initial.modelSource,
       target: initial.target,
-      strategy: initial.settings.translation.strategy
+      strategy: initial.settings.translation.strategy,
     )
     initial.modelCheck = old
     let store = TestStore(initialState: initial) { OnboardingFeature() } withDependencies: {
@@ -481,7 +493,7 @@ struct OnboardingTests {
   }
 
   @Test
-  func readinessOnlyReflectsTheSelectedMode() {
+  func `readiness only reflects the selected mode`() {
     #expect(LanguageReadiness.resolve(selected: .installed) == .installed)
     #expect(LanguageReadiness.resolve(selected: .supported) == .downloadRequired)
     #expect(LanguageReadiness.resolve(selected: .unsupported) == .unsupported)
@@ -502,7 +514,7 @@ struct OnboardingTests {
       characters: "",
       charactersIgnoringModifiers: "",
       isARepeat: false,
-      keyCode: keyCode
+      keyCode: keyCode,
     ))
   }
 

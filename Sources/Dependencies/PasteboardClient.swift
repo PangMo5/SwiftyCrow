@@ -13,6 +13,8 @@ struct PasteboardClient {
   var copyString: @Sendable (_ text: String) async -> Void
 }
 
+// MARK: DependencyKey
+
 extension PasteboardClient: DependencyKey {
   static var liveValue: PasteboardClient {
     PasteboardClient(
@@ -28,7 +30,7 @@ extension PasteboardClient: DependencyKey {
           NSPasteboard.general.clearContents()
           NSPasteboard.general.setString(text, forType: .string)
         }
-      }
+      },
     )
   }
 }

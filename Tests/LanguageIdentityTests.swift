@@ -8,7 +8,7 @@ import Testing
 @Suite("Language selection identity")
 struct LanguageIdentityTests {
   @Test(arguments: [("en-US", "en-Latn-US"), ("ko-KR", "ko-Kore-KR"), ("ja-JP", "ja-Jpan-JP")])
-  func shortConfigCodesMatchSystemPickerTags(short: String, expanded: String) {
+  func `short config codes match system picker tags`(short: String, expanded: String) {
     let configured = Language(code: short)
     let catalog = Language(code: expanded)
     #expect(configured == catalog)
@@ -18,7 +18,7 @@ struct LanguageIdentityTests {
   }
 
   @Test
-  func distinctScriptsRegionsAndAutomaticDetectionKeepTheirIdentity() {
+  func `distinct scripts regions and automatic detection keep their identity`() {
     #expect(Language(code: "zh-Hans") != Language(code: "zh-Hant"))
     #expect(Language(code: "en-US") != Language(code: "en-GB"))
     #expect(Language.auto != Language(code: "en-US"))

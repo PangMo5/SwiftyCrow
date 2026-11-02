@@ -17,6 +17,8 @@ struct LoginItemClient: Sendable {
   var isEnabled: @Sendable () -> Bool = { false }
 }
 
+// MARK: DependencyKey
+
 extension LoginItemClient: DependencyKey {
   static let liveValue = LoginItemClient(
     setEnabled: { enabled in
@@ -31,10 +33,11 @@ extension LoginItemClient: DependencyKey {
           break
         }
       } catch {
-        Log.loginItem.error("login item \(enabled ? "register" : "unregister") failed: \(error.localizedDescription, privacy: .public)")
+        Log.loginItem
+          .error("login item \(enabled ? "register" : "unregister") failed: \(error.localizedDescription, privacy: .public)")
       }
     },
-    isEnabled: { SMAppService.mainApp.status == .enabled }
+    isEnabled: { SMAppService.mainApp.status == .enabled },
   )
 }
 

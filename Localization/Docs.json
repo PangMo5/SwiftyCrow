@@ -391,6 +391,13 @@
     "zh-Hans": "**正在下载（灰色）：** 下载正在进行，请等待完成。",
     "zh-Hant": "**正在下載（灰色）：** 下載正在進行，請等待完成。"
   },
+  "38b577336d85ff2a": {
+    "en": "Use {0} in a colocated Git repository. Existing Git history and GitHub remotes remain available. For a fresh clone, run {1} once, then {2}. Inspect changes with {3} and {4}, start work with {5}, and name task bookmarks with the {6} prefix. Update remotes with {7}.",
+    "ja": "Gitと作業ディレクトリを共有するリポジトリで{0}を使います。既存のGit履歴とGitHubリモートは引き続き利用できます。新しくクローンした場合は、{1}を一度実行してから{2}を実行してください。{3}と{4}で変更を確認し、{5}で作業を開始します。作業用ブックマークには{6}の接頭辞を付け、{7}でリモートを更新します。",
+    "ko": "Git과 작업 디렉터리를 공유하는 저장소에서 {0}를 사용해요. 기존 Git 이력과 GitHub 원격 저장소는 그대로 유지돼요. 새로 복제한 저장소에서는 {1}을 한 번 실행한 뒤 {2}를 실행해 주세요. {3}와 {4}로 변경을 확인하고, {5}로 새 작업을 시작해요. 작업 북마크 이름에는 {6} 접두사를 사용하고, {7}로 원격 정보를 갱신해요.",
+    "zh-Hans": "在与 Git 共享工作目录的仓库中使用 {0}。现有 Git 历史和 GitHub 远程仓库仍然可用。对于新克隆的仓库，先执行一次 {1}，再执行 {2}。使用 {3} 和 {4} 查看更改，使用 {5} 开始新工作，任务书签名称使用 {6} 前缀。使用 {7} 更新远程信息。",
+    "zh-Hant": "在與 Git 共用工作目錄的儲存庫中使用 {0}。現有 Git 歷史與 GitHub 遠端儲存庫仍可使用。對於新複製的儲存庫，先執行一次 {1}，再執行 {2}。使用 {3} 與 {4} 查看變更，使用 {5} 開始新工作，工作書籤名稱使用 {6} 前綴。使用 {7} 更新遠端資訊。"
+  },
   "394fc5b3ec543fd2": {
     "en": "Go to **General** → **Language & Region**",
     "ja": "**一般** → **言語と地域**に進んでください。",
@@ -418,6 +425,13 @@
     "ko": "SwiftyCrow를 다시 실행하고 번역해 보세요.",
     "zh-Hans": "重新启动 SwiftyCrow，再尝试翻译。",
     "zh-Hant": "重新啟動 SwiftyCrow，再嘗試翻譯。"
+  },
+  "3e7af622850dedfc": {
+    "en": "[Jujutsu]({0}) ({1}) for version control",
+    "ja": "バージョン管理用の[Jujutsu]({0})（{1}）",
+    "ko": "버전 관리를 위한 [Jujutsu]({0}) ({1})",
+    "zh-Hans": "用于版本控制的 [Jujutsu]({0})（{1}）",
+    "zh-Hant": "用於版本控制的 [Jujutsu]({0})（{1}）"
   },
   "3f31ff34fa8e996e": {
     "en": "**Default shortcuts:** Start a capture with ⇧⌘1 and select a live translation area with ⇧⌘2. Customize them in Quick Setup or Settings. Existing custom bindings remain unchanged.",
@@ -467,13 +481,6 @@
     "ko": "**원문 자동 감지와 동적 언어 목록:** Vision으로 원문 언어를 감지하고, 설치된 Apple 번역·글자 인식 언어로 목록을 구성해요. 언어를 코드에 고정하지 않아요.",
     "zh-Hans": "**自动检测原文和动态语言列表：** 使用 Vision 检测原文语言，从已安装的 Apple 翻译和文字识别语言生成列表，不在代码中写死语言。",
     "zh-Hant": "**自動偵測原文與動態語言清單：** 使用 Vision 偵測原文語言，從已安裝的 Apple 翻譯與文字辨識語言產生清單，不在程式碼中固定語言。"
-  },
-  "47f89ba78512963c": {
-    "en": "[mise]({0}) (manages Tuist via {1})",
-    "ja": "[mise]({0})（{1}でTuistを管理）",
-    "ko": "[mise]({0}) ({1}로 Tuist 관리)",
-    "zh-Hans": "[mise]({0})（通过 {1} 管理 Tuist）",
-    "zh-Hant": "[mise]({0})（透過 {1} 管理 Tuist）"
   },
   "48a4da9b8e0b8aab": {
     "en": "Reading difficult sources",
@@ -881,6 +888,13 @@
     "zh-Hans": "为每种需要的语言点击**下载**。",
     "zh-Hant": "為每種需要的語言點按**下載**。"
   },
+  "749b6fa2a9d54c54": {
+    "en": "Xcode 27.2 with Swift 6.4.2 and the macOS 27.2 SDK",
+    "ja": "Swift 6.4.2とmacOS 27.2 SDKを含むXcode 27.2",
+    "ko": "Swift 6.4.2와 macOS 27.2 SDK가 포함된 Xcode 27.2",
+    "zh-Hans": "包含 Swift 6.4.2 和 macOS 27.2 SDK 的 Xcode 27.2",
+    "zh-Hant": "包含 Swift 6.4.2 與 macOS 27.2 SDK 的 Xcode 27.2"
+  },
   "74ec0f4a03ce08c0": {
     "en": "Start or replace the live overlay using the same selection, then translate live.",
     "ja": "同じ選択方法でライブ翻訳を開始するか、範囲を変更します。",
@@ -979,6 +993,13 @@
     "zh-Hans": "**从屏幕翻译：** 直接选择相关区域，无需先保存文件或将文字移入其他应用。",
     "zh-Hant": "**從螢幕翻譯：** 直接選取相關區域，無須先儲存檔案或將文字移入其他 App。"
   },
+  "8152d73887996d24": {
+    "en": "[mise]({0}) (manages Tuist and SwiftFormat via {1})",
+    "ja": "[mise]({0})（{1}でTuistとSwiftFormatを管理）",
+    "ko": "[mise]({0}) ({1}로 Tuist와 SwiftFormat 관리)",
+    "zh-Hans": "[mise]({0})（通过 {1} 管理 Tuist 和 SwiftFormat）",
+    "zh-Hant": "[mise]({0})（透過 {1} 管理 Tuist 與 SwiftFormat）"
+  },
   "8153ad883694933d": {
     "en": "Supported on macOS 26+ (the language list changes by macOS version)",
     "ja": "macOS 26以降に対応します。言語一覧はmacOSのバージョンによって変わる場合があります。",
@@ -1041,6 +1062,13 @@
     "ko": "단축키 표기법",
     "zh-Hans": "快捷键语法",
     "zh-Hant": "快速鍵語法"
+  },
+  "8b723be97e99f32e": {
+    "en": "{0} selects Xcode 27.2. mise exports the matching {1} for this project without changing the machine-wide Xcode selection. Use {2} or {3} when mise shell activation is unavailable. The SDK follows the selected Xcode; the app's minimum supported macOS version remains 26.0.",
+    "ja": "{0}でXcode 27.2を選択します。miseはマシン全体のXcode選択を変更せず、このプロジェクトに対応する{1}を設定します。miseのシェル連携が利用できない場合は、{2}または{3}を使ってください。SDKは選択したXcodeに従い、アプリの最小対応macOSバージョンは26.0のままです。",
+    "ko": "{0}에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 {1}를 설정해요. mise 셸 활성화를 사용할 수 없다면 {2} 또는 {3}를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.",
+    "zh-Hans": "{0} 选择 Xcode 27.2。mise 为此项目设置对应的 {1}，不会更改整台机器的 Xcode 选择。无法启用 mise shell 集成时，请使用 {2} 或 {3}。SDK 跟随所选 Xcode，应用支持的最低 macOS 版本仍为 26.0。",
+    "zh-Hant": "{0} 選擇 Xcode 27.2。mise 為此專案設定對應的 {1}，不會更改整台機器的 Xcode 選擇。無法啟用 mise shell 整合時，請使用 {2} 或 {3}。SDK 依所選 Xcode 而定，App 支援的最低 macOS 版本仍為 26.0。"
   },
   "8d59829c1e15afe1": {
     "en": "Usage",
@@ -1378,13 +1406,6 @@
     "zh-Hans": "不再使用手动 {0} 设置，实时翻译会自动调整更新间隔。",
     "zh-Hant": "不再使用手動 {0} 設定，即時翻譯會自動調整更新間隔。"
   },
-  "afdb687fbbdcf7e4": {
-    "en": "Xcode 26.4+ with Swift 6.3 and the macOS 26.4 SDK or newer",
-    "ja": "Swift 6.3とmacOS 26.4 SDK以降を含むXcode 26.4以降",
-    "ko": "Swift 6.3과 macOS 26.4 SDK 이상을 포함한 Xcode 26.4 이상",
-    "zh-Hans": "Xcode 26.4 或更高版本，包含 Swift 6.3 和 macOS 26.4 或更新的 SDK",
-    "zh-Hant": "Xcode 26.4 或以上版本，包含 Swift 6.3 與 macOS 26.4 或更新的 SDK"
-  },
   "b0a7379c1902341d": {
     "en": "**Faster translation:** All lines are translated in a single on-device translation session (batched) instead of spinning up one session per line. Results still stream in progressively, chip by chip.",
     "ja": "**翻訳を高速化：** 行ごとにセッションを作らず、1つのオンデバイス翻訳セッションで全行をまとめて処理します。結果はこれまでどおり、準備できたものから順に表示します。",
@@ -1595,13 +1616,6 @@
     "zh-Hans": "**实时翻译：** 根据画面变化调整更新间隔，跳过未变化的内容并取消过时任务。隐藏后可在记住的区域与翻译窗口位置恢复；断开显示器后窗口会回到可见屏幕。",
     "zh-Hant": "**即時翻譯：** 依畫面變化調整更新間隔，跳過未變化的內容並取消過時工作。隱藏後可在記住的區域與翻譯視窗位置恢復；中斷顯示器連線後視窗會回到可見螢幕。"
   },
-  "bf1cde24099d4e4f": {
-    "en": "SwiftFormat, installed separately, for source formatting",
-    "ja": "ソースコードの書式を整えるSwiftFormatを別途インストール",
-    "ko": "소스 코드 서식을 맞추기 위한 SwiftFormat 별도 설치",
-    "zh-Hans": "另行安装 SwiftFormat，用于源码格式化",
-    "zh-Hant": "另行安裝 SwiftFormat，用於原始碼格式化"
-  },
   "c011d6097bfbc8e9": {
     "en": "License",
     "ja": "ライセンス",
@@ -1798,6 +1812,13 @@
     "zh-Hans": "鼠标悬停时隐藏翻译层，便于阅读下方原文。",
     "zh-Hant": "游標停留時隱藏翻譯層，方便閱讀下方原文。"
   },
+  "d361f05e96ed6bca": {
+    "en": "Version control",
+    "ja": "バージョン管理",
+    "ko": "버전 관리",
+    "zh-Hans": "版本控制",
+    "zh-Hant": "版本控制"
+  },
   "d44bf6155602857d": {
     "en": "**Display modes:** Place translation over the source or in a separate window beside it.",
     "ja": "**表示方法：** 原文の上に翻訳を重ねるか、隣の別ウインドウで読めます。",
@@ -1916,6 +1937,13 @@
     "ko": "번역문 복사",
     "zh-Hans": "复制译文",
     "zh-Hant": "複製譯文"
+  },
+  "e3990cfee104b338": {
+    "en": "Run {0} to apply the Airbnb style and {1} to check it. The upstream configuration revision is recorded in {2}.",
+    "ja": "{0}でAirbnbスタイルを適用し、{1}で確認します。上流設定のリビジョンは{2}に記録しています。",
+    "ko": "{0}으로 Airbnb 스타일을 적용하고 {1}로 검사해요. 업스트림 설정의 리비전은 {2}에 기록돼 있어요.",
+    "zh-Hans": "运行 {0} 应用 Airbnb 样式，运行 {1} 进行检查。上游配置的修订版本记录在 {2} 中。",
+    "zh-Hant": "執行 {0} 套用 Airbnb 樣式，執行 {1} 進行檢查。上游設定的修訂版本記錄於 {2}。"
   },
   "e3b0282d41ab1932": {
     "en": "For more details, see [docs/LANGUAGE_MODELS.md]({0}).",

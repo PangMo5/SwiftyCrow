@@ -100,12 +100,12 @@ enum CaptureQualitySelection {
 
   static func load(
     root: URL,
-    environment: [String: String] = ProcessInfo.processInfo.environment
+    environment: [String: String] = ProcessInfo.processInfo.environment,
   ) throws -> [CaptureQualityCase] {
     let manifest = environment["SWIFTYCROW_QUALITY_MANIFEST"] ?? "corpus.json"
     let cases = try JSONDecoder().decode(
       [CaptureQualityCase].self,
-      from: Data(contentsOf: root.appendingPathComponent(manifest))
+      from: Data(contentsOf: root.appendingPathComponent(manifest)),
     )
     return try select(cases, environment: environment)
   }
@@ -138,5 +138,4 @@ enum CaptureQualitySelection {
     guard !selected.isEmpty else { throw SelectionError.emptySelection }
     return selected
   }
-
 }

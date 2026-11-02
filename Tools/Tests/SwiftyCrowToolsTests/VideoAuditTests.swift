@@ -9,12 +9,12 @@ import Testing
 @Suite("Decoded video review pixels")
 struct VideoAuditTests {
   @Test
-  func paddingDoesNotChangePixelIdentityOrColorMetrics() throws {
+  func `padding does not change pixel identity or color metrics`() throws {
     func frame(padding: UInt8) throws -> DecodedPixels {
       var value: CVPixelBuffer?
       try require(
         CVPixelBufferCreate(nil, 3, 2, kCVPixelFormatType_32BGRA, nil, &value) == kCVReturnSuccess,
-        "Cannot allocate test frame"
+        "Cannot allocate test frame",
       )
       let buffer = try #require(value)
       CVPixelBufferLockBaseAddress(buffer, [])

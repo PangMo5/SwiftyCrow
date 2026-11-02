@@ -7,13 +7,13 @@ import Testing
 
 struct OCRVisualSpacingTests {
   @Test
-  func aPartialBodyMeasurementCannotPromoteAShortEmphasisRun() throws {
+  func `a partial body measurement cannot promote A short emphasis run`() throws {
     let parent = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.2,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var emphasis = parent
     emphasis.fontSizeScale = 0.4
@@ -34,7 +34,7 @@ struct OCRVisualSpacingTests {
         .init(range: NSRange(location: 0, length: 1), box: box(10, 10)),
         .init(range: NSRange(location: 2, length: 4), box: box(80, 40)),
         .init(range: NSRange(location: 7, length: 1), box: box(136, 7)),
-      ]
+      ],
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 200, height: 60) { x, y in
       (10..<22).contains(y) && ((10..<20).contains(x) || (80..<120).contains(x) || (136..<143).contains(x)) ? .black : .white
@@ -46,7 +46,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func refiningAnUnsplitRowKeepsItsComposedBaseStyle() {
+  func `refining an unsplit row keeps its composed base style`() {
     let text = "Important ordinary words here"
     let chars = Array(text.utf16)
     let parent = OverlaySourceAppearance(
@@ -54,7 +54,7 @@ struct OCRVisualSpacingTests {
       foreground: .white,
       confidence: 1,
       fontSizeScale: 0.3,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     var emphasis = parent
     emphasis.fontWeight = .bold
@@ -69,9 +69,9 @@ struct OCRVisualSpacingTests {
             x: CGFloat(origin + offset * 12) / 1200,
             y: 0.25,
             width: CGFloat(word.utf16.count * 12) / 1200,
-            height: 0.4
+            height: 0.4,
           ),
-          appearance: index == 0 ? emphasis : parent
+          appearance: index == 0 ? emphasis : parent,
         )
       }
       return OCRResult.Line(
@@ -79,12 +79,12 @@ struct OCRVisualSpacingTests {
           x: CGFloat(origin) / 1200,
           y: 0.25,
           width: CGFloat(chars.count * 12) / 1200,
-          height: 0.4
+          height: 0.4,
         ),
         text: text,
         imageAspectRatio: 30,
         appearance: parent,
-        styleRuns: runs
+        styleRuns: runs,
       )
     }
     let result = OCRVisualSpacing.refining(.init(lines: lines), width: 1200, height: 40) { x, y in
@@ -99,13 +99,13 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func separatedLabelsDoNotInheritTheirLargerMarkersTypography() throws {
+  func `separated labels do not inherit their larger markers typography`() throws {
     let parent = OverlaySourceAppearance(
       background: .white,
       foreground: .black,
       confidence: 1,
       fontSizeScale: 0.3,
-      fontWeight: .bold
+      fontWeight: .bold,
     )
     let label = OverlaySourceAppearance(
       background: .white,
@@ -113,7 +113,7 @@ struct OCRVisualSpacingTests {
       confidence: 1,
       inkHeightScale: 0.12,
       fontSizeScale: 0.14,
-      fontWeight: .regular
+      fontWeight: .regular,
     )
     let lines = (0..<3).map { index in
       let y = CGFloat(index * 30 + 5) / 100
@@ -126,10 +126,10 @@ struct OCRVisualSpacingTests {
           .init(
             range: NSRange(location: 0, length: 1),
             box: CGRect(x: 0.05, y: y, width: 0.12, height: 0.22),
-            appearance: parent
+            appearance: parent,
           ),
           .init(range: NSRange(location: 2, length: 6), box: CGRect(x: 0.23, y: y, width: 0.4, height: 0.22), appearance: label),
-        ]
+        ],
       )
     }
     let result = OCRVisualSpacing.refining(.init(lines: lines), width: 200, height: 100) { x, y in
@@ -149,7 +149,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func repeatedOutlinedControlsAreNotTranslatedAsLetters() {
+  func `repeated outlined controls are not translated as letters`() {
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     let lines = (0..<3).map { index in
       let y = CGFloat(index * 30 + 5) / 100
@@ -162,14 +162,14 @@ struct OCRVisualSpacingTests {
           .init(
             range: NSRange(location: 0, length: 1),
             box: CGRect(x: 0.05, y: y, width: 0.12, height: 0.22),
-            appearance: appearance
+            appearance: appearance,
           ),
           .init(
             range: NSRange(location: 2, length: 6),
             box: CGRect(x: 0.23, y: y, width: 0.4, height: 0.22),
-            appearance: appearance
+            appearance: appearance,
           ),
-        ]
+        ],
       )
     }
     let result = OCRVisualSpacing.refining(.init(lines: lines), width: 200, height: 100) { x, y in
@@ -184,7 +184,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test(arguments: ["三 人工知能", "i Heading", "三 Überschrift"])
-  func aSmallLeadingIconKeepsItsPixelsRegardlessOfTheRecognizedScript(_ text: String) throws {
+  func `a small leading icon keeps its pixels regardless of the recognized script`(_ text: String) throws {
     let appearance = OverlaySourceAppearance(background: .white, foreground: .black, confidence: 1)
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0.04, y: 0.1, width: 0.75, height: 0.6),
@@ -194,14 +194,14 @@ struct OCRVisualSpacingTests {
         .init(
           range: NSRange(location: 0, length: 1),
           box: CGRect(x: 0.05, y: 0.1, width: 0.15, height: 0.6),
-          appearance: appearance
+          appearance: appearance,
         ),
         .init(
           range: NSRange(location: 2, length: text.utf16.count - 2),
           box: CGRect(x: 0.25, y: 0.1, width: 0.5, height: 0.6),
-          appearance: appearance
+          appearance: appearance,
         ),
-      ]
+      ],
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 200, height: 60) { x, y in
       ((15..<29).contains(x) && (18..<32).contains(y)) || ((50..<150).contains(x) && (10..<40).contains(y)) ? .black : .white
@@ -212,7 +212,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test(arguments: ["Manual semantic review", "Manuelle semantische Prüfung", "Révision sémantique manuelle"])
-  func normalMonospacedWordSpacesAreNotControlBoundaries(_ text: String) {
+  func `normal monospaced word spaces are not control boundaries`(_ text: String) {
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
     let width = text.utf16.count * 12 + 20
     var offset = 0
@@ -222,7 +222,7 @@ struct OCRVisualSpacingTests {
         x: Double(10 + offset * 12) / Double(width),
         y: 0.25,
         width: Double(word.utf16.count * 12) / Double(width),
-        height: 0.4
+        height: 0.4,
       ), appearance: appearance)
     }
     let line = OCRResult.Line(
@@ -230,7 +230,7 @@ struct OCRVisualSpacingTests {
       text: text,
       imageAspectRatio: Double(width) / 40,
       appearance: appearance,
-      styleRuns: runs
+      styleRuns: runs,
     )
     let chars = Array(text.utf16)
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: width, height: 40) { x, y in
@@ -244,19 +244,19 @@ struct OCRVisualSpacingTests {
   }
 
   @Test(arguments: ["製品支援設定", "产品帮助设置", "제품지원설정"])
-  func unspacedNavigationUsesGraphemeGeometry(_ text: String) {
+  func `unspaced navigation uses grapheme geometry`(_ text: String) {
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
     let chars = Array(text)
     let anchors = chars.indices.map { i in OCRTextAnchor(
       range: NSRange(location: i, length: 1),
-      box: CGRect(x: CGFloat(10 + i * 12 + (i / 2) * 24) / 150, y: 0.25, width: 10.0 / 150, height: 0.35)
+      box: CGRect(x: CGFloat(10 + i * 12 + (i / 2) * 24) / 150, y: 0.25, width: 10.0 / 150, height: 0.35),
     ) }
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0.25, width: 1, height: 0.35),
       text: text,
       imageAspectRatio: 3.75,
       appearance: appearance,
-      spacingAnchors: anchors
+      spacingAnchors: anchors,
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 150, height: 40) { x, y in
       anchors.contains { $0.box.contains(CGPoint(x: CGFloat(x) / 150, y: CGFloat(y) / 40)) } ? .white : .black
@@ -265,7 +265,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func rightToLeftControlOrderFollowsSourceRanges() {
+  func `right to left control order follows source ranges`() {
     let words = ["المساعدة", "والدعم", "الإعدادات"]
     let text = words.joined(separator: " ")
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
@@ -280,7 +280,7 @@ struct OCRVisualSpacingTests {
       return OverlaySourceStyleRun(
         range: NSRange(location: offset, length: word.utf16.count),
         box: boxes[i],
-        appearance: appearance
+        appearance: appearance,
       )
     }
     let line = OCRResult.Line(
@@ -288,7 +288,7 @@ struct OCRVisualSpacingTests {
       text: text,
       imageAspectRatio: 7.5,
       appearance: appearance,
-      styleRuns: runs
+      styleRuns: runs,
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 300, height: 40) { x, y in
       boxes.contains { $0.contains(CGPoint(x: CGFloat(x) / 300, y: CGFloat(y) / 40)) } ? .white : .black
@@ -298,7 +298,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func visibleNavigationGapSplitsEvenWhenVisionWordBoxesAlmostTouch() {
+  func `visible navigation gap splits even when vision word boxes almost touch`() {
     let tokens = ["Release", "notes", "›", "View", "on", "GitHub", "›"]
     let widths = [50, 32, 6, 26, 12, 42, 6]
     let text = tokens.joined(separator: " ")
@@ -315,7 +315,7 @@ struct OCRVisualSpacingTests {
       runs.append(.init(
         range: NSRange(location: offset, length: tokens[i].utf16.count),
         box: CGRect(x: CGFloat(x) / 250, y: 0.25, width: CGFloat(reportedWidth) / 250, height: 0.35),
-        appearance: appearance
+        appearance: appearance,
       ))
       x += widths[i] + (i == 2 ? 28 : 3)
       offset += tokens[i].utf16.count + 1
@@ -325,7 +325,7 @@ struct OCRVisualSpacingTests {
       text: text,
       imageAspectRatio: 6.25,
       appearance: appearance,
-      styleRuns: runs
+      styleRuns: runs,
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 250, height: 40) { x, y in
       ink.contains(where: { $0.contains(CGPoint(x: x, y: y)) }) ? .white : .black
@@ -337,7 +337,7 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func separateFooterControlsKeepObservedWhitespaceAndOrder() {
+  func `separate footer controls keep observed whitespace and order`() {
     let texts = ["Configuration", "License", "Third-party notices"]
     let appearance = OverlaySourceAppearance(background: .black, foreground: .white, confidence: 1)
     let lines = texts.enumerated().map { i, text in
@@ -346,7 +346,7 @@ struct OCRVisualSpacingTests {
         text: text,
         imageAspectRatio: 7.5,
         recognitionGroupID: i,
-        appearance: appearance
+        appearance: appearance,
       )
     }
     let result = OCRVisualSpacing.refining(.init(lines: lines), width: 300, height: 40) { x, y in
@@ -358,10 +358,10 @@ struct OCRVisualSpacingTests {
   }
 
   @Test
-  func sentenceSpacingDoesNotSplitProse() {
+  func `sentence spacing does not split prose`() {
     let line = OCRResult.Line(
       boundingBoxNormalized: CGRect(x: 0, y: 0, width: 1, height: 1),
-      text: "Read the documentation before continuing."
+      text: "Read the documentation before continuing.",
     )
     let result = OCRVisualSpacing.refining(.init(lines: [line]), width: 300, height: 40) { x, _ in x % 60 < 20 ? .white : .black }
     #expect(result.lines == [line])

@@ -24,11 +24,11 @@ enum OverlaySourceAppearanceAnalyzer {
     to result: OCRResult,
     from image: CGImage,
     tableCells: [OCRTableCell] = [],
-    didPrepareParagraphs: (@Sendable ([OCRResult.Line]) -> Void)? = nil
+    didPrepareParagraphs: (@Sendable ([OCRResult.Line]) -> Void)? = nil,
   ) async -> OCRResult {
     let styleRaster = PixelRaster(image: image, longestSide: appearanceRasterLongestSide(
       for: result,
-      imageSize: CGSize(width: image.width, height: image.height)
+      imageSize: CGSize(width: image.width, height: image.height),
     ))
     let surfaceRaster = PixelRaster(image: image, longestSide: 384)
     let styled = OCRResult(lines: await CaptureAnalysisExecutor.map(result.lines) { line in
@@ -72,7 +72,7 @@ enum OverlaySourceAppearanceAnalyzer {
           width: samplingRaster.width,
           height: samplingRaster.height,
           background: background,
-          sample: { x, y in samplingRaster.color(at: y * samplingRaster.width + x) }
+          sample: { x, y in samplingRaster.color(at: y * samplingRaster.width + x) },
         )
       }
       let lineAppearance = samplingRaster.map {
@@ -87,7 +87,7 @@ enum OverlaySourceAppearanceAnalyzer {
           line.styleRuns,
           anchors: line.spacingAnchors,
           raster: samplingRaster,
-          band: samplingBand
+          band: samplingBand,
         )
       }
       if let samplingRaster, !line.isVerticalBlock {
@@ -110,7 +110,7 @@ enum OverlaySourceAppearanceAnalyzer {
               around: run.box,
               raster: samplingRaster,
               text: text(in: sharedRange, source: line.text),
-              within: samplingBand
+              within: samplingBand,
             )
             sampledRuns.append((run.box, run.appearance))
           }
@@ -120,14 +120,15 @@ enum OverlaySourceAppearanceAnalyzer {
           run.appearance.fontDesign = fontDesign(
             for: text(in: run.range, source: line.text),
             appearance: run.appearance,
-            surroundingBackground: surroundingBackground
+            surroundingBackground: surroundingBackground,
           )
           if
-            !line.isVerticalBlock, let ink = observedInkBox(
+            !line.isVerticalBlock,
+            let ink = observedInkBox(
               run.box,
               appearance: run.appearance,
               raster: samplingRaster,
-              within: samplingBand
+              within: samplingBand,
             )
           {
             run.inkBox = ink
@@ -172,7 +173,7 @@ enum OverlaySourceAppearanceAnalyzer {
         line.replacementPatches.append(contentsOf: inlineSurfaceErasers(
           for: inlineStyleRuns,
           parentBackground: surroundingBackground,
-          raster: samplingRaster
+          raster: samplingRaster,
         ))
       }
       let appearanceSamples: [WeightedAppearance]
@@ -184,18 +185,18 @@ enum OverlaySourceAppearanceAnalyzer {
         let textLength = (line.text as NSString).length
         let coveredLength = min(
           textLength,
-          line.styleRuns.reduce(0) { $0 + max(0, $1.range.length) }
+          line.styleRuns.reduce(0) { $0 + max(0, $1.range.length) },
         )
         var samples = line.styleRuns.map {
           WeightedAppearance(
             appearance: $0.appearance,
-            weight: CGFloat(max(1, $0.range.length))
+            weight: CGFloat(max(1, $0.range.length)),
           )
         }
         if coveredLength < textLength {
           samples.append(WeightedAppearance(
             appearance: lineAppearance,
-            weight: CGFloat(textLength - coveredLength)
+            weight: CGFloat(textLength - coveredLength),
           ))
         }
         appearanceSamples = samples
@@ -210,7 +211,7 @@ enum OverlaySourceAppearanceAnalyzer {
       let hasInlineLink = appearanceSamples.contains { $0.appearance.isUnderlined || isChromatic($0.appearance.foreground) }
       line.appearance = combinedAppearance(
         hasInlineLink && !neutralSamples.isEmpty ? neutralSamples : appearanceSamples,
-        fallback: lineAppearance
+        fallback: lineAppearance,
       )
       if line.isVerticalBlock, line.verticalCharScale > 0 {
         // A vertical word's total height is not its font size. Calibrate from
@@ -228,7 +229,7 @@ enum OverlaySourceAppearanceAnalyzer {
         shouldConsolidatePatches(
           line.replacementPatches,
           into: lineAppearance,
-          isVertical: line.isVerticalBlock
+          isVertical: line.isVerticalBlock,
         )
       {
         // A flat line is cleaner as one restoration surface: punctuation and
@@ -249,7 +250,7 @@ enum OverlaySourceAppearanceAnalyzer {
         restorationAppearance.background = surroundingBackground
         let patch = OverlaySourcePatch(
           box: line.boundingBoxNormalized,
-          appearance: restorationAppearance
+          appearance: restorationAppearance,
         )
         line.replacementPatches = [patch]
         if let rubyPatch = nearbyChromaticRubyPatch(above: patch, raster: samplingRaster) {
@@ -266,7 +267,7 @@ enum OverlaySourceAppearanceAnalyzer {
           containing: surfaceAnchor,
           appearance: line.appearance,
           raster: $0,
-          limitingTo: OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines)
+          limitingTo: OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines),
         )
       }
       let hasDistinctCompactFill = line.rowCount == 1
@@ -282,7 +283,7 @@ enum OverlaySourceAppearanceAnalyzer {
           raster: samplingRaster,
           limitingTo: OCRVisualStructure.surfaceSearchBounds(for: line, among: result.lines),
           minimumConfidence: 0.30,
-          acceptedConfidenceFloor: 0.35
+          acceptedConfidenceFloor: 0.35,
         )
       }
       if line.surface == nil, line.rowCount == 1, line.tableCell == nil, let styleRaster {
@@ -296,8 +297,9 @@ enum OverlaySourceAppearanceAnalyzer {
             containing: surfaceAnchor,
             appearance: line.appearance,
             raster: styleRaster,
-            limitingTo: limit
-          ), isCompactTextSurface(surface, around: surfaceAnchor)
+            limitingTo: limit,
+          ),
+          isCompactTextSurface(surface, around: surfaceAnchor)
         {
           line.surface = surface
         }
@@ -319,7 +321,7 @@ enum OverlaySourceAppearanceAnalyzer {
           inside: surface,
           original: line.appearance,
           surroundingBackground: surroundingBackground,
-          raster: samplingRaster
+          raster: samplingRaster,
         )
       {
         let original = line.appearance
@@ -374,18 +376,18 @@ enum OverlaySourceAppearanceAnalyzer {
     let references = styleRaster.map { completingChromaticReferences(assigned, raster: $0) } ?? assigned
     let separated = OCRInlineSourceFragments.capturingAnnotations(
       OCRVisualStructure.separatingCompoundControls(OCRVisualStructure.separatingStyleAccessories(references)),
-      image: image
+      image: image,
     )
     let rubyOwned = OCRInlineSourceFragments.capturingCodeLiterals(
       OCRInlineSourceFragments.capturingRubyAnnotations(separated, image: image),
-      image: image
+      image: image,
     )
     let spaced = styleRaster.map { raster in
       OCRVisualSpacing.refining(
         rubyOwned,
         width: raster.width,
         height: raster.height,
-        sample: { x, y in raster.color(at: y * raster.width + x) }
+        sample: { x, y in raster.color(at: y * raster.width + x) },
       )
     } ?? rubyOwned
     let prepared = OCRVisualStructure.preservingIdentifierTags(spaced.removingNestedDuplicates()).absorbingRubyAnnotations()
@@ -402,7 +404,7 @@ enum OverlaySourceAppearanceAnalyzer {
         coalesced,
         width: raster.width,
         height: raster.height,
-        sample: { x, y in raster.color(at: y * raster.width + x) }
+        sample: { x, y in raster.color(at: y * raster.width + x) },
       )
     } ?? coalesced
     return OCRResult(lines: await CaptureAnalysisExecutor.map(allocated.lines) { line in
@@ -412,7 +414,7 @@ enum OverlaySourceAppearanceAnalyzer {
         let sampledUnion = appearance(around: line.boundingBoxNormalized, raster: styleRaster)
         let surroundingBackground = sampledSurroundingBackground(
           around: line.boundingBoxNormalized,
-          raster: styleRaster
+          raster: styleRaster,
         ) ?? sampledUnion.background
         let parentCandidates = line.styleRuns.compactMap { run -> WeightedAppearance? in
           guard run.appearance.background.distance(to: surroundingBackground) <= 0.06 else {
@@ -420,7 +422,7 @@ enum OverlaySourceAppearanceAnalyzer {
           }
           return WeightedAppearance(
             appearance: run.appearance,
-            weight: CGFloat(max(1, run.range.length))
+            weight: CGFloat(max(1, run.range.length)),
           )
         }
         let neutralCandidates = parentCandidates.filter {
@@ -433,7 +435,7 @@ enum OverlaySourceAppearanceAnalyzer {
         unionAppearance.fontDesign = fontDesign(
           for: line.text,
           appearance: unionAppearance,
-          surroundingBackground: surroundingBackground
+          surroundingBackground: surroundingBackground,
         )
         line.appearance = unionAppearance
       }
@@ -459,7 +461,7 @@ enum OverlaySourceAppearanceAnalyzer {
             containing: sourceBox,
             appearance: line.appearance,
             raster: surfaceRaster,
-            limitingTo: previousSurface?.clippingBox
+            limitingTo: previousSurface?.clippingBox,
           )
           : nil
         line.surface = previousSurface.flatMap {
@@ -486,7 +488,7 @@ enum OverlaySourceAppearanceAnalyzer {
           let erasers = inlineSurfaceErasers(
             for: inlineStyleRuns,
             parentBackground: line.appearance.background,
-            raster: styleRaster
+            raster: styleRaster,
           ).filter { candidate in
             !line.replacementPatches.contains { existing in
               existing.erasesDistinctSurface && coversSameSurface(existing.box, candidate.box)
@@ -515,7 +517,7 @@ enum OverlaySourceAppearanceAnalyzer {
             patch,
             characterScale: line.verticalCharScale,
             inside: surface.box,
-            raster: styleRaster
+            raster: styleRaster,
           )
         }
       }
@@ -537,6 +539,10 @@ enum OverlaySourceAppearanceAnalyzer {
     var red = 0
     var green = 0
     var blue = 0
+
+    var isEmpty: Bool {
+      count == 0
+    }
   }
 
   private struct DominantSample {
@@ -579,7 +585,7 @@ enum OverlaySourceAppearanceAnalyzer {
             bitsPerComponent: 8,
             bytesPerRow: bytesPerRow,
             space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
           )
         else { return false }
         context.interpolationQuality = .medium
@@ -611,7 +617,7 @@ enum OverlaySourceAppearanceAnalyzer {
         }
         return (
           max(0, Int(ceil(range.lowerBound * CGFloat(raster.height) - 0.5))),
-          min(raster.height - 1, Int(floor(range.upperBound * CGFloat(raster.height) - 0.5)))
+          min(raster.height - 1, Int(floor(range.upperBound * CGFloat(raster.height) - 0.5))),
         )
       }
     }
@@ -631,7 +637,9 @@ enum OverlaySourceAppearanceAnalyzer {
     }
 
     func color(at index: Int) -> OverlayColor? {
-      if usesOwnershipMask, !owns(x: index % width, y: index / width) { return nil }
+      if usesOwnershipMask, !owns(x: index % width, y: index / width) {
+        return nil
+      }
       // Borrow once for all channels. Repeated Array property reads otherwise
       // contend on the shared storage's reference count in Debug captures.
       return pixels.withUnsafeBufferPointer { bytes in
@@ -641,7 +649,7 @@ enum OverlaySourceAppearanceAnalyzer {
           red: CGFloat(bytes[offset]) / 255,
           green: CGFloat(bytes[offset + 1]) / 255,
           blue: CGFloat(bytes[offset + 2]) / 255,
-          alpha: 1
+          alpha: 1,
         )
       }
     }
@@ -649,7 +657,7 @@ enum OverlaySourceAppearanceAnalyzer {
     func matchesBackground(
       at index: Int,
       color: OverlayColor,
-      tolerance: CGFloat
+      tolerance: CGFloat,
     ) -> Bool {
       guard let sample = self.color(at: index) else { return false }
       return sample.distance(to: color) <= tolerance
@@ -702,7 +710,7 @@ enum OverlaySourceAppearanceAnalyzer {
           x: complete.minX / CGFloat(raster.width),
           y: complete.minY / CGFloat(raster.height),
           width: complete.width / CGFloat(raster.width),
-          height: complete.height / CGFloat(raster.height)
+          height: complete.height / CGFloat(raster.height),
         )
         return run
       }
@@ -713,7 +721,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func separatingChromaticReferences(
     _ line: OCRResult.Line,
     raster: PixelRaster,
-    band: CGRect
+    band: CGRect,
   ) -> [OverlaySourceStyleRun] {
     let text = line.text as NSString
     return line.styleRuns.flatMap { run -> [OverlaySourceStyleRun] in
@@ -734,13 +742,15 @@ enum OverlaySourceAppearanceAnalyzer {
         for x in Int(pixels.minX)..<Int(pixels.maxX) {
           guard
             let color = raster.color(at: y * raster.width + x),
-            isChromatic(color), color.distance(to: background) > 0.15
+            isChromatic(color),
+            color.distance(to: background) > 0.15
           else { continue }
           colored = colored.union(CGRect(x: x, y: y, width: 1, height: 1))
         }
       }
       guard
-        !colored.isNull, colored.width <= pixels.width * 0.5,
+        !colored.isNull,
+        colored.width <= pixels.width * 0.5,
         colored.width <= colored.height * 4,
         min(colored.minX - pixels.minX, pixels.maxX - colored.maxX) <= max(2, pixels.height * 0.3)
       else { return [run] }
@@ -749,7 +759,7 @@ enum OverlaySourceAppearanceAnalyzer {
         x: markerOnRight ? pixels.minX : colored.maxX,
         y: pixels.minY,
         width: markerOnRight ? colored.minX - pixels.minX : pixels.maxX - colored.maxX,
-        height: pixels.height
+        height: pixels.height,
       )
       let prefix = NSRange(location: range.location, length: annotation.location - range.location)
       return [(prefix, body), (annotation, colored.insetBy(dx: -0.5, dy: -0.5).intersection(pixels))]
@@ -762,7 +772,7 @@ enum OverlaySourceAppearanceAnalyzer {
             x: bounds.minX / CGFloat(raster.width),
             y: bounds.minY / CGFloat(raster.height),
             width: bounds.width / CGFloat(raster.width),
-            height: bounds.height / CGFloat(raster.height)
+            height: bounds.height / CGFloat(raster.height),
           )
           piece.inkBox = nil
           return piece
@@ -774,13 +784,14 @@ enum OverlaySourceAppearanceAnalyzer {
     _ runs: [OverlaySourceStyleRun],
     anchors: [OCRTextAnchor],
     raster: PixelRaster,
-    band: CGRect
+    band: CGRect,
   ) -> [OverlaySourceStyleRun] {
     runs.flatMap { run -> [OverlaySourceStyleRun] in
       let glyphs = anchors.filter { NSIntersectionRange($0.range, run.range).length == $0.range.length }
         .sorted { $0.range.location < $1.range.location }
       guard
-        glyphs.count >= 2, glyphs.first?.range.location == run.range.location,
+        glyphs.count >= 2,
+        glyphs.first?.range.location == run.range.location,
         glyphs.last.map({ NSMaxRange($0.range) }) == NSMaxRange(run.range),
         zip(glyphs, glyphs.dropFirst()).allSatisfy({ a, b in
           let intersection = a.box.intersection(b.box)
@@ -813,14 +824,16 @@ enum OverlaySourceAppearanceAnalyzer {
     let rightChroma = max(right.red, right.green, right.blue) - min(right.red, right.green, right.blue)
     // Thin neutral glyphs (i/l/punctuation) have lighter antialiasing, not a
     // different style. Compare chromatic ink after removing that opacity bias.
-    if leftChroma < 0.12, rightChroma < 0.12 { return true }
+    if leftChroma < 0.12, rightChroma < 0.12 {
+      return true
+    }
     func direction(_ appearance: OverlaySourceAppearance) -> [CGFloat] {
       let delta = [
         appearance.background.red - appearance.foreground.red,
         appearance.background.green - appearance.foreground.green,
         appearance.background.blue - appearance.foreground.blue,
       ]
-      let scale = max(0.01, delta.map { abs($0) }.max() ?? 0)
+      let scale = max(0.01, delta.lazy.map { abs($0) }.max() ?? 0)
       return delta.map { $0 / scale }
     }
     return zip(direction(a), direction(b)).allSatisfy { abs($0 - $1) < 0.15 }
@@ -832,7 +845,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func horizontalRuleSamplingBand(
     around line: OCRResult.Line,
     background: OverlayColor,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> CGRect {
     let canvas = CGRect(x: 0, y: 0, width: 1, height: 1)
     guard !line.isVerticalBlock, line.rowCount == 1, abs(line.rotationRadians) < 0.1 else { return canvas }
@@ -844,7 +857,10 @@ enum OverlaySourceAppearanceAnalyzer {
     let extensionWidth = max(12, Int(box.height * 2))
     func uniform(_ range: Range<Int>, y: Int, color: OverlayColor, threshold: CGFloat) -> Bool {
       guard
-        !range.isEmpty, range.lowerBound >= 0, range.upperBound <= raster.width, y >= 0,
+        !range.isEmpty,
+        range.lowerBound >= 0,
+        range.upperBound <= raster.width,
+        y >= 0,
         y < raster.height
       else { return false }
       return range.count(where: { x in
@@ -870,7 +886,7 @@ enum OverlaySourceAppearanceAnalyzer {
     _ box: CGRect,
     appearance: OverlaySourceAppearance,
     raster: PixelRaster,
-    within band: CGRect
+    within band: CGRect,
   ) -> CGRect? {
     let pixels = pixelRect(for: box, raster: raster).integral
       .intersection(pixelRect(for: band, raster: raster))
@@ -890,7 +906,7 @@ enum OverlaySourceAppearanceAnalyzer {
       x: ink.minX / CGFloat(raster.width),
       y: ink.minY / CGFloat(raster.height),
       width: ink.width / CGFloat(raster.width),
-      height: ink.height / CGFloat(raster.height)
+      height: ink.height / CGFloat(raster.height),
     )
   }
 
@@ -899,7 +915,9 @@ enum OverlaySourceAppearanceAnalyzer {
       return line.boundingBoxNormalized
     }
     let mainRunBounds = line.styleRuns.reduce(CGRect.null) { $0.union($1.box) }
-    if !mainRunBounds.isNull, coversVisibleSource(line.styleRuns, in: line.text) { return mainRunBounds }
+    if !mainRunBounds.isNull, coversVisibleSource(line.styleRuns, in: line.text) {
+      return mainRunBounds
+    }
     return line.orientedBox ?? line.boundingBoxNormalized
   }
 
@@ -907,7 +925,7 @@ enum OverlaySourceAppearanceAnalyzer {
     _ patch: OverlaySourcePatch,
     characterScale: CGFloat,
     inside normalizedSurface: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> OverlaySourcePatch {
     let source = pixelRect(for: patch.box, raster: raster).integral
     let surface = pixelRect(for: normalizedSurface, raster: raster).integral
@@ -940,7 +958,9 @@ enum OverlaySourceAppearanceAnalyzer {
         if inkCount >= minimumInkPerRow {
           runStart = runStart ?? y
         } else if let start = runStart {
-          if y - start >= minimumRunLength { runs.append(start ..< y) }
+          if y - start >= minimumRunLength {
+            runs.append(start ..< y)
+          }
           runStart = nil
         }
       }
@@ -973,14 +993,14 @@ enum OverlaySourceAppearanceAnalyzer {
       x: patch.box.minX,
       y: minimumY / CGFloat(raster.height),
       width: patch.box.width,
-      height: (maximumY - minimumY) / CGFloat(raster.height)
+      height: (maximumY - minimumY) / CGFloat(raster.height),
     )
     return result
   }
 
   private static func nearbyChromaticRubyPatch(
     above patch: OverlaySourcePatch,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> OverlaySourcePatch? {
     let source = pixelRect(for: patch.box, raster: raster).integral
     guard !source.isNull, !source.isEmpty else { return nil }
@@ -1037,7 +1057,7 @@ enum OverlaySourceAppearanceAnalyzer {
           red: background.red + red * amount,
           green: background.green + green * amount,
           blue: background.blue + blue * amount,
-          alpha: 1
+          alpha: 1,
         )
         guard color.distance(to: expected) <= 0.08 else { continue }
         inkMinimumX = min(inkMinimumX, x)
@@ -1054,9 +1074,9 @@ enum OverlaySourceAppearanceAnalyzer {
         x: CGFloat(inkMinimumX) / CGFloat(raster.width),
         y: CGFloat(inkMinimumY) / CGFloat(raster.height),
         width: CGFloat(inkMaximumX - inkMinimumX + 1) / CGFloat(raster.width),
-        height: CGFloat(inkMaximumY - inkMinimumY + 1) / CGFloat(raster.height)
+        height: CGFloat(inkMaximumY - inkMinimumY + 1) / CGFloat(raster.height),
       ),
-      appearance: patch.appearance
+      appearance: patch.appearance,
     )
   }
 
@@ -1066,7 +1086,7 @@ enum OverlaySourceAppearanceAnalyzer {
     raster: PixelRaster,
     limitingTo normalizedLimit: CGRect? = nil,
     minimumConfidence: CGFloat = 0.35,
-    acceptedConfidenceFloor: CGFloat? = nil
+    acceptedConfidenceFloor: CGFloat? = nil,
   ) -> OverlaySourceSurface? {
     let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
     let normalizedSource = normalizedSource.standardized.intersection(unit)
@@ -1077,14 +1097,14 @@ enum OverlaySourceAppearanceAnalyzer {
         x: normalizedLimit.minX * CGFloat(raster.width),
         y: normalizedLimit.minY * CGFloat(raster.height),
         width: normalizedLimit.width * CGFloat(raster.width),
-        height: normalizedLimit.height * CGFloat(raster.height)
+        height: normalizedLimit.height * CGFloat(raster.height),
       ).integral.intersection(rasterBounds)
     } ?? rasterBounds
     let source = CGRect(
       x: normalizedSource.minX * CGFloat(raster.width),
       y: normalizedSource.minY * CGFloat(raster.height),
       width: max(1, normalizedSource.width * CGFloat(raster.width)),
-      height: max(1, normalizedSource.height * CGFloat(raster.height))
+      height: max(1, normalizedSource.height * CGFloat(raster.height)),
     ).integral.intersection(allowedBounds)
     guard !source.isNull, !source.isEmpty else { return nil }
 
@@ -1094,7 +1114,7 @@ enum OverlaySourceAppearanceAnalyzer {
     let tolerance = min(0.09, max(0.05, 0.05 + (1 - appearance.confidence) * 0.12))
     let search = source.insetBy(
       dx: -max(2, source.width * 0.2),
-      dy: -max(2, source.height * 0.2)
+      dy: -max(2, source.height * 0.2),
     ).integral.intersection(allowedBounds)
     var seed: Int?
     var seedScore = -CGFloat.infinity
@@ -1114,7 +1134,8 @@ enum OverlaySourceAppearanceAnalyzer {
           }
         }
         let score = 900 - distance
-        if fullySurrounded, score > seedScore { seed = y * raster.width + x
+        if fullySurrounded, score > seedScore {
+          seed = y * raster.width + x
           seedScore = score
         }
       }
@@ -1146,8 +1167,10 @@ enum OverlaySourceAppearanceAnalyzer {
     }
     guard let seed else { return nil }
     if
-      allowedBounds == rasterBounds, let background = raster.edgeBackground,
-      background.connected[seed], background.color.distance(to: appearance.background) <= tolerance
+      allowedBounds == rasterBounds,
+      let background = raster.edgeBackground,
+      background.connected[seed],
+      background.color.distance(to: appearance.background) <= tolerance
     {
       return nil
     }
@@ -1179,7 +1202,10 @@ enum OverlaySourceAppearanceAnalyzer {
       }
       if
         x == Int(allowedBounds.minX) || y == Int(allowedBounds.minY)
-        || x == Int(allowedBounds.maxX) - 1 || y == Int(allowedBounds.maxY) - 1 { return nil }
+        || x == Int(allowedBounds.maxX) - 1 || y == Int(allowedBounds.maxY) - 1
+      {
+        return nil
+      }
       minimumX = min(minimumX, x)
       minimumY = min(minimumY, y)
       maximumX = max(maximumX, x)
@@ -1198,7 +1224,7 @@ enum OverlaySourceAppearanceAnalyzer {
         guard
           allowedBounds.contains(CGPoint(
             x: CGFloat(neighborX) + 0.5,
-            y: CGFloat(neighborY) + 0.5
+            y: CGFloat(neighborY) + 0.5,
           ))
         else { continue }
         let local = localIndex(neighbor)
@@ -1208,7 +1234,7 @@ enum OverlaySourceAppearanceAnalyzer {
           raster.matchesBackground(
             at: neighbor,
             color: appearance.background,
-            tolerance: tolerance
+            tolerance: tolerance,
           )
         else {
           continue
@@ -1221,7 +1247,7 @@ enum OverlaySourceAppearanceAnalyzer {
       x: minimumX,
       y: minimumY,
       width: maximumX - minimumX + 1,
-      height: maximumY - minimumY + 1
+      height: maximumY - minimumY + 1,
     )
     // A page or screenshot enclosed by a border is a flat closed component too,
     // but it is not a semantic text container. Treating it as one made the
@@ -1235,28 +1261,28 @@ enum OverlaySourceAppearanceAnalyzer {
 
     let safe = component.insetBy(
       dx: max(1, component.width * 0.07),
-      dy: max(1, component.height * 0.05)
+      dy: max(1, component.height * 0.05),
     )
     guard safe.width > 1, safe.height > 1 else { return nil }
     let confidence = min(
       1,
       appearance.confidence
         * min(1, fillRatio / 0.65)
-        * min(1, 0.65 + (expansion - 1) * 0.2)
+        * min(1, 0.65 + (expansion - 1) * 0.2),
     )
     guard confidence >= minimumConfidence else { return nil }
     let cornerRadiusFraction = inferredCornerRadiusFraction(
       minimumY: minimumY,
       maximumY: maximumY,
       rowMinimumX: rowMinimumX,
-      rowMaximumX: rowMaximumX
+      rowMaximumX: rowMaximumX,
     )
     return OverlaySourceSurface(
       box: CGRect(
         x: safe.minX / CGFloat(raster.width),
         y: safe.minY / CGFloat(raster.height),
         width: safe.width / CGFloat(raster.width),
-        height: safe.height / CGFloat(raster.height)
+        height: safe.height / CGFloat(raster.height),
       ),
       // A high-resolution retry is made only for a compact fill already known
       // to contrast with its surroundings. Promote that accepted geometry to
@@ -1267,9 +1293,9 @@ enum OverlaySourceAppearanceAnalyzer {
         x: component.minX / CGFloat(raster.width),
         y: component.minY / CGFloat(raster.height),
         width: component.width / CGFloat(raster.width),
-        height: component.height / CGFloat(raster.height)
+        height: component.height / CGFloat(raster.height),
       ),
-      cornerRadiusFraction: cornerRadiusFraction
+      cornerRadiusFraction: cornerRadiusFraction,
     )
   }
 
@@ -1277,7 +1303,7 @@ enum OverlaySourceAppearanceAnalyzer {
     minimumY: Int,
     maximumY: Int,
     rowMinimumX: [Int],
-    rowMaximumX: [Int]
+    rowMaximumX: [Int],
   ) -> CGFloat {
     guard maximumY >= minimumY else { return 0 }
     let rowWidths = (minimumY ... maximumY).map { y in
@@ -1296,7 +1322,7 @@ enum OverlaySourceAppearanceAnalyzer {
     around normalizedBox: CGRect,
     raster: PixelRaster,
     text: String? = nil,
-    within samplingBand: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+    within samplingBand: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1),
   ) -> OverlaySourceAppearance {
     let rasterBounds = pixelRect(for: samplingBand, raster: raster)
     let source = pixelRect(for: normalizedBox, raster: raster).intersection(rasterBounds)
@@ -1307,7 +1333,7 @@ enum OverlaySourceAppearanceAnalyzer {
     // page beneath them.
     let sampleBounds = source.insetBy(
       dx: -max(2, min(source.width * 0.12, source.height * 0.5)),
-      dy: -max(2, source.height * 0.35)
+      dy: -max(2, source.height * 0.35),
     ).integral.intersection(rasterBounds)
 
     let interior = dominantSample(in: source, excluding: nil, raster: raster)
@@ -1325,19 +1351,19 @@ enum OverlaySourceAppearanceAnalyzer {
       let innerEdgeCoverage = edgeMatchRatio(
         color: interior.color,
         in: source,
-        raster: raster
+        raster: raster,
       )
       let outerEdgeCoverage = edgeMatchRatio(
         color: interior.color,
         in: source.insetBy(dx: -2, dy: -2).intersection(rasterBounds),
-        raster: raster
+        raster: raster,
       )
       let interiorFormsSurface = innerEdgeCoverage >= 0.95
         || (innerEdgeCoverage >= 0.55 && outerEdgeCoverage >= 0.55)
         || hasOpposingBackgroundEdges(
           color: interior.color,
           in: source.insetBy(dx: -2, dy: -2).intersection(rasterBounds),
-          raster: raster
+          raster: raster,
         )
       hasHighContrastSurface = interiorDistance > 0.25 && interiorFormsSurface
       dominant = interior.confidence >= 0.32
@@ -1433,54 +1459,54 @@ enum OverlaySourceAppearanceAnalyzer {
         red: CGFloat(bucket.red) / CGFloat(bucket.count * 255),
         green: CGFloat(bucket.green) / CGFloat(bucket.count * 255),
         blue: CGFloat(bucket.blue) / CGFloat(bucket.count * 255),
-        alpha: 1
+        alpha: 1,
       )
     }
     func sameFamily(_ a: Bucket, _ b: Bucket) -> Bool {
       sameInkColor(
         .init(background: background, foreground: bucketColor(a), confidence: 1),
-        .init(background: background, foreground: bucketColor(b), confidence: 1)
+        .init(background: background, foreground: bucketColor(b), confidence: 1),
       )
     }
     // Antialiasing disperses one hue across RGB buckets. Count its family
     // before choosing a mode so a few solid black brackets cannot win by
     // occupying one undispersed bucket.
     let mode = foregroundBuckets.values.sorted { $0.count > $1.count }.prefix(8)
-      .map { candidate in
+      .lazy.map { candidate in
         (bucket: candidate, count: foregroundBuckets.values.filter { sameFamily($0, candidate) }.reduce(0) { $0 + $1.count })
       }.max(by: { $0.count < $1.count })?.bucket
     let family = mode.map { mode in
       foregroundBuckets.values.filter {
         sameInkColor(
           .init(background: background, foreground: bucketColor($0), confidence: 1),
-          .init(background: background, foreground: bucketColor(mode), confidence: 1)
+          .init(background: background, foreground: bucketColor(mode), confidence: 1),
         )
       }
     } ?? []
-    let familyContrast = family.map { bucketColor($0).distance(to: background) }.max() ?? 0
+    let familyContrast = family.lazy.map { bucketColor($0).distance(to: background) }.max() ?? 0
     let dominantForeground = family.filter { bucketColor($0).distance(to: background) >= familyContrast * 0.94 }
       .reduce(Bucket()) { sum, item in
         Bucket(
           count: sum.count + item.count,
           red: sum.red + item.red,
           green: sum.green + item.green,
-          blue: sum.blue + item.blue
+          blue: sum.blue + item.blue,
         )
       }
     let foreground: OverlayColor =
-      if dominantForeground.count > 0 {
+      if !dominantForeground.isEmpty {
         OverlayColor(
           red: CGFloat(dominantForeground.red) / CGFloat(dominantForeground.count * 255),
           green: CGFloat(dominantForeground.green) / CGFloat(dominantForeground.count * 255),
           blue: CGFloat(dominantForeground.blue) / CGFloat(dominantForeground.count * 255),
-          alpha: 1
+          alpha: 1,
         )
       } else if foregroundSampleCount > 0 {
         OverlayColor(
           red: foregroundRed / CGFloat(foregroundSampleCount),
           green: foregroundGreen / CGFloat(foregroundSampleCount),
           blue: foregroundBlue / CGFloat(foregroundSampleCount),
-          alpha: 1
+          alpha: 1,
         )
       } else {
         relativeLuminance(background) >= 0.179 ? .black : .white
@@ -1491,7 +1517,7 @@ enum OverlaySourceAppearanceAnalyzer {
       : 0
     let foregroundConfidence = min(
       1,
-      maximumDistance * min(1, CGFloat(foregroundSampleCount) / CGFloat(max(1, sourceSampleCount)) * 10)
+      maximumDistance * min(1, CGFloat(foregroundSampleCount) / CGFloat(max(1, sourceSampleCount)) * 10),
     )
     let underlineThreshold = max(2, Int(source.width * 0.58))
     let underlineStart = Int(source.minY + source.height * 0.68)
@@ -1500,7 +1526,7 @@ enum OverlaySourceAppearanceAnalyzer {
       y: CGFloat(underlineStart),
       width: source.width,
       height: source.maxY - CGFloat(underlineStart)
-        + (hasHighContrastSurface ? 0 : max(2, source.height * 0.15))
+        + (hasHighContrastSurface ? 0 : max(2, source.height * 0.15)),
     ).integral.intersection(rasterBounds)
     let underlineInkThreshold = max(0.08, maximumDistance * 0.7)
     var underlineRuns = [Int: Int]()
@@ -1528,7 +1554,7 @@ enum OverlaySourceAppearanceAnalyzer {
       SourceTypography.measure(
         text: $0,
         inkSize: CGSize(width: inkWidth, height: inkHeight),
-        coverage: integratedInk / CGFloat(max(1, inkWidth * inkHeight))
+        coverage: integratedInk / CGFloat(max(1, inkWidth * inkHeight)),
       )
     }
     let isItalic = measuresSlant && inkWidth > 0 && inkHeight > 0 && SourceTypographySlant.isItalic(
@@ -1539,7 +1565,7 @@ enum OverlaySourceAppearanceAnalyzer {
         }
       },
       width: inkWidth,
-      height: inkHeight
+      height: inkHeight,
     )
     return OverlaySourceAppearance(
       background: background,
@@ -1552,13 +1578,13 @@ enum OverlaySourceAppearanceAnalyzer {
       fontWeight: typography?.weight ?? fontWeight(for: inkCoverage, source: source, raster: raster),
       fontDesign: text.map { SourceTypography.isMonospaced(text: $0, inkColumns: inkColumns) } == true ? .monospaced : .standard,
       isItalic: isItalic,
-      isUnderlined: isUnderlined
+      isUnderlined: isUnderlined,
     )
   }
 
   private static func combinedAppearance(
     _ samples: [WeightedAppearance],
-    fallback: OverlaySourceAppearance
+    fallback: OverlaySourceAppearance,
   ) -> OverlaySourceAppearance {
     let samples = samples.filter { $0.appearance.confidence > 0 && $0.weight > 0 }
     guard !samples.isEmpty else { return fallback }
@@ -1620,7 +1646,7 @@ enum OverlaySourceAppearanceAnalyzer {
         1,
         dominant.reduce(0) {
           $0 + $1.appearance.foregroundConfidence * $1.weight
-        } / max(1, totalSemanticWeight)
+        } / max(1, totalSemanticWeight),
       ),
       inkCoverage: coverage,
       inkHeightScale: inkHeight,
@@ -1634,14 +1660,14 @@ enum OverlaySourceAppearanceAnalyzer {
       isItalic: dominant.filter { $0.appearance.isItalic }.reduce(0) { $0 + $1.weight } * 2 >= totalSemanticWeight,
       isUnderlined: dominant.filter { $0.appearance.isUnderlined }.reduce(0) {
         $0 + $1.weight
-      } * 2 >= totalSemanticWeight
+      } * 2 >= totalSemanticWeight,
     )
   }
 
   private static func dominantSample(
     in bounds: CGRect,
     excluding excluded: CGRect?,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> DominantSample? {
     // Samples are quantized to four bits per RGB channel below, so every key
     // is in a fixed 16³ space. Direct indexing avoids allocating and hashing a
@@ -1654,15 +1680,19 @@ enum OverlaySourceAppearanceAnalyzer {
       for y in Int(bounds.minY) ..< Int(bounds.maxY) {
         for x in Int(bounds.minX) ..< Int(bounds.maxX) {
           let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
-          if excluded?.contains(point) == true { continue }
-          if usesOwnershipMask, !raster.owns(x: x, y: y) { continue }
+          if excluded?.contains(point) == true {
+            continue
+          }
+          if usesOwnershipMask, !raster.owns(x: x, y: y) {
+            continue
+          }
           let offset = (y * raster.width + x) * 4
           guard offset >= 0, offset + 3 < pixels.count, pixels[offset + 3] > 127 else { continue }
           let red = Int(pixels[offset])
           let green = Int(pixels[offset + 1])
           let blue = Int(pixels[offset + 2])
           let key = (red >> 4) << 8 | (green >> 4) << 4 | (blue >> 4)
-          if buckets[key].count == 0 {
+          if buckets[key].isEmpty {
             occupiedKeys.append(key)
           }
           buckets[key].count += 1
@@ -1685,7 +1715,7 @@ enum OverlaySourceAppearanceAnalyzer {
         let distance = max(
           abs(sample.red / divisor - dominant.red / dominant.count),
           abs(sample.green / divisor - dominant.green / dominant.count),
-          abs(sample.blue / divisor - dominant.blue / dominant.count)
+          abs(sample.blue / divisor - dominant.blue / dominant.count),
         )
         return count + (distance <= 20 ? sample.count : 0)
       }
@@ -1705,7 +1735,7 @@ enum OverlaySourceAppearanceAnalyzer {
       max(
         abs(sample.red / sample.count - center.red / center.count),
         abs(sample.green / sample.count - center.green / center.count),
-        abs(sample.blue / sample.count - center.blue / center.count)
+        abs(sample.blue / sample.count - center.blue / center.count),
       ) <= 20
     }
     let mode = neighborhood.max(by: { $0.count < $1.count }) ?? center
@@ -1723,10 +1753,10 @@ enum OverlaySourceAppearanceAnalyzer {
         red: CGFloat(dominant.red) / divisor,
         green: CGFloat(dominant.green) / divisor,
         blue: CGFloat(dominant.blue) / divisor,
-        alpha: 1
+        alpha: 1,
       ),
       count: selected.count,
-      total: total
+      total: total,
     )
   }
 
@@ -1737,7 +1767,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func hasOpposingBackgroundEdges(
     color: OverlayColor,
     in bounds: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> Bool {
     guard bounds.width >= 3, bounds.height >= 3 else { return false }
     let x0 = Int(bounds.minX)
@@ -1759,7 +1789,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func edgeMatchRatio(
     color: OverlayColor,
     in bounds: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> CGFloat {
     let band = max(1, min(3, Int(min(bounds.width, bounds.height) * 0.15)))
     var matching = 0
@@ -1772,7 +1802,9 @@ enum OverlaySourceAppearanceAnalyzer {
           || y >= Int(bounds.maxY) - band
         guard onEdge, let sample = raster.color(at: y * raster.width + x) else { continue }
         total += 1
-        if sample.distance(to: color) <= 0.08 { matching += 1 }
+        if sample.distance(to: color) <= 0.08 {
+          matching += 1
+        }
       }
     }
     return CGFloat(matching) / CGFloat(max(1, total))
@@ -1787,12 +1819,14 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func fontDesign(
     for text: String,
     appearance: OverlaySourceAppearance,
-    surroundingBackground: OverlayColor
+    surroundingBackground: OverlayColor,
   ) -> OverlayFontDesign {
     // Punctuation at the edge of a control is not evidence of a code font.
     // Whole code-only rows are already protected before appearance analysis.
     guard text.contains(where: { $0.isLetter || $0.isNumber }) else { return .standard }
-    if appearance.fontDesign == .monospaced || OCRTextSemantics.isCode(text) { return .monospaced }
+    if appearance.fontDesign == .monospaced || OCRTextSemantics.isCode(text) {
+      return .monospaced
+    }
     // Footnotes and bracketed edit links do not turn surrounding prose into
     // code. Syntax heuristics apply only to compact literals, never a paragraph.
     guard text.split(whereSeparator: \.isWhitespace).count <= 1 else { return .standard }
@@ -1813,13 +1847,13 @@ enum OverlaySourceAppearanceAnalyzer {
 
   private static func sampledSurroundingBackground(
     around normalizedBox: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> OverlayColor? {
     let source = pixelRect(for: normalizedBox, raster: raster)
     guard !source.isNull, !source.isEmpty else { return nil }
     let bounds = source.insetBy(
       dx: -max(4, source.height * 1.2),
-      dy: -max(4, source.height)
+      dy: -max(4, source.height),
     ).integral.intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
     return dominantSample(in: bounds, excluding: source, raster: raster)?.color
   }
@@ -1829,7 +1863,7 @@ enum OverlaySourceAppearanceAnalyzer {
     inside surface: OverlaySourceSurface,
     original: OverlaySourceAppearance,
     surroundingBackground: OverlayColor,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> OverlaySourceAppearance? {
     let sampleBox = source.standardized.intersection(surface.box.standardized)
     guard !sampleBox.isNull, !sampleBox.isEmpty else { return nil }
@@ -1851,7 +1885,7 @@ enum OverlaySourceAppearanceAnalyzer {
 
   private static func isCompactTextSurface(
     _ surface: OverlaySourceSurface,
-    around normalizedSource: CGRect
+    around normalizedSource: CGRect,
   ) -> Bool {
     let surface = (surface.clippingBox ?? surface.box).standardized
     let source = normalizedSource.standardized
@@ -1877,7 +1911,7 @@ enum OverlaySourceAppearanceAnalyzer {
       x: surface.box.minX,
       y: clippingBox.minY + verticalInset,
       width: surface.box.width,
-      height: clippingBox.height - verticalInset * 2
+      height: clippingBox.height - verticalInset * 2,
     )
     guard !insetBox.isEmpty else { return surface }
     var surface = surface
@@ -1897,7 +1931,7 @@ enum OverlaySourceAppearanceAnalyzer {
 
   private static func coversVisibleSource(
     _ runs: [OverlaySourceStyleRun],
-    in text: String
+    in text: String,
   ) -> Bool {
     guard !runs.isEmpty else { return false }
     var visible = IndexSet()
@@ -1923,7 +1957,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func inlineSurfaceErasers(
     for runs: [OverlaySourceStyleRun],
     parentBackground: OverlayColor,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> [OverlaySourcePatch] {
     let runs = runs.reduce(into: [OverlaySourceStyleRun]()) { result, run in
       guard !result.contains(where: { sameBox($0.box, run.box) }) else { return }
@@ -1950,7 +1984,7 @@ enum OverlaySourceAppearanceAnalyzer {
       let detected = inferredSurface(
         containing: source,
         appearance: representative.appearance,
-        raster: raster
+        raster: raster,
       )?.clippingBox
       let box: CGRect
       if let detected, isCompactInlineSurface(detected, around: source) {
@@ -1959,13 +1993,13 @@ enum OverlaySourceAppearanceAnalyzer {
         let pixels = pixelRect(for: source, raster: raster)
         let padded = pixels.insetBy(
           dx: -max(1, pixels.height * 0.45),
-          dy: -max(1, pixels.height * 0.5)
+          dy: -max(1, pixels.height * 0.5),
         ).intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
         box = CGRect(
           x: padded.minX / CGFloat(raster.width),
           y: padded.minY / CGFloat(raster.height),
           width: padded.width / CGFloat(raster.width),
-          height: padded.height / CGFloat(raster.height)
+          height: padded.height / CGFloat(raster.height),
         )
       }
       var appearance = representative.appearance
@@ -1973,7 +2007,7 @@ enum OverlaySourceAppearanceAnalyzer {
       erasers.append(OverlaySourcePatch(
         box: box,
         appearance: appearance,
-        erasesDistinctSurface: true
+        erasesDistinctSurface: true,
       ))
     }
     return erasers
@@ -1982,7 +2016,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func sharesInlineSurface(
     _ lhs: OverlaySourceStyleRun,
     _ rhs: OverlaySourceStyleRun,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> Bool {
     guard lhs.appearance.background.distance(to: rhs.appearance.background) <= 0.04 else {
       return false
@@ -2020,7 +2054,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func shouldConsolidatePatches(
     _ patches: [OverlaySourcePatch],
     into lineAppearance: OverlaySourceAppearance,
-    isVertical: Bool
+    isVertical: Bool,
   ) -> Bool {
     guard
       !isVertical,
@@ -2039,14 +2073,14 @@ enum OverlaySourceAppearanceAnalyzer {
       x: box.minX * CGFloat(raster.width),
       y: box.minY * CGFloat(raster.height),
       width: max(1, box.width * CGFloat(raster.width)),
-      height: max(1, box.height * CGFloat(raster.height))
+      height: max(1, box.height * CGFloat(raster.height)),
     ).integral.intersection(CGRect(x: 0, y: 0, width: raster.width, height: raster.height))
   }
 
   private static func weightedColor(
     _ appearances: [WeightedAppearance],
     totalWeight: CGFloat,
-    component: (WeightedAppearance) -> (OverlayColor, CGFloat)
+    component: (WeightedAppearance) -> (OverlayColor, CGFloat),
   ) -> OverlayColor {
     appearances.reduce(OverlayColor(red: 0, green: 0, blue: 0, alpha: 1)) { result, appearance in
       let (color, weight) = component(appearance)
@@ -2054,7 +2088,7 @@ enum OverlaySourceAppearanceAnalyzer {
         red: result.red + color.red * weight / totalWeight,
         green: result.green + color.green * weight / totalWeight,
         blue: result.blue + color.blue * weight / totalWeight,
-        alpha: 1
+        alpha: 1,
       )
     }
   }
@@ -2062,7 +2096,7 @@ enum OverlaySourceAppearanceAnalyzer {
   private static func fontWeight(
     for inkCoverage: CGFloat,
     source: CGRect,
-    raster: PixelRaster
+    raster: PixelRaster,
   ) -> OverlayFontWeight {
     if source.width >= source.height * 2, source.height / CGFloat(raster.height) >= 0.06, inkCoverage >= 0.2 {
       return .bold
@@ -2085,7 +2119,9 @@ enum OverlaySourceAppearanceAnalyzer {
     var cumulative: CGFloat = 0
     for sample in sorted {
       cumulative += sample.weight
-      if cumulative >= midpoint { return sample.appearance.fontWeight }
+      if cumulative >= midpoint {
+        return sample.appearance.fontWeight
+      }
     }
     return sorted.last?.appearance.fontWeight ?? .semibold
   }
@@ -2099,16 +2135,20 @@ enum OverlaySourceAppearanceAnalyzer {
     var cumulative: CGFloat = 0
     for sample in sorted {
       cumulative += sample.weight
-      if cumulative >= midpoint { return sample.appearance.inkHeightScale }
+      if cumulative >= midpoint {
+        return sample.appearance.inkHeightScale
+      }
     }
     return sorted.last?.appearance.inkHeightScale ?? 0
   }
 
   private static func relativeLuminance(_ color: OverlayColor) -> CGFloat {
     func linearized(_ component: CGFloat) -> CGFloat {
-      component <= 0.04045
-        ? component / 12.92
-        : pow((component + 0.055) / 1.055, 2.4)
+      if component <= 0.04045 {
+        component / 12.92
+      } else {
+        pow((component + 0.055) / 1.055, 2.4)
+      }
     }
     return 0.2126 * linearized(color.red)
       + 0.7152 * linearized(color.green)
@@ -2123,4 +2163,5 @@ enum OverlaySourceAppearanceAnalyzer {
     min(color.red, color.green, color.blue) >= 0.8
       && max(color.red, color.green, color.blue) - min(color.red, color.green, color.blue) <= 0.08
   }
+
 }

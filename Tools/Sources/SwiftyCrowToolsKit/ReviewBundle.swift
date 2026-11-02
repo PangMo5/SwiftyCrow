@@ -32,7 +32,7 @@ struct ReviewBundle {
       try require(record["cameraSHA256"] == take["hashes"]["capture-demo.mov"], "Export is from another selected take: \(id)")
       try require(
         record["presentationTimelineSHA256"] == take["hashes"]["presentation.json"],
-        "Export narration differs from selected take: \(id)"
+        "Export narration differs from selected take: \(id)",
       )
       try require(record["visualReviewEvidence"] == take["review"], "Export visual review differs from selection: \(id)")
       record["selection"] = take
@@ -70,7 +70,7 @@ struct ReviewBundle {
       try require(
         record["film"] == take["film"] && record["uiLanguage"] == take["locale"]
           && record["sourceLanguage"].str == pair.source && record["translationLanguage"].str == pair.target,
-        "Bundle language mismatch: \(id)"
+        "Bundle language mismatch: \(id)",
       )
       for (path, hash) in Self.assets + [("metadataFile", "metadataSHA256")] {
         try require(record[hash].str == sha(library.path(record[path].str)), "Bundle asset changed: \(id)/\(path)")
@@ -85,12 +85,12 @@ struct ReviewBundle {
       try require(
         record["cameraSHA256"] == take["hashes"]["capture-demo.mov"]
           && record["presentationTimelineSHA256"] == take["hashes"]["presentation.json"],
-        "Selection/export binding changed"
+        "Selection/export binding changed",
       )
       try require(
         take["reviewSHA256"].str == sha(library.path(take["review"].str))
           && record["visualReviewEvidence"] == take["review"],
-        "Visual review changed: \(id)"
+        "Visual review changed: \(id)",
       )
       let evidence = record["actualLanguageEvidence"]
       let scene = record["scene"]
@@ -102,7 +102,7 @@ struct ReviewBundle {
           && scene["actionVerification"]["storyCompleted"].boolean
           && scene["actionVerification"]["actualLanguagePairVerified"].boolean
           && scene["actionVerification"]["actualLanguagePickerValues"] == evidence["actualLanguagePickerValues"],
-        "Runtime language evidence mismatch: \(id)"
+        "Runtime language evidence mismatch: \(id)",
       )
       try TakeLibrary.validateText(evidence["actualTranslationText"].str, locale: take["locale"].str)
       let timeline = try JSON.read(library.path(record["presentationTimeline"].str))
@@ -110,7 +110,7 @@ struct ReviewBundle {
         timeline,
         film: take["film"].str,
         locale: take["locale"].str,
-        duration: record["recorder"]["durationSeconds"].double
+        duration: record["recorder"]["durationSeconds"].double,
       )
       try require(timeline["scenariosSHA256"] == scene["scenariosSHA256"], "Scenario evidence mismatch")
       if !portable {
@@ -118,7 +118,7 @@ struct ReviewBundle {
         let directory = try library.path(take["directory"].str)
         try require(
           current == scene && library.languageEvidence(take, scene: current) == evidence,
-          "Recorded evidence changed: \(id)"
+          "Recorded evidence changed: \(id)",
         )
         for (name, hash) in take["hashes"].object {
           try require(!name.contains("/") && hash.str == sha(directory.at(name)), "Selected raw evidence changed: \(id)/\(name)")
@@ -127,7 +127,7 @@ struct ReviewBundle {
     }
     try require(
       found == expected,
-      "Bundle must contain exactly one take for every film and locale; missing: \(expected.subtracting(found).sorted())"
+      "Bundle must contain exactly one take for every film and locale; missing: \(expected.subtracting(found).sorted())",
     )
     print(
       "Verified \(records.count) recordings (\(portable ? "portable assets and preserved evidence" : "including camera originals"))"

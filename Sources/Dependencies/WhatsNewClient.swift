@@ -26,7 +26,7 @@ struct WhatsNewClient: Sendable {
 extension WhatsNewClient: DependencyKey {
   static let liveValue = WhatsNewClient(
     showIfNeeded: { await WhatsNewController.shared.showIfNeeded(hasExistingConfiguration: $0) },
-    show: { await WhatsNewController.shared.show() }
+    show: { await WhatsNewController.shared.show() },
   )
   static let testValue = WhatsNewClient(showIfNeeded: { _ in }, show: { })
 }
@@ -53,7 +53,10 @@ private final class WhatsNewController: NSObject, NSWindowDelegate {
     UserDefaults.standard.set(version, forKey: lastShownKey)
     if
       WhatsNewClient
-        .shouldShow(current: version, lastShown: previous, hasExistingConfiguration: hasExistingConfiguration) { show() }
+        .shouldShow(current: version, lastShown: previous, hasExistingConfiguration: hasExistingConfiguration)
+    {
+      show()
+    }
   }
 
   func show() {
@@ -66,7 +69,7 @@ private final class WhatsNewController: NSObject, NSWindowDelegate {
       contentRect: .zero,
       styleMask: [.titled, .closable, .fullSizeContentView],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     panel.title = String(localized: "What’s New")
     panel.titlebarAppearsTransparent = true

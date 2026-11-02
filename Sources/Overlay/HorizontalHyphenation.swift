@@ -20,7 +20,9 @@ enum HorizontalHyphenation {
   static func wordRanges(in text: String, language: Locale.Language) -> [NSRange] {
     let tokenizer = NLTokenizer(unit: .word)
     tokenizer.string = text
-    if let code = language.languageCode?.identifier { tokenizer.setLanguage(NLLanguage(rawValue: code)) }
+    if let code = language.languageCode?.identifier {
+      tokenizer.setLanguage(NLLanguage(rawValue: code))
+    }
     return tokenizer.tokens(for: text.startIndex..<text.endIndex).map { NSRange($0, in: text) }
   }
 
@@ -37,7 +39,9 @@ enum HorizontalHyphenation {
       let word = source.substring(with: range)
       let points = cached[word] ?? dictionary.boundaries(in: word)
       cached[word] = points
-      if !points.isEmpty { result[range] = points }
+      if !points.isEmpty {
+        result[range] = points
+      }
     }
     return result
   }
@@ -46,7 +50,9 @@ enum HorizontalHyphenation {
     guard let dictionary = Dictionary(language: language) else { return words }
     var cached = [String: [String]]()
     return words.flatMap { word in
-      if let pieces = cached[word] { return pieces }
+      if let pieces = cached[word] {
+        return pieces
+      }
       let text = word as NSString
       var start = 0
       var pieces = [String]()
@@ -97,7 +103,7 @@ enum HorizontalHyphenation {
           CFRange(location: 0, length: length),
           0,
           locale,
-          &character
+          &character,
         )
         guard point > 0, point < cursor else { break }
         if graphemeBoundaries.contains(point) {
@@ -108,5 +114,7 @@ enum HorizontalHyphenation {
       }
       return result.reversed()
     }
+
   }
+
 }

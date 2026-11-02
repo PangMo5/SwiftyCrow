@@ -13,7 +13,7 @@ struct TakeLibrary {
       stats["status"].str == "ok" && stats["error"].isNull && frames.isFinite && dropped.isFinite
         && frames > 0 && dropped >= 0 && dropped / (frames + dropped) <= 0.01
         && stats["durationSeconds"].double > 0,
-      "Recorder failed or missed-slot budget exceeded"
+      "Recorder failed or missed-slot budget exceeded",
     )
   }
 
@@ -40,7 +40,7 @@ struct TakeLibrary {
     }
     try require(
       !matches(required, text).isEmpty && matches(forbidden, text).isEmpty,
-      "Actual translated text has the wrong writing system: \(locale)"
+      "Actual translated text has the wrong writing system: \(locale)",
     )
   }
 
@@ -73,12 +73,12 @@ struct TakeLibrary {
     try require(scene["film"] == take["film"] && scene["uiLanguage"] == take["locale"], "Wrong take identity: \(id)")
     try require(
       scene["translationSource"].str == pair.source && scene["translationTarget"].str == pair.target,
-      "Wrong recorded language pair: \(id)"
+      "Wrong recorded language pair: \(id)",
     )
     try require(
       scene["actionVerification"]["storyCompleted"].boolean
         && scene["actionVerification"]["actualLanguagePairVerified"].boolean,
-      "Incomplete runtime assertions: \(id)"
+      "Incomplete runtime assertions: \(id)",
     )
     try Self.validateStatistics(stats)
     let timeline = try JSON.read(directory.at("presentation.json"))
@@ -86,11 +86,11 @@ struct TakeLibrary {
       timeline,
       film: take["film"].str,
       locale: take["locale"].str,
-      duration: stats["durationSeconds"].double
+      duration: stats["durationSeconds"].double,
     )
     try require(
       scene["scenariosSHA256"].str.count == 64 && scene["scenariosSHA256"] == timeline["scenariosSHA256"],
-      "Scenario/timeline mismatch: \(id)"
+      "Scenario/timeline mismatch: \(id)",
     )
     let ready = try JSON.read(directory.at("capture-demo.ready.json"))
     try require(timeline["captureEpochUptimeNanoseconds"] == ready["firstFrameUptimeNanoseconds"], "Wrong capture epoch: \(id)")
@@ -125,7 +125,7 @@ struct TakeLibrary {
   func select(source: URL, output: URL) throws {
     try require(
       source.resolvingSymlinksInPath() != output.resolvingSymlinksInPath(),
-      "Selection output must not replace its decisions"
+      "Selection output must not replace its decisions",
     )
     let decisions = try JSON.read(source)["takes"].array
     try unique(decisions)
@@ -179,7 +179,7 @@ struct TakeLibrary {
       if reviewed {
         try require(
           !take["review"].str.isEmpty && take["reviewSHA256"].str == sha(path(take["review"].str)),
-          "Visual review missing or changed"
+          "Visual review missing or changed",
         )
         let seconds = take["posterSeconds"].double
         let duration = try JSON.read(directory.at("capture-demo.json"))["durationSeconds"].double
@@ -196,7 +196,7 @@ struct TakeLibrary {
       let destination = try output.at(key(take))
       try await VideoAudit(workspace: workspace).audit(
         source: path(take["directory"].str).at("capture-demo.mov"),
-        output: destination
+        output: destination,
       )
     }
     print("Prepared contact sheets; visual acceptance remains pending")
@@ -231,7 +231,7 @@ struct TakeLibrary {
         locale: take["locale"].str,
         posterSeconds: take["posterSeconds"].double,
         review: path(take["review"].str),
-        mediaRoot: output
+        mediaRoot: output,
       )
       let metadata = try output.at(key(take) + ".json")
       var value = try JSON.read(metadata)

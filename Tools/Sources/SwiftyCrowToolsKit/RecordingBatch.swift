@@ -28,11 +28,16 @@ struct RecordingBatch {
     ] {
       let file = try library.path(plan[key].str)
       try require(file.exists, "Recording input missing: \(key)")
-      if key == "demoqa" { arguments += [file.path, "story"] }
-      else { arguments += [option, file.path] }
+      if key == "demoqa" {
+        arguments += [file.path, "story"]
+      } else {
+        arguments += [option, file.path]
+      }
       // Config is mutable: selecting a language/region updates it during the batch.
       // Its path is fixed, while code, archives, catalogs, and fixtures are fingerprinted.
-      if key != "config" { inputs.append((key, try inputFingerprint(file))) }
+      if key != "config" {
+        inputs.append((key, try inputFingerprint(file)))
+      }
     }
     let scenarios = try JSON.read(library.path(plan["scenarios"].str))
     try require(scenarios["version"].int == 2, "Batch recording requires a locale-specific scenario matrix")
@@ -47,7 +52,7 @@ struct RecordingBatch {
       try require(
         scenario["targetLanguage"].str == pair.target
           && scenario["sources"].array.first?["language"].str == pair.source,
-        "Batch scenario language mismatch: \(id)"
+        "Batch scenario language mismatch: \(id)",
       )
       let argv = arguments + [
         "--locale",
@@ -80,7 +85,7 @@ struct RecordingBatch {
         "SWIFTYCROW_HOST_MOUSE_CONFIG",
         "SWIFTYCROW_HOST_CAPTURE_ROOT",
       ])
-    }
+    },
   ) async throws {
     try require(source.resolvingSymlinksInPath() != output.resolvingSymlinksInPath(), "Batch report must not replace its plan")
     let library = TakeLibrary(workspace: workspace)
@@ -89,7 +94,7 @@ struct RecordingBatch {
       let directory = try library.path(request.take["directory"].str).resolvingSymlinksInPath().path
       try require(
         !output.resolvingSymlinksInPath().path.hasPrefix(directory + "/"),
-        "Batch report must be outside camera take directories"
+        "Batch report must be outside camera take directories",
       )
     }
     if check {
@@ -113,15 +118,17 @@ struct RecordingBatch {
         if directory.exists {
           try require(
             marker.exists && JSON.read(marker) == request.fingerprint,
-            "Existing take belongs to another request: \(id)"
+            "Existing take belongs to another request: \(id)",
           )
           _ = try library.validate(take)
           resumed = true
         } else {
-          if marker.exists { try require(
-            JSON.read(marker) == request.fingerprint,
-            "Changed recording request; choose a new take directory"
-          ) }
+          if marker.exists {
+            try require(
+              JSON.read(marker) == request.fingerprint,
+              "Changed recording request; choose a new take directory",
+            )
+          }
           try request.fingerprint.write(marker)
           try await execute(request.arguments)
           _ = try library.validate(take)

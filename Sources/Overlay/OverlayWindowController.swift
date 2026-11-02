@@ -24,7 +24,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       x: max(screen.minX, min(frame.minX, screen.maxX - size.width)),
       y: max(screen.minY, min(frame.minY, screen.maxY - size.height)),
       width: size.width,
-      height: size.height
+      height: size.height,
     )
   }
 
@@ -41,7 +41,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     assign(state.validatingSourceWindow(
       id: trackedWindowID,
       frame: trackedFrame,
-      minimumGeneration: minimumSourceGeneration
+      minimumGeneration: minimumSourceGeneration,
     ))
     configureSourceTracking(state.isVisible ? state.sourceWindowID : nil)
 
@@ -56,10 +56,14 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
           isPlacingWindow = true
           window.setFrame(overlayFrame.rect, display: true)
           isPlacingWindow = false
-          if state.sourceWindowID == nil { window.makeKeyAndOrderFront(nil) }
+          if state.sourceWindowID == nil {
+            window.makeKeyAndOrderFront(nil)
+          }
         }
       }
-      if let id = state.sourceWindowID { refreshSourceWindow(id) }
+      if let id = state.sourceWindowID {
+        refreshSourceWindow(id)
+      }
       applyPassThrough()
     } else {
       stopResizeEdgeTracking()
@@ -140,17 +144,33 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   /// value or not, so blindly re-assigning `lines` or the backdrop on each
   /// render invalidated the whole overlay view tree at the live capture rate.
   private func assign(_ state: OverlayRenderState) {
-    if model.tracksSourceWindow != (state.sourceWindowID != nil) { model.tracksSourceWindow = state.sourceWindowID != nil }
-    if model.lastError != state.lastError { model.lastError = state.lastError }
-    if model.lines != state.lines { model.lines = state.lines }
-    if model.hideOnHover != state.hideOnHover { model.hideOnHover = state.hideOnHover }
-    if model.isTranslating != state.isTranslating { model.isTranslating = state.isTranslating }
-    if model.isLive != state.isLive { model.isLive = state.isLive }
-    if model.liveMode != state.liveMode { model.liveMode = state.liveMode }
+    if model.tracksSourceWindow != (state.sourceWindowID != nil) {
+      model.tracksSourceWindow = state.sourceWindowID != nil
+    }
+    if model.lastError != state.lastError {
+      model.lastError = state.lastError
+    }
+    if model.lines != state.lines {
+      model.lines = state.lines
+    }
+    if model.hideOnHover != state.hideOnHover {
+      model.hideOnHover = state.hideOnHover
+    }
+    if model.isTranslating != state.isTranslating {
+      model.isTranslating = state.isTranslating
+    }
+    if model.isLive != state.isLive {
+      model.isLive = state.isLive
+    }
+    if model.liveMode != state.liveMode {
+      model.liveMode = state.liveMode
+    }
     if model.backdrop != state.backdrop {
       model.backdrop = state.backdrop
     }
-    if model.imageSize != state.imageSize { model.imageSize = state.imageSize }
+    if model.imageSize != state.imageSize {
+      model.imageSize = state.imageSize
+    }
     if model.translationUnavailable != state.translationUnavailable {
       model.translationUnavailable = state.translationUnavailable
     }
@@ -171,11 +191,15 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     pendingInteractionReset?.cancel()
     pendingInteractionReset = nil
     model.isInteracting = false
-    if window != nil { flushFrameSave() }
+    if window != nil {
+      flushFrameSave()
+    }
     window?.delegate = nil
     window?.orderOut(nil)
     window = nil
-    if let resultWindow { savedResultWindowFrame = resultWindow.frame }
+    if let resultWindow {
+      savedResultWindowFrame = resultWindow.frame
+    }
     resultWindow?.orderOut(nil)
     resultWindow = nil
   }
@@ -294,13 +318,15 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
   }
 
   private func showWindowIfNeeded() {
-    if window != nil { return }
+    if window != nil {
+      return
+    }
 
     let panel = OverlayPanel(
       contentRect: NSRect(x: 0, y: 0, width: 520, height: 280),
       styleMask: [.borderless, .resizable, .fullSizeContentView, .nonactivatingPanel],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     // Movement belongs to the SwiftUI WindowDragGesture on the move handle;
     // never move on a plain background drag.
@@ -321,7 +347,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       model: model,
       onToggleLive: { [weak self] in self?.eventHandler?(.toggleLive) },
       onClose: { [weak self] in self?.eventHandler?(.close) },
-      onCopy: { [weak self] in self?.copyTranslation() }
+      onCopy: { [weak self] in self?.copyTranslation() },
     )
     let hosting = NSHostingView(rootView: rootView)
     hosting.frame = panel.contentLayoutRect
@@ -364,7 +390,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     let local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .scrollWheel]) { [weak self] event in
       MainActor.assumeIsolated {
         self?.updatePassThroughForCursor()
-        if event.type == .scrollWheel { self?.sourceContentInteracted(event) }
+        if event.type == .scrollWheel {
+          self?.sourceContentInteracted(event)
+        }
       }
       return event
     }
@@ -403,7 +431,9 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
     // Drive the move handle's hover visibility from the global cursor position
     // (interior pass-through means SwiftUI's .onHover never fires here).
     let inside = frame.contains(mouse)
-    if model.cursorInside != inside { model.cursorInside = inside }
+    if model.cursorInside != inside {
+      model.cursorInside = inside
+    }
 
     // Top-left move handle: the ONLY region that drags the window. Its hit zone
     // is always live, even while the handle itself is faded out.
@@ -411,7 +441,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       x: frame.minX,
       y: frame.maxY - moveHandleSize.height,
       width: moveHandleSize.width,
-      height: moveHandleSize.height
+      height: moveHandleSize.height,
     )
     if !model.tracksSourceWindow, moveZone.contains(mouse) {
       window.alphaValue = 1
@@ -424,7 +454,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       x: frame.maxX - controlsZoneSize.width,
       y: frame.maxY - controlsZoneSize.height,
       width: controlsZoneSize.width,
-      height: controlsZoneSize.height
+      height: controlsZoneSize.height,
     )
     if controlsZone.contains(mouse) {
       window.alphaValue = 1
@@ -463,7 +493,7 @@ final class OverlayWindowController: NSObject, NSWindowDelegate {
       contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
       styleMask: [.borderless, .resizable, .nonactivatingPanel, .fullSizeContentView],
       backing: .buffered,
-      defer: false
+      defer: false,
     )
     panel.isOpaque = false
     panel.backgroundColor = .clear
@@ -555,7 +585,7 @@ private struct OverlayRootView: View {
       showMoveHandle: model.cursorInside,
       allowsRepositioning: !model.tracksSourceWindow,
       onToggleLive: onToggleLive,
-      onClose: onClose
+      onClose: onClose,
     )
     .background {
       // Hidden affordances: ⌘, opens Settings, ⌘C copies the translated text.
@@ -611,7 +641,7 @@ private struct LiveResultView: View {
 
   // MARK: Private
 
-  @ViewBuilder
+  @ContentBuilder
   private var content: some View {
     if !model.isInteracting, let backdrop = model.backdrop {
       ZStack {
@@ -630,6 +660,7 @@ private struct LiveResultView: View {
     guard model.imageSize.height > 0 else { return 1 }
     return model.imageSize.width / model.imageSize.height
   }
+
 }
 
 // MARK: - LiveBackdropImage

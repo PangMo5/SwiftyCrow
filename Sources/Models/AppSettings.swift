@@ -96,7 +96,9 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
     let d = ShortcutSettings()
     func shortcut(_ key: CodingKeys, default value: HotKey? = nil) throws -> HotKey? {
       // An empty string represents an explicitly cleared shortcut in TOML.
-      if (try? c.decode(String.self, forKey: key)) == "" { return nil }
+      if (try? c.decode(String.self, forKey: key)) == "" {
+        return nil
+      }
       return try c.decodeIfPresent(HotKey.self, forKey: key) ?? value
     }
     selectRegion = try shortcut(.selectRegion, default: d.selectRegion)
@@ -145,24 +147,51 @@ struct ShortcutSettings: Codable, Equatable, Sendable {
 
   func encode(to encoder: any Encoder) throws {
     var c = encoder.container(keyedBy: CodingKeys.self)
-    if let selectRegion { try c.encode(selectRegion, forKey: .selectRegion) }
-    else { try c.encode("", forKey: .selectRegion) }
-    if let liveOverlay { try c.encode(liveOverlay, forKey: .liveOverlay) }
-    else { try c.encode("", forKey: .liveOverlay) }
-    if let toggleLive { try c.encode(toggleLive, forKey: .toggleLive) }
-    else { try c.encode("", forKey: .toggleLive) }
-    if let toggleLiveMode { try c.encode(toggleLiveMode, forKey: .toggleLiveMode) }
-    else { try c.encode("", forKey: .toggleLiveMode) }
-    if let toggleLiveOverlay { try c.encode(toggleLiveOverlay, forKey: .toggleLiveOverlay) }
-    else { try c.encode("", forKey: .toggleLiveOverlay) }
-    if let regionSave { try c.encode(regionSave, forKey: .regionSave) }
-    else { try c.encode("", forKey: .regionSave) }
-    if let regionCopyImage { try c.encode(regionCopyImage, forKey: .regionCopyImage) }
-    else { try c.encode("", forKey: .regionCopyImage) }
-    if let regionCopyOriginal { try c.encode(regionCopyOriginal, forKey: .regionCopyOriginal) }
-    else { try c.encode("", forKey: .regionCopyOriginal) }
-    if let regionCopyTranslation { try c.encode(regionCopyTranslation, forKey: .regionCopyTranslation) }
-    else { try c.encode("", forKey: .regionCopyTranslation) }
+    if let selectRegion {
+      try c.encode(selectRegion, forKey: .selectRegion)
+    } else {
+      try c.encode("", forKey: .selectRegion)
+    }
+    if let liveOverlay {
+      try c.encode(liveOverlay, forKey: .liveOverlay)
+    } else {
+      try c.encode("", forKey: .liveOverlay)
+    }
+    if let toggleLive {
+      try c.encode(toggleLive, forKey: .toggleLive)
+    } else {
+      try c.encode("", forKey: .toggleLive)
+    }
+    if let toggleLiveMode {
+      try c.encode(toggleLiveMode, forKey: .toggleLiveMode)
+    } else {
+      try c.encode("", forKey: .toggleLiveMode)
+    }
+    if let toggleLiveOverlay {
+      try c.encode(toggleLiveOverlay, forKey: .toggleLiveOverlay)
+    } else {
+      try c.encode("", forKey: .toggleLiveOverlay)
+    }
+    if let regionSave {
+      try c.encode(regionSave, forKey: .regionSave)
+    } else {
+      try c.encode("", forKey: .regionSave)
+    }
+    if let regionCopyImage {
+      try c.encode(regionCopyImage, forKey: .regionCopyImage)
+    } else {
+      try c.encode("", forKey: .regionCopyImage)
+    }
+    if let regionCopyOriginal {
+      try c.encode(regionCopyOriginal, forKey: .regionCopyOriginal)
+    } else {
+      try c.encode("", forKey: .regionCopyOriginal)
+    }
+    if let regionCopyTranslation {
+      try c.encode(regionCopyTranslation, forKey: .regionCopyTranslation)
+    } else {
+      try c.encode("", forKey: .regionCopyTranslation)
+    }
   }
 
 }

@@ -32,7 +32,7 @@ enum OCRTableRecovery {
   static func refine(
     _ document: VisionTextRecognizer.Document,
     image: CGImage,
-    language: Language
+    language: Language,
   ) async throws -> VisionTextRecognizer.Document {
     var result = document
     let size = CGSize(width: image.width, height: image.height)
@@ -48,7 +48,7 @@ enum OCRTableRecovery {
         x: bounds.minX * size.width,
         y: bounds.minY * size.height,
         width: bounds.width * size.width,
-        height: bounds.height * size.height
+        height: bounds.height * size.height,
       )
       .insetBy(dx: -8, dy: -8).integral.intersection(CGRect(origin: .zero, size: size))
       let scale = max(1, min(2, 1800 / max(crop.width, crop.height)))
@@ -61,7 +61,7 @@ enum OCRTableRecovery {
           bitsPerComponent: 8,
           bytesPerRow: 0,
           space: CGColorSpace(name: CGColorSpace.sRGB)!,
-          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
       else { throw CocoaError(.coderInvalidValue) }
       context.interpolationQuality = .high
@@ -71,7 +71,7 @@ enum OCRTableRecovery {
       let reread = OCRDocumentRegion.remap(
         try await VisionTextRecognizer.document(in: input, language: language, usesLanguageCorrection: false),
         crop: crop,
-        imageSize: size
+        imageSize: size,
       )
       requests += 1
       let grids = Dictionary(grouping: reread.tableCells, by: \.table)
@@ -91,7 +91,9 @@ enum OCRTableRecovery {
       } else {
         Log.ocr.debug("Rejected reference-table evidence with changed native grid")
       }
-      if requests == 2 { break }
+      if requests == 2 {
+        break
+      }
     }
     return result
   }
@@ -110,7 +112,6 @@ enum OCRTableRecovery {
     let column: Int
     let rowSpan: Int
     let columnSpan: Int
-
   }
 
 }

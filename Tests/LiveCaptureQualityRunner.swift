@@ -17,7 +17,9 @@ enum LiveCaptureQualityRunner {
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     var records = [[String: Any]]()
     let codes = CaptureQualityLanguage.all.map(\.code).filter { $0 != "he" }
-    if let sourceLanguage, !codes.contains(sourceLanguage) { throw CocoaError(.validationMissingMandatoryProperty) }
+    if let sourceLanguage, !codes.contains(sourceLanguage) {
+      throw CocoaError(.validationMissingMandatoryProperty)
+    }
     for copy in CaptureQualityLanguage.all
       where codes.contains(copy.code) && (sourceLanguage == nil || sourceLanguage == copy.code)
     {
@@ -46,7 +48,7 @@ enum LiveCaptureQualityRunner {
         await store.send(.liveFrameResponse(
           generation: store.state.captureGeneration,
           frame: store.state.overlayFrame,
-          result: .success(frame)
+          result: .success(frame),
         )).finish()
         let completed = ContinuousClock.now
         let lines = store.state.overlayLines
@@ -55,16 +57,24 @@ enum LiveCaptureQualityRunner {
           texts: lines.map(\.source.text),
           expected: step == 7
             ? []
-            : [step == 3 ? copy.note : copy.body]
+            : [step == 3 ? copy.note : copy.body],
         ) + CaptureQualityMetrics.layoutIssues(
           placements,
           canvas: frame.imageSize,
-          minimumFontRatio: 0.4
+          minimumFontRatio: 0.4,
         )
-        if let error = store.state.lastError { issues.append(error) }
-        if step == 1, store.state.recognitionGeneration != before { issues.append("Identical frame reran OCR") }
-        if step == 7, !lines.isEmpty { issues.append("Removed content retained an overlay") }
-        if lines.contains(where: { !$0.sourcePixelsAreCurrent }) { issues.append("Completed frame remained visually stale") }
+        if let error = store.state.lastError {
+          issues.append(error)
+        }
+        if step == 1, store.state.recognitionGeneration != before {
+          issues.append("Identical frame reran OCR")
+        }
+        if step == 7, !lines.isEmpty {
+          issues.append("Removed content retained an overlay")
+        }
+        if lines.contains(where: { !$0.sourcePixelsAreCurrent }) {
+          issues.append("Completed frame remained visually stale")
+        }
         for placement in placements {
           let expected: CGFloat = placement.line.source.text == copy.heading ? 36 : 26
           let measured = placement.line.source.appearance.fontSizeScale * frame.imageSize.height
@@ -73,12 +83,20 @@ enum LiveCaptureQualityRunner {
           }
         }
         let heading = placements.first { $0.line.source.text == copy.heading }
-        if step != 7, lines.isEmpty { issues.append("No recognized content") }
-        if step != 7, heading == nil { issues.append("Missing translated heading") }
+        if step != 7, lines.isEmpty {
+          issues.append("No recognized content")
+        }
+        if step != 7, heading == nil {
+          issues.append("Missing translated heading")
+        }
         if let heading {
           if let baseline = firstHeadingFont {
-            if abs(heading.fontSize / baseline - 1) > 0.15 { issues.append("Unchanged heading font drift exceeded 15%") }
-          } else { firstHeadingFont = heading.fontSize }
+            if abs(heading.fontSize / baseline - 1) > 0.15 {
+              issues.append("Unchanged heading font drift exceeded 15%")
+            }
+          } else {
+            firstHeadingFont = heading.fontSize
+          }
         }
         let id = "\(copy.code)-\(step)"
         let png = NSMutableData()
@@ -152,11 +170,13 @@ enum LiveCaptureQualityRunner {
       bitsPerComponent: 8,
       bytesPerRow: 0,
       space: CGColorSpace(name: CGColorSpace.sRGB)!,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue,
     )!
     ctx.setFillColor(CGColor(gray: dark ? 0.09 : 0.97, alpha: 1))
     ctx.fill(CGRect(x: 0, y: 0, width: 1200, height: 800))
-    if step == 7 { return ctx.makeImage()! }
+    if step == 7 {
+      return ctx.makeImage()!
+    }
     let offset: CGFloat = step == 6 ? 50 : 0
     func text(_ value: String, y: CGFloat, width: CGFloat, size: CGFloat) {
       let paragraph = NSMutableParagraphStyle()
@@ -172,9 +192,9 @@ enum LiveCaptureQualityRunner {
         CFRange(location: 0, length: 0),
         CGPath(
           rect: CGRect(x: 50, y: 800 - y - offset - 250, width: width, height: 250),
-          transform: nil
+          transform: nil,
         ),
-        nil
+        nil,
       )
       CTFrameDraw(frame, ctx)
     }

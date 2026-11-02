@@ -6,15 +6,15 @@ import Sharing
 import TOML
 
 extension SharedKey where Self == FileStorageKey<OverlayFrame>.Default {
-  // Window geometry is UI state, not user config — store it as JSON under
-  // Application Support instead of the hand-editable config.toml.
+  /// Window geometry is UI state, not user config — store it as JSON under
+  /// Application Support instead of the hand-editable config.toml.
   static var overlayFrame: Self {
     let url = URL.applicationSupportDirectory
       .appending(path: "SwiftyCrow", directoryHint: .isDirectory)
       .appending(path: "overlay-frame.json")
     try? FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(),
-      withIntermediateDirectories: true
+      withIntermediateDirectories: true,
     )
     return Self[.fileStorage(url), default: .default]
   }
@@ -42,9 +42,9 @@ extension SharedKey where Self == FileStorageKey<AppSettings>.Default {
           let encoder = TOMLEncoder()
           encoder.outputFormatting = [.sortedKeys]
           return try encoder.encode(value)
-        }
+        },
       ),
-      default: AppSettings()
+      default: AppSettings(),
     ]
   }
 }

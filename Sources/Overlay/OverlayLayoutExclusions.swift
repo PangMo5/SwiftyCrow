@@ -11,16 +11,22 @@ enum OverlayLayoutExclusions {
     in frame: CGRect,
     excluding obstacles: [CGRect],
     allowed: [CGRect] = [],
-    alignment: OverlayTextAlignment
+    alignment: OverlayTextAlignment,
   ) -> CGRect? {
     guard !frame.isEmpty, !frame.isNull else { return nil }
     let blocked = obstacles.map { $0.intersection(frame) }.filter { !$0.isNull && !$0.isEmpty }
     let permitted = allowed.map { $0.intersection(frame) }.filter { !$0.isNull && !$0.isEmpty }
-    if blocked.isEmpty, allowed.isEmpty { return frame }
-    if !allowed.isEmpty, permitted.isEmpty { return nil }
+    if blocked.isEmpty, allowed.isEmpty {
+      return frame
+    }
+    if !allowed.isEmpty, permitted.isEmpty {
+      return nil
+    }
     func unique(_ values: [CGFloat]) -> [CGFloat] {
       values.sorted().reduce(into: []) { result, value in
-        if result.last.map({ value - $0 > 0.000_001 }) ?? true { result.append(value) }
+        if result.last.map({ value - $0 > 0.000_001 }) ?? true {
+          result.append(value)
+        }
       }
     }
     let rectangles = blocked + permitted
@@ -43,9 +49,15 @@ enum OverlayLayoutExclusions {
       for row in ys.indices {
         for column in xs.indices {
           let index = row * columns + column
-          if row > 0 { difference[index] += difference[index - columns] }
-          if column > 0 { difference[index] += difference[index - 1] }
-          if row > 0, column > 0 { difference[index] -= difference[index - columns - 1] }
+          if row > 0 {
+            difference[index] += difference[index - columns]
+          }
+          if column > 0 {
+            difference[index] += difference[index - 1]
+          }
+          if row > 0, column > 0 {
+            difference[index] -= difference[index - columns - 1]
+          }
         }
       }
       return difference
@@ -91,11 +103,13 @@ enum OverlayLayoutExclusions {
             x: xs[last.start],
             y: ys[row + 1] - last.height,
             width: xs[column] - xs[last.start],
-            height: last.height
+            height: last.height,
           ))
           start = last.start
         }
-        if height > 0, stack.last?.height != height { stack.append((start, height)) }
+        if height > 0, stack.last?.height != height {
+          stack.append((start, height))
+        }
       }
     }
     return best
