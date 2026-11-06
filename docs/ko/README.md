@@ -151,21 +151,22 @@ SwiftyCrow는 Apple의 기기 내 번역 프레임워크를 사용해요. **"번
 ### 필수 환경
 
 - Swift 6.4.2와 macOS 27.2 SDK가 포함된 Xcode 27.2
-- [mise](https://mise.jdx.dev) (`.mise.toml`로 Tuist와 SwiftFormat 관리)
+- [mise](https://mise.jdx.dev) (`.mise.toml`로 SwiftFormat과 빌드 작업 관리)
 - 버전 관리를 위한 [Jujutsu](https://docs.jj-vcs.dev) (`jj`)
 
 <a id="building-from-source"></a>
 ### 소스로 빌드하기
 
 ```sh
-export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
-export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs the pinned Tuist and SwiftFormat versions
-mise run generate          # resolves SPM dependencies and generates the workspace
-open SwiftyCrow.xcworkspace
+export SWIFTYCROW_DEVELOPMENT_IDENTITY="Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+mise install               # installs the pinned SwiftFormat version
+mise run generate          # resolves SPM dependencies
+mise run build             # builds and signs the Debug app
+mise run test              # runs the app tests through SwiftPM
+open Package.swift         # opens the package in Xcode
 ```
 
-`.xcode-version`에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 `DEVELOPER_DIR`를 설정해요. mise 셸 활성화를 사용할 수 없다면 `mise exec -- swift ...` 또는 `mise exec -- xcodebuild ...`를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.
+`.xcode-version`에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 `DEVELOPER_DIR`를 설정해요. mise 셸 활성화를 사용할 수 없다면 `mise exec -- swift ...`를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.
 
 `mise run format`으로 Airbnb 스타일을 적용하고 `mise run format:check`로 검사해요. 업스트림 설정의 리비전은 `.swiftformat`에 기록돼 있어요.
 
@@ -174,15 +175,18 @@ open SwiftyCrow.xcworkspace
 
 Git과 작업 디렉터리를 공유하는 저장소에서 `jj`를 사용해요. 기존 Git 이력과 GitHub 원격 저장소는 그대로 유지돼요. 새로 복제한 저장소에서는 `jj git init --colocate`을 한 번 실행한 뒤 `jj bookmark track main@origin`를 실행해 주세요. `jj status`와 `jj diff`로 변경을 확인하고, `jj new -m "description"`로 새 작업을 시작해요. 작업 북마크 이름에는 `pangmo5/` 접두사를 사용하고, `jj git fetch`로 원격 정보를 갱신해요.
 
-Debug 빌드는 Apple Development 인증서로 서명해요. `TUIST_DEVELOPMENT_TEAM`에 개발 인증서와 연결된 팀을 지정해 주세요. 같은 서명을 유지하면 다시 빌드해도 macOS가 화면 기록 권한을 유지할 수 있어요. 셸 프로필이나 로컬 `.mise.local.toml`에 값을 저장해 두세요.
+Debug 빌드는 Apple Development 인증서로 서명해요. `SWIFTYCROW_DEVELOPMENT_IDENTITY`에 개발 인증서의 이름이나 지문을 지정해 주세요. 같은 서명과 별도의 Debug bundle ID를 유지하면 다시 빌드해도 화면 기록 권한을 유지할 수 있어요. 셸 프로필이나 로컬 `.mise.local.toml`에 값을 저장해 두세요.
 
 ```toml
 [env]
-TUIST_DEVELOPMENT_TEAM     = "YOUR_TEAM_ID"
-TUIST_SPARKLE_PUBLIC_ED_KEY = "YOUR_SPARKLE_PUBLIC_KEY"
+SWIFTYCROW_DEVELOPMENT_IDENTITY = "Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+# Optional when several distribution certificates are installed:
+# SWIFTYCROW_DISTRIBUTION_IDENTITY = "Developer ID Application: YOUR_NAME (TEAM_ID)"
 ```
 
-`TUIST_SPARKLE_PUBLIC_ED_KEY`는 프로젝트를 생성할 때 `Info.plist`에 넣을 공개 검증 키예요. 유효한 키여야 하며 업데이트 피드의 서명 키와 일치해야 해요. 공식 피드를 사용한다면 배포된 앱의 `Contents/Info.plist`에 있는 `SUPublicEDKey` 값을 사용해 주세요. 포크에는 자체 피드와 그에 맞는 공개 키가 필요해요.
+`App/Info.plist`에는 공식 업데이트 피드의 공개 검증 키가 들어 있어요. 포크에는 자체 피드와 그에 맞는 공개 키가 필요하며, `SWIFTYCROW_SPARKLE_PUBLIC_ED_KEY`을 설정하면 앱을 패키징할 때 키를 바꿀 수 있어요. 비공개 서명 키는 저장소 밖에서 관리해요.
+
+`VERSION`을 앱과 웹사이트 버전의 기준으로 사용해요. `mise run build release`는 Developer ID로 서명한 arm64/x86_64 유니버설 앱을 빌드해요. Debug 앱과 Release 앱은 각각 `DerivedData/Build/Products/Debug`와 `DerivedData/Build/Products/Release`에 저장돼요.
 
 <a id="localization-and-site-previews"></a>
 ### 현지화와 웹 미리보기
@@ -199,7 +203,7 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 <a id="tech-stack"></a>
 ### 기술 구성
 
-- **Tuist**로 생성하는 워크스페이스 (`Project.swift`, `Tuist/Package.swift`)
+- **Swift Package Manager**로 앱 모듈, 의존성, 테스트를 관리하며, Apple 도구로 Xcode 프로젝트 없이 앱을 패키징하고 서명해요.
 - 앱과 캡처 상태는 **TCA** (`swift-composable-architecture`)로 관리하고, 의존성은 `@DependencyClient`로 연결해요.
 - **swift-sharing**의 `fileStorage` 방식을 **swift-toml**에 연결해요.
 - 전역 단축키 등록에는 **Magnet**을 쓰고, 별도의 작은 단축키 기록창을 제공해요.

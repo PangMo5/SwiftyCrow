@@ -26,10 +26,7 @@ struct SiteBuilder {
     let siteLocales = selectedLocale.map { [$0] } ?? locales
     let checks = CatalogChecks(workspace: workspace)
     let docs = DocumentBuilder(workspace: workspace)
-    guard
-      let version = try requestedVersion ?? matches(#"let appVersion = "([^"]+)""#, workspace.root.at("Project.swift").text())
-        .first?[1]
-    else { throw ToolError("Missing appVersion in Project.swift") }
+    let version = try requestedVersion ?? trim(workspace.root.at("VERSION").text())
     try require(fullMatch(#"\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?"#, version), "Invalid site version")
     let films = try checks.films()
     let values = try JSON.read(workspace.root.at("Localization/Web.json"))

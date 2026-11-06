@@ -19,8 +19,7 @@ jobs:
   release:
     runs-on: xcode-27
     env:
-      TUIST_DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
-      TUIST_SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+      SWIFTYCROW_SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
     steps:
       - uses: actions/checkout@v7
       - uses: maxim-lobanov/setup-xcode@v1
@@ -32,9 +31,9 @@ jobs:
         run: |
           set -euo pipefail
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          APP_VERSION="$(grep -E '^let appVersion' Project.swift | sed -E 's/.*"([^"]+)".*/\1/')"
+          APP_VERSION="$(cat VERSION)"
           if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
-            echo "::error::Tag ($TAG_VERSION) does not match Project.swift appVersion ($APP_VERSION). Bump appVersion and retag." >&2
+            echo "::error::Tag ($TAG_VERSION) does not match VERSION ($APP_VERSION). Update VERSION and retag." >&2
             exit 1
           fi
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
@@ -47,10 +46,10 @@ jobs:
         run: |
           set -euo pipefail
           brew install ffmpeg
-          swift test --package-path Tools
-          swift run --package-path Tools swiftycrow-tools check
-          swift run --package-path Tools swiftycrow-tools check-release --version "$VERSION"
-          swift run --package-path Tools swiftycrow-tools site --output "$RUNNER_TEMP/site" --version "$VERSION"
+          mise exec -- swift test --package-path Tools
+          mise exec -- swift run --package-path Tools swiftycrow-tools check
+          mise exec -- swift run --package-path Tools swiftycrow-tools check-release --version "$VERSION"
+          mise exec -- swift run --package-path Tools swiftycrow-tools site --output "$RUNNER_TEMP/site" --version "$VERSION"
           cp web/_headers "$RUNNER_TEMP/site/_headers"
 
       - name: Import Developer ID certificate
@@ -74,53 +73,12 @@ jobs:
           done < <(security list-keychains -d user | sed -E 's/^[[:space:]]*"(.*)"[[:space:]]*$/\1/')
           security list-keychains -d user -s "$KEYCHAIN" "${existing_keychains[@]}"
 
-      - name: Generate Xcode project
+      - name: Build universal app (Developer ID, Release)
         env:
-          TUIST_BUILD_NUMBER: ${{ github.run_number }}
+          SWIFTYCROW_BUILD_NUMBER: ${{ github.run_number }}
         run: |
-          tuist install
-          tuist generate --no-open
-
-      - name: Archive (Developer ID, Release)
-        run: |
-          set -euo pipefail
-          xcodebuild archive \
-            -workspace SwiftyCrow.xcworkspace \
-            -scheme SwiftyCrow \
-            -configuration Release \
-            -destination 'generic/platform=macOS' \
-            -archivePath "$RUNNER_TEMP/SwiftyCrow.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Developer ID Application" \
-            DEVELOPMENT_TEAM="$TUIST_DEVELOPMENT_TEAM" \
-            OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime"
-
-      - name: Export app
-        run: |
-          set -euo pipefail
-          cp -R "$RUNNER_TEMP/SwiftyCrow.xcarchive/Products/Applications/SwiftyCrow.app" "$RUNNER_TEMP/SwiftyCrow.app"
-
-      - name: Re-sign Sparkle nested helpers
-        run: |
-          set -euo pipefail
-          # xcodebuild re-signs Sparkle.framework itself but leaves its nested
-          # helper bundles/binaries (Updater.app, Autoupdate, XPCServices) with
-          # Sparkle's original signature, which notarization rejects. Re-sign
-          # them inside-out with our Developer ID, hardened runtime + timestamp.
-          APP="$RUNNER_TEMP/SwiftyCrow.app"
-          SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
-          sign() {
-            codesign --force --options runtime --timestamp \
-              --preserve-metadata=entitlements \
-              --sign "Developer ID Application" "$1"
-          }
-          sign "$SPARKLE/Versions/Current/XPCServices/Installer.xpc"
-          sign "$SPARKLE/Versions/Current/XPCServices/Downloader.xpc"
-          sign "$SPARKLE/Versions/Current/Autoupdate"
-          sign "$SPARKLE/Versions/Current/Updater.app"
-          sign "$SPARKLE"
-          sign "$APP"
-          codesign --verify --deep --strict --verbose=2 "$APP"
+          mise run build release
+          ditto DerivedData/Build/Products/Release/SwiftyCrow.app "$RUNNER_TEMP/SwiftyCrow.app"
 
       - name: Create DMG
         run: |
@@ -175,7 +133,8 @@ jobs:
           SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
         run: |
           set -euo pipefail
-          SPARKLE_BIN="$(find Tuist/.build -path '*/Sparkle/bin' -type d | head -1)"
+          SPARKLE_BIN="$PWD/.build/artifacts/sparkle/Sparkle/bin"
+          test -x "$SPARKLE_BIN/generate_appcast"
           mkdir -p "$RUNNER_TEMP/release"
           cp "$RUNNER_TEMP/SwiftyCrow-${{ steps.version.outputs.version }}.dmg" "$RUNNER_TEMP/release/"
           echo "$SPARKLE_PRIVATE_ED_KEY" > "$RUNNER_TEMP/sparkle_ed_private.key"
@@ -198,7 +157,7 @@ jobs:
           # the previous minor (those users already had it). The website /
           # GitHub release show only this version's own section — CHANGELOG.md
           # stays one-section-per-version, no hand-carried notes.
-          swift run --package-path Tools swiftycrow-tools appcast-notes --output "$APPCAST" --version "$VERSION"
+          mise exec -- swift run --package-path Tools swiftycrow-tools appcast-notes --output "$APPCAST" --version "$VERSION"
 
       - name: Build release notes from CHANGELOG
         env:

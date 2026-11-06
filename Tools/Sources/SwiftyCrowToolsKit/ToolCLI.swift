@@ -172,7 +172,7 @@ public struct SwiftyCrowTools: AsyncParsableCommand {
   var output: String?
   @Option(help: "Media directory for an isolated locale preview, containing locale subdirectories.")
   var mediaRoot: String?
-  @Option(help: "Published site version. Defaults to Project.swift.")
+  @Option(help: "Published site version. Defaults to VERSION.")
   var version: String?
   @Option(help: "Compiler-generated .stringsdata directory.")
   var stringsdata: String?

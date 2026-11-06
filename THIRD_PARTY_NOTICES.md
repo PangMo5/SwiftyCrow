@@ -4,7 +4,7 @@
 
 # Third-Party Notices
 
-SwiftyCrow incorporates the open-source components listed below. Swift package entries are pinned to the exact revisions recorded in `Tuist/Package.resolved`; web runtime entries are pinned by the versioned script URLs in `web/releases.html`. Every source link and license text corresponds to the recorded revision.
+SwiftyCrow incorporates the open-source components listed below. Swift package entries are pinned to the exact revisions recorded in `Package.resolved`; web runtime entries are pinned by the versioned script URLs in `web/releases.html`. Every source link and license text corresponds to the recorded revision.
 
 These notices apply only to the named third-party components. SwiftyCrow itself is licensed under `AGPL-3.0-only` as described in `LICENSE`.
 

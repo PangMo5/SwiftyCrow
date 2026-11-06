@@ -17,13 +17,13 @@ results. It waits for fonts and browser layout, rejects clipped pages, and write
 SVG protection rectangles come from the independent DOM, never from recognition.
 No SwiftyCrow module or generated translation is used to author expectations.
 
-Build the current app with XcodeBuildMCP before packaging a probe:
+Build the current app with SwiftPM before packaging a probe:
 
 ```sh
-xcodebuildmcp macos build --workspace-path "$PWD/SwiftyCrow.xcworkspace" \
-  --scheme SwiftyCrow --configuration Debug --derived-data-path "$PWD/DerivedData"
+mise run build
 bash DemoLab/Quality/BuildProbe.sh capture /absolute/new/CaptureProbe.app
 bash DemoLab/Quality/BuildProbe.sh tests /absolute/new/Tests.app
+bash DemoLab/Quality/BuildProbe.sh execution-tests /absolute/new/ExecutionTests.app
 bash DemoLab/Quality/BuildNativeApp.sh /absolute/new/NativeQA.app
 ```
 
@@ -34,6 +34,10 @@ support files. Source snapshots prevent edits during compilation from changing
 the test inputs. Compare the module and executable SHA-256 hashes on both sides
 of the Tart share before running.
 
+Keep executor and AppKit checks in the separate execution-tests process. TCA's
+TestStore replaces Swift's process-wide executor, so those checks cannot share a
+process with TestStore tests. SwiftPM uses separate test bundles for the same reason.
+
 Run in `swiftycrow-demo`, with guest paths adjusted to the configured share:
 
 ```sh
@@ -43,6 +47,9 @@ tart exec swiftycrow-demo \
 tart exec swiftycrow-demo env SWIFTYCROW_TEST_TEMP_ROOT=/guest/writable-temp \
   /guest/Tests.app/Contents/MacOS/swiftpm-testing-helper \
   /guest/new-tests.xml
+tart exec swiftycrow-demo \
+  /guest/ExecutionTests.app/Contents/MacOS/swiftpm-testing-helper \
+  /guest/new-execution-tests.xml
 ```
 
 `corpus.json` uses `CaptureQualityCase` from `Tests/CaptureQualitySelection.swift`.

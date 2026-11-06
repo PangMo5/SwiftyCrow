@@ -201,7 +201,7 @@ struct Workspace: Sendable {
 
   static func discover(_ explicit: String?) throws -> Self {
     var root = URL(fileURLWithPath: explicit ?? FileManager.default.currentDirectoryPath).standardizedFileURL
-    while !root.at("Resources/Localizable.xcstrings").exists || !root.at("Project.swift").exists {
+    while !root.at("Resources/Localizable.xcstrings").exists || !root.at("VERSION").exists {
       let parent = root.deletingLastPathComponent()
       try require(parent != root, "Could not locate the SwiftyCrow repository")
       root = parent

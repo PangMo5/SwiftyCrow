@@ -62,13 +62,13 @@ DerivedData/
 *.xcodeproj
 *.xcworkspace
 .jj/
+.build/
+.swiftpm/
 
-### Tuist derived files ###
-graph.dot
+### Local tooling ###
+# Legacy generated output can remain in existing checkouts.
 Derived/
-
-### Tuist managed dependencies ###
-Tuist/.build
+graph.dot
 .nvim/xcodebuild
 buildServer.json
 .codanna/index/tantivy
@@ -86,9 +86,3 @@ buildServer.json
 /dist/
 /.wrangler/
 
-### Demo recorder build products ###
-DemoLab/Recorder/.build/
-DemoLab/Recorder/.swiftpm/
-
-Tools/.build/
-Tools/.swiftpm/

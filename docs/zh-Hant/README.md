@@ -151,21 +151,22 @@ SwiftyCrow 使用 Apple 的裝置端翻譯框架。出現**「無法翻譯」**�
 ### 環境需求
 
 - 包含 Swift 6.4.2 與 macOS 27.2 SDK 的 Xcode 27.2
-- [mise](https://mise.jdx.dev)（透過 `.mise.toml` 管理 Tuist 與 SwiftFormat）
+- [mise](https://mise.jdx.dev)（透過 `.mise.toml` 管理 SwiftFormat 與建置工作）
 - 用於版本控制的 [Jujutsu](https://docs.jj-vcs.dev)（`jj`）
 
 <a id="building-from-source"></a>
 ### 從原始碼建置
 
 ```sh
-export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
-export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs the pinned Tuist and SwiftFormat versions
-mise run generate          # resolves SPM dependencies and generates the workspace
-open SwiftyCrow.xcworkspace
+export SWIFTYCROW_DEVELOPMENT_IDENTITY="Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+mise install               # installs the pinned SwiftFormat version
+mise run generate          # resolves SPM dependencies
+mise run build             # builds and signs the Debug app
+mise run test              # runs the app tests through SwiftPM
+open Package.swift         # opens the package in Xcode
 ```
 
-`.xcode-version` 選擇 Xcode 27.2。mise 為此專案設定對應的 `DEVELOPER_DIR`，不會更改整台機器的 Xcode 選擇。無法啟用 mise shell 整合時，請使用 `mise exec -- swift ...` 或 `mise exec -- xcodebuild ...`。SDK 依所選 Xcode 而定，App 支援的最低 macOS 版本仍為 26.0。
+`.xcode-version` 選擇 Xcode 27.2。mise 為此專案設定對應的 `DEVELOPER_DIR`，不會更改整台機器的 Xcode 選擇。無法啟用 mise shell 整合時，請使用 `mise exec -- swift ...`。SDK 依所選 Xcode 而定，App 支援的最低 macOS 版本仍為 26.0。
 
 執行 `mise run format` 套用 Airbnb 樣式，執行 `mise run format:check` 進行檢查。上游設定的修訂版本記錄於 `.swiftformat`。
 
@@ -174,15 +175,18 @@ open SwiftyCrow.xcworkspace
 
 在與 Git 共用工作目錄的儲存庫中使用 `jj`。現有 Git 歷史與 GitHub 遠端儲存庫仍可使用。對於新複製的儲存庫，先執行一次 `jj git init --colocate`，再執行 `jj bookmark track main@origin`。使用 `jj status` 與 `jj diff` 查看變更，使用 `jj new -m "description"` 開始新工作，工作書籤名稱使用 `pangmo5/` 前綴。使用 `jj git fetch` 更新遠端資訊。
 
-Debug 建置使用 Apple Development 簽章。請將 `TUIST_DEVELOPMENT_TEAM` 設為開發憑證所屬的團隊。保持簽章一致，可讓 macOS 在重新建置後繼續保留螢幕錄製授權。將這些值寫入 shell 設定或本機 `.mise.local.toml`：
+Debug 建置使用 Apple Development 簽章。請將 `SWIFTYCROW_DEVELOPMENT_IDENTITY` 設為開發憑證的名稱或指紋。一致的簽章與獨立的 Debug bundle ID 可在重新建置後保留螢幕錄製授權。將這些值寫入 shell 設定或本機 `.mise.local.toml`：
 
 ```toml
 [env]
-TUIST_DEVELOPMENT_TEAM     = "YOUR_TEAM_ID"
-TUIST_SPARKLE_PUBLIC_ED_KEY = "YOUR_SPARKLE_PUBLIC_KEY"
+SWIFTYCROW_DEVELOPMENT_IDENTITY = "Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+# Optional when several distribution certificates are installed:
+# SWIFTYCROW_DISTRIBUTION_IDENTITY = "Developer ID Application: YOUR_NAME (TEAM_ID)"
 ```
 
-`TUIST_SPARKLE_PUBLIC_ED_KEY` 提供產生專案時寫入 `Info.plist` 的公開驗證金鑰。金鑰必須有效，並與更新來源的簽章金鑰相符。使用官方更新來源時，請使用發布版 App `Contents/Info.plist` 中的 `SUPublicEDKey`。分支版本需要自己的更新來源與相符的公開金鑰。
+`App/Info.plist` 包含官方更新來源的公開驗證金鑰。分支版本需要自己的更新來源與相符的公開金鑰；設定 `SWIFTYCROW_SPARKLE_PUBLIC_ED_KEY` 可在封裝 App 時替換金鑰。私密簽章金鑰保存在儲存庫之外。
+
+`VERSION` 是 App 與網站版本的統一來源。`mise run build release` 建置使用 Developer ID 簽章的 arm64/x86_64 通用 App。Debug 與 Release App 分別輸出至 `DerivedData/Build/Products/Debug` 和 `DerivedData/Build/Products/Release`。
 
 <a id="localization-and-site-previews"></a>
 ### 在地化與網站預覽
@@ -199,7 +203,7 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 <a id="tech-stack"></a>
 ### 技術組成
 
-- 由 **Tuist** 產生的工作空間（`Project.swift`、`Tuist/Package.swift`）
+- **Swift Package Manager** 管理 App 模組、相依項目與測試；Apple 工具不需 Xcode 專案即可封裝與簽署 App。
 - 使用 **TCA**（`swift-composable-architecture`）管理 App 與擷取狀態，透過 `@DependencyClient` 注入相依項目。
 - 透過 **swift-sharing** 的 `fileStorage` 方式連接 **swift-toml**。
 - 使用 **Magnet** 註冊全域快速鍵，並提供小型自訂快速鍵輸入控制項。

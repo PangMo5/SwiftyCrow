@@ -17,7 +17,14 @@ extension Notification.Name {
 
 // MARK: - SwiftyCrowApp
 
-@main
+/// The bundle launcher and quality tools share this package's compiled module.
+@MainActor
+public func runSwiftyCrow() {
+  SwiftyCrowApp.main()
+}
+
+// MARK: - SwiftyCrowApp
+
 struct SwiftyCrowApp: App {
 
   // MARK: Internal

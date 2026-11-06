@@ -10,18 +10,19 @@ on:
       - ".swiftformat"
       - ".mise.toml"
       - ".xcode-version"
-      - "scripts/xcode-env.sh"
+      - "scripts/**"
+      - "App/**"
+      - "Package.resolved"
+      - "VERSION"
       - "Tools/**"
       - "DemoLab/**"
       - "Localization/**"
-      - "Resources/Localizable.xcstrings"
-      - "Resources/Marketing/**"
+      - "Resources/**"
       - "docs/**"
       - "README.md"
       - "CHANGELOG.md"
       - "web/**"
-      - "Project.swift"
-      - ".github/workflows/tools.yml"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 permissions:
@@ -48,9 +49,12 @@ jobs:
       - run: mise run generate
       - name: Test app and recorder with the selected Xcode SDK
         run: |
-          xcodebuild test -workspace SwiftyCrow.xcworkspace -scheme SwiftyCrow \
-            -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
-          swift test --package-path DemoLab/Recorder
+          mise run test
+          mise exec -- swift test --package-path DemoLab/Recorder
+      - name: Verify the app bundle
+        env:
+          SWIFTYCROW_DEVELOPMENT_IDENTITY: "-"
+        run: mise run build
 
   portable-tools:
     runs-on: ubuntu-latest
@@ -65,5 +69,5 @@ jobs:
           swift run --package-path Tools swiftycrow-tools check
           swift run --package-path Tools swiftycrow-tools docs --check
           swift run --package-path Tools swiftycrow-tools verify-media --source DemoLab/Edits/review-bundle.json --portable
-          swift run --package-path Tools swiftycrow-tools check-release --allow-unreleased --version "$(sed -nE 's/^let appVersion = "([^"]+)"/\1/p' Project.swift)"
+          swift run --package-path Tools swiftycrow-tools check-release --allow-unreleased --version "$(cat VERSION)"
           swift run --package-path Tools swiftycrow-tools site --output /tmp/swiftycrow-site
