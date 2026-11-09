@@ -141,22 +141,23 @@ every key, its default, and the shortcut syntax.
 ### Requirements
 
 - Xcode 27.2 with Swift 6.4.2 and the macOS 27.2 SDK
-- [mise](https://mise.jdx.dev) (manages Tuist and SwiftFormat via `.mise.toml`)
+- [mise](https://mise.jdx.dev) (manages SwiftFormat and build tasks via `.mise.toml`)
 - [Jujutsu](https://docs.jj-vcs.dev) (`jj`) for version control
 
 ### Building from source
 
 ```sh
-export TUIST_DEVELOPMENT_TEAM=YOUR_TEAM_ID
-export TUIST_SPARKLE_PUBLIC_ED_KEY=YOUR_SPARKLE_PUBLIC_KEY
-mise install               # installs the pinned Tuist and SwiftFormat versions
-mise run generate          # resolves SPM dependencies and generates the workspace
-open SwiftyCrow.xcworkspace
+export SWIFTYCROW_DEVELOPMENT_IDENTITY="Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+mise install               # installs the pinned SwiftFormat version
+mise run generate          # resolves SPM dependencies
+mise run build             # builds and signs the Debug app
+mise run test              # runs the app tests through SwiftPM
+open Package.swift         # opens the package in Xcode
 ```
 
 `.xcode-version` selects Xcode 27.2. mise exports the matching `DEVELOPER_DIR`
 for this project without changing the machine-wide Xcode selection. Use
-`mise exec -- swift ...` or `mise exec -- xcodebuild ...` when mise shell
+`mise exec -- swift ...` when mise shell
 activation is unavailable. The SDK follows the selected Xcode; the app's
 minimum supported macOS version remains 26.0.
 
@@ -172,20 +173,24 @@ start work with `jj new -m "description"`, and name task bookmarks with the
 `pangmo5/` prefix. Update remotes with `jj git fetch`.
 
 The project uses Apple Development signing for Debug builds. Set
-`TUIST_DEVELOPMENT_TEAM` to the team associated with your development certificate.
-Consistent signing lets macOS retain the app's Screen Recording grant across
+`SWIFTYCROW_DEVELOPMENT_IDENTITY` to your development certificate's name or fingerprint.
+Consistent signing and the separate Debug bundle ID preserve the app's Screen Recording grant across
 rebuilds. Persist the values in your shell profile or a local `.mise.local.toml`:
 
 ```toml
 [env]
-TUIST_DEVELOPMENT_TEAM     = "YOUR_TEAM_ID"
-TUIST_SPARKLE_PUBLIC_ED_KEY = "YOUR_SPARKLE_PUBLIC_KEY"
+SWIFTYCROW_DEVELOPMENT_IDENTITY = "Apple Development: YOUR_NAME (CERTIFICATE_ID)"
+# Optional when several distribution certificates are installed:
+# SWIFTYCROW_DISTRIBUTION_IDENTITY = "Developer ID Application: YOUR_NAME (TEAM_ID)"
 ```
 
-`TUIST_SPARKLE_PUBLIC_ED_KEY` supplies the public verification key embedded in
-`Info.plist` when the project is generated. It must be valid and match the update
-feed's signing key. For the official feed, use `SUPublicEDKey` from the released
-app's `Contents/Info.plist`. A fork needs its own feed and matching public key.
+`App/Info.plist` contains the official update feed's public verification key.
+A fork needs its own feed and matching public key; set `SWIFTYCROW_SPARKLE_PUBLIC_ED_KEY`
+to override the key when packaging the app. Private signing keys remain outside the repository.
+
+`VERSION` is the source of truth for the app and website version. `mise run build release`
+builds a universal arm64/x86_64 app with Developer ID signing. Debug and Release apps
+are written to `DerivedData/Build/Products/Debug` and `DerivedData/Build/Products/Release`.
 
 ### Localization and site previews
 
@@ -200,7 +205,7 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 
 ### Tech stack
 
-- **Tuist** generated workspace (`Project.swift`, `Tuist/Package.swift`)
+- **Swift Package Manager** for the app module, dependencies, and tests; Apple tools package and sign the app without an Xcode project
 - **TCA** (`swift-composable-architecture`) for app + capture state, with dependencies wired through `@DependencyClient`
 - **swift-sharing** with a `fileStorage` strategy bridged to **swift-toml**
 - **Magnet** for global hotkey registration, plus a small custom recorder view

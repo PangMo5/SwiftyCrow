@@ -33,7 +33,7 @@ may require another grant.
 
 ## Prepare the real app and source
 
-1. Build SwiftyCrow with the repository's Tuist manifest and localization gates.
+1. Build SwiftyCrow with `mise run build`, including the Swift package and localization gates.
    Keep the Debug bundle identifier separate from an installed release.
 2. Record the app archive hash, source revision and dirty-state boundary. A
    marketing version alone does not identify a development capture.

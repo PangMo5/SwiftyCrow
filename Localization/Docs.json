@@ -62,6 +62,13 @@
     "zh-Hans": "**文档结构：** 识别截取页面中的标题、正文、图片说明和边栏文字。",
     "zh-Hant": "**文件結構：** 辨識擷取頁面中的標題、內文、圖片說明和側欄文字。"
   },
+  "06fa45bb25f43b9c": {
+    "en": "{0} contains the official update feed's public verification key. A fork needs its own feed and matching public key; set {1} to override the key when packaging the app. Private signing keys remain outside the repository.",
+    "ja": "{0}には公式更新フィードの公開検証キーを記録しています。フォークには独自のフィードと対応する公開キーが必要です。{1}を設定すると、アプリのパッケージ作成時にキーを変更できます。秘密署名キーはリポジトリの外で管理します。",
+    "ko": "{0}에는 공식 업데이트 피드의 공개 검증 키가 들어 있어요. 포크에는 자체 피드와 그에 맞는 공개 키가 필요하며, {1}을 설정하면 앱을 패키징할 때 키를 바꿀 수 있어요. 비공개 서명 키는 저장소 밖에서 관리해요.",
+    "zh-Hans": "{0} 包含官方更新源的公开验证密钥。分支版本需要自己的更新源及匹配的公钥；设置 {1} 可在打包应用时替换公钥。私有签名密钥保存在仓库之外。",
+    "zh-Hant": "{0} 包含官方更新來源的公開驗證金鑰。分支版本需要自己的更新來源與相符的公開金鑰；設定 {1} 可在封裝 App 時替換金鑰。私密簽章金鑰保存在儲存庫之外。"
+  },
   "072e1bac397a8500": {
     "en": "**Live and Capture no longer spin without translating:** Using either one after the app had sat idle could leave a spinner running forever, with no translation, until you closed it and tried again. macOS unloads its text-recognition model when it needs the memory, and reloading it takes tens of seconds — that wait was landing on the capture you had just asked for. SwiftyCrow now loads the model in the background at launch, on wake, and while you drag out a region, so the wait is usually gone before you finish selecting. When it can't be avoided, the capture window and the overlay say **Preparing text recognition** instead of showing a bare spinner.",
     "ja": "**ライブ翻訳とキャプチャが翻訳せず待ち続ける問題を修正：** アプリをしばらく使わなかった後、閉じてやり直すまで待機表示だけが続くことがありました。macOSはメモリが必要になると文字認識モデルを解放し、再読み込みには数十秒かかります。起動時、スリープ解除時、範囲の選択中にモデルを先読みするようにしたため、多くの場合は選択が終わる前に準備できます。待つ必要があるときは、単なる待機表示ではなく**文字認識を準備しています**と案内します。",
@@ -173,6 +180,13 @@
     "ko": "**메뉴 막대 앱:** Dock 아이콘이 없어요. 창을 열지 않아도 한 번 캡처·실시간 전환·표시 전환 전역 단축키를 사용할 수 있어요.",
     "zh-Hans": "**菜单栏应用：** 没有 Dock 图标，即使没有打开窗口，也能使用单次截图、实时切换和显示切换的全局快捷键。",
     "zh-Hant": "**選單列 App：** 沒有 Dock 圖示，即使未開啟視窗，也能使用單次擷取、即時切換與顯示切換的全域快速鍵。"
+  },
+  "15f89d541514c50c": {
+    "en": "{0} selects Xcode 27.2. mise exports the matching {1} for this project without changing the machine-wide Xcode selection. Use {2} when mise shell activation is unavailable. The SDK follows the selected Xcode; the app's minimum supported macOS version remains 26.0.",
+    "ja": "{0}でXcode 27.2を選択します。miseはマシン全体のXcode選択を変更せず、このプロジェクトに対応する{1}を設定します。miseのシェル連携が利用できない場合は{2}を使ってください。SDKは選択したXcodeに従い、アプリの最小対応macOSバージョンは26.0のままです。",
+    "ko": "{0}에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 {1}를 설정해요. mise 셸 활성화를 사용할 수 없다면 {2}를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.",
+    "zh-Hans": "{0} 选择 Xcode 27.2。mise 为此项目设置对应的 {1}，不会更改整台机器的 Xcode 选择。无法启用 mise shell 集成时，请使用 {2}。SDK 跟随所选 Xcode，应用支持的最低 macOS 版本仍为 26.0。",
+    "zh-Hant": "{0} 選擇 Xcode 27.2。mise 為此專案設定對應的 {1}，不會更改整台機器的 Xcode 選擇。無法啟用 mise shell 整合時，請使用 {2}。SDK 依所選 Xcode 而定，App 支援的最低 macOS 版本仍為 26.0。"
   },
   "163d2438d7b04a87": {
     "en": "**Scheduled update checks:** A new **Settings → Updates** tab lets you enable automatic background checks and choose an interval of every hour, day, or week. New versions are announced with a notification. Installing stays your choice.",
@@ -496,6 +510,13 @@
     "zh-Hans": "**Homebrew**（推荐）：",
     "zh-Hant": "**Homebrew**（建議）："
   },
+  "4a128b92f6cd8d84": {
+    "en": "{0} is the source of truth for the app and website version. {1} builds a universal arm64/x86_64 app with Developer ID signing. Debug and Release apps are written to {2} and {3}.",
+    "ja": "{0}はアプリとウェブサイトのバージョンの正本です。{1}はDeveloper IDで署名したarm64/x86_64ユニバーサルアプリをビルドします。DebugアプリとReleaseアプリの出力先は、それぞれ{2}と{3}です。",
+    "ko": "{0}을 앱과 웹사이트 버전의 기준으로 사용해요. {1}는 Developer ID로 서명한 arm64/x86_64 유니버설 앱을 빌드해요. Debug 앱과 Release 앱은 각각 {2}와 {3}에 저장돼요.",
+    "zh-Hans": "{0} 是应用和网站版本的统一来源。{1} 构建使用 Developer ID 签名的 arm64/x86_64 通用应用。Debug 和 Release 应用分别输出到 {2} 和 {3}。",
+    "zh-Hant": "{0} 是 App 與網站版本的統一來源。{1} 建置使用 Developer ID 簽章的 arm64/x86_64 通用 App。Debug 與 Release App 分別輸出至 {2} 和 {3}。"
+  },
   "4a247bd1f5194cc2": {
     "en": "Go to System Settings and install models for both languages",
     "ja": "システム設定で両方の言語のモデルをインストールしてください。",
@@ -755,13 +776,6 @@
     "zh-Hans": "**常见语言组合：**",
     "zh-Hant": "**常見語言組合：**"
   },
-  "62f92ce5743eac7c": {
-    "en": "The project uses Apple Development signing for Debug builds. Set {0} to the team associated with your development certificate. Consistent signing lets macOS retain the app's Screen Recording grant across rebuilds. Persist the values in your shell profile or a local {1}:",
-    "ja": "DebugビルドはApple Development証明書で署名します。{0}には開発証明書に対応するチームを指定してください。同じ署名を使い続けると、再ビルド後もmacOSが画面収録の許可を維持できます。値はシェルのプロファイルかローカルの{1}に保存してください。",
-    "ko": "Debug 빌드는 Apple Development 인증서로 서명해요. {0}에 개발 인증서와 연결된 팀을 지정해 주세요. 같은 서명을 유지하면 다시 빌드해도 macOS가 화면 기록 권한을 유지할 수 있어요. 셸 프로필이나 로컬 {1}에 값을 저장해 두세요.",
-    "zh-Hans": "Debug 构建使用 Apple Development 签名。请将 {0} 设为开发证书所属的团队。保持签名一致，可让 macOS 在重新构建后继续保留屏幕录制授权。将这些值写入 shell 配置或本地 {1}：",
-    "zh-Hant": "Debug 建置使用 Apple Development 簽章。請將 {0} 設為開發憑證所屬的團隊。保持簽章一致，可讓 macOS 在重新建置後繼續保留螢幕錄製授權。將這些值寫入 shell 設定或本機 {1}："
-  },
   "63727550806f998a": {
     "en": "**About tab:** Version, author, GitHub link, and open-source credits.",
     "ja": "**情報タブ：** バージョン、作成者、GitHubリンク、オープンソース情報を確認できます。",
@@ -937,6 +951,13 @@
     "zh-Hans": "文档",
     "zh-Hant": "文件"
   },
+  "7b4edee74c5f26fd": {
+    "en": "The project uses Apple Development signing for Debug builds. Set {0} to your development certificate's name or fingerprint. Consistent signing and the separate Debug bundle ID preserve the app's Screen Recording grant across rebuilds. Persist the values in your shell profile or a local {1}:",
+    "ja": "DebugビルドはApple Development証明書で署名します。{0}には開発証明書の名前またはフィンガープリントを設定してください。同じ署名とDebug専用のバンドルIDを使い続けることで、再ビルド後も画面収録の許可を維持できます。値はシェルのプロファイルかローカルの{1}に保存してください：",
+    "ko": "Debug 빌드는 Apple Development 인증서로 서명해요. {0}에 개발 인증서의 이름이나 지문을 지정해 주세요. 같은 서명과 별도의 Debug bundle ID를 유지하면 다시 빌드해도 화면 기록 권한을 유지할 수 있어요. 셸 프로필이나 로컬 {1}에 값을 저장해 두세요.",
+    "zh-Hans": "Debug 构建使用 Apple Development 签名。请将 {0} 设为开发证书的名称或指纹。一致的签名和独立的 Debug bundle ID 可在重新构建后保留屏幕录制授权。将这些值写入 shell 配置或本地 {1}：",
+    "zh-Hant": "Debug 建置使用 Apple Development 簽章。請將 {0} 設為開發憑證的名稱或指紋。一致的簽章與獨立的 Debug bundle ID 可在重新建置後保留螢幕錄製授權。將這些值寫入 shell 設定或本機 {1}："
+  },
   "7bbb1915d8b26eeb": {
     "en": "The overview shows how to capture screen text, translate it, and copy the result into a note. The feature videos below demonstrate examples of image copying, live updates, a separate translation window, and vertical text recognition.",
     "ja": "概要動画では、画面の文字をキャプチャして翻訳し、メモにコピーする流れを紹介します。下の機能別動画では、画像のコピー、ライブ更新、別の翻訳ウインドウ、縦書き認識の活用例をご覧いただけます。",
@@ -992,13 +1013,6 @@
     "ko": "**화면에서 바로 번역:** 파일로 저장하거나 글을 다른 앱에 옮기지 않고 필요한 영역을 선택해요.",
     "zh-Hans": "**从屏幕翻译：** 直接选择相关区域，无需先保存文件或将文字移入其他应用。",
     "zh-Hant": "**從螢幕翻譯：** 直接選取相關區域，無須先儲存檔案或將文字移入其他 App。"
-  },
-  "8152d73887996d24": {
-    "en": "[mise]({0}) (manages Tuist and SwiftFormat via {1})",
-    "ja": "[mise]({0})（{1}でTuistとSwiftFormatを管理）",
-    "ko": "[mise]({0}) ({1}로 Tuist와 SwiftFormat 관리)",
-    "zh-Hans": "[mise]({0})（通过 {1} 管理 Tuist 和 SwiftFormat）",
-    "zh-Hant": "[mise]({0})（透過 {1} 管理 Tuist 與 SwiftFormat）"
   },
   "8153ad883694933d": {
     "en": "Supported on macOS 26+ (the language list changes by macOS version)",
@@ -1062,13 +1076,6 @@
     "ko": "단축키 표기법",
     "zh-Hans": "快捷键语法",
     "zh-Hant": "快速鍵語法"
-  },
-  "8b723be97e99f32e": {
-    "en": "{0} selects Xcode 27.2. mise exports the matching {1} for this project without changing the machine-wide Xcode selection. Use {2} or {3} when mise shell activation is unavailable. The SDK follows the selected Xcode; the app's minimum supported macOS version remains 26.0.",
-    "ja": "{0}でXcode 27.2を選択します。miseはマシン全体のXcode選択を変更せず、このプロジェクトに対応する{1}を設定します。miseのシェル連携が利用できない場合は、{2}または{3}を使ってください。SDKは選択したXcodeに従い、アプリの最小対応macOSバージョンは26.0のままです。",
-    "ko": "{0}에서 Xcode 27.2를 선택해요. mise는 시스템 전체의 Xcode 설정을 바꾸지 않고 이 프로젝트에 맞는 {1}를 설정해요. mise 셸 활성화를 사용할 수 없다면 {2} 또는 {3}를 사용해 주세요. SDK는 선택한 Xcode를 따르며, 앱이 지원하는 최소 macOS 버전은 26.0으로 유지돼요.",
-    "zh-Hans": "{0} 选择 Xcode 27.2。mise 为此项目设置对应的 {1}，不会更改整台机器的 Xcode 选择。无法启用 mise shell 集成时，请使用 {2} 或 {3}。SDK 跟随所选 Xcode，应用支持的最低 macOS 版本仍为 26.0。",
-    "zh-Hant": "{0} 選擇 Xcode 27.2。mise 為此專案設定對應的 {1}，不會更改整台機器的 Xcode 選擇。無法啟用 mise shell 整合時，請使用 {2} 或 {3}。SDK 依所選 Xcode 而定，App 支援的最低 macOS 版本仍為 26.0。"
   },
   "8d59829c1e15afe1": {
     "en": "Usage",
@@ -1153,6 +1160,13 @@
     "ko": "오류 메시지에서 SwiftyCrow가 감지한 언어를 확인해 주세요.",
     "zh-Hans": "在错误信息中确认 SwiftyCrow 检测到的语言。",
     "zh-Hant": "在錯誤訊息中確認 SwiftyCrow 偵測到的語言。"
+  },
+  "96c6047f11792354": {
+    "en": "**Swift Package Manager** for the app module, dependencies, and tests; Apple tools package and sign the app without an Xcode project",
+    "ja": "**Swift Package Manager**でアプリモジュール、依存関係、テストを管理。AppleのツールがXcodeプロジェクトを使わずにアプリをパッケージ化して署名します。",
+    "ko": "**Swift Package Manager**로 앱 모듈, 의존성, 테스트를 관리하며, Apple 도구로 Xcode 프로젝트 없이 앱을 패키징하고 서명해요.",
+    "zh-Hans": "**Swift Package Manager** 管理应用模块、依赖和测试；Apple 工具无需 Xcode 项目即可打包和签名应用。",
+    "zh-Hant": "**Swift Package Manager** 管理 App 模組、相依項目與測試；Apple 工具不需 Xcode 專案即可封裝與簽署 App。"
   },
   "9725a3e0b18b80d1": {
     "en": "**Sparkle** for in-app updates",
@@ -1854,13 +1868,6 @@
     "zh-Hans": "设置保存在 {0}，按应用的设置页分为 {1}、{2}、{3}、{4} 和 {5} 表。应用内的修改与手动编辑文件的更改会保持同步。",
     "zh-Hant": "設定儲存在 {0}，依 App 的設定頁分為 {1}、{2}、{3}、{4} 和 {5} 資料表。App 內的修改與手動編輯檔案的變更會保持同步。"
   },
-  "d82272c023b200d8": {
-    "en": "**Tuist** generated workspace ({0}, {1})",
-    "ja": "**Tuist**で生成するワークスペース（{0}、{1}）",
-    "ko": "**Tuist**로 생성하는 워크스페이스 ({0}, {1})",
-    "zh-Hans": "由 **Tuist** 生成的工作区（{0}、{1}）",
-    "zh-Hant": "由 **Tuist** 產生的工作空間（{0}、{1}）"
-  },
   "d8f5e5cf58bf91a1": {
     "en": "\"Unable to translate\" or a missing-model hint",
     "ja": "翻訳エラーやモデル未インストールの案内",
@@ -2050,6 +2057,13 @@
     "zh-Hans": "本参考以 {0} 为准。已发布版本的设置请查看对应[发布标签]({1})中的此文件。",
     "zh-Hant": "這份參考以 {0} 為準。已發布版本的設定請查看對應[發布標籤]({1})中的此檔案。"
   },
+  "ec99ccde7e5adbe9": {
+    "en": "[mise]({0}) (manages SwiftFormat and build tasks via {1})",
+    "ja": "[mise]({0})（{1}でSwiftFormatとビルドタスクを管理）",
+    "ko": "[mise]({0}) ({1}로 SwiftFormat과 빌드 작업 관리)",
+    "zh-Hans": "[mise]({0})（通过 {1} 管理 SwiftFormat 和构建任务）",
+    "zh-Hant": "[mise]({0})（透過 {1} 管理 SwiftFormat 與建置工作）"
+  },
   "ed5a4d0f9e5589ec": {
     "en": "**For Auto source detection:**",
     "ja": "**原文の自動検出を使う場合：**",
@@ -2217,12 +2231,5 @@
     "ko": "모델 설치 후 저장 공간이 부족할 때",
     "zh-Hans": "安装模型后存储空间不足",
     "zh-Hant": "安裝模型後儲存空間不足"
-  },
-  "ffa6abf73eeebc6c": {
-    "en": "{0} supplies the public verification key embedded in {1} when the project is generated. It must be valid and match the update feed's signing key. For the official feed, use {2} from the released app's {3}. A fork needs its own feed and matching public key.",
-    "ja": "{0}は、プロジェクト生成時に{1}へ埋め込む公開検証キーです。有効なキーで、更新フィードの署名キーと一致する必要があります。公式フィードを使う場合は、リリース済みアプリの{3}にある{2}を使ってください。フォークには独自のフィードと対応する公開キーが必要です。",
-    "ko": "{0}는 프로젝트를 생성할 때 {1}에 넣을 공개 검증 키예요. 유효한 키여야 하며 업데이트 피드의 서명 키와 일치해야 해요. 공식 피드를 사용한다면 배포된 앱의 {3}에 있는 {2} 값을 사용해 주세요. 포크에는 자체 피드와 그에 맞는 공개 키가 필요해요.",
-    "zh-Hans": "{0} 提供生成项目时写入 {1} 的公开验证密钥。该密钥必须有效，并与更新源的签名密钥匹配。使用官方更新源时，请使用发布版应用 {3} 中的 {2}。分支版本需要自己的更新源及匹配的公钥。",
-    "zh-Hant": "{0} 提供產生專案時寫入 {1} 的公開驗證金鑰。金鑰必須有效，並與更新來源的簽章金鑰相符。使用官方更新來源時，請使用發布版 App {3} 中的 {2}。分支版本需要自己的更新來源與相符的公開金鑰。"
   }
 }

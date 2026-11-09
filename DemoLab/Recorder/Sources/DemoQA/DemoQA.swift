@@ -348,7 +348,7 @@ final class SceneDriver {
       "launchArguments": ["-AppleLanguages", "(\(language))", "-AppleLocale", locale],
       "appPath": appURL.path,
       "appExecutableSHA256": try digest(executable),
-      "appDebugDylibSHA256": try digest(appURL.appendingPathComponent("Contents/MacOS/SwiftyCrow.debug.dylib")),
+      "appModuleSHA256": try digest(appURL.appendingPathComponent("Contents/Frameworks/libSwiftyCrow.dylib")),
       "appArchivePath": appArchive?.path ?? "not provided",
       "appArchiveSHA256": try appArchive.map(digest) ?? "not provided",
       "sourceSHA256": try digest(source),

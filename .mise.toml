@@ -1,5 +1,4 @@
 [tools]
-tuist = "4.214.1"
 swiftformat = "0.64.5"
 
 [env]
@@ -14,5 +13,13 @@ description = "Check Swift formatting without changing files"
 run = "swiftformat --lint ."
 
 [tasks.generate]
-description = "Resolve dependencies and generate the Xcode workspace"
-run = ["tuist install", "tuist generate --no-open"]
+description = "Resolve the Swift package dependencies"
+run = "swift package resolve"
+
+[tasks.build]
+description = "Build and sign the macOS app (debug by default; accepts release)"
+run = "bash scripts/build-app.sh"
+
+[tasks.test]
+description = "Run the app's Swift package tests"
+run = "swift test"

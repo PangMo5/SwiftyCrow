@@ -9,7 +9,7 @@
 --rules fileHeader
 
 # Exclude checkout directories for common package managers
---exclude Carthage,Pods,.build,.swiftpm,.jj,Derived,DerivedData,Tuist/.build
+--exclude Carthage,Pods,.build,.swiftpm,.jj,Derived,DerivedData
 
 # options
 --swift-version 6.4
