@@ -937,6 +937,13 @@
     "zh-Hans": "请提供 macOS 版本、语言组合和应用中显示的完整错误信息。",
     "zh-Hant": "請提供 macOS 版本、語言組合與 App 中顯示的完整錯誤訊息。"
   },
+  "79a2afd2cdb14e0d": {
+    "en": "If you find SwiftyCrow useful, you can support its development with a coffee.",
+    "ja": "SwiftyCrowが役に立ったら、コーヒー1杯分の応援で開発を支援できます。",
+    "ko": "SwiftyCrow가 도움이 됐다면 커피 한 잔으로 개발을 후원할 수 있어요.",
+    "zh-Hans": "如果 SwiftyCrow 对你有帮助，可以请我喝杯咖啡，支持后续开发。",
+    "zh-Hant": "如果 SwiftyCrow 對你有幫助，歡迎請我喝杯咖啡，支持後續開發。"
+  },
   "7ad610616409b130": {
     "en": "**Stable {0} ordering:** The config file's sections and keys were written in a non-deterministic order, churning the file on every change. Keys are now written sorted, so edits produce clean, minimal diffs.",
     "ja": "**{0}の並び順を安定化：** 設定のセクションやキーの順序が一定せず、変更のたびにファイル全体が変わる問題を修正しました。キーを並べ替えて保存し、差分を小さく明確に保ちます。",
@@ -1678,6 +1685,13 @@
     "ko": "사용한 패키지의 라이선스와 정확한 소스 리비전은 [THIRD_PARTY_NOTICES.md]({0})에 기록되어 있어요. 이 파일과 라이선스는 배포 앱에도 포함돼요.",
     "zh-Hans": "所用软件包的许可证和确切源码修订记录在 [THIRD_PARTY_NOTICES.md]({0}) 中。该文件和许可证均包含在发布的应用包内。",
     "zh-Hant": "使用的套件授權條款與確切原始碼修訂記錄在 [THIRD_PARTY_NOTICES.md]({0}) 中。此檔案與授權條款均包含在發布的 App 套件內。"
+  },
+  "c3008f19d555dfa2": {
+    "en": "Support development",
+    "ja": "開発への支援",
+    "ko": "개발 후원",
+    "zh-Hans": "支持开发",
+    "zh-Hant": "贊助開發"
   },
   "c32538df0d77293a": {
     "en": "**Pause and resume:** Use the **LIVE** handle to pause or resume, and **×** to close the overlay.",

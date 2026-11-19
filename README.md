@@ -213,6 +213,12 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 - **Apple Vision** for OCR, **Apple Translation** for translation, **ScreenCaptureKit** for capture
 - Source style enforced by the [Airbnb SwiftFormat](https://github.com/airbnb/swift) configuration in `.swiftformat`
 
+## Support development
+
+If you find SwiftyCrow useful, you can support its development with a coffee.
+
+<a href="https://buymeacoffee.com/pangmo5"><img src="https://pangmo5.dev/buy-me-a-coffee.png" alt="Buy Me a Coffee" width="144"></a>
+
 ## License
 
 [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). Copyright (C) 2021-2026 PangMo5.

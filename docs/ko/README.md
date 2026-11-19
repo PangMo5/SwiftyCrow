@@ -211,6 +211,13 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 - 글자 인식은 **Apple Vision**, 번역은 **Apple 번역**, 캡처는 **ScreenCaptureKit**을 사용해요.
 - `.swiftformat`의 [Airbnb SwiftFormat](https://github.com/airbnb/swift) 설정으로 소스 코드 서식을 맞춰요.
 
+<a id="support-development"></a>
+## 개발 후원
+
+SwiftyCrow가 도움이 됐다면 커피 한 잔으로 개발을 후원할 수 있어요.
+
+<a href="https://buymeacoffee.com/pangmo5"><img src="https://pangmo5.dev/buy-me-a-coffee.png" alt="Buy Me a Coffee" width="144"></a>
+
 <a id="license"></a>
 ## 라이선스
 
