@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import CoreGraphics
-import CoreML
 import CoreText
 import Foundation
 import Synchronization
@@ -300,8 +299,11 @@ struct OCRRecoveryTests {
     let input = Array(repeating: weak, count: skippedCount) + [code, context]
     var requests = 0
     let result = try await OCRLineRefiner
-      .refine(input, in: image, language: automaticLanguage ? .auto : .init(code: "en")) { _, request in
+      .refine(input, in: image, language: automaticLanguage ? .auto : .init(code: "en")) { crop, request in
         requests += 1
+        #expect(crop.width == 768)
+        #expect(crop.height == 78)
+        #expect(request.recognitionLevel == .accurate)
         #expect(!request.usesLanguageCorrection)
         return ["let count = 42;"]
       }
@@ -313,7 +315,13 @@ struct OCRRecoveryTests {
     #expect(result.last == context)
   }
 
-  @Test(arguments: [0, 8])
+  @Test(
+    .disabled(
+      if: ProcessInfo.processInfo.environment["SWIFTYCROW_SKIP_NATIVE_OCR_SMOKE"] == "1",
+      "The hosted macOS runner fails inside the Vision OCR model compiler",
+    ),
+    arguments: [0, 8],
+  )
   func `native code reread survives unrelated weak fragments`(_ skippedCount: Int) async throws {
     let context = try rowImage()
     context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
@@ -337,19 +345,7 @@ struct OCRRecoveryTests {
       Array(repeating: weak, count: skippedCount) + [code],
       in: image,
       language: .init(code: "en"),
-    ) { crop, request in
-      // Exercise Vision on the same compute device on developer Macs and CI runners.
-      var request = request
-      let cpu = try #require(request.supportedComputeStageDevices[.main]?.first {
-        if case .cpu = $0 {
-          true
-        } else {
-          false
-        }
-      }, "Vision text recognition must support the CPU for the main compute stage")
-      request.setComputeDevice(cpu, for: .main)
-      return try await OCRLineRefiner.recognize(crop, request: request)
-    }
+    )
     #expect(result.last?.text == "let count = 42;")
     #expect(result.last?.boundingBoxNormalized == code.boundingBoxNormalized)
     #expect(result.prefix(skippedCount).allSatisfy { $0 == weak })

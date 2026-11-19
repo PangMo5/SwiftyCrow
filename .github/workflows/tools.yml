@@ -48,6 +48,9 @@ jobs:
       - uses: jdx/mise-action@v5
       - run: mise run generate
       - name: Test app and recorder with the selected Xcode SDK
+        env:
+          # Remove once this runner can compile the native Vision OCR smoke fixture.
+          SWIFTYCROW_SKIP_NATIVE_OCR_SMOKE: "1"
         run: |
           mise run test
           mise exec -- swift test --package-path DemoLab/Recorder
