@@ -220,14 +220,14 @@ enum OCRLineRefiner {
     return latin && cjk
   }
 
-  // MARK: Private
-
-  private static func recognize(_ image: CGImage, request: RecognizeTextRequest) async throws -> [String] {
+  static func recognize(_ image: CGImage, request: RecognizeTextRequest) async throws -> [String] {
     try await request.perform(on: image).compactMap { observation in
       guard let candidate = observation.topCandidates(1).first, candidate.confidence >= 0.5 else { return nil }
       return candidate.string
     }
   }
+
+  // MARK: Private
 
   /// Re-read only the literal, without changing the sentence around it or
   /// feeding an extremely wide paragraph crop to the recognition model.

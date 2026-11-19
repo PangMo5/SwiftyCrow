@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import CoreGraphics
+import CoreML
 import CoreText
 import Foundation
 import Synchronization
 import Testing
+import Vision
 @testable import SwiftyCrow
 
 struct OCRRecoveryTests {
@@ -335,7 +337,19 @@ struct OCRRecoveryTests {
       Array(repeating: weak, count: skippedCount) + [code],
       in: image,
       language: .init(code: "en"),
-    )
+    ) { crop, request in
+      // Exercise Vision on the same compute device on developer Macs and CI runners.
+      var request = request
+      let cpu = try #require(request.supportedComputeStageDevices[.main]?.first {
+        if case .cpu = $0 {
+          true
+        } else {
+          false
+        }
+      }, "Vision text recognition must support the CPU for the main compute stage")
+      request.setComputeDevice(cpu, for: .main)
+      return try await OCRLineRefiner.recognize(crop, request: request)
+    }
     #expect(result.last?.text == "let count = 42;")
     #expect(result.last?.boundingBoxNormalized == code.boundingBoxNormalized)
     #expect(result.prefix(skippedCount).allSatisfy { $0 == weak })
