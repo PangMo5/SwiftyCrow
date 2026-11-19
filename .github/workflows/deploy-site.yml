@@ -38,14 +38,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: build-site
-  cancel-in-progress: false
+  group: build-site-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     # Match the environment already exercised by the portable-tools job.
-    container: swift:6.4-noble
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -54,8 +53,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install site build tools
-        run: apt-get update && apt-get install -y --no-install-recommends gh ffmpeg
+      - name: Install video metadata tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
 
       - name: Check latest release
         id: release
