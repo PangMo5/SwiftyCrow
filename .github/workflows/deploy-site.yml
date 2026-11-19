@@ -38,8 +38,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: build-site
-  cancel-in-progress: false
+  group: build-site-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

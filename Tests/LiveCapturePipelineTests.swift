@@ -133,16 +133,15 @@ struct LiveCapturePipelineTests {
       $0.ocr.recognizeText = { image, _ in
         let signature = try LiveFrame(image: image).signature
         recognizedFrames.withValue { $0.append(signature) }
-        let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
-          continuation.onTermination = { reason in
-            if case .cancelled = reason {
-              cancellations.withValue { $0 += 1 }
-            }
+        return try await withTaskCancellationHandler {
+          let stream = AsyncThrowingStream<OCRResult, any Error> { continuation in
+            continuations.withValue { $0.append(continuation) }
           }
-          continuations.withValue { $0.append(continuation) }
+          for try await result in stream { return result }
+          throw CancellationError()
+        } onCancel: {
+          cancellations.withValue { $0 += 1 }
         }
-        for try await result in stream { return result }
-        throw CancellationError()
       }
       $0.languageDetection = LanguageDetectionClient(detect: { _, _ in nil })
       $0.translation = TranslationClient(translateBatch: { items, _, _, _ in
