@@ -214,7 +214,9 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 <a id="support-development"></a>
 ## 開発への支援
 
-SwiftyCrowが役に立ったら、[コーヒー1杯分の応援](https://buymeacoffee.com/pangmo5)で開発を支援できます。
+SwiftyCrowが役に立ったら、コーヒー1杯分の応援で開発を支援できます。
+
+<a href="https://buymeacoffee.com/pangmo5"><img src="https://pangmo5.dev/buy-me-a-coffee.png" alt="Buy Me a Coffee" width="144"></a>
 
 <a id="license"></a>
 ## ライセンス

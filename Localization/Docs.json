@@ -398,13 +398,6 @@
     "zh-Hans": "**自定义快捷键：** 在**设置 → 快捷键**中配置全局区域截图、实时切换、显示切换，以及结果窗口的保存和复制键。",
     "zh-Hant": "**自訂快速鍵：** 在**設定 → 快速鍵**中配置全域區域擷取、即時切換、顯示切換，以及結果視窗的儲存與複製鍵。"
   },
-  "37c8e33535f49bad": {
-    "en": "If you find SwiftyCrow useful, you can [buy me a coffee]({0}) to support its development.",
-    "ja": "SwiftyCrowが役に立ったら、[コーヒー1杯分の応援]({0})で開発を支援できます。",
-    "ko": "SwiftyCrow가 도움이 됐다면 [커피 한 잔으로]({0}) 개발을 후원할 수 있어요.",
-    "zh-Hans": "如果 SwiftyCrow 对你有帮助，可以[请我喝杯咖啡]({0})，支持后续开发。",
-    "zh-Hant": "如果 SwiftyCrow 對你有幫助，歡迎[請我喝杯咖啡]({0})，支持後續開發。"
-  },
   "37ced2eae9574038": {
     "en": "**Downloading... (gray):** The download is in progress. Wait for it to finish.",
     "ja": "**ダウンロード中（灰色）：** ダウンロードが進行中です。完了するまでお待ちください。",
@@ -943,6 +936,13 @@
     "ko": "macOS 버전, 언어 조합, 앱에 표시된 정확한 오류 메시지를 알려 주세요.",
     "zh-Hans": "请提供 macOS 版本、语言组合和应用中显示的完整错误信息。",
     "zh-Hant": "請提供 macOS 版本、語言組合與 App 中顯示的完整錯誤訊息。"
+  },
+  "79a2afd2cdb14e0d": {
+    "en": "If you find SwiftyCrow useful, you can support its development with a coffee.",
+    "ja": "SwiftyCrowが役に立ったら、コーヒー1杯分の応援で開発を支援できます。",
+    "ko": "SwiftyCrow가 도움이 됐다면 커피 한 잔으로 개발을 후원할 수 있어요.",
+    "zh-Hans": "如果 SwiftyCrow 对你有帮助，可以请我喝杯咖啡，支持后续开发。",
+    "zh-Hant": "如果 SwiftyCrow 對你有幫助，歡迎請我喝杯咖啡，支持後續開發。"
   },
   "7ad610616409b130": {
     "en": "**Stable {0} ordering:** The config file's sections and keys were written in a non-deterministic order, churning the file on every change. Keys are now written sorted, so edits produce clean, minimal diffs.",

@@ -496,19 +496,19 @@
     "zh-Hans": "SwiftyCrow 通过 Apple Vision 和翻译框架，完全在 Mac 上翻译屏幕文字，无需云端、密钥或配额。",
     "zh-Hant": "SwiftyCrow 透過 Apple Vision 與翻譯框架，完全在 Mac 上翻譯螢幕文字，不需要雲端、金鑰或使用額度。"
   },
-  "c3008f19d555dfa2": {
-    "en": "Support development",
-    "ja": "開発を支援する",
-    "ko": "개발 후원하기",
-    "zh-Hans": "支持开发",
-    "zh-Hant": "贊助開發"
-  },
   "c7074b42c22d9089": {
     "en": "Current SwiftyCrow source is available under the GNU Affero General Public License v3.0 only. Earlier releases retain the license published with their source. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.",
     "ja": "現在のSwiftyCrowソースはGNU Affero General Public License v3のみで提供しています。以前のリリースには、そのソースと一緒に公開されたライセンスが適用されます。AppleのVision、Translation、ScreenCaptureKitを使っており、Apple Inc.とは提携していません。",
     "ko": "현재 SwiftyCrow 소스는 GNU Affero General Public License v3 전용으로 제공돼요. 이전 릴리스에는 해당 소스와 함께 공개된 라이선스가 적용돼요. Apple의 Vision, Translation, ScreenCaptureKit으로 만들었으며 Apple Inc.와 제휴한 앱은 아니에요.",
     "zh-Hans": "当前 SwiftyCrow 源码仅按 GNU Affero General Public License v3 提供。旧版本仍适用随其源码发布的许可证。使用 Apple Vision、Translation 和 ScreenCaptureKit 构建，与 Apple Inc. 无关联。",
     "zh-Hant": "目前 SwiftyCrow 原始碼僅依 GNU Affero General Public License v3 提供。舊版本仍適用隨其原始碼發布的授權條款。使用 Apple Vision、Translation 與 ScreenCaptureKit 建置，與 Apple Inc. 無關聯。"
+  },
+  "cbcdb0b46d7cbfc8": {
+    "en": "Support development on Buy Me a Coffee",
+    "ja": "Buy Me a Coffeeで開発を支援する",
+    "ko": "Buy Me a Coffee에서 개발 후원하기",
+    "zh-Hans": "在 Buy Me a Coffee 上支持开发",
+    "zh-Hant": "前往 Buy Me a Coffee 贊助開發"
   },
   "d010d4344cd8c620": {
     "en": "Recognizes vertical Japanese and Chinese in reading order and places the translation over the source.",
