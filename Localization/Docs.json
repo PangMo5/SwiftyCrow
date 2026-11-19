@@ -398,6 +398,13 @@
     "zh-Hans": "**自定义快捷键：** 在**设置 → 快捷键**中配置全局区域截图、实时切换、显示切换，以及结果窗口的保存和复制键。",
     "zh-Hant": "**自訂快速鍵：** 在**設定 → 快速鍵**中配置全域區域擷取、即時切換、顯示切換，以及結果視窗的儲存與複製鍵。"
   },
+  "37c8e33535f49bad": {
+    "en": "If you find SwiftyCrow useful, you can [buy me a coffee]({0}) to support its development.",
+    "ja": "SwiftyCrowが役に立ったら、[コーヒー1杯分の応援]({0})で開発を支援できます。",
+    "ko": "SwiftyCrow가 도움이 됐다면 [커피 한 잔으로]({0}) 개발을 후원할 수 있어요.",
+    "zh-Hans": "如果 SwiftyCrow 对你有帮助，可以[请我喝杯咖啡]({0})，支持后续开发。",
+    "zh-Hant": "如果 SwiftyCrow 對你有幫助，歡迎[請我喝杯咖啡]({0})，支持後續開發。"
+  },
   "37ced2eae9574038": {
     "en": "**Downloading... (gray):** The download is in progress. Wait for it to finish.",
     "ja": "**ダウンロード中（灰色）：** ダウンロードが進行中です。完了するまでお待ちください。",
@@ -1678,6 +1685,13 @@
     "ko": "사용한 패키지의 라이선스와 정확한 소스 리비전은 [THIRD_PARTY_NOTICES.md]({0})에 기록되어 있어요. 이 파일과 라이선스는 배포 앱에도 포함돼요.",
     "zh-Hans": "所用软件包的许可证和确切源码修订记录在 [THIRD_PARTY_NOTICES.md]({0}) 中。该文件和许可证均包含在发布的应用包内。",
     "zh-Hant": "使用的套件授權條款與確切原始碼修訂記錄在 [THIRD_PARTY_NOTICES.md]({0}) 中。此檔案與授權條款均包含在發布的 App 套件內。"
+  },
+  "c3008f19d555dfa2": {
+    "en": "Support development",
+    "ja": "開発への支援",
+    "ko": "개발 후원",
+    "zh-Hans": "支持开发",
+    "zh-Hant": "贊助開發"
   },
   "c32538df0d77293a": {
     "en": "**Pause and resume:** Use the **LIVE** handle to pause or resume, and **×** to close the overlay.",

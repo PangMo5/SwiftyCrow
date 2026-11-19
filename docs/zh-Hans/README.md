@@ -211,6 +211,11 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 - 使用 **Apple Vision** 识别文字、**Apple 翻译**进行翻译、**ScreenCaptureKit** 截取屏幕。
 - 使用 `.swiftformat` 中的 [Airbnb SwiftFormat](https://github.com/airbnb/swift) 配置统一源码格式。
 
+<a id="support-development"></a>
+## 支持开发
+
+如果 SwiftyCrow 对你有帮助，可以[请我喝杯咖啡](https://buymeacoffee.com/pangmo5)，支持后续开发。
+
 <a id="license"></a>
 ## 许可证
 

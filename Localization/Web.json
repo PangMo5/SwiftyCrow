@@ -496,6 +496,13 @@
     "zh-Hans": "SwiftyCrow 通过 Apple Vision 和翻译框架，完全在 Mac 上翻译屏幕文字，无需云端、密钥或配额。",
     "zh-Hant": "SwiftyCrow 透過 Apple Vision 與翻譯框架，完全在 Mac 上翻譯螢幕文字，不需要雲端、金鑰或使用額度。"
   },
+  "c3008f19d555dfa2": {
+    "en": "Support development",
+    "ja": "開発を支援する",
+    "ko": "개발 후원하기",
+    "zh-Hans": "支持开发",
+    "zh-Hant": "贊助開發"
+  },
   "c7074b42c22d9089": {
     "en": "Current SwiftyCrow source is available under the GNU Affero General Public License v3.0 only. Earlier releases retain the license published with their source. Built with Apple's Vision, Translation, and ScreenCaptureKit. Not affiliated with Apple Inc.",
     "ja": "現在のSwiftyCrowソースはGNU Affero General Public License v3のみで提供しています。以前のリリースには、そのソースと一緒に公開されたライセンスが適用されます。AppleのVision、Translation、ScreenCaptureKitを使っており、Apple Inc.とは提携していません。",

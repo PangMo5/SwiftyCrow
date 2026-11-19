@@ -5439,6 +5439,41 @@
         }
       }
     },
+    "Support Development": {
+      "comment": "Link to the developer’s Buy Me a Coffee page in About.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support Development"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発を支援する"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개발 후원하기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持开发"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贊助開發"
+          }
+        }
+      }
+    },
     "Target": {
       "comment": "Translation-language picker label.",
       "extractionState": "manual",

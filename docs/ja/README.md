@@ -211,6 +211,11 @@ swift run --package-path Tools swiftycrow-tools serve --output DerivedData/Site 
 - 文字認識には**Apple Vision**、翻訳には**Apple翻訳**、キャプチャには**ScreenCaptureKit**を使います。
 - `.swiftformat`にある[Airbnb SwiftFormat](https://github.com/airbnb/swift)設定でソースコードの書式を統一します。
 
+<a id="support-development"></a>
+## 開発への支援
+
+SwiftyCrowが役に立ったら、[コーヒー1杯分の応援](https://buymeacoffee.com/pangmo5)で開発を支援できます。
+
 <a id="license"></a>
 ## ライセンス
 

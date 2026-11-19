@@ -380,6 +380,7 @@ private struct AboutSection: View {
       Button("View Changelog…") { showsChangelog = true }
         .buttonStyle(.link)
         .accessibilityIdentifier("about-changelog")
+      Link("Support Development", destination: URL(string: "https://buymeacoffee.com/pangmo5")!)
     }
 
     .sheet(isPresented: $showsChangelog) { BundledDocumentView(document: .changelog) }
