@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install video metadata tools
-        run: apt-get update && apt-get install -y ffmpeg
+        run: apt-get update && apt-get install -y --no-install-recommends ffmpeg
       - name: Test Swift automation and verify reviewed media
         run: |
           swift test --package-path Tools
