@@ -115,7 +115,12 @@ enum BackgroundReconstruction {
       }
     }
 
-    if !unknown.isEmpty {
+    // A zero right-hand side already has the exact zero solution. Passing it
+    // to the iterative solver can still report an iteration-limit error.
+    let activeChannels = (0..<3).filter { channel in unknown.contains { right[$0][channel] != 0 } }
+    if activeChannels.isEmpty {
+      for node in unknown { result[node] = SIMD4(0, 0, 0, 1) }
+    } else {
       let size = unknown.count
       precondition(size <= Int(Int32.max))
       var equation = [Int32](repeating: -1, count: count)
@@ -126,7 +131,7 @@ enum BackgroundReconstruction {
       rows.reserveCapacity(size * 5)
       columns.reserveCapacity(size * 5)
       coefficients.reserveCapacity(size * 5)
-      var rhs = [Double](repeating: 0, count: size * 3)
+      var rhs = [Double](repeating: 0, count: size * activeChannels.count)
       var solution = rhs
       for (row, node) in unknown.enumerated() {
         rows.append(Int32(row))
@@ -139,7 +144,9 @@ enum BackgroundReconstruction {
           columns.append(column)
           coefficients.append(-1)
         }
-        for channel in 0..<3 { rhs[channel * size + row] = right[node][channel] }
+        for (index, channel) in activeChannels.enumerated() {
+          rhs[index * size + row] = right[node][channel]
+        }
       }
       let matrix = SparseConvertFromCoordinate(
         Int32(size),
@@ -153,6 +160,10 @@ enum BackgroundReconstruction {
       )
       defer { SparseCleanup(matrix) }
       var options = SparseCGOptions()
+      // The default error handler traps before SparseSolve can return a status.
+      options.reportError = { message in
+        Log.ocr.error("Background reconstruction solve failed: \(String(cString: message), privacy: .public)")
+      }
       options.maxIterations = Int32(min(size, max(100, 4 * (width + height))))
       options.atol = 0.00000001
       options.rtol = 0.0000000001
@@ -163,14 +174,14 @@ enum BackgroundReconstruction {
             matrix,
             DenseMatrix_Double(
               rowCount: Int32(size),
-              columnCount: 3,
+              columnCount: Int32(activeChannels.count),
               columnStride: Int32(size),
               attributes: SparseAttributes_t(),
               data: b.baseAddress!,
             ),
             DenseMatrix_Double(
               rowCount: Int32(size),
-              columnCount: 3,
+              columnCount: Int32(activeChannels.count),
               columnStride: Int32(size),
               attributes: SparseAttributes_t(),
               data: x.baseAddress!,
@@ -182,7 +193,10 @@ enum BackgroundReconstruction {
       // Leave failed components unresolved so the caller can expose review.
       if status == SparseIterativeConverged {
         for (row, node) in unknown.enumerated() {
-          let color = Color(Float(solution[row]), Float(solution[size + row]), Float(solution[2 * size + row]))
+          var color = Color.zero
+          for (index, channel) in activeChannels.enumerated() {
+            color[channel] = Float(solution[index * size + row])
+          }
           if color.x.isFinite, color.y.isFinite, color.z.isFinite {
             result[node] = SIMD4(color.x, color.y, color.z, 1)
           }
