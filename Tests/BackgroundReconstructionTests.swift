@@ -326,6 +326,30 @@ struct BackgroundReconstructionTests {
     #expect(colors.count == 9)
   }
 
+  @Test(.bug("https://github.com/PangMo5/SwiftyCrow/issues/22"), arguments: [
+    SIMD3<Float>(1, 0, 0),
+    SIMD3<Float>(0, 1, 0),
+    SIMD3<Float>(0, 0, 1),
+    SIMD3<Float>(1, 0, 2),
+  ])
+  func `reconstruction solves varying color with zero channels`(channels: SIMD3<Float>) {
+    var colors = [SIMD3<Float>]()
+    let unresolved = BackgroundReconstruction.fill(
+      width: 3,
+      height: 1,
+      mask: [false, true, false],
+      barriers: nil,
+    ) { x, _ in
+      channels * Float(100 + x)
+    } write: { _, color in
+      if let color {
+        colors.append(color)
+      }
+    }
+    #expect(unresolved == 0)
+    #expect(colors == [channels * 101])
+  }
+
   // MARK: Private
 
   private static func grain(x: Int, y: Int, scale: Int) -> Float {
